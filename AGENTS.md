@@ -135,12 +135,15 @@ When creating or editing C# files (`.cs`) in this repository, include the follow
 
 ## Pending Backend Tasks (Gap Report)
 
-Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `MessageBox` are UI-related and must be skipped until the Avalonia UI phase.
+Gap report derived from comparing the ShareX libraries against the Avalonia projects. UI-named files (Form/Control/Designer/Renderer/MessageBox/etc.) are excluded from this checklist and deferred to the UI phase.
 
 ### ShareX.HelpersLib
 - [ ] AnimatedGifCreator.cs
 - [ ] AppVeyor.cs
 - [ ] AppVeyorUpdateChecker.cs
+- [ ] BlackStyleCheckBox.cs
+- [ ] BlackStyleProgressBar.cs
+- [ ] Canvas.cs
 - [ ] CaptureHelpers.cs
 - [ ] ClipboardHelpers.cs
 - [ ] ClipboardHelpersEx.cs
@@ -151,25 +154,26 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] ColorMatrixManager.cs
 - [ ] ColorPicker.cs
 - [ ] ColorSlider.cs
-- [ ] ColorUserControl.cs
-- [ ] ControlHider.cs
 - [ ] ConvolutionMatrixManager.cs
 - [ ] CursorData.cs
+- [ ] CustomVScrollBar.cs
 - [ ] DesktopIconManager.cs
-- [ ] DownloaderForm.cs
-- [ ] DPAPI.cs
+- [x] DPAPI.cs
 - [ ] DPAPIEncryptedStringPropertyResolver.cs
 - [ ] DPAPIEncryptedStringValueProvider.cs
 - [ ] DWMManager.cs
 - [ ] Emoji.cs
+- [ ] EnumDescriptionConverter.cs
 - [ ] EnumExtensions.cs
 - [ ] EnumInfo.cs
+- [ ] EnumProperNameConverter.cs
+- [ ] EnumProperNameKeepCaseConverter.cs
 - [ ] Extensions.cs
 - [ ] ExternalProgram.cs
 - [ ] FFmpegUpdateChecker.cs
 - [ ] FileDownloader.cs
+- [ ] FileHelpersLite.cs
 - [ ] FontSafe.cs
-- [ ] FormExtensions.cs
 - [ ] GifClass.cs
 - [ ] GitHubUpdateChecker.cs
 - [ ] GitHubUpdateManager.cs
@@ -178,7 +182,6 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] GraphicsPathExtensions.cs
 - [ ] GraphicsQualityManager.cs
 - [ ] GrayscaleQuantizer.cs
-- [ ] HotkeyForm.cs
 - [ ] HotkeyInfo.cs
 - [ ] HSB.cs
 - [ ] HttpClientFactory.cs
@@ -188,9 +191,9 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] JsonHelpers.cs
 - [ ] KeyboardHook.cs
 - [ ] KnownTypesSerializationBinder.cs
-- [ ] LayeredForm.cs
-- [ ] ListViewColumnSorter.cs
+- [ ] ListExtensions.cs
 - [ ] MyColor.cs
+- [ ] MyColorConverter.cs
 - [ ] NativeConstants.cs
 - [ ] NativeEnums.cs
 - [ ] NativeMessagingHost.cs
@@ -199,10 +202,13 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] NativeStructs.cs
 - [ ] OctreeQuantizer.cs
 - [ ] PaletteQuantizer.cs
+- [ ] Point.cs
+- [ ] PointF.cs
 - [ ] PointInfo.cs
 - [ ] PrintHelper.cs
 - [ ] PrintSettings.cs
 - [ ] PrintTextHelper.cs
+- [ ] PropertyExtensions.cs
 - [ ] Quantizer.cs
 - [ ] RegistryHelpers.cs
 - [ ] RGBA.cs
@@ -213,52 +219,56 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] ShareXTheme.cs
 - [ ] ShortcutHelpers.cs
 - [ ] SingleInstanceManager.cs
+- [ ] StringCollectionToStringTypeConverter.cs
 - [ ] TaskbarManager.cs
-- [ ] TextBoxTraceListener.cs
 - [ ] TimerResolutionManager.cs
 - [ ] UnsafeBitmap.cs
 - [ ] UpdateChecker.cs
-- [ ] UpdateCheckerLabel.cs
-- [ ] UpdateMessageBox.cs
-- [ ] WindowInfo.cs
-- [x] WindowState.cs
-- [ ] WritablePropertiesOnlyResolver.cs
 - [ ] WshShell.cs
 - [ ] XmlColor.cs
 - [ ] XmlFont.cs
 - [ ] XMLUpdateChecker.cs
 
 ### ShareX.HistoryLib
-- [ ] HistoryImageListViewRenderer.cs
 - [ ] HistoryItemManager.cs
-- [ ] HistoryItemManager_ContextMenu.cs
-- [ ] HistoryManagerMock.cs
-- [x] HistorySettings.cs
-- [x] ImageHistorySettings.cs
 - [ ] ShareX.HistoryLib.AssemblyInfo.cs
 - [ ] ShareX.HistoryLib.resources.cs
 
 ### ShareX.ImageEffectsLib
+- [ ] CanvasMargin.cs
+- [ ] ColorBgra.cs
+- [ ] ColorMatrixManager.cs
+- [ ] ConvolutionMatrixManager.cs
+- [ ] DrawingExtensions.cs
 - [ ] DrawParticles.cs
 - [ ] DrawTextEx.cs
+- [ ] GradientInfo.cs
+- [ ] GradientStop.cs
 - [ ] ImageEffectPackager.cs
 - [ ] ImageEffectPreset.cs
+- [ ] ImageEffectPropertyExtensions.cs
+- [ ] ImageEffectsProcessing.cs
 - [ ] ImageEffectsSerializationBinder.cs
 - [ ] ReplaceColor.cs
 - [ ] SelectiveColor.cs
 - [ ] ShareX.ImageEffectsLib.AssemblyInfo.cs
 - [ ] ShareX.ImageEffectsLib.resources.cs
+- [ ] UnsafeBitmap.cs
 - [ ] WatermarkConfig.cs
+- [ ] WatermarkHelpers.cs
 
 ### ShareX.IndexerLib
 - [ ] ShareX.IndexerLib.AssemblyInfo.cs
 - [ ] ShareX.IndexerLib.resources.cs
 
 ### ShareX.MediaLib
+- [ ] DesignStubs.cs
 - [ ] FFmpegDownloader.cs
 - [ ] FFmpegGitHubDownloader.cs
+- [ ] GradientInfo.cs
 - [ ] ImageBeautifier.cs
 - [ ] ImageCombinerOptions.cs
+- [ ] Resources.cs
 - [ ] ShareX.MediaLib.AssemblyInfo.cs
 - [ ] ShareX.MediaLib.resources.cs
 
@@ -284,11 +294,6 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] HighlightEffectShape.cs
 - [ ] ImageCache.cs
 - [ ] ImageDrawingShape.cs
-- [ ] ImageEditorButton.cs
-- [ ] ImageEditorControl.cs
-- [ ] ImageEditorHistory.cs
-- [ ] ImageEditorMemento.cs
-- [ ] ImageEditorScrollbar.cs
 - [ ] ImageFileDrawingShape.cs
 - [ ] ImageScreenDrawingShape.cs
 - [ ] InputManager.cs
@@ -310,31 +315,26 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] ScrollbarManager.cs
 - [ ] ScrollingCaptureManager.cs
 - [ ] ShapeManager.cs
-- [ ] ShapeManagerMenu.cs
 - [ ] ShareX.ScreenCaptureLib.AssemblyInfo.cs
 - [ ] ShareX.ScreenCaptureLib.resources.cs
-- [ ] SimpleWindowInfo.cs
 - [ ] SmartEraserDrawingShape.cs
 - [ ] SnapSize.cs
 - [ ] SpeechBalloonDrawingShape.cs
 - [ ] SpotlightTool.cs
 - [ ] StepDrawingShape.cs
 - [ ] StickerDrawingShape.cs
-- [ ] StickerImageListViewRenderer.cs
 - [ ] TextAnimation.cs
 - [ ] TextDrawingOptions.cs
 - [ ] TextDrawingShape.cs
 - [ ] TextOutlineDrawingShape.cs
-- [ ] WindowsList.cs
-- [ ] WindowsRectangleList.cs
 
 ### ShareX.UploadersLib
 - [ ] AmazonS3.cs
+- [ ] AmazonS3StorageClass.cs
 - [ ] AzureStorage.cs
 - [ ] BackblazeB2.cs
 - [ ] BitlyURLShortener.cs
 - [ ] Box.cs
-- [ ] CertFileNameEditor.cs
 - [ ] Chevereto.cs
 - [ ] CustomFileUploader.cs
 - [ ] Dropbox.cs
@@ -350,14 +350,13 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] Hostr.cs
 - [ ] ImageShackUploader.cs
 - [ ] Imgur.cs
-- [ ] KeyFileNameEditor.cs
+- [ ] JiraUpload.cs
 - [ ] KuttURLShortener.cs
 - [ ] Lambda.cs
 - [ ] LobFile.cs
 - [ ] LocalhostAccount.cs
 - [ ] MediaFire.cs
 - [ ] Mega.cs
-- [ ] OAuthListenerForm.cs
 - [ ] OneDrive.cs
 - [ ] OneTimeSecret.cs
 - [ ] OwnCloud.cs
@@ -371,11 +370,13 @@ Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `Message
 - [ ] Pushbullet.cs
 - [ ] PushbulletSharingService.cs
 - [ ] Puush.cs
+- [ ] Resources.cs
 - [ ] Seafile.cs
 - [ ] SharedFolderUploader.cs
 - [ ] ShareX.UploadersLib.AssemblyInfo.cs
 - [ ] ShareX.UploadersLib.resources.cs
 - [ ] Streamable.cs
+- [ ] Stubs.cs
 - [ ] Sul.cs
 - [ ] Upaste.cs
 - [ ] UploadScreenshot.cs
