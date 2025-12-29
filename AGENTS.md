@@ -133,6 +133,257 @@ When creating or editing C# files (`.cs`) in this repository, include the follow
 - [x] Verify uploader settings models cover all fields referenced by config/task flows.
 - [x] Audit OAuth manager signature support and match ShareX behavior.
 
+## Pending Backend Tasks (Gap Report)
+
+Note: Items with names like `Form`, `Control`, `Editor`, `Renderer`, or `MessageBox` are UI-related and must be skipped until the Avalonia UI phase.
+
+### ShareX.HelpersLib
+- [ ] AnimatedGifCreator.cs
+- [ ] AppVeyor.cs
+- [ ] AppVeyorUpdateChecker.cs
+- [ ] CaptureHelpers.cs
+- [ ] ClipboardHelpers.cs
+- [ ] ClipboardHelpersEx.cs
+- [ ] CMYK.cs
+- [ ] ColorBgra.cs
+- [ ] ColorBox.cs
+- [ ] ColorEventHandler.cs
+- [ ] ColorMatrixManager.cs
+- [ ] ColorPicker.cs
+- [ ] ColorSlider.cs
+- [ ] ColorUserControl.cs
+- [ ] ControlHider.cs
+- [ ] ConvolutionMatrixManager.cs
+- [ ] CursorData.cs
+- [ ] DesktopIconManager.cs
+- [ ] DownloaderForm.cs
+- [ ] DPAPI.cs
+- [ ] DPAPIEncryptedStringPropertyResolver.cs
+- [ ] DPAPIEncryptedStringValueProvider.cs
+- [ ] DWMManager.cs
+- [ ] Emoji.cs
+- [ ] EnumExtensions.cs
+- [ ] EnumInfo.cs
+- [ ] Extensions.cs
+- [ ] ExternalProgram.cs
+- [ ] FFmpegUpdateChecker.cs
+- [ ] FileDownloader.cs
+- [ ] FontSafe.cs
+- [ ] FormExtensions.cs
+- [ ] GifClass.cs
+- [ ] GitHubUpdateChecker.cs
+- [ ] GitHubUpdateManager.cs
+- [ ] GradientInfo.cs
+- [ ] GradientStop.cs
+- [ ] GraphicsPathExtensions.cs
+- [ ] GraphicsQualityManager.cs
+- [ ] GrayscaleQuantizer.cs
+- [ ] HotkeyForm.cs
+- [ ] HotkeyInfo.cs
+- [ ] HSB.cs
+- [ ] HttpClientFactory.cs
+- [ ] ImageFilesCache.cs
+- [ ] InputHelpers.cs
+- [ ] InputManager.cs
+- [ ] JsonHelpers.cs
+- [ ] KeyboardHook.cs
+- [ ] KnownTypesSerializationBinder.cs
+- [ ] LayeredForm.cs
+- [ ] ListViewColumnSorter.cs
+- [ ] MyColor.cs
+- [ ] NativeConstants.cs
+- [ ] NativeEnums.cs
+- [ ] NativeMessagingHost.cs
+- [ ] NativeMethods.cs
+- [ ] NativeMethods_Helpers.cs
+- [ ] NativeStructs.cs
+- [ ] OctreeQuantizer.cs
+- [ ] PaletteQuantizer.cs
+- [ ] PointInfo.cs
+- [ ] PrintHelper.cs
+- [ ] PrintSettings.cs
+- [ ] PrintTextHelper.cs
+- [ ] Quantizer.cs
+- [ ] RegistryHelpers.cs
+- [ ] RGBA.cs
+- [ ] SafeStringEnumConverter.cs
+- [ ] SevenZipManager.cs
+- [ ] ShareX.HelpersLib.AssemblyInfo.cs
+- [ ] ShareX.HelpersLib.resources.cs
+- [ ] ShareXTheme.cs
+- [ ] ShortcutHelpers.cs
+- [ ] SingleInstanceManager.cs
+- [ ] TaskbarManager.cs
+- [ ] TextBoxTraceListener.cs
+- [ ] TimerResolutionManager.cs
+- [ ] UnsafeBitmap.cs
+- [ ] UpdateChecker.cs
+- [ ] UpdateCheckerLabel.cs
+- [ ] UpdateMessageBox.cs
+- [ ] WindowInfo.cs
+- [x] WindowState.cs
+- [ ] WritablePropertiesOnlyResolver.cs
+- [ ] WshShell.cs
+- [ ] XmlColor.cs
+- [ ] XmlFont.cs
+- [ ] XMLUpdateChecker.cs
+
+### ShareX.HistoryLib
+- [ ] HistoryImageListViewRenderer.cs
+- [ ] HistoryItemManager.cs
+- [ ] HistoryItemManager_ContextMenu.cs
+- [ ] HistoryManagerMock.cs
+- [x] HistorySettings.cs
+- [x] ImageHistorySettings.cs
+- [ ] ShareX.HistoryLib.AssemblyInfo.cs
+- [ ] ShareX.HistoryLib.resources.cs
+
+### ShareX.ImageEffectsLib
+- [ ] DrawParticles.cs
+- [ ] DrawTextEx.cs
+- [ ] ImageEffectPackager.cs
+- [ ] ImageEffectPreset.cs
+- [ ] ImageEffectsSerializationBinder.cs
+- [ ] ReplaceColor.cs
+- [ ] SelectiveColor.cs
+- [ ] ShareX.ImageEffectsLib.AssemblyInfo.cs
+- [ ] ShareX.ImageEffectsLib.resources.cs
+- [ ] WatermarkConfig.cs
+
+### ShareX.IndexerLib
+- [ ] ShareX.IndexerLib.AssemblyInfo.cs
+- [ ] ShareX.IndexerLib.resources.cs
+
+### ShareX.MediaLib
+- [ ] FFmpegDownloader.cs
+- [ ] FFmpegGitHubDownloader.cs
+- [ ] ImageBeautifier.cs
+- [ ] ImageCombinerOptions.cs
+- [ ] ShareX.MediaLib.AssemblyInfo.cs
+- [ ] ShareX.MediaLib.resources.cs
+
+### ShareX.ScreenCaptureLib
+- [ ] AnnotationOptions.cs
+- [ ] ArrowDrawingShape.cs
+- [ ] BaseDrawingShape.cs
+- [ ] BaseEffectShape.cs
+- [ ] BaseRegionShape.cs
+- [ ] BaseShape.cs
+- [ ] BaseTool.cs
+- [ ] BlurEffectShape.cs
+- [ ] ColorBlinkAnimation.cs
+- [ ] CropTool.cs
+- [ ] CursorDrawingShape.cs
+- [ ] CutOutTool.cs
+- [ ] EllipseDrawingShape.cs
+- [ ] EllipseRegionShape.cs
+- [ ] FreehandArrowDrawingShape.cs
+- [ ] FreehandDrawingShape.cs
+- [ ] FreehandRegionShape.cs
+- [ ] HardDiskCache.cs
+- [ ] HighlightEffectShape.cs
+- [ ] ImageCache.cs
+- [ ] ImageDrawingShape.cs
+- [ ] ImageEditorButton.cs
+- [ ] ImageEditorControl.cs
+- [ ] ImageEditorHistory.cs
+- [ ] ImageEditorMemento.cs
+- [ ] ImageEditorScrollbar.cs
+- [ ] ImageFileDrawingShape.cs
+- [ ] ImageScreenDrawingShape.cs
+- [ ] InputManager.cs
+- [ ] LineDrawingShape.cs
+- [ ] MagnifyDrawingShape.cs
+- [ ] MouseState.cs
+- [ ] PixelateEffectShape.cs
+- [ ] PointAnimation.cs
+- [ ] RectangleAnimation.cs
+- [ ] RectangleDrawingShape.cs
+- [ ] RectangleRegionShape.cs
+- [ ] RegionCaptureOptions.cs
+- [ ] RegionCaptureTasks.cs
+- [ ] ResizeNode.cs
+- [ ] ScreenRecorder.cs
+- [ ] ScreenRecordingOptions.cs
+- [ ] Screenshot.cs
+- [ ] Screenshot_Transparent.cs
+- [ ] ScrollbarManager.cs
+- [ ] ScrollingCaptureManager.cs
+- [ ] ShapeManager.cs
+- [ ] ShapeManagerMenu.cs
+- [ ] ShareX.ScreenCaptureLib.AssemblyInfo.cs
+- [ ] ShareX.ScreenCaptureLib.resources.cs
+- [ ] SimpleWindowInfo.cs
+- [ ] SmartEraserDrawingShape.cs
+- [ ] SnapSize.cs
+- [ ] SpeechBalloonDrawingShape.cs
+- [ ] SpotlightTool.cs
+- [ ] StepDrawingShape.cs
+- [ ] StickerDrawingShape.cs
+- [ ] StickerImageListViewRenderer.cs
+- [ ] TextAnimation.cs
+- [ ] TextDrawingOptions.cs
+- [ ] TextDrawingShape.cs
+- [ ] TextOutlineDrawingShape.cs
+- [ ] WindowsList.cs
+- [ ] WindowsRectangleList.cs
+
+### ShareX.UploadersLib
+- [ ] AmazonS3.cs
+- [ ] AzureStorage.cs
+- [ ] BackblazeB2.cs
+- [ ] BitlyURLShortener.cs
+- [ ] Box.cs
+- [ ] CertFileNameEditor.cs
+- [ ] Chevereto.cs
+- [ ] CustomFileUploader.cs
+- [ ] Dropbox.cs
+- [ ] Email.cs
+- [ ] EmailSharingService.cs
+- [ ] FirebaseDynamicLinksURLShortener.cs
+- [ ] FlickrUploader.cs
+- [ ] FTP.cs
+- [ ] GitHubGist.cs
+- [ ] GoogleCloudStorage.cs
+- [ ] GoogleDrive.cs
+- [ ] Hastebin.cs
+- [ ] Hostr.cs
+- [ ] ImageShackUploader.cs
+- [ ] Imgur.cs
+- [ ] KeyFileNameEditor.cs
+- [ ] KuttURLShortener.cs
+- [ ] Lambda.cs
+- [ ] LobFile.cs
+- [ ] LocalhostAccount.cs
+- [ ] MediaFire.cs
+- [ ] Mega.cs
+- [ ] OAuthListenerForm.cs
+- [ ] OneDrive.cs
+- [ ] OneTimeSecret.cs
+- [ ] OwnCloud.cs
+- [ ] Paste_ee.cs
+- [ ] Pastebin.cs
+- [ ] Pastie.cs
+- [ ] Photobucket.cs
+- [ ] Plik.cs
+- [ ] PolrURLShortener.cs
+- [ ] Pomf.cs
+- [ ] Pushbullet.cs
+- [ ] PushbulletSharingService.cs
+- [ ] Puush.cs
+- [ ] Seafile.cs
+- [ ] SharedFolderUploader.cs
+- [ ] ShareX.UploadersLib.AssemblyInfo.cs
+- [ ] ShareX.UploadersLib.resources.cs
+- [ ] Streamable.cs
+- [ ] Sul.cs
+- [ ] Upaste.cs
+- [ ] UploadScreenshot.cs
+- [ ] VgymeUploader.cs
+- [ ] YourlsURLShortener.cs
+- [ ] YouTube.cs
+- [ ] ZeroWidthURLShortener.cs
+
 ## TODO ARM64 optimisations and compatibility
 
 Goal
