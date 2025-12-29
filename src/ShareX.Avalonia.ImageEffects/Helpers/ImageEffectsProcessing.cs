@@ -26,6 +26,7 @@
 using ShareX.Avalonia.Common;
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 
 namespace ShareX.Avalonia.ImageEffects.Helpers
@@ -109,6 +110,64 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
                 int level = (int)Math.Round(value / step);
                 return (byte)MathHelpers.Clamp((int)Math.Round(level * step), 0, 255);
             }
+        }
+
+        public static Bitmap Pixelate(Bitmap bmp, int size, int borderSize = 0, Color? borderColor = null)
+        {
+            size = Math.Max(1, size);
+            Bitmap result = (Bitmap)bmp.Clone();
+
+            using (UnsafeBitmap source = new UnsafeBitmap(bmp, true, ImageLockMode.ReadOnly))
+            using (UnsafeBitmap dest = new UnsafeBitmap(result, true, ImageLockMode.WriteOnly))
+            {
+                for (int y = 0; y < source.Height; y += size)
+                {
+                    for (int x = 0; x < source.Width; x += size)
+                    {
+                        int maxX = Math.Min(x + size, source.Width);
+                        int maxY = Math.Min(y + size, source.Height);
+                        int r = 0, g = 0, b = 0, a = 0, count = 0;
+
+                        for (int yy = y; yy < maxY; yy++)
+                        {
+                            for (int xx = x; xx < maxX; xx++)
+                            {
+                                ColorBgra c = source.GetPixel(xx, yy);
+                                r += c.Red;
+                                g += c.Green;
+                                b += c.Blue;
+                                a += c.Alpha;
+                                count++;
+                            }
+                        }
+
+                        byte rb = (byte)(r / count);
+                        byte gb = (byte)(g / count);
+                        byte bb = (byte)(b / count);
+                        byte ab = (byte)(a / count);
+                        ColorBgra avg = new ColorBgra(bb, gb, rb, ab);
+
+                        for (int yy = y; yy < maxY; yy++)
+                        {
+                            for (int xx = x; xx < maxX; xx++)
+                            {
+                                dest.SetPixel(xx, yy, avg);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (borderSize > 0 && borderColor.HasValue)
+            {
+                using (Graphics g = Graphics.FromImage(result))
+                using (Pen pen = new Pen(borderColor.Value, borderSize) { Alignment = PenAlignment.Inset })
+                {
+                    g.DrawRectangle(pen, 0, 0, result.Width, result.Height);
+                }
+            }
+
+            return result;
         }
     }
 }
