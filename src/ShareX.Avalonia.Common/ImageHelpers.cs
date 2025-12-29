@@ -115,5 +115,33 @@ namespace ShareX.Avalonia.Common
                 }
             }
         }
+
+
+        public static Bitmap CreateCheckerPattern()
+        {
+            return CreateCheckerPattern(10, 10);
+        }
+
+        public static Bitmap CreateCheckerPattern(int width, int height)
+        {
+            return CreateCheckerPattern(width, height, SystemColors.ControlLight, SystemColors.ControlLightLight);
+        }
+
+        public static Bitmap CreateCheckerPattern(int width, int height, Color checkerColor1, Color checkerColor2)
+        {
+            Bitmap bmp = new Bitmap(width * 2, height * 2);
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            using (Brush brush1 = new SolidBrush(checkerColor1))
+            using (Brush brush2 = new SolidBrush(checkerColor2))
+            {
+                g.FillRectangle(brush1, 0, 0, width, height);
+                g.FillRectangle(brush1, width, height, width, height);
+                g.FillRectangle(brush2, width, 0, width, height);
+                g.FillRectangle(brush2, 0, height, width, height);
+            }
+
+            return bmp;
+        }
     }
 }

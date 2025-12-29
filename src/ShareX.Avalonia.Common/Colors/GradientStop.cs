@@ -23,36 +23,40 @@
 
 #endregion License Information (GPL v3)
 
+using System.ComponentModel;
 using System.Drawing;
+using ShareX.Avalonia.Common;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Avalonia.Common.Colors
 {
-    public static class GraphicsExtensions
+    public class GradientStop
     {
-        public static void DrawRectangleProper(this Graphics g, Pen pen, int x, int y, int width, int height)
-        {
-            if (pen.Width == 1)
-            {
-                width -= 1;
-                height -= 1;
-            }
+        [DefaultValue(typeof(Color), "Black")]
+        public Color Color { get; set; } = Color.Black;
 
-            if (width > 0 && height > 0)
+        private float location;
+
+        [DefaultValue(0f)]
+        public float Location
+        {
+            get
             {
-                g.DrawRectangle(pen, x, y, width, height);
+                return location;
+            }
+            set
+            {
+                location = value.Clamp(0f, 100f);
             }
         }
 
-        public static void DrawRectangleProper(this Graphics g, Pen pen, Rectangle rect)
+        public GradientStop()
         {
-            DrawRectangleProper(g, pen, rect.X, rect.Y, rect.Width, rect.Height);
         }
 
-        public static void DrawTextWithShadow(this Graphics g, string text, System.Drawing.Point position, Font font, Brush textBrush, Brush shadowBrush)
+        public GradientStop(Color color, float offset)
         {
-            System.Drawing.PointF shadowPosition = new System.Drawing.PointF(position.X + 1, position.Y + 1);
-            g.DrawString(text, font, shadowBrush, shadowPosition);
-            g.DrawString(text, font, textBrush, new System.Drawing.PointF(position.X, position.Y));
+            Color = color;
+            Location = offset;
         }
     }
 }
