@@ -31,7 +31,7 @@ namespace ShareX.Avalonia.Common
 {
     public static class PropertyExtensions
     {
-        public static void ApplyDefaultPropertyValues(this object target)
+        public static void ApplyDefaultValues(this object target)
         {
             foreach (PropertyDescriptor prop in TypeDescriptor.GetProperties(target))
             {

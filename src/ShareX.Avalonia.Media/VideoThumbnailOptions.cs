@@ -89,7 +89,7 @@ namespace ShareX.Avalonia.Media
 
         public VideoThumbnailOptions()
         {
-            this.ApplyDefaultPropertyValues();
+            this.ApplyDefaultValues();
         }
     }
 }
