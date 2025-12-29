@@ -165,8 +165,8 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] DWMManager.cs
 - [ ] Emoji.cs
 - [ ] EnumDescriptionConverter.cs
-- [ ] EnumExtensions.cs
-- [ ] EnumInfo.cs
+- [x] EnumExtensions.cs
+- [x] EnumInfo.cs
 - [ ] EnumProperNameConverter.cs
 - [ ] EnumProperNameKeepCaseConverter.cs
 - [ ] Extensions.cs
