@@ -219,6 +219,8 @@ must be treated as platform code and cannot be copied wholesale.
 Gap report derived from comparing the ShareX libraries against the Avalonia projects. UI-named files (Form/Control/Designer/Renderer/MessageBox/etc.) are excluded from this checklist and deferred to the UI phase.
 
 ### ShareX.HelpersLib
+- [x] CodeMenuEntry.cs
+- [x] CodeMenuEntryActions.cs
 - [ ] AnimatedGifCreator.cs
 - [ ] AppVeyor.cs
 - [ ] AppVeyorUpdateChecker.cs
@@ -251,7 +253,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] EnumProperNameConverter.cs
 - [x] EnumProperNameKeepCaseConverter.cs
 - [ ] Extensions.cs
-- [ ] ExternalProgram.cs
+- [x] ExternalProgram.cs
 - [ ] FFmpegUpdateChecker.cs
 - [x] FileDownloader.cs
 - [ ] FileHelpersLite.cs

@@ -341,6 +341,31 @@ namespace ShareX.Avalonia.Common
             return newFilePath;
         }
 
+        public static long GetFileSize(string filePath)
+        {
+            try
+            {
+                return new FileInfo(filePath).Length;
+            }
+            catch
+            {
+            }
+
+            return -1;
+        }
+
+        public static string GetFileSizeReadable(string filePath, bool binaryUnits = false)
+        {
+            long fileSize = GetFileSize(filePath);
+
+            if (fileSize >= 0)
+            {
+                return fileSize.ToSizeString(binaryUnits);
+            }
+
+            return string.Empty;
+        }
+
         public static void CreateDirectory(string directoryPath)
         {
             if (string.IsNullOrEmpty(directoryPath))
