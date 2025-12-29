@@ -1248,6 +1248,58 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             }
         }
 
+        public static Bitmap DrawCheckers(Image img)
+        {
+            return DrawCheckers(img, 10, SystemColors.ControlLight, SystemColors.ControlLightLight);
+        }
+
+        public static Bitmap DrawCheckers(Image img, int checkerSize, Color checkerColor1, Color checkerColor2)
+        {
+            Bitmap bmpResult = img.CreateEmptyBitmap();
+
+            using (img)
+            using (Graphics g = Graphics.FromImage(bmpResult))
+            using (Image checker = CreateCheckerPattern(checkerSize, checkerSize, checkerColor1, checkerColor2))
+            using (Brush checkerBrush = new TextureBrush(checker, WrapMode.Tile))
+            {
+                g.FillRectangle(checkerBrush, new Rectangle(0, 0, bmpResult.Width, bmpResult.Height));
+                g.DrawImage(img, 0, 0, img.Width, img.Height);
+            }
+
+            return bmpResult;
+        }
+
+        public static Bitmap DrawCheckers(int width, int height, int checkerSize, Color checkerColor1, Color checkerColor2)
+        {
+            Bitmap bmp = new Bitmap(width, height);
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            using (Image checker = CreateCheckerPattern(checkerSize, checkerSize, checkerColor1, checkerColor2))
+            using (Brush checkerBrush = new TextureBrush(checker, WrapMode.Tile))
+            {
+                g.FillRectangle(checkerBrush, new Rectangle(0, 0, bmp.Width, bmp.Height));
+            }
+
+            return bmp;
+        }
+
+        public static Bitmap CreateCheckerPattern(int width, int height, Color checkerColor1, Color checkerColor2)
+        {
+            Bitmap bmp = new Bitmap(width * 2, height * 2);
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            using (Brush brush1 = new SolidBrush(checkerColor1))
+            using (Brush brush2 = new SolidBrush(checkerColor2))
+            {
+                g.FillRectangle(brush1, 0, 0, width, height);
+                g.FillRectangle(brush1, width, height, width, height);
+                g.FillRectangle(brush2, width, 0, width, height);
+                g.FillRectangle(brush2, 0, height, width, height);
+            }
+
+            return bmp;
+        }
+
         private static void AddRoundedRectangle(GraphicsPath graphicsPath, RectangleF rect, float radius)
         {
             if (radius <= 0f)
