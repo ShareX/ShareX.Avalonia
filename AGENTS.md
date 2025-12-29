@@ -163,7 +163,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] DPAPIEncryptedStringValueProvider.cs
 - [x] WritablePropertiesOnlyResolver.cs
 - [ ] DWMManager.cs
-- [ ] Emoji.cs
+- [x] Emoji.cs
 - [x] EnumDescriptionConverter.cs
 - [x] EnumExtensions.cs
 - [x] EnumInfo.cs
