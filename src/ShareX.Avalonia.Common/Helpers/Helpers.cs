@@ -25,144 +25,191 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ShareX.Avalonia.Common.Helpers
+namespace ShareX.Avalonia.Common
 {
     public static class Helpers
     {
-        private const string Alphanumeric = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        public const string Numbers = "0123456789"; // 48 ... 57
+        public const string AlphabetCapital = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 65 ... 90
+        public const string Alphabet = "abcdefghijklmnopqrstuvwxyz"; // 97 ... 122
+        public const string Alphanumeric = Numbers + AlphabetCapital + Alphabet;
+        public const string AlphanumericInverse = Numbers + Alphabet + AlphabetCapital;
+        public const string Hexadecimal = Numbers + "ABCDEF";
+        public const string Base58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // https://en.wikipedia.org/wiki/Base58
+        public const string Base56 = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz"; // A variant, Base56, excludes 1 (one) and o (lowercase o) compared to Base 58.
 
-        public static IEnumerable<T> GetInstances<T>()
+        public static string AddZeroes(string input, int digits = 2)
         {
-            Type targetType = typeof(T);
-            List<T> instances = new List<T>();
+            return input.PadLeft(digits, '0');
+        }
 
-            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+        public static string AddZeroes(int number, int digits = 2)
+        {
+            return AddZeroes(number.ToString(), digits);
+        }
+
+        public static char GetRandomChar(string chars)
+        {
+            return chars[RandomCrypto.Next(chars.Length - 1)];
+        }
+
+        public static string GetRandomString(string chars, int length)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            while (length-- > 0)
             {
-                foreach (Type type in asm.GetTypes().Where(t => targetType.IsAssignableFrom(t) && !t.IsAbstract && t.GetConstructor(Type.EmptyTypes) != null))
-                {
-                    try
-                    {
-                        if (Activator.CreateInstance(type) is T instance)
-                        {
-                            instances.Add(instance);
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore types that cannot be instantiated
-                    }
-                }
+                sb.Append(GetRandomChar(chars));
             }
 
-            return instances;
+            return sb.ToString();
+        }
+
+        public static string GetRandomNumber(int length)
+        {
+            return GetRandomString(Numbers, length);
         }
 
         public static string GetRandomAlphanumeric(int length)
         {
-            if (length <= 0)
-            {
-                return string.Empty;
-            }
-
-            StringBuilder sb = new StringBuilder(length);
-
-            using RandomNumberGenerator rng = RandomNumberGenerator.Create();
-            byte[] buffer = new byte[4];
-
-            for (int i = 0; i < length; i++)
-            {
-                rng.GetBytes(buffer);
-                int value = BitConverter.ToInt32(buffer, 0) & int.MaxValue;
-                sb.Append(Alphanumeric[value % Alphanumeric.Length]);
-            }
-
-            return sb.ToString();
+            return GetRandomString(Alphanumeric, length);
         }
 
+        public static string GetRandomKey(int length = 5, int count = 3, char separator = '-')
+        {
+            return Enumerable.Range(1, ((length + 1) * count) - 1).Aggregate("", (x, index) => x += index % (length + 1) == 0 ? separator : GetRandomChar(Alphanumeric));
+        }
+
+        public static string GetUniqueID()
+        {
+            return Guid.NewGuid().ToString("N");
+        }
+
+        public static string SafeStringFormat(string format, params object[] args)
+        {
+            return SafeStringFormat(null, format, args);
+        }
+
+        public static string SafeStringFormat(IFormatProvider provider, string format, params object[] args)
+        {
+            try
+            {
+                if (provider != null)
+                {
+                    return string.Format(provider, format, args);
+                }
+
+                return string.Format(format, args);
+            }
+            catch (Exception e)
+            {
+                DebugHelper.WriteException(e);
+            }
+
+            return format;
+        }
+        
         public static string BytesToHex(byte[] bytes)
         {
-            if (bytes == null || bytes.Length == 0)
-            {
-                return string.Empty;
-            }
-
-            return BitConverter.ToString(bytes).Replace("-", string.Empty);
-        }
-
-        public static int CompareVersion(string? v1, string? v2)
-        {
-            if (!Version.TryParse(v1, out Version? version1))
-            {
-                version1 = new Version(0, 0, 0, 0);
-            }
-
-            if (!Version.TryParse(v2, out Version? version2))
-            {
-                version2 = new Version(0, 0, 0, 0);
-            }
-
-            return version1.CompareTo(version2);
-        }
-
-        // Example: "TopLeft" becomes "Top left"
-        // Example2: "Rotate180" becomes "Rotate 180"
-        public static string GetProperName(string name, bool keepCase = false)
-        {
             StringBuilder sb = new StringBuilder();
-
-            bool number = false;
-
-            for (int i = 0; i < name.Length; i++)
+            foreach (byte x in bytes)
             {
-                char c = name[i];
-
-                if (i > 0 && (char.IsUpper(c) || (!number && char.IsNumber(c))))
-                {
-                    sb.Append(' ');
-
-                    if (keepCase)
-                    {
-                        sb.Append(c);
-                    }
-                    else
-                    {
-                        sb.Append(char.ToLowerInvariant(c));
-                    }
-                }
-                else
-                {
-                    sb.Append(c);
-                }
-
-                number = char.IsNumber(c);
+                sb.Append(string.Format("{0:x2}", x));
             }
-
             return sb.ToString();
         }
 
-        public static string GetApplicationVersion()
+        public static byte[] ComputeSHA256(byte[] data)
         {
-            Version? version = Assembly.GetExecutingAssembly().GetName().Version;
-            return version?.ToString() ?? "0.0.0.0";
+            using (HashAlgorithm hashAlgorithm = SHA256.Create())
+            {
+                return hashAlgorithm.ComputeHash(data);
+            }
         }
 
-        public static Size MeasureText(string text, Font font)
+        public static byte[] ComputeSHA256(Stream stream, int bufferSize = 1024 * 32)
         {
-            if (string.IsNullOrEmpty(text) || font == null)
-            {
-                return Size.Empty;
-            }
+            BufferedStream bufferedStream = new BufferedStream(stream, bufferSize);
 
-            using Bitmap bmp = new Bitmap(1, 1);
-            using Graphics g = Graphics.FromImage(bmp);
-            SizeF size = g.MeasureString(text, font);
-            return Size.Ceiling(size);
+            using (HashAlgorithm hashAlgorithm = SHA256.Create())
+            {
+                return hashAlgorithm.ComputeHash(bufferedStream);
+            }
+        }
+
+        public static byte[] ComputeSHA256(string data)
+        {
+            return ComputeSHA256(Encoding.UTF8.GetBytes(data));
+        }
+
+        public static byte[] ComputeHMACSHA256(byte[] data, byte[] key)
+        {
+            using (HMACSHA256 hashAlgorithm = new HMACSHA256(key))
+            {
+                return hashAlgorithm.ComputeHash(data);
+            }
+        }
+
+        public static byte[] ComputeHMACSHA256(string data, string key)
+        {
+            return ComputeHMACSHA256(Encoding.UTF8.GetBytes(data), Encoding.UTF8.GetBytes(key));
+        }
+
+        public static byte[] ComputeHMACSHA256(byte[] data, string key)
+        {
+            return ComputeHMACSHA256(data, Encoding.UTF8.GetBytes(key));
+        }
+
+        public static byte[] ComputeHMACSHA256(string data, byte[] key)
+        {
+            return ComputeHMACSHA256(Encoding.UTF8.GetBytes(data), key);
+        }
+
+        public static T[] GetEnums<T>()
+        {
+            return (T[])Enum.GetValues(typeof(T));
+        }
+        
+        public static string GetProperName(string name, bool keepCase = false)
+        {
+             StringBuilder sb = new StringBuilder();
+
+             bool number = false;
+
+             for (int i = 0; i < name.Length; i++)
+             {
+                 char c = name[i];
+
+                 if (i > 0 && (char.IsUpper(c) || (!number && char.IsNumber(c))))
+                 {
+                     sb.Append(' ');
+
+                     if (keepCase)
+                     {
+                         sb.Append(c);
+                     }
+                     else
+                     {
+                         sb.Append(char.ToLowerInvariant(c));
+                     }
+                 }
+                 else
+                 {
+                     sb.Append(c);
+                 }
+
+                 number = char.IsNumber(c);
+             }
+
+             return sb.ToString();
         }
     }
 }

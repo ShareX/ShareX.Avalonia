@@ -26,7 +26,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using ShareX.Avalonia.Common.Helpers;
 using System.IO;
 using System.Text;
 
@@ -92,7 +91,7 @@ namespace ShareX.Avalonia.Common
         {
             if (!string.IsNullOrEmpty(filePath))
             {
-                FileHelpersLite.CreateDirectoryFromFilePath(filePath);
+                FileHelpers.CreateDirectoryFromFilePath(filePath);
 
                 using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.WriteThrough))
                 {

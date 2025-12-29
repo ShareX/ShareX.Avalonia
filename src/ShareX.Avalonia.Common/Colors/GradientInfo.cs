@@ -48,7 +48,7 @@ namespace ShareX.Avalonia.Common.Colors
         public bool IsVisible => IsValid && Colors.Any(x => x.Color.A > 0);
 
         [JsonIgnore]
-        public bool IsTransparent => IsValid && Colors.Any(x => x.Color.IsTransparent());
+        public bool IsTransparent => IsValid && Colors.Any(x => Extensions.IsTransparent(x.Color));
 
         public GradientInfo() : this(LinearGradientMode.Vertical)
         {

@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using CommonHelpers = ShareX.Avalonia.Common.Helpers.Helpers;
+using CommonHelpers = ShareX.Avalonia.Common.Helpers;
 using System;
 using System.ComponentModel;
 using System.Globalization;

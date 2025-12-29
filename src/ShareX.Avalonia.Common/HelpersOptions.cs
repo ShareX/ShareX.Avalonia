@@ -31,6 +31,7 @@ namespace ShareX.Avalonia.Common
     public static class HelpersOptions
     {
         public static ProxyInfo CurrentProxy { get; } = new ProxyInfo();
+        public static string BrowserPath { get; set; }
         public static Dictionary<string, string> ShareXSpecialFolders { get; } = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
     }
 }

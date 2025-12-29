@@ -30,7 +30,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using ShareX.Avalonia.Common;
 
-namespace ShareX.Avalonia.Common.Helpers
+namespace ShareX.Avalonia.Common
 {
     public static class ColorHelpers
     {

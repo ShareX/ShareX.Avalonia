@@ -29,6 +29,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace ShareX.Avalonia.Common
 {
@@ -374,6 +375,93 @@ namespace ShareX.Avalonia.Common
             }
 
             Directory.CreateDirectory(directoryPath);
+        }
+
+        public static void CreateDirectoryFromFilePath(string filePath)
+        {
+            string directory = Path.GetDirectoryName(filePath);
+
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+        }
+
+        public static string CopyFile(string filePath, string destinationFolder, bool overwrite = true)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath) || string.IsNullOrEmpty(destinationFolder))
+            {
+                return null;
+            }
+
+            string fileName = Path.GetFileName(filePath);
+            string destinationFilePath = Path.Combine(destinationFolder, fileName);
+            Directory.CreateDirectory(destinationFolder);
+            File.Copy(filePath, destinationFilePath, overwrite);
+            return destinationFilePath;
+        }
+
+        public static string BackupFileWeekly(string filePath, string destinationFolder)
+        {
+            if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            {
+                return null;
+            }
+
+            string fileName = Path.GetFileNameWithoutExtension(filePath);
+            DateTime dateTime = DateTime.Now;
+            string extension = Path.GetExtension(filePath);
+            string newFileName = $"{fileName}-{dateTime:yyyy-MM}-W{WeekOfYear(dateTime):00}{extension}";
+            string newFilePath = Path.Combine(destinationFolder, newFileName);
+
+            if (!File.Exists(newFilePath))
+            {
+                Directory.CreateDirectory(destinationFolder);
+                File.Copy(filePath, newFilePath, false);
+                return newFilePath;
+            }
+
+            return null;
+        }
+
+        private static int WeekOfYear(DateTime dateTime)
+        {
+            return CultureInfo.CurrentCulture.Calendar.GetWeekOfYear(dateTime, CalendarWeekRule.FirstDay, DayOfWeek.Monday);
+        }
+
+        public static bool IsFileLocked(string filePath)
+        {
+            try
+            {
+                using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    fs.Close();
+                }
+            }
+            catch (IOException)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static bool DeleteFile(string filePath)
+        {
+             try
+             {
+                 if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+                 {
+                     File.Delete(filePath);
+                     return true;
+                 }
+             }
+             catch (Exception e)
+             {
+                 DebugHelper.WriteException(e);
+             }
+
+             return false;
         }
 
         public static bool OpenFolderWithFile(string filePath)

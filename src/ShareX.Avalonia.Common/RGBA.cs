@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Common.Helpers;
+
 using System.Drawing;
 
 namespace ShareX.Avalonia.Common
