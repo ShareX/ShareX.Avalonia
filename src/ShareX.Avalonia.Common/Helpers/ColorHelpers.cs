@@ -125,30 +125,75 @@ namespace ShareX.Avalonia.Common.Helpers
                 min = color.B;
             }
 
-            hsb.Hue = GetHue(color);
-            hsb.Saturation = max == 0 ? 0 : 1f - (1f * min / max);
-            hsb.Brightness = max / 255f;
+            int diff = max - min;
+
+            hsb.Brightness = (double)max / 255;
+
+            if (max == 0)
+            {
+                hsb.Saturation = 0;
+            }
+            else
+            {
+                hsb.Saturation = (double)diff / max;
+            }
+
+            double q;
+            if (diff == 0)
+            {
+                q = 0;
+            }
+            else
+            {
+                q = (double)60 / diff;
+            }
+
+            if (max == color.R)
+            {
+                if (color.G < color.B)
+                {
+                    hsb.Hue = (360 + (q * (color.G - color.B))) / 360;
+                }
+                else
+                {
+                    hsb.Hue = q * (color.G - color.B) / 360;
+                }
+            }
+            else if (max == color.G)
+            {
+                hsb.Hue = (120 + (q * (color.B - color.R))) / 360;
+            }
+            else if (max == color.B)
+            {
+                hsb.Hue = (240 + (q * (color.R - color.G))) / 360;
+            }
+            else
+            {
+                hsb.Hue = 0.0;
+            }
+
+            hsb.Alpha = color.A;
 
             return hsb;
         }
 
         public static CMYK ColorToCMYK(Color color)
         {
-            float red = color.R / 255f;
-            float green = color.G / 255f;
-            float blue = color.B / 255f;
-
-            float black = Math.Min(1 - red, Math.Min(1 - green, 1 - blue));
-
-            CMYK cmyk = new CMYK
+            if (color.R == 0 && color.G == 0 && color.B == 0)
             {
-                K = black,
-                C = (1 - red - black) / (1 - black),
-                M = (1 - green - black) / (1 - black),
-                Y = (1 - blue - black) / (1 - black)
-            };
+                return new CMYK(0, 0, 0, 1, color.A);
+            }
 
-            return cmyk;
+            double c = 1 - (color.R / 255d);
+            double m = 1 - (color.G / 255d);
+            double y = 1 - (color.B / 255d);
+            double k = Math.Min(c, Math.Min(m, y));
+
+            c = (c - k) / (1 - k);
+            m = (m - k) / (1 - k);
+            y = (y - k) / (1 - k);
+
+            return new CMYK(c, m, y, k, color.A);
         }
 
         public static string ColorToRGBString(Color color)
@@ -170,7 +215,7 @@ namespace ShareX.Avalonia.Common.Helpers
         public static string ColorToCMYKString(Color color)
         {
             CMYK cmyk = ColorToCMYK(color);
-            return string.Format("{0}%, {1}%, {2}%, {3}%", Math.Round(cmyk.C * 100), Math.Round(cmyk.M * 100), Math.Round(cmyk.Y * 100), Math.Round(cmyk.K * 100));
+            return string.Format("{0}%, {1}%, {2}%, {3}%", Math.Round(cmyk.Cyan * 100), Math.Round(cmyk.Magenta * 100), Math.Round(cmyk.Yellow * 100), Math.Round(cmyk.Key * 100));
         }
 
         public static Color HexToColor(string hex, ColorFormat format = ColorFormat.RGB)
@@ -230,88 +275,73 @@ namespace ShareX.Avalonia.Common.Helpers
             return Color.FromArgb(a, r, g, b);
         }
 
+        public static Color HSBToColor(HSB hsb)
+        {
+            int mid;
+            int max = (int)Math.Round(hsb.Brightness * 255);
+            int min = (int)Math.Round((1.0 - hsb.Saturation) * (hsb.Brightness / 1.0) * 255);
+            double q = (double)(max - min) / 255;
+
+            if (hsb.Hue >= 0 && hsb.Hue <= (double)1 / 6)
+            {
+                mid = (int)Math.Round((((hsb.Hue - 0) * q) * 1530) + min);
+                return Color.FromArgb(hsb.Alpha, max, mid, min);
+            }
+
+            if (hsb.Hue <= (double)1 / 3)
+            {
+                mid = (int)Math.Round((-((hsb.Hue - ((double)1 / 6)) * q) * 1530) + max);
+                return Color.FromArgb(hsb.Alpha, mid, max, min);
+            }
+
+            if (hsb.Hue <= 0.5)
+            {
+                mid = (int)Math.Round((((hsb.Hue - ((double)1 / 3)) * q) * 1530) + min);
+                return Color.FromArgb(hsb.Alpha, min, max, mid);
+            }
+
+            if (hsb.Hue <= (double)2 / 3)
+            {
+                mid = (int)Math.Round((-((hsb.Hue - 0.5) * q) * 1530) + max);
+                return Color.FromArgb(hsb.Alpha, min, mid, max);
+            }
+
+            if (hsb.Hue <= (double)5 / 6)
+            {
+                mid = (int)Math.Round((((hsb.Hue - ((double)2 / 3)) * q) * 1530) + min);
+                return Color.FromArgb(hsb.Alpha, mid, min, max);
+            }
+
+            if (hsb.Hue <= 1.0)
+            {
+                mid = (int)Math.Round((-((hsb.Hue - ((double)5 / 6)) * q) * 1530) + max);
+                return Color.FromArgb(hsb.Alpha, max, min, mid);
+            }
+
+            return Color.FromArgb(hsb.Alpha, 0, 0, 0);
+        }
+
         public static Color HSBTColor(HSB hsb)
         {
-            while (hsb.Hue < 0)
-            {
-                hsb.Hue += 360;
-            }
-
-            hsb.Hue %= 360;
-            hsb.Saturation = Math.Min(1, Math.Max(0, hsb.Saturation));
-            hsb.Brightness = Math.Min(1, Math.Max(0, hsb.Brightness));
-
-            if (hsb.Saturation == 0)
-            {
-                return Color.FromArgb(Convert.ToInt32(hsb.Brightness * 255), Convert.ToInt32(hsb.Brightness * 255), Convert.ToInt32(hsb.Brightness * 255));
-            }
-
-            float fMax, fMid, fMin;
-            int iSextant;
-            if (hsb.Hue <= 60)
-            {
-                fMax = hsb.Brightness;
-                fMid = hsb.Hue * hsb.Brightness / 60f;
-                fMin = 0;
-            }
-            else if (hsb.Hue <= 120)
-            {
-                fMax = ((120 - hsb.Hue) * hsb.Brightness / 60f);
-                fMid = hsb.Brightness;
-                fMin = 0;
-            }
-            else if (hsb.Hue <= 180)
-            {
-                fMax = 0;
-                fMid = hsb.Brightness;
-                fMin = ((hsb.Hue - 120) * hsb.Brightness / 60f);
-            }
-            else if (hsb.Hue <= 240)
-            {
-                fMax = 0;
-                fMid = ((240 - hsb.Hue) * hsb.Brightness / 60f);
-                fMin = hsb.Brightness;
-            }
-            else if (hsb.Hue <= 300)
-            {
-                fMax = ((hsb.Hue - 240) * hsb.Brightness / 60f);
-                fMid = 0;
-                fMin = hsb.Brightness;
-            }
-            else
-            {
-                fMax = hsb.Brightness;
-                fMid = 0;
-                fMin = ((360 - hsb.Hue) * hsb.Brightness / 60f);
-            }
-
-            fMid = fMid + fMin;
-            fMax = fMax + fMin;
-
-            iSextant = (int)Math.Floor(hsb.Hue / 60f);
-            switch (iSextant)
-            {
-                case 1:
-                    return Color.FromArgb(Convert.ToInt32(fMid * 255), Convert.ToInt32(fMax * 255), Convert.ToInt32(fMin * 255));
-                case 2:
-                    return Color.FromArgb(Convert.ToInt32(fMin * 255), Convert.ToInt32(fMax * 255), Convert.ToInt32(fMid * 255));
-                case 3:
-                    return Color.FromArgb(Convert.ToInt32(fMin * 255), Convert.ToInt32(fMid * 255), Convert.ToInt32(fMax * 255));
-                case 4:
-                    return Color.FromArgb(Convert.ToInt32(fMid * 255), Convert.ToInt32(fMin * 255), Convert.ToInt32(fMax * 255));
-                case 5:
-                    return Color.FromArgb(Convert.ToInt32(fMax * 255), Convert.ToInt32(fMin * 255), Convert.ToInt32(fMid * 255));
-                default:
-                    return Color.FromArgb(Convert.ToInt32(fMax * 255), Convert.ToInt32(fMid * 255), Convert.ToInt32(fMin * 255));
-            }
+            return HSBToColor(hsb);
         }
 
         public static Color CMYKToColor(CMYK cmyk)
         {
-            return Color.FromArgb(
-                Convert.ToInt32((1 - cmyk.C) * (1 - cmyk.K) * 255),
-                Convert.ToInt32((1 - cmyk.M) * (1 - cmyk.K) * 255),
-                Convert.ToInt32((1 - cmyk.Y) * (1 - cmyk.K) * 255));
+            if (cmyk.Cyan == 0 && cmyk.Magenta == 0 && cmyk.Yellow == 0 && cmyk.Key == 1)
+            {
+                return Color.FromArgb(cmyk.Alpha, 0, 0, 0);
+            }
+
+            double c = (cmyk.Cyan * (1 - cmyk.Key)) + cmyk.Key;
+            double m = (cmyk.Magenta * (1 - cmyk.Key)) + cmyk.Key;
+            double y = (cmyk.Yellow * (1 - cmyk.Key)) + cmyk.Key;
+
+            int r = (int)Math.Round((1 - c) * 255);
+            int g = (int)Math.Round((1 - m) * 255);
+            int b = (int)Math.Round((1 - y) * 255);
+
+            return Color.FromArgb(cmyk.Alpha, r, g, b);
         }
 
         public static Color HexToColorSafe(string hex, ColorFormat format = ColorFormat.RGB)
@@ -346,7 +376,7 @@ namespace ShareX.Avalonia.Common.Helpers
 
         public static Color HSBTColor(float h, float s, float b)
         {
-            return HSBTColor(new HSB(h, s, b));
+            return HSBToColor(new HSB(h, s, b));
         }
 
         public static Color Brightness(Color color, double value)
@@ -493,41 +523,4 @@ namespace ShareX.Avalonia.Common.Helpers
         }
     }
 
-    public class HSB
-    {
-        public HSB()
-        {
-        }
-
-        public HSB(float h, float s, float b)
-        {
-            Hue = h;
-            Saturation = s;
-            Brightness = b;
-        }
-
-        public float Hue { get; set; }
-        public float Saturation { get; set; }
-        public float Brightness { get; set; }
-    }
-
-    public class CMYK
-    {
-        public CMYK()
-        {
-        }
-
-        public CMYK(float c, float m, float y, float k)
-        {
-            C = c;
-            M = m;
-            Y = y;
-            K = k;
-        }
-
-        public float C { get; set; }
-        public float M { get; set; }
-        public float Y { get; set; }
-        public float K { get; set; }
-    }
 }

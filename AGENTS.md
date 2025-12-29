@@ -147,7 +147,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] CaptureHelpers.cs
 - [ ] ClipboardHelpers.cs
 - [ ] ClipboardHelpersEx.cs
-- [ ] CMYK.cs
+- [x] CMYK.cs
 - [ ] ColorBgra.cs
 - [ ] ColorBox.cs
 - [ ] ColorEventHandler.cs
@@ -184,7 +184,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] GraphicsQualityManager.cs
 - [ ] GrayscaleQuantizer.cs
 - [ ] HotkeyInfo.cs
-- [ ] HSB.cs
+- [x] HSB.cs
 - [x] HttpClientFactory.cs
 - [ ] ImageFilesCache.cs
 - [ ] InputHelpers.cs
