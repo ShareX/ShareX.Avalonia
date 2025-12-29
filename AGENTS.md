@@ -256,7 +256,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] ExternalProgram.cs
 - [ ] FFmpegUpdateChecker.cs
 - [x] FileDownloader.cs
-- [ ] FileHelpersLite.cs
+- [x] FileHelpersLite.cs
 - [x] FontSafe.cs
 - [x] GifClass.cs
 - [ ] GitHubUpdateChecker.cs
@@ -266,6 +266,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] GraphicsPathExtensions.cs
 - [x] GraphicsQualityManager.cs
 - [x] GrayscaleQuantizer.cs
+- [x] Helpers.cs
 - [ ] HotkeyInfo.cs
 - [x] HSB.cs
 - [x] HttpClientFactory.cs
@@ -294,6 +295,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] PrintTextHelper.cs
 - [ ] PropertyExtensions.cs
 - [x] Quantizer.cs
+- [x] RandomCrypto.cs
 - [x] RegistryHelpers.cs
 - [x] RGBA.cs
 - [x] SafeStringEnumConverter.cs
@@ -308,6 +310,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] TimerResolutionManager.cs
 - [ ] UnsafeBitmap.cs
 - [ ] UpdateChecker.cs
+- [x] URLHelpers.cs
 - [ ] WshShell.cs
 - [x] XmlColor.cs
 - [x] XmlFont.cs
