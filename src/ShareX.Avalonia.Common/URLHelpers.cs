@@ -34,6 +34,8 @@ namespace ShareX.Avalonia.Common
 {
     public static class URLHelpers
     {
+        private static readonly string[] URLPrefixes = new[] { "http://", "https://", "ftp://", "ftps://", "file://", "//" };
+
         public static string ForcePrefix(string? url)
         {
             if (string.IsNullOrWhiteSpace(url))
@@ -115,6 +117,24 @@ namespace ShareX.Avalonia.Common
             }
 
             return combined;
+        }
+
+        public static string RemovePrefixes(string? url)
+        {
+            if (string.IsNullOrEmpty(url))
+            {
+                return string.Empty;
+            }
+
+            foreach (string prefix in URLPrefixes)
+            {
+                if (url.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return url.Substring(prefix.Length);
+                }
+            }
+
+            return url;
         }
 
         public static string CreateQueryString(string url, NameValueCollection args)

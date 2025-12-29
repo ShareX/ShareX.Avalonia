@@ -132,7 +132,7 @@ namespace ShareX.UploadersLib.FileUploaders
                 HttpHomePathAutoAddSubFolderPath = false;
             }
 
-            string httpHomePath = StripProtocolPrefixes(HttpHomePath);
+            string httpHomePath = URLHelpers.RemovePrefixes(HttpHomePath);
 
             return NameParser.Parse(NameParserType.URL, httpHomePath.Replace("%host", FileHelpers.ExpandFolderVariables(LocalhostRoot)));
         }
@@ -225,26 +225,6 @@ namespace ShareX.UploadersLib.FileUploaders
         object ICloneable.Clone()
         {
             return Clone();
-        }
-
-        private static string StripProtocolPrefixes(string value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return string.Empty;
-            }
-
-            if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            {
-                return value.Substring("http://".Length);
-            }
-
-            if (value.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            {
-                return value.Substring("https://".Length);
-            }
-
-            return value;
         }
     }
 
