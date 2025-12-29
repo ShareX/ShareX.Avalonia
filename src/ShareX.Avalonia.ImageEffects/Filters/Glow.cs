@@ -1,0 +1,109 @@
+#region License Information (GPL v3)
+
+/*
+    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    Copyright (c) 2007-2025 ShareX Team
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
+*/
+
+#endregion License Information (GPL v3)
+
+using ShareX.Avalonia.ImageEffects.Helpers;
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using DrawingPoint = System.Drawing.Point;
+
+namespace ShareX.Avalonia.ImageEffects
+{
+    [Description("Glow")]
+    public class Glow : ImageEffect
+    {
+        private static readonly Random Random = new Random();
+        private int size;
+        private float strength;
+
+        [DefaultValue(20)]
+        public int Size
+        {
+            get => size;
+            set => size = Math.Max(0, value);
+        }
+
+        [DefaultValue(1f)]
+        public float Strength
+        {
+            get => strength;
+            set => strength = Math.Max(0.1f, value);
+        }
+
+        [DefaultValue(typeof(Color), "White")]
+        public Color Color { get; set; }
+
+        [DefaultValue(false)]
+        public bool UseGradient { get; set; }
+
+        public GradientInfo Gradient { get; set; }
+
+        [DefaultValue(typeof(DrawingPoint), "0, 0")]
+        public DrawingPoint Offset { get; set; }
+
+        public Glow()
+        {
+            this.ApplyDefaultPropertyValues();
+            Gradient = CreateDefaultGradient();
+        }
+
+        public override Bitmap Apply(Bitmap bmp)
+        {
+            return ImageEffectsProcessing.AddGlow(bmp, Size, Strength, Color, Offset, UseGradient ? Gradient : null);
+        }
+
+        protected override string GetSummary()
+        {
+            return Size.ToString();
+        }
+
+        private static GradientInfo CreateDefaultGradient()
+        {
+            GradientInfo gradientInfo = new GradientInfo
+            {
+                Type = LinearGradientMode.ForwardDiagonal
+            };
+
+            switch (Random.Next(0, 3))
+            {
+                case 0:
+                    gradientInfo.Colors.Add(new GradientStop(Color.FromArgb(0, 187, 138), 0f));
+                    gradientInfo.Colors.Add(new GradientStop(Color.FromArgb(0, 105, 163), 100f));
+                    break;
+                case 1:
+                    gradientInfo.Colors.Add(new GradientStop(Color.FromArgb(255, 3, 135), 0f));
+                    gradientInfo.Colors.Add(new GradientStop(Color.FromArgb(255, 143, 3), 100f));
+                    break;
+                default:
+                    gradientInfo.Colors.Add(new GradientStop(Color.FromArgb(184, 11, 195), 0f));
+                    gradientInfo.Colors.Add(new GradientStop(Color.FromArgb(98, 54, 255), 100f));
+                    break;
+            }
+
+            return gradientInfo;
+        }
+    }
+}

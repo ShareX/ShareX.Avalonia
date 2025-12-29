@@ -25,9 +25,11 @@
 
 using ShareX.Avalonia.Common;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using DrawingPoint = System.Drawing.Point;
 
 namespace ShareX.Avalonia.ImageEffects.Helpers
 {
@@ -181,6 +183,52 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             return result;
         }
 
+        public static Bitmap Slice(Bitmap bmp, int minSliceHeight, int maxSliceHeight, int minSliceShift, int maxSliceShift)
+        {
+            if (minSliceHeight < 1 || maxSliceHeight < 1)
+            {
+                throw new ArgumentOutOfRangeException(nameof(minSliceHeight));
+            }
+
+            if (minSliceShift < 0 || maxSliceShift < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(minSliceShift));
+            }
+
+            if (maxSliceHeight < minSliceHeight)
+            {
+                throw new ArgumentOutOfRangeException(nameof(maxSliceHeight));
+            }
+
+            Bitmap bmpResult = bmp.CreateEmptyBitmap();
+
+            using (Graphics g = Graphics.FromImage(bmpResult))
+            {
+                int y = 0;
+
+                while (y < bmp.Height)
+                {
+                    Rectangle sourceRect = new Rectangle(0, y, bmp.Width, RandomFast.Next(minSliceHeight, maxSliceHeight));
+                    Rectangle destRect = sourceRect;
+
+                    if (RandomFast.Next(1) == 0)
+                    {
+                        destRect.X = RandomFast.Next(-maxSliceShift, -minSliceShift);
+                    }
+                    else
+                    {
+                        destRect.X = RandomFast.Next(minSliceShift, maxSliceShift);
+                    }
+
+                    g.DrawImage(bmp, destRect, sourceRect, GraphicsUnit.Pixel);
+
+                    y += sourceRect.Height;
+                }
+            }
+
+            return bmpResult;
+        }
+
         public static Bitmap AddCanvas(Image img, CanvasMargin margin, Color canvasColor)
         {
             if (margin.Horizontal == 0 && margin.Vertical == 0)
@@ -232,6 +280,142 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             }
 
             return bmp;
+        }
+
+        public static Bitmap CreateGradientMask(Bitmap bmp, GradientInfo gradient, float opacity = 1f)
+        {
+            Bitmap mask = (Bitmap)bmp.Clone();
+
+            if (opacity <= 0 || gradient == null || !gradient.IsValid)
+            {
+                return mask;
+            }
+
+            gradient.Draw(mask);
+
+            using (UnsafeBitmap bmpSource = new UnsafeBitmap(bmp, true, ImageLockMode.ReadOnly))
+            using (UnsafeBitmap bmpMask = new UnsafeBitmap(mask, true, ImageLockMode.ReadWrite))
+            {
+                int pixelCount = bmpSource.PixelCount;
+
+                for (int i = 0; i < pixelCount; i++)
+                {
+                    ColorBgra sourceColor = bmpSource.GetPixel(i);
+                    ColorBgra maskColor = bmpMask.GetPixel(i);
+                    maskColor.Alpha = (byte)Math.Min(255, sourceColor.Alpha * (maskColor.Alpha / 255f) * opacity);
+                    bmpMask.SetPixel(i, maskColor);
+                }
+            }
+
+            return mask;
+        }
+
+        public static Bitmap AddGlow(Bitmap bmp, int size, float strength, Color color, DrawingPoint offset, GradientInfo? gradient = null)
+        {
+            if (size < 0 || strength < 0.1f)
+            {
+                return bmp;
+            }
+
+            Bitmap bmpBlur = null;
+            Bitmap bmpMask = null;
+
+            try
+            {
+                if (size > 0)
+                {
+                    bmpBlur = AddCanvas(bmp, new CanvasMargin(size), Color.Transparent) ?? bmp;
+                    BoxBlur(bmpBlur, size);
+                }
+                else
+                {
+                    bmpBlur = bmp;
+                }
+
+                if (gradient != null && gradient.IsValid)
+                {
+                    bmpMask = CreateGradientMask(bmpBlur, gradient, strength);
+                }
+                else
+                {
+                    bmpMask = ColorMatrixManager.Mask(strength, color).Apply(bmpBlur);
+                }
+
+                Bitmap bmpResult = bmpMask.CreateEmptyBitmap(Math.Abs(offset.X), Math.Abs(offset.Y));
+
+                using (Graphics g = Graphics.FromImage(bmpResult))
+                {
+                    g.DrawImage(bmpMask, Math.Max(0, offset.X), Math.Max(0, offset.Y), bmpMask.Width, bmpMask.Height);
+                    g.DrawImage(bmp, Math.Max(size, -offset.X + size), Math.Max(size, -offset.Y + size), bmp.Width, bmp.Height);
+                }
+
+                return bmpResult;
+            }
+            finally
+            {
+                bmp?.Dispose();
+                bmpBlur?.Dispose();
+                bmpMask?.Dispose();
+            }
+        }
+
+        public static Bitmap AddShadow(Bitmap bmp, float opacity, int size)
+        {
+            return AddShadow(bmp, opacity, size, 1, Color.Black, new DrawingPoint(0, 0));
+        }
+
+        public static Bitmap AddShadow(Bitmap bmp, float opacity, int size, float darkness, Color color, DrawingPoint offset, bool autoResize = true)
+        {
+            Bitmap bmpShadow = null;
+
+            try
+            {
+                bmpShadow = bmp.CreateEmptyBitmap(size * 2, size * 2);
+                Rectangle shadowRectangle = new Rectangle(size, size, bmp.Width, bmp.Height);
+                ColorMatrixManager.Mask(opacity, color).Apply(bmp, bmpShadow, shadowRectangle);
+
+                if (size > 0)
+                {
+                    BoxBlur(bmpShadow, size);
+                }
+
+                if (darkness > 1)
+                {
+                    Bitmap shadowImage2 = ColorMatrixManager.Alpha(darkness).Apply(bmpShadow);
+                    bmpShadow.Dispose();
+                    bmpShadow = shadowImage2;
+                }
+
+                Bitmap bmpResult;
+
+                if (autoResize)
+                {
+                    bmpResult = bmpShadow.CreateEmptyBitmap(Math.Abs(offset.X), Math.Abs(offset.Y));
+
+                    using (Graphics g = Graphics.FromImage(bmpResult))
+                    {
+                        g.DrawImage(bmpShadow, Math.Max(0, offset.X), Math.Max(0, offset.Y), bmpShadow.Width, bmpShadow.Height);
+                        g.DrawImage(bmp, Math.Max(size, -offset.X + size), Math.Max(size, -offset.Y + size), bmp.Width, bmp.Height);
+                    }
+                }
+                else
+                {
+                    bmpResult = bmp.CreateEmptyBitmap();
+
+                    using (Graphics g = Graphics.FromImage(bmpResult))
+                    {
+                        g.DrawImage(bmpShadow, -size + offset.X, -size + offset.Y, bmpShadow.Width, bmpShadow.Height);
+                        g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                    }
+                }
+
+                return bmpResult;
+            }
+            finally
+            {
+                bmp?.Dispose();
+                bmpShadow?.Dispose();
+            }
         }
 
         [Flags]
@@ -433,6 +617,266 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             return rotated;
         }
 
+        public static Bitmap AddReflection(Image img, int percentage, int maxAlpha, int minAlpha)
+        {
+            percentage = MathHelpers.Clamp(percentage, 1, 100);
+            maxAlpha = MathHelpers.Clamp(maxAlpha, 0, 255);
+            minAlpha = MathHelpers.Clamp(minAlpha, 0, 255);
+
+            Bitmap reflection;
+
+            using (Bitmap bitmapRotate = (Bitmap)img.Clone())
+            {
+                bitmapRotate.RotateFlip(RotateFlipType.RotateNoneFlipY);
+                reflection = bitmapRotate.Clone(new Rectangle(0, 0, bitmapRotate.Width, (int)(bitmapRotate.Height * ((float)percentage / 100))), PixelFormat.Format32bppArgb);
+            }
+
+            using (reflection)
+            {
+                Bitmap result = new Bitmap(reflection.Width, reflection.Height, PixelFormat.Format32bppArgb);
+                ColorMatrix opacityMatrix = new ColorMatrix
+                {
+                    Matrix33 = 0
+                };
+
+                float alpha = maxAlpha - ((float)(maxAlpha - minAlpha) / reflection.Height);
+                float addValue = (float)(maxAlpha - minAlpha) / reflection.Height;
+
+                using (Graphics g = Graphics.FromImage(result))
+                {
+                    g.SetHighQuality();
+                    g.Clear(Color.Transparent);
+                    for (int i = 0; i < reflection.Height; i++)
+                    {
+                        opacityMatrix.Matrix33 = alpha / 255;
+
+                        alpha -= addValue;
+
+                        ImageAttributes ia = new ImageAttributes();
+                        ia.SetColorMatrix(opacityMatrix);
+                        g.DrawImage(reflection, new Rectangle(0, i, reflection.Width, 1), 0, i, reflection.Width, 1, GraphicsUnit.Pixel, ia);
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        public static Bitmap DrawReflection(Bitmap bmp, int percentage, int maxAlpha, int minAlpha, int offset, bool skew, int skewSize)
+        {
+            Bitmap reflection = AddReflection(bmp, percentage, maxAlpha, minAlpha);
+
+            if (skew)
+            {
+                reflection = AddSkew(reflection, skewSize, 0);
+            }
+
+            Bitmap bmpResult = new Bitmap(reflection.Width, bmp.Height + reflection.Height + offset);
+
+            using (bmp)
+            using (reflection)
+            using (Graphics g = Graphics.FromImage(bmpResult))
+            {
+                g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                g.DrawImage(reflection, 0, bmp.Height + offset, reflection.Width, reflection.Height);
+            }
+
+            return bmpResult;
+        }
+
+        public static Bitmap WavyEdges(Bitmap bmp, int waveDepth, int waveRange, AnchorSides sides, Color backgroundColor)
+        {
+            if (waveDepth < 1 || waveRange < 1 || sides == AnchorSides.None)
+            {
+                return bmp;
+            }
+
+            List<DrawingPoint> points = new List<DrawingPoint>();
+
+            int horizontalWaveCount = Math.Max(2, (bmp.Width / waveRange + 1) / 2 * 2) - 1;
+            int verticalWaveCount = Math.Max(2, (bmp.Height / waveRange + 1) / 2 * 2) - 1;
+            int horizontalWaveRange = bmp.Width / horizontalWaveCount;
+            int verticalWaveRange = bmp.Height / verticalWaveCount;
+
+            int step = Math.Min(Math.Max(1, waveRange / waveDepth), 10);
+
+            int WaveFunc(int t, int max, int depth) => (int)((1 - Math.Cos(t * Math.PI / max)) * depth / 2);
+
+            if (sides.HasFlag(AnchorSides.Top))
+            {
+                int startX = sides.HasFlag(AnchorSides.Left) ? waveDepth : 0;
+                int endX = sides.HasFlag(AnchorSides.Right) ? bmp.Width - waveDepth : bmp.Width;
+                for (int x = startX; x < endX; x += step)
+                {
+                    points.Add(new DrawingPoint(x, WaveFunc(x, horizontalWaveRange, waveDepth)));
+                }
+                points.Add(new DrawingPoint(endX, WaveFunc(endX, horizontalWaveRange, waveDepth)));
+            }
+            else
+            {
+                points.Add(new DrawingPoint(0, 0));
+            }
+
+            if (sides.HasFlag(AnchorSides.Right))
+            {
+                int startY = sides.HasFlag(AnchorSides.Top) ? waveDepth : 0;
+                int endY = sides.HasFlag(AnchorSides.Bottom) ? bmp.Height - waveDepth : bmp.Height;
+                for (int y = startY; y < endY; y += step)
+                {
+                    points.Add(new DrawingPoint(bmp.Width - waveDepth + WaveFunc(y, verticalWaveRange, waveDepth), y));
+                }
+                points.Add(new DrawingPoint(bmp.Width - waveDepth + WaveFunc(endY, verticalWaveRange, waveDepth), endY));
+            }
+            else
+            {
+                points.Add(new DrawingPoint(bmp.Width, points[^1].Y));
+            }
+
+            if (sides.HasFlag(AnchorSides.Bottom))
+            {
+                int startX = sides.HasFlag(AnchorSides.Right) ? bmp.Width - waveDepth : bmp.Width;
+                int endX = sides.HasFlag(AnchorSides.Left) ? waveDepth : 0;
+                for (int x = startX; x >= endX; x -= step)
+                {
+                    points.Add(new DrawingPoint(x, bmp.Height - waveDepth + WaveFunc(x, horizontalWaveRange, waveDepth)));
+                }
+            }
+            else
+            {
+                points.Add(new DrawingPoint(points[^1].X, bmp.Height));
+            }
+
+            if (sides.HasFlag(AnchorSides.Left))
+            {
+                int startY = sides.HasFlag(AnchorSides.Bottom) ? bmp.Height - waveDepth : bmp.Height;
+                int endY = sides.HasFlag(AnchorSides.Top) ? waveDepth : 0;
+                for (int y = startY; y >= endY; y -= step)
+                {
+                    points.Add(new DrawingPoint(waveDepth - WaveFunc(y, verticalWaveRange, waveDepth), y));
+                }
+            }
+            else
+            {
+                points.Add(new DrawingPoint(0, points[^1].Y));
+            }
+
+            if (!sides.HasFlag(AnchorSides.Top))
+            {
+                points[0] = new DrawingPoint(points[^1].X, 0);
+            }
+
+            Bitmap bmpResult = bmp.CreateEmptyBitmap();
+
+            using (bmp)
+            using (Graphics g = Graphics.FromImage(bmpResult))
+            using (TextureBrush brush = new TextureBrush(bmp))
+            {
+                if (backgroundColor.A > 0)
+                {
+                    g.Clear(backgroundColor);
+                }
+
+                g.SetHighQuality();
+                g.PixelOffsetMode = PixelOffsetMode.Half;
+
+                g.FillPolygon(brush, points.ToArray());
+            }
+
+            return bmpResult;
+        }
+
+        public static Bitmap TornEdges(Bitmap bmp, int tornDepth, int tornRange, AnchorSides sides, bool curvedEdges, bool random, Color backgroundColor)
+        {
+            if (tornDepth < 1 || tornRange < 1 || sides == AnchorSides.None)
+            {
+                return bmp;
+            }
+
+            List<DrawingPoint> points = new List<DrawingPoint>();
+
+            int horizontalTornCount = bmp.Width / tornRange;
+            int verticalTornCount = bmp.Height / tornRange;
+
+            if (horizontalTornCount < 2 && verticalTornCount < 2)
+            {
+                points.Add(new DrawingPoint(0, 0));
+                points.Add(new DrawingPoint(bmp.Width, 0));
+            }
+
+            if (sides.HasFlag(AnchorSides.Right) && verticalTornCount > 1)
+            {
+                int startY = (sides.HasFlag(AnchorSides.Top) && horizontalTornCount > 1) ? tornDepth : 0;
+                int endY = (sides.HasFlag(AnchorSides.Bottom) && horizontalTornCount > 1) ? bmp.Height - tornDepth : bmp.Height;
+                for (int y = startY; y < endY; y += tornRange)
+                {
+                    int x = random ? RandomFast.Next(0, tornDepth) : ((y / tornRange) & 1) * tornDepth;
+                    points.Add(new DrawingPoint(bmp.Width - tornDepth + x, y));
+                }
+            }
+            else
+            {
+                points.Add(new DrawingPoint(bmp.Width, 0));
+                points.Add(new DrawingPoint(bmp.Width, bmp.Height));
+            }
+
+            if (sides.HasFlag(AnchorSides.Bottom) && horizontalTornCount > 1)
+            {
+                int startX = (sides.HasFlag(AnchorSides.Right) && verticalTornCount > 1) ? bmp.Width - tornDepth : bmp.Width;
+                int endX = (sides.HasFlag(AnchorSides.Left) && verticalTornCount > 1) ? tornDepth : 0;
+                for (int x = startX; x >= endX; x = (x / tornRange - 1) * tornRange)
+                {
+                    int y = random ? RandomFast.Next(0, tornDepth) : ((x / tornRange) & 1) * tornDepth;
+                    points.Add(new DrawingPoint(x, bmp.Height - tornDepth + y));
+                }
+            }
+            else
+            {
+                points.Add(new DrawingPoint(bmp.Width, bmp.Height));
+                points.Add(new DrawingPoint(0, bmp.Height));
+            }
+
+            if (sides.HasFlag(AnchorSides.Left) && verticalTornCount > 1)
+            {
+                int startY = (sides.HasFlag(AnchorSides.Bottom) && horizontalTornCount > 1) ? bmp.Height - tornDepth : bmp.Height;
+                int endY = (sides.HasFlag(AnchorSides.Top) && horizontalTornCount > 1) ? tornDepth : 0;
+                for (int y = startY; y >= endY; y = (y / tornRange - 1) * tornRange)
+                {
+                    int x = random ? RandomFast.Next(0, tornDepth) : ((y / tornRange) & 1) * tornDepth;
+                    points.Add(new DrawingPoint(x, y));
+                }
+            }
+            else
+            {
+                points.Add(new DrawingPoint(0, bmp.Height));
+                points.Add(new DrawingPoint(0, 0));
+            }
+
+            Bitmap bmpResult = bmp.CreateEmptyBitmap();
+
+            using (bmp)
+            using (Graphics g = Graphics.FromImage(bmpResult))
+            using (TextureBrush brush = new TextureBrush(bmp))
+            {
+                if (backgroundColor.A > 0)
+                {
+                    g.Clear(backgroundColor);
+                }
+
+                if (curvedEdges)
+                {
+                    g.SetHighQuality();
+                    g.PixelOffsetMode = PixelOffsetMode.Half;
+                    g.FillClosedCurve(brush, points.ToArray());
+                }
+                else
+                {
+                    g.FillPolygon(brush, points.ToArray());
+                }
+            }
+
+            return bmpResult;
+        }
+
         public static Bitmap AddSkew(Image img, int x, int y)
         {
             Bitmap result = img.CreateEmptyBitmap(Math.Abs(x), Math.Abs(y));
@@ -519,6 +963,61 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             return bmpResult;
         }
 
+        public static Bitmap Outline(Bitmap bmp, int borderSize, Color borderColor, int padding = 0, bool outlineOnly = false)
+        {
+            Bitmap outline = MakeOutline(bmp, padding, padding + borderSize + 1, borderColor);
+
+            if (outlineOnly)
+            {
+                bmp.Dispose();
+                return outline;
+            }
+
+            using (outline)
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.DrawImage(outline, 0, 0, outline.Width, outline.Height);
+            }
+
+            return bmp;
+        }
+
+        public static Bitmap MakeOutline(Bitmap bmp, int minRadius, int maxRadius, Color color)
+        {
+            Bitmap bmpResult = bmp.CreateEmptyBitmap();
+
+            using (UnsafeBitmap source = new UnsafeBitmap(bmp, true, ImageLockMode.ReadOnly))
+            using (UnsafeBitmap dest = new UnsafeBitmap(bmpResult, true, ImageLockMode.WriteOnly))
+            {
+                for (int x = 0; x < source.Width; x++)
+                {
+                    for (int y = 0; y < source.Height; y++)
+                    {
+                        float dist = DistanceToThreshold(source, x, y, maxRadius, 255);
+
+                        if (dist > minRadius && dist < maxRadius)
+                        {
+                            byte alpha = 255;
+
+                            if (dist - minRadius < 1)
+                            {
+                                alpha = (byte)(255 * (dist - minRadius));
+                            }
+                            else if (maxRadius - dist < 1)
+                            {
+                                alpha = (byte)(255 * (maxRadius - dist));
+                            }
+
+                            ColorBgra bgra = new ColorBgra(color.B, color.G, color.R, alpha);
+                            dest.SetPixel(x, y, bgra);
+                        }
+                    }
+                }
+            }
+
+            return bmpResult;
+        }
+
         public static Bitmap RoundedCorners(Bitmap bmp, int cornerRadius)
         {
             Bitmap bmpResult = bmp.CreateEmptyBitmap();
@@ -569,6 +1068,36 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             }
 
             return new Size(newWidth, newHeight);
+        }
+
+        private static float DistanceToThreshold(UnsafeBitmap unsafeBitmap, int x, int y, int radius, int threshold)
+        {
+            int minx = Math.Max(x - radius, 0);
+            int maxx = Math.Min(x + radius, unsafeBitmap.Width - 1);
+            int miny = Math.Max(y - radius, 0);
+            int maxy = Math.Min(y + radius, unsafeBitmap.Height - 1);
+            int dist2 = (radius * radius) + 1;
+
+            for (int tx = minx; tx <= maxx; tx++)
+            {
+                for (int ty = miny; ty <= maxy; ty++)
+                {
+                    ColorBgra color = unsafeBitmap.GetPixel(tx, ty);
+
+                    if (color.Alpha >= threshold)
+                    {
+                        int dx = tx - x;
+                        int dy = ty - y;
+                        int testDist2 = (dx * dx) + (dy * dy);
+                        if (testDist2 < dist2)
+                        {
+                            dist2 = testDist2;
+                        }
+                    }
+                }
+            }
+
+            return (float)Math.Sqrt(dist2);
         }
 
         private static void AddRoundedRectangle(GraphicsPath graphicsPath, RectangleF rect, float radius)
