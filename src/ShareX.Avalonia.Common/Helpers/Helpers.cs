@@ -110,6 +110,42 @@ namespace ShareX.Avalonia.Common.Helpers
             return version1.CompareTo(version2);
         }
 
+        // Example: "TopLeft" becomes "Top left"
+        // Example2: "Rotate180" becomes "Rotate 180"
+        public static string GetProperName(string name, bool keepCase = false)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            bool number = false;
+
+            for (int i = 0; i < name.Length; i++)
+            {
+                char c = name[i];
+
+                if (i > 0 && (char.IsUpper(c) || (!number && char.IsNumber(c))))
+                {
+                    sb.Append(' ');
+
+                    if (keepCase)
+                    {
+                        sb.Append(c);
+                    }
+                    else
+                    {
+                        sb.Append(char.ToLowerInvariant(c));
+                    }
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+
+                number = char.IsNumber(c);
+            }
+
+            return sb.ToString();
+        }
+
         public static string GetApplicationVersion()
         {
             Version? version = Assembly.GetExecutingAssembly().GetName().Version;
