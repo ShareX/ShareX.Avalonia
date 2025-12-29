@@ -220,7 +220,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] ShareXTheme.cs
 - [ ] ShortcutHelpers.cs
 - [ ] SingleInstanceManager.cs
-- [ ] StringCollectionToStringTypeConverter.cs
+- [x] StringCollectionToStringTypeConverter.cs
 - [ ] TaskbarManager.cs
 - [ ] TimerResolutionManager.cs
 - [ ] UnsafeBitmap.cs
