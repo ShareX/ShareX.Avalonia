@@ -181,6 +181,208 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             return result;
         }
 
+        public static Bitmap AddCanvas(Image img, CanvasMargin margin, Color canvasColor)
+        {
+            if (margin.Horizontal == 0 && margin.Vertical == 0)
+            {
+                return null;
+            }
+
+            int width = img.Width + margin.Horizontal;
+            int height = img.Height + margin.Vertical;
+
+            if (width < 1 || height < 1)
+            {
+                return null;
+            }
+
+            Bitmap bmp = img.CreateEmptyBitmap(margin.Horizontal, margin.Vertical);
+
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.DrawImage(img, margin.Left, margin.Top, img.Width, img.Height);
+
+                if (canvasColor.A > 0)
+                {
+                    g.CompositingMode = CompositingMode.SourceCopy;
+
+                    using (Brush brush = new SolidBrush(canvasColor))
+                    {
+                        if (margin.Left > 0)
+                        {
+                            g.FillRectangle(brush, 0, 0, margin.Left, bmp.Height);
+                        }
+
+                        if (margin.Top > 0)
+                        {
+                            g.FillRectangle(brush, 0, 0, bmp.Width, margin.Top);
+                        }
+
+                        if (margin.Right > 0)
+                        {
+                            g.FillRectangle(brush, bmp.Width - margin.Right, 0, margin.Right, bmp.Height);
+                        }
+
+                        if (margin.Bottom > 0)
+                        {
+                            g.FillRectangle(brush, 0, bmp.Height - margin.Bottom, bmp.Width, margin.Bottom);
+                        }
+                    }
+                }
+            }
+
+            return bmp;
+        }
+
+        [Flags]
+        public enum AnchorSides
+        {
+            None = 0,
+            Left = 1,
+            Top = 2,
+            Right = 4,
+            Bottom = 8,
+            All = Left | Top | Right | Bottom
+        }
+
+        public static Rectangle FindAutoCropRectangle(Bitmap bmp, bool sameColorCrop = false, AnchorSides sides = AnchorSides.All)
+        {
+            Rectangle source = new Rectangle(0, 0, bmp.Width, bmp.Height);
+
+            if (sides == AnchorSides.None)
+            {
+                return source;
+            }
+
+            Rectangle crop = source;
+
+            using (UnsafeBitmap unsafeBitmap = new UnsafeBitmap(bmp, true, ImageLockMode.ReadOnly))
+            {
+                bool leave = false;
+
+                ColorBgra checkColor = unsafeBitmap.GetPixel(0, 0);
+                uint mask = checkColor.Alpha == 0 ? 0xFF000000 : 0xFFFFFFFF;
+                uint check = checkColor.Bgra & mask;
+
+                if (sides.HasFlag(AnchorSides.Left))
+                {
+                    for (int x = 0; x < bmp.Width && !leave; x++)
+                    {
+                        for (int y = 0; y < bmp.Height; y++)
+                        {
+                            if ((unsafeBitmap.GetPixel(x, y).Bgra & mask) != check)
+                            {
+                                crop.X = x;
+                                crop.Width -= x;
+                                leave = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!leave)
+                    {
+                        return crop;
+                    }
+
+                    leave = false;
+                }
+
+                if (sides.HasFlag(AnchorSides.Top))
+                {
+                    for (int y = 0; y < bmp.Height && !leave; y++)
+                    {
+                        for (int x = 0; x < bmp.Width; x++)
+                        {
+                            if ((unsafeBitmap.GetPixel(x, y).Bgra & mask) != check)
+                            {
+                                crop.Y = y;
+                                crop.Height -= y;
+                                leave = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (!sameColorCrop)
+                {
+                    checkColor = unsafeBitmap.GetPixel(bmp.Width - 1, bmp.Height - 1);
+                    mask = checkColor.Alpha == 0 ? 0xFF000000 : 0xFFFFFFFF;
+                    check = checkColor.Bgra & mask;
+                }
+
+                if (sides.HasFlag(AnchorSides.Right))
+                {
+                    leave = false;
+                    for (int x = bmp.Width - 1; x >= 0 && !leave; x--)
+                    {
+                        for (int y = 0; y < bmp.Height; y++)
+                        {
+                            if ((unsafeBitmap.GetPixel(x, y).Bgra & mask) != check)
+                            {
+                                crop.Width = x - crop.X + 1;
+                                leave = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (sides.HasFlag(AnchorSides.Bottom))
+                {
+                    leave = false;
+                    for (int y = bmp.Height - 1; y >= 0 && !leave; y--)
+                    {
+                        for (int x = 0; x < bmp.Width; x++)
+                        {
+                            if ((unsafeBitmap.GetPixel(x, y).Bgra & mask) != check)
+                            {
+                                crop.Height = y - crop.Y + 1;
+                                leave = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return crop;
+        }
+
+        public static Bitmap AutoCropImage(Bitmap bmp, bool sameColorCrop, AnchorSides sides, int padding)
+        {
+            Rectangle source = new Rectangle(0, 0, bmp.Width, bmp.Height);
+            Rectangle crop = FindAutoCropRectangle(bmp, sameColorCrop, sides);
+
+            if (source == crop)
+            {
+                return bmp;
+            }
+
+            Bitmap croppedBitmap = CropBitmap(bmp, crop);
+
+            if (croppedBitmap == null)
+            {
+                return bmp;
+            }
+
+            using (bmp)
+            {
+                if (padding > 0)
+                {
+                    using (croppedBitmap)
+                    {
+                        Color color = bmp.GetPixel(0, 0);
+                        Bitmap padded = AddCanvas(croppedBitmap, new CanvasMargin(padding), color);
+                        return padded ?? bmp;
+                    }
+                }
+
+                return croppedBitmap;
+            }
+        }
+
         public static Bitmap RotateImage(Bitmap bmp, float angle, bool upsize, bool clip)
         {
             if (angle == 0)
@@ -229,6 +431,30 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             }
 
             return rotated;
+        }
+
+        public static Bitmap AddSkew(Image img, int x, int y)
+        {
+            Bitmap result = img.CreateEmptyBitmap(Math.Abs(x), Math.Abs(y));
+
+            using (img)
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                g.SetHighQuality();
+                int startX = -Math.Min(0, x);
+                int startY = -Math.Min(0, y);
+                int endX = Math.Max(0, x);
+                int endY = Math.Max(0, y);
+                System.Drawing.Point[] destinationPoints =
+                {
+                    new System.Drawing.Point(startX, startY),
+                    new System.Drawing.Point(startX + img.Width - 1, endY),
+                    new System.Drawing.Point(endX, startY + img.Height - 1)
+                };
+                g.DrawImage(img, destinationPoints);
+            }
+
+            return result;
         }
 
         public static Bitmap ResizeImage(Bitmap bmp, Size size)
@@ -293,6 +519,30 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             return bmpResult;
         }
 
+        public static Bitmap RoundedCorners(Bitmap bmp, int cornerRadius)
+        {
+            Bitmap bmpResult = bmp.CreateEmptyBitmap();
+
+            using (bmp)
+            using (Graphics g = Graphics.FromImage(bmpResult))
+            {
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.PixelOffsetMode = PixelOffsetMode.Half;
+
+                using (GraphicsPath gp = new GraphicsPath())
+                {
+                    AddRoundedRectangle(gp, new RectangleF(0, 0, bmp.Width, bmp.Height), cornerRadius);
+
+                    using (TextureBrush brush = new TextureBrush(bmp))
+                    {
+                        g.FillPath(brush, gp);
+                    }
+                }
+            }
+
+            return bmpResult;
+        }
+
         public static Size ApplyAspectRatio(int width, int height, Bitmap bmp)
         {
             int newWidth;
@@ -319,6 +569,34 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             }
 
             return new Size(newWidth, newHeight);
+        }
+
+        private static void AddRoundedRectangle(GraphicsPath graphicsPath, RectangleF rect, float radius)
+        {
+            if (radius <= 0f)
+            {
+                graphicsPath.AddRectangle(rect);
+                return;
+            }
+
+            if (radius >= Math.Min(rect.Width, rect.Height) / 2f)
+            {
+                graphicsPath.AddEllipse(rect);
+                return;
+            }
+
+            float diameter = radius * 2f;
+            SizeF size = new SizeF(diameter, diameter);
+            RectangleF arc = new RectangleF(rect.Location, size);
+
+            graphicsPath.AddArc(arc, 180, 90);
+            arc.X = rect.Right - diameter;
+            graphicsPath.AddArc(arc, 270, 90);
+            arc.Y = rect.Bottom - diameter;
+            graphicsPath.AddArc(arc, 0, 90);
+            arc.X = rect.Left;
+            graphicsPath.AddArc(arc, 90, 90);
+            graphicsPath.CloseFigure();
         }
     }
 }
