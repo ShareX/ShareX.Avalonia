@@ -221,7 +221,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 ### ShareX.HelpersLib
 - [x] CodeMenuEntry.cs
 - [x] CodeMenuEntryActions.cs
-- [ ] AnimatedGifCreator.cs
+- [x] AnimatedGifCreator.cs
 - [ ] AppVeyor.cs
 - [ ] AppVeyorUpdateChecker.cs
 - [ ] BlackStyleCheckBox.cs
@@ -258,14 +258,14 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] FileDownloader.cs
 - [ ] FileHelpersLite.cs
 - [x] FontSafe.cs
-- [ ] GifClass.cs
+- [x] GifClass.cs
 - [ ] GitHubUpdateChecker.cs
 - [ ] GitHubUpdateManager.cs
-- [ ] GradientInfo.cs
-- [ ] GradientStop.cs
+- [x] GradientInfo.cs
+- [x] GradientStop.cs
 - [ ] GraphicsPathExtensions.cs
 - [x] GraphicsQualityManager.cs
-- [ ] GrayscaleQuantizer.cs
+- [x] GrayscaleQuantizer.cs
 - [ ] HotkeyInfo.cs
 - [x] HSB.cs
 - [x] HttpClientFactory.cs
@@ -284,8 +284,8 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] NativeMethods.cs
 - [ ] NativeMethods_Helpers.cs
 - [ ] NativeStructs.cs
-- [ ] OctreeQuantizer.cs
-- [ ] PaletteQuantizer.cs
+- [x] OctreeQuantizer.cs
+- [x] PaletteQuantizer.cs
 - [ ] Point.cs
 - [ ] PointF.cs
 - [x] PointInfo.cs
@@ -293,7 +293,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] PrintSettings.cs
 - [ ] PrintTextHelper.cs
 - [ ] PropertyExtensions.cs
-- [ ] Quantizer.cs
+- [x] Quantizer.cs
 - [x] RegistryHelpers.cs
 - [x] RGBA.cs
 - [x] SafeStringEnumConverter.cs
