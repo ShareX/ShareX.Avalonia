@@ -159,8 +159,9 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] CustomVScrollBar.cs
 - [ ] DesktopIconManager.cs
 - [x] DPAPI.cs
-- [ ] DPAPIEncryptedStringPropertyResolver.cs
-- [ ] DPAPIEncryptedStringValueProvider.cs
+- [x] DPAPIEncryptedStringPropertyResolver.cs
+- [x] DPAPIEncryptedStringValueProvider.cs
+- [x] WritablePropertiesOnlyResolver.cs
 - [ ] DWMManager.cs
 - [ ] Emoji.cs
 - [ ] EnumDescriptionConverter.cs
