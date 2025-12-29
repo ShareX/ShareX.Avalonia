@@ -1100,6 +1100,154 @@ namespace ShareX.Avalonia.ImageEffects.Helpers
             return (float)Math.Sqrt(dist2);
         }
 
+        public static Bitmap DrawBorder(Bitmap bmp, Color borderColor, int borderSize, BorderType borderType, DashStyle dashStyle = DashStyle.Solid)
+        {
+            using (Pen borderPen = new Pen(borderColor, borderSize) { Alignment = PenAlignment.Inset, DashStyle = dashStyle })
+            {
+                return DrawBorder(bmp, borderPen, borderType);
+            }
+        }
+
+        public static Bitmap DrawBorder(Bitmap bmp, GradientInfo gradientInfo, int borderSize, BorderType borderType, DashStyle dashStyle = DashStyle.Solid)
+        {
+            int width = bmp.Width;
+            int height = bmp.Height;
+
+            if (borderType == BorderType.Outside)
+            {
+                width += borderSize * 2;
+                height += borderSize * 2;
+            }
+
+            using (LinearGradientBrush brush = gradientInfo.GetGradientBrush(new Rectangle(0, 0, width, height)))
+            using (Pen borderPen = new Pen(brush, borderSize) { Alignment = PenAlignment.Inset, DashStyle = dashStyle })
+            {
+                return DrawBorder(bmp, borderPen, borderType);
+            }
+        }
+
+        public static Bitmap DrawBorder(Bitmap bmp, Pen borderPen, BorderType borderType)
+        {
+            Bitmap bmpResult;
+
+            if (borderType == BorderType.Inside)
+            {
+                bmpResult = bmp;
+
+                using (Graphics g = Graphics.FromImage(bmpResult))
+                {
+                    g.DrawRectangle(borderPen, 0, 0, bmp.Width, bmp.Height);
+                }
+            }
+            else
+            {
+                int borderSize = (int)borderPen.Width;
+                bmpResult = bmp.CreateEmptyBitmap(borderSize * 2, borderSize * 2);
+
+                using (bmp)
+                using (Graphics g = Graphics.FromImage(bmpResult))
+                {
+                    g.DrawRectangle(borderPen, 0, 0, bmpResult.Width, bmpResult.Height);
+                    g.DrawImage(bmp, borderSize, borderSize, bmp.Width, bmp.Height);
+                }
+            }
+
+            return bmpResult;
+        }
+
+        public static Bitmap FillBackground(Image img, Color color)
+        {
+            using (Brush brush = new SolidBrush(color))
+            {
+                return FillBackground(img, brush);
+            }
+        }
+
+        public static Bitmap FillBackground(Image img, GradientInfo gradientInfo)
+        {
+            using (LinearGradientBrush brush = gradientInfo.GetGradientBrush(new Rectangle(0, 0, img.Width, img.Height)))
+            {
+                return FillBackground(img, brush);
+            }
+        }
+
+        public static Bitmap FillBackground(Image img, Brush brush)
+        {
+            Bitmap result = img.CreateEmptyBitmap();
+
+            using (Graphics g = Graphics.FromImage(result))
+            {
+                g.FillRectangle(brush, 0, 0, result.Width, result.Height);
+                g.DrawImage(img, 0, 0, result.Width, result.Height);
+            }
+
+            return result;
+        }
+
+        public static Bitmap DrawBackgroundImage(Bitmap bmp, string backgroundImageFilePath, bool center = true, bool tile = false)
+        {
+            if (string.IsNullOrEmpty(backgroundImageFilePath) || !File.Exists(backgroundImageFilePath))
+            {
+                return bmp;
+            }
+
+            Bitmap? backgroundImage = null;
+
+            try
+            {
+                backgroundImage = (Bitmap)Image.FromFile(backgroundImageFilePath);
+                return DrawBackgroundImage(bmp, backgroundImage, center, tile);
+            }
+            catch
+            {
+                return bmp;
+            }
+        }
+
+        public static Bitmap DrawBackgroundImage(Bitmap bmp, Bitmap backgroundImage, bool center = true, bool tile = false)
+        {
+            if (bmp == null || backgroundImage == null)
+            {
+                return bmp;
+            }
+
+            using (bmp)
+            using (backgroundImage)
+            {
+                Bitmap bmpResult = bmp.CreateEmptyBitmap();
+
+                using (Graphics g = Graphics.FromImage(bmpResult))
+                {
+                    if (tile)
+                    {
+                        using (TextureBrush tb = new TextureBrush(backgroundImage, WrapMode.Tile))
+                        {
+                            g.FillRectangle(tb, new Rectangle(0, 0, bmpResult.Width, bmpResult.Height));
+                        }
+                    }
+                    else
+                    {
+                        int x = 0;
+                        int y = 0;
+                        int width = backgroundImage.Width;
+                        int height = backgroundImage.Height;
+
+                        if (center)
+                        {
+                            x = (bmpResult.Width - width) / 2;
+                            y = (bmpResult.Height - height) / 2;
+                        }
+
+                        g.DrawImage(backgroundImage, x, y, width, height);
+                    }
+
+                    g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                }
+
+                return bmpResult;
+            }
+        }
+
         private static void AddRoundedRectangle(GraphicsPath graphicsPath, RectangleF rect, float radius)
         {
             if (radius <= 0f)
