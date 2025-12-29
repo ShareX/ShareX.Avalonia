@@ -162,4 +162,3 @@ namespace ShareX.Avalonia.Common
     }
 }
 
-
