@@ -38,7 +38,48 @@ namespace ShareX.Avalonia.Common
                 return string.Empty;
             }
 
+            try
+            {
+                foreach (Environment.SpecialFolder specialFolder in Enum.GetValues(typeof(Environment.SpecialFolder)))
+                {
+                    string token = $"%{specialFolder}%";
+                    string folderPath = Environment.GetFolderPath(specialFolder);
+                    if (!string.IsNullOrEmpty(folderPath))
+                    {
+                        path = path.Replace(token, folderPath, StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+            }
+            catch
+            {
+            }
+
             return Environment.ExpandEnvironmentVariables(path);
+        }
+
+        public static string GetVariableFolderPath(string path)
+        {
+            if (string.IsNullOrEmpty(path))
+            {
+                return string.Empty;
+            }
+
+            try
+            {
+                foreach (Environment.SpecialFolder specialFolder in Enum.GetValues(typeof(Environment.SpecialFolder)))
+                {
+                    string folderPath = Environment.GetFolderPath(specialFolder);
+                    if (!string.IsNullOrEmpty(folderPath))
+                    {
+                        path = path.Replace(folderPath, $"%{specialFolder}%", StringComparison.OrdinalIgnoreCase);
+                    }
+                }
+            }
+            catch
+            {
+            }
+
+            return path;
         }
 
         public static void CreateDirectory(string directoryPath)
