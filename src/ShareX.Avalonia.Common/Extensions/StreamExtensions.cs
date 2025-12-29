@@ -107,7 +107,12 @@ namespace ShareX.Avalonia.Common
         {
             if (stream.Length > 0 && !string.IsNullOrEmpty(filePath))
             {
-                FileHelpers.CreateDirectoryFromFilePath(filePath);
+                string directory = Path.GetDirectoryName(filePath);
+
+                if (!string.IsNullOrEmpty(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
 
                 using (FileStream fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 {
