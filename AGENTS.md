@@ -94,6 +94,86 @@ When creating or editing C# files (`.cs`) in this repository, include the follow
 - For changes, summarize what changed and where.
 - Provide next steps only when they are natural and actionable.
 
+## Platform Abstractions and Native Code Rules
+
+All platform specific functionality must be isolated behind platform abstraction interfaces.
+
+No code outside ShareX.Avalonia.Platform.* projects may reference:
+
+NativeMethods
+
+NativeConstants, NativeEnums, NativeStructs
+
+Win32 P Invoke
+
+System.Windows.Forms
+
+Windows specific handles or messages
+
+Direct calls to Windows APIs are forbidden in Common, Core, Uploaders, Media, or other backend projects.
+
+### Required architecture
+
+Define platform neutral interfaces in ShareX.Avalonia.Platform.Abstractions.
+
+Implement Windows functionality in ShareX.Avalonia.Platform.Windows.
+
+Create stub implementations for future platforms:
+
+ShareX.Avalonia.Platform.Linux
+
+ShareX.Avalonia.Platform.MacOS
+
+### Windows only features
+
+If a capability is Windows only:
+
+It must still be defined via an abstraction interface.
+
+Windows provides the concrete implementation.
+
+Other platforms provide a stub implementation that either:
+
+throws PlatformNotSupportedException, or
+
+returns a safe no-op with a logged warning.
+
+UI and workflows must detect capability availability and disable or hide unsupported features.
+
+### Porting rule for existing ShareX code
+
+A file may only be ported directly if it contains zero references to:
+
+NativeMethods or related native helpers
+
+WinForms types
+
+Windows specific interop
+
+If a file mixes logic and native calls:
+
+Extract pure logic into Common or Core.
+
+Move native code into ShareX.Avalonia.Platform.Windows.
+
+Replace callsites with interface calls.
+
+Native method names and signatures should remain Windows specific and must not leak into shared layers.
+
+### Enforcement
+
+When porting ShareX.HelpersLib, files that reference:
+
+NativeMethods.cs
+
+NativeMethods_Helpers.cs
+
+NativeMessagingHost.cs
+
+DWM, hooks, clipboard, or input APIs
+
+must be treated as platform code and cannot be copied wholesale.
+
 ## Main Goal and Porting Rules
 
 - Main goal: build ShareX.Avalonia by porting the ShareX backend first, then designing the Avalonia UI.
@@ -132,6 +212,7 @@ When creating or editing C# files (`.cs`) in this repository, include the follow
 - [x] Port remaining ShareX.HelpersLib non-UI utilities needed by backend workflows.
 - [x] Verify uploader settings models cover all fields referenced by config/task flows.
 - [x] Audit OAuth manager signature support and match ShareX behavior.
+- [ ] Enforce platform abstraction rules for all new ported code (no native references outside platform projects).
 
 ## Pending Backend Tasks (Gap Report)
 
@@ -181,7 +262,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] GradientInfo.cs
 - [ ] GradientStop.cs
 - [ ] GraphicsPathExtensions.cs
-- [ ] GraphicsQualityManager.cs
+- [x] GraphicsQualityManager.cs
 - [ ] GrayscaleQuantizer.cs
 - [ ] HotkeyInfo.cs
 - [x] HSB.cs
