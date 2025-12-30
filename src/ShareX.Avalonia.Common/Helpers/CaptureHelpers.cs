@@ -239,9 +239,13 @@ namespace ShareX.Avalonia.Common.Helpers
                 {
                     Rectangle windowRectangle = windowInfo.Rectangle;
                     
-                    // TODO: [Avalonia] Replace System.Windows.Forms.Screen with Avalonia equivalent
-                    // Rectangle monitorRectangle = Screen.FromRectangle(windowRectangle).Bounds;
-                    // return windowRectangle.Contains(monitorRectangle);
+                    // Use platform service for screen information
+                    if (ShareX.Avalonia.Platform.Abstractions.PlatformServices.IsInitialized)
+                    {
+                        var screenInfo = ShareX.Avalonia.Platform.Abstractions.PlatformServices.Screen.GetScreenFromRectangle(windowRectangle);
+                        Rectangle monitorRectangle = screenInfo.Bounds;
+                        return windowRectangle.Contains(monitorRectangle);
+                    }
                 }
             }
 
