@@ -243,7 +243,7 @@ namespace ShareX.Avalonia.Uploaders.FileUploaders
                 }
             }
 
-            httpHomeUri.Scheme = BrowserProtocol.GetDescription();
+            httpHomeUri.Scheme = EnumExtensions.GetDescription(BrowserProtocol);
             return httpHomeUri.Uri.OriginalString;
         }
 

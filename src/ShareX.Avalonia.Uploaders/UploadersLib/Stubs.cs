@@ -180,7 +180,7 @@ namespace ShareX.UploadersLib.FileUploaders
 
             path = URLHelpers.CombineURL(path, fileName);
 
-            string remoteProtocol = RemoteProtocol.GetDescription();
+            string remoteProtocol = EnumExtensions.GetDescription(RemoteProtocol);
 
             if (!path.StartsWith(remoteProtocol, StringComparison.Ordinal))
             {
