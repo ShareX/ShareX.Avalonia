@@ -193,4 +193,43 @@ public static class GeneralHelpers
     {
         return GetTimestamp(DateTime.Now);
     }
+
+    /// <summary>
+    /// Checks if running on Windows 10 or greater
+    /// </summary>
+    public static bool IsWindows10OrGreater()
+    {
+        return OperatingSystem.IsWindowsVersionAtLeast(10, 0);
+    }
+
+    /// <summary>
+    /// Converts byte array to hexadecimal string
+    /// </summary>
+    public static string BytesToHex(byte[] bytes)
+    {
+        if (bytes == null || bytes.Length == 0) return string.Empty;
+        
+        StringBuilder sb = new StringBuilder(bytes.Length * 2);
+        
+        foreach (byte b in bytes)
+        {
+            sb.AppendFormat("{0:x2}", b);
+        }
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Gets all instances of a type using reflection
+    /// </summary>
+    public static IEnumerable<T> GetInstances<T>() where T : class
+    {
+        var type = typeof(T);
+        var assembly = type.Assembly;
+        
+        return assembly.GetTypes()
+            .Where(t => t.IsClass && !t.IsAbstract && type.IsAssignableFrom(t))
+            .Select(t => Activator.CreateInstance(t) as T)
+            .Where(instance => instance != null)!;
+    }
 }
