@@ -51,7 +51,7 @@ namespace ShareX.Avalonia.Common
             {
                 if (value is Enum enumValue)
                 {
-                    return CommonGeneralHelpers.GetProperName(enumValue.ToString());
+                    return GeneralHelpers.GetProperName(enumValue.ToString());
                 }
             }
 
@@ -67,7 +67,7 @@ namespace ShareX.Avalonia.Common
         {
             foreach (Enum e in Enum.GetValues(enumType).OfType<Enum>())
             {
-                if (CommonGeneralHelpers.GetProperName(e.ToString()) == (string)value)
+                if (GeneralHelpers.GetProperName(e.ToString()) == (string)value)
                 {
                     return e;
                 }
@@ -77,6 +77,7 @@ namespace ShareX.Avalonia.Common
         }
     }
 }
+
 
 
 
