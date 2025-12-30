@@ -46,7 +46,7 @@
         </Grid>
 
         <!-- Top Control Bar -->
-        <Grid Grid.Row="1" Background="#252535" Padding="20,15">
+        <Border Grid.Row="1" Background="#252535" Padding="20,15">
             <StackPanel Spacing="15">
                 <!-- Capture Modes and Tools Row -->
                 <StackPanel Orientation="Horizontal" Spacing="10">
@@ -139,18 +139,20 @@
                     <Border Background="#FFFFFF"
                             CornerRadius="{Binding PreviewCornerRadius}"
                             ClipToBounds="True">
-                        <Image Source="{Binding PreviewImage}"
-                               Stretch="Uniform"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center"/>
-                        
-                        <!-- Placeholder when no image -->
-                        <TextBlock Text="No image captured"
-                                   Foreground="#6B7280"
-                                   FontSize="20"
+                        <Grid>
+                            <Image Source="{Binding PreviewImage}"
+                                   Stretch="Uniform"
                                    HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"
-                                   IsVisible="{Binding !HasPreviewImage}"/>
+                                   VerticalAlignment="Center"/>
+                            
+                            <!-- Placeholder when no image -->
+                            <TextBlock Text="No image captured"
+                                       Foreground="#6B7280"
+                                       FontSize="20"
+                                       HorizontalAlignment="Center"
+                                       VerticalAlignment="Center"
+                                       IsVisible="{Binding !HasPreviewImage}"/>
+                        </Grid>
                     </Border>
                 </Border>
             </Grid>
