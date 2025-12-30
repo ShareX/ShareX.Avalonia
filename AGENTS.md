@@ -31,6 +31,19 @@ When creating or editing C# files (`.cs`) in this repository, include the follow
 
 # Agent Rules
 
+## Multi-Agent Coordination
+
+This project uses multiple AI developer agents working in parallel. See [MULTI_AGENT_COORDINATION.md](MULTI_AGENT_COORDINATION.md) for:
+- Agent roles (Antigravity, Codex, Copilot)
+- Task distribution rules
+- Git workflow and branch naming
+- Conflict avoidance protocols
+- Communication requirements
+
+**Lead Agent**: Antigravity (architecture, integration, merge decisions)
+
+---
+
 - Always summarize code changes in the final response, and use that summary when performing `git push` after each code update.
 
 ## Semantic Versioning
