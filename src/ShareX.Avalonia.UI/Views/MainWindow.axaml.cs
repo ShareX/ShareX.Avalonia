@@ -114,6 +114,14 @@ namespace ShareX.Avalonia.UI.Views
             }
         }
 
+        private void OnTitleBarPointerPressed(object sender, PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                BeginMoveDrag(e);
+            }
+        }
+
         private Point _startPoint;
         private bool _isDrawing;
         private Control? _currentShape;

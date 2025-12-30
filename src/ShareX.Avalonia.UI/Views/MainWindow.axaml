@@ -19,7 +19,7 @@
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto,Auto">
         
         <!-- Header Row with Logo and Window Controls -->
-        <Grid Grid.Row="0" Height="40" Background="#1E1E2E" ColumnDefinitions="*,Auto">
+        <Grid Grid.Row="0" Height="40" Background="#1E1E2E" ColumnDefinitions="*,Auto" PointerPressed="OnTitleBarPointerPressed">
             <TextBlock Grid.Column="0" 
                        Text="ShareX" 
                        FontSize="16" 
