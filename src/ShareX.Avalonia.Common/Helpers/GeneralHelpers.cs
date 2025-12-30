@@ -235,4 +235,54 @@ public static class GeneralHelpers
             .Select(t => Activator.CreateInstance(t) as T)
             .Where(instance => instance != null)!;
     }
+
+    /// <summary>
+    /// Compares two version objects
+    /// </summary>
+    public static int CompareVersion(Version version1, Version version2, bool ignoreRevision = false)
+    {
+        if (version1 == null && version2 == null) return 0;
+        if (version1 == null) return -1;
+        if (version2 == null) return 1;
+
+        if (ignoreRevision)
+        {
+            var v1 = new Version(version1.Major, version1.Minor, version1.Build);
+            var v2 = new Version(version2.Major, version2.Minor, version2.Build);
+            return v1.CompareTo(v2);
+        }
+
+        return version1.CompareTo(version2);
+    }
+
+    /// <summary>
+    /// Converts a string to proper name format (e.g., "myVariable" -> "My Variable")
+    /// </summary>
+    public static string GetProperName(string name, bool keepCase = false)
+    {
+        if (string.IsNullOrEmpty(name)) return name;
+
+        StringBuilder result = new StringBuilder();
+        
+        for (int i = 0; i < name.Length; i++)
+        {
+            char c = name[i];
+            
+            if (i == 0)
+            {
+                result.Append(keepCase ? c : char.ToUpper(c));
+            }
+            else if (char.IsUpper(c))
+            {
+                result.Append(' ');
+                result.Append(keepCase ? c : c);
+            }
+            else
+            {
+                result.Append(keepCase ? c : c);
+            }
+        }
+
+        return result.ToString();
+    }
 }
