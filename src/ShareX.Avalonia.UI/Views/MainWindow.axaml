@@ -1,36 +1,48 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
+        xmlns:views="using:ShareX.Avalonia.UI.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
         x:Class="ShareX.Avalonia.UI.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="ShareX.Avalonia">
+        Title="ShareX.Avalonia"
+        Width="900" Height="600">
 
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto, *, Auto" Margin="20">
-        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
-            <Button Command="{Binding CaptureRegionCommand}" Content="Capture Region" />
-            <Button Command="{Binding CaptureAndUploadCommand}" Content="Capture &amp; Upload" />
-        </StackPanel>
+    <TabControl>
+        <!-- Capture Tab -->
+        <TabItem Header="Capture">
+            <Grid RowDefinitions="Auto, *, Auto" Margin="20">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
+                    <Button Command="{Binding CaptureRegionCommand}" Content="Capture Region" />
+                    <Button Command="{Binding CaptureAndUploadCommand}" Content="Capture &amp; Upload" />
+                </StackPanel>
 
-        <ListBox Grid.Row="1" ItemsSource="{Binding Tasks}" Margin="0,10">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <TextBlock Text="{Binding Info.FileName}" FontWeight="Bold"/>
-                        <TextBlock Text="{Binding Status}"/>
-                        <TextBlock Text="{Binding Info.Result.URL}" Foreground="Blue"/>
-                    </StackPanel>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
-        
-        <TextBlock Grid.Row="2" Text="Ready" />
-    </Grid>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Tasks}" Margin="0,10">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal" Spacing="10">
+                                <TextBlock Text="{Binding Info.FileName}" FontWeight="Bold"/>
+                                <TextBlock Text="{Binding Status}"/>
+                                <TextBlock Text="{Binding Info.Result.URL}" Foreground="Blue"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+                
+                <TextBlock Grid.Row="2" Text="Ready" />
+            </Grid>
+        </TabItem>
+
+        <!-- History Tab -->
+        <TabItem Header="History">
+            <views:HistoryView />
+        </TabItem>
+    </TabControl>
 
 </Window>

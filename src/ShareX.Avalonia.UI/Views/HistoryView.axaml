@@ -1,0 +1,73 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="ShareX.Avalonia.UI.Views.HistoryView"
+             x:DataType="vm:HistoryViewModel">
+    
+    <Design.DataContext>
+        <vm:HistoryViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Toolbar -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="10">
+            <Button Content="Refresh" Command="{Binding RefreshHistoryCommand}" />
+            <Button Content="Toggle View" Command="{Binding ToggleViewCommand}" />
+            <TextBlock Text="{Binding HistoryItems.Count, StringFormat='Items: {0}'}" 
+                       VerticalAlignment="Center" 
+                       Margin="10,0,0,0"/>
+        </StackPanel>
+
+        <!-- History List -->
+        <ScrollViewer Grid.Row="1">
+            <ItemsControl ItemsSource="{Binding HistoryItems}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="Gray" 
+                                BorderThickness="1" 
+                                Margin="5" 
+                                Padding="10"
+                                Background="#20FFFFFF">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
+                                <!-- Thumbnail placeholder -->
+                                <Border Grid.Column="0" 
+                                        Width="80" 
+                                        Height="60" 
+                                        Background="#40000000"
+                                        Margin="0,0,10,0">
+                                    <TextBlock Text="📷" 
+                                               FontSize="32" 
+                                               HorizontalAlignment="Center" 
+                                               VerticalAlignment="Center"/>
+                                </Border>
+
+                                <!-- Info -->
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding FileName}" FontWeight="Bold"/>
+                                    <TextBlock Text="{Binding DateTime, StringFormat='yyyy-MM-dd HH:mm:ss'}" 
+                                               FontSize="11" 
+                                               Foreground="Gray"/>
+                                    <TextBlock Text="{Binding URL}" 
+                                               Foreground="Blue" 
+                                               FontSize="11"/>
+                                </StackPanel>
+
+                                <!-- Actions -->
+                                <StackPanel Grid.Column="2" 
+                                            Orientation="Horizontal" 
+                                            Spacing="5"
+                                            VerticalAlignment="Center">
+                                    <Button Content="Open" Width="60"/>
+                                    <Button Content="Copy URL" Width="80"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
