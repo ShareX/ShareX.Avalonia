@@ -25,10 +25,20 @@
 
 using System.Drawing;
 
+using System.Drawing.Drawing2D;
+
 namespace ShareX.Avalonia.Common
 {
     public static class GraphicsExtensions
     {
+        public static void SetHighQuality(this Graphics g)
+        {
+            g.CompositingQuality = CompositingQuality.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.SmoothingMode = SmoothingMode.HighQuality;
+            g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+        }
+
         public static void DrawRectangleProper(this Graphics g, Pen pen, int x, int y, int width, int height)
         {
             if (pen.Width == 1)

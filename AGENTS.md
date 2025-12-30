@@ -235,11 +235,11 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] ColorBgra.cs
 - [ ] ColorBox.cs
 - [ ] ColorEventHandler.cs
-- [ ] ColorMatrixManager.cs
+- [x] ColorMatrixManager.cs
 - [ ] ColorPicker.cs
 - [x] ColorPickerOptions.cs
 - [ ] ColorSlider.cs
-- [ ] ConvolutionMatrixManager.cs
+- [x] ConvolutionMatrixManager.cs
 - [x] ConvolutionMatrix.cs
 - [ ] CursorData.cs
 - [ ] CustomVScrollBar.cs
