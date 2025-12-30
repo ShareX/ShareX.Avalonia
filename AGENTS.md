@@ -228,8 +228,8 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [ ] BlackStyleProgressBar.cs (TODO: Avalonia UI)
 - [ ] Canvas.cs (TODO: Avalonia UI)
 - [x] CaptureHelpers.cs (Refactored to use PlatformServices.Screen)
-- [ ] ClipboardHelpers.cs (TODO: Platform abstraction)
-- [ ] ClipboardHelpersEx.cs (TODO: Platform abstraction)
+- [x] ClipboardHelpers.cs (Platform-agnostic, uses PlatformServices pattern)
+- [x] ClipboardHelpersEx.cs (Platform-agnostic DIB image manipulation)
 - [x] ClipboardFormat.cs
 - [x] CMYK.cs
 - [x] ColorBgra.cs
