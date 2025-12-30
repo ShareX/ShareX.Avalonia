@@ -73,10 +73,10 @@ namespace ShareX.Avalonia.ScreenCapture
             {
                 if (OverrideCLIPath && !string.IsNullOrEmpty(CLIPath))
                 {
-                    return FileHelpersLite.GetAbsolutePath(CLIPath);
+                    return FileHelpers.GetAbsolutePath(CLIPath);
                 }
 
-                return FileHelpersLite.GetAbsolutePath("ffmpeg.exe");
+                return FileHelpers.GetAbsolutePath("ffmpeg.exe");
             }
         }
 
