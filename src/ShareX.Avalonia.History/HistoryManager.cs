@@ -109,12 +109,12 @@ namespace ShareX.Avalonia.History
             {
                 if (CreateBackup)
                 {
-                    FileHelpersLite.CopyFile(filePath, BackupFolder);
+                    FileHelpers.CopyFile(filePath, BackupFolder);
                 }
 
                 if (CreateWeeklyBackup)
                 {
-                    FileHelpersLite.BackupFileWeekly(filePath, BackupFolder);
+                    FileHelpers.BackupFileWeekly(filePath, BackupFolder);
                 }
             }
         }

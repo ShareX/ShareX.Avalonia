@@ -44,7 +44,7 @@ namespace ShareX.Avalonia.History
 
         private void Connect(string filePath)
         {
-            FileHelpersLite.CreateDirectoryFromFilePath(filePath);
+            FileHelpers.CreateDirectoryFromFilePath(filePath);
 
             string connectionString = $"Data Source={filePath}";
             connection = new SqliteConnection(connectionString);
