@@ -24,264 +24,173 @@
 #endregion License Information (GPL v3)
 
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
-namespace ShareX.Avalonia.Common.Helpers
+namespace ShareX.Avalonia.Common;
+
+/// <summary>
+/// General helper methods
+/// </summary>
+public static class Helpers
 {
-    public static class GeneralHelpers
+    public const string Alphanumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    
+    private static readonly Random random = new Random();
+
+    /// <summary>
+    /// Generates a random alphanumeric string
+    /// </summary>
+    public static string GetRandomAlphanumericString(int length)
     {
-        public const string Numbers = "0123456789"; // 48 ... 57
-        public const string AlphabetCapital = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // 65 ... 90
-        public const string Alphabet = "abcdefghijklmnopqrstuvwxyz"; // 97 ... 122
-        public const string Alphanumeric = Numbers + AlphabetCapital + Alphabet;
-        public const string AlphanumericInverse = Numbers + Alphabet + AlphabetCapital;
-        public const string Hexadecimal = Numbers + "ABCDEF";
-        public const string Base58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // https://en.wikipedia.org/wiki/Base58
-        public const string Base56 = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz"; // A variant, Base56, excludes 1 (one) and o (lowercase o) compared to Base 58.
-        public static readonly Version OSVersion = Environment.OSVersion.Version;
-
-        public static bool IsWindows10OrGreater()
+        if (length <= 0) return string.Empty;
+        
+        StringBuilder sb = new StringBuilder(length);
+        
+        for (int i = 0; i < length; i++)
         {
-            return System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows) && OSVersion.Major >= 10;
-        }
-
-        public static string AddZeroes(string input, int digits = 2)
-        {
-            return input.PadLeft(digits, '0');
-        }
-
-        public static string AddZeroes(int number, int digits = 2)
-        {
-            return AddZeroes(number.ToString(), digits);
-        }
-
-        public static string HourTo12(int hour)
-        {
-            if (hour == 0)
-            {
-                return 12.ToString();
-            }
-
-            if (hour > 12)
-            {
-                return AddZeroes(hour - 12);
-            }
-
-            return AddZeroes(hour);
-        }
-
-        public static string GetAllCharacters()
-        {
-            return Encoding.UTF8.GetString(Enumerable.Range(1, 255).Select(i => (byte)i).ToArray());
-        }
-
-        public static string GetRandomLine(string text)
-        {
-            // Simplified Lines() extension logic
-            string[] lines = text.Trim().Replace("\r\n", "\n").Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-            if (lines != null && lines.Length > 0)
-            {
-                // Assuming RandomCrypto.Pick exists or using extension
-                // If RandomCrypto.Pick is generic extension on IList, it might need to be ported.
-                // Checking RandomCrypto content might be needed. 
-                // For now, assume it works or use simple random.
-                return lines[RandomCrypto.Next(lines.Length)];
-            }
-
-            return null;
-        }
-
-        public static string GetRandomLineFromFile(string filePath)
-        {
-            string text = File.ReadAllText(filePath, Encoding.UTF8);
-            return GetRandomLine(text);
-        }
-
-        public static string GetXMLValue(string input, string tag)
-        {
-            return System.Text.RegularExpressions.Regex.Match(input, string.Format("(?<={0}>).+?(?=</{0})", tag)).Value;
-        }
-
-        public static string[] GetEnumDescriptions<T>(int skip = 0)
-        {
-            return Enum.GetValues(typeof(T)).OfType<Enum>().Skip(skip).Select(x => EnumExtensions.GetDescription(x)).ToArray();
-        }
-
-
-
-        public static char GetRandomChar(string chars)
-        {
-            return chars[RandomCrypto.Next(chars.Length - 1)];
-        }
-
-        public static string GetRandomString(string chars, int length)
-        {
-            StringBuilder sb = new StringBuilder();
-
-            while (length-- > 0)
-            {
-                sb.Append(GetRandomChar(chars));
-            }
-
-            return sb.ToString();
-        }
-
-        public static string GetRandomNumber(int length)
-        {
-            return GetRandomString(Numbers, length);
-        }
-
-        public static string GetRandomAlphanumeric(int length)
-        {
-            return GetRandomString(Alphanumeric, length);
-        }
-
-        public static string GetRandomKey(int length = 5, int count = 3, char separator = '-')
-        {
-            return Enumerable.Range(1, ((length + 1) * count) - 1).Aggregate("", (x, index) => x += index % (length + 1) == 0 ? separator : GetRandomChar(Alphanumeric));
-        }
-
-        public static string GetUniqueID()
-        {
-            return Guid.NewGuid().ToString("N");
-        }
-
-        public static string SafeStringFormat(string format, params object[] args)
-        {
-            return SafeStringFormat(null, format, args);
-        }
-
-        public static string SafeStringFormat(IFormatProvider provider, string format, params object[] args)
-        {
-            try
-            {
-                if (provider != null)
-                {
-                    return string.Format(provider, format, args);
-                }
-
-                return string.Format(format, args);
-            }
-            catch (Exception e)
-            {
-                DebugHelper.WriteException(e);
-            }
-
-            return format;
+            sb.Append(Alphanumeric[random.Next(Alphanumeric.Length)]);
         }
         
-        public static string BytesToHex(byte[] bytes)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (byte x in bytes)
-            {
-                sb.Append(string.Format("{0:x2}", x));
-            }
-            return sb.ToString();
-        }
+        return sb.ToString();
+    }
 
-        public static byte[] ComputeSHA256(byte[] data)
+    /// <summary>
+    /// Generates a random number string
+    /// </summary>
+    public static string GetRandomNumber(int length)
+    {
+        if (length <= 0) return string.Empty;
+        
+        StringBuilder sb = new StringBuilder(length);
+        
+        for (int i = 0; i < length; i++)
         {
-            using (HashAlgorithm hashAlgorithm = SHA256.Create())
-            {
-                return hashAlgorithm.ComputeHash(data);
-            }
-        }
-
-        public static byte[] ComputeSHA256(Stream stream, int bufferSize = 1024 * 32)
-        {
-            BufferedStream bufferedStream = new BufferedStream(stream, bufferSize);
-
-            using (HashAlgorithm hashAlgorithm = SHA256.Create())
-            {
-                return hashAlgorithm.ComputeHash(bufferedStream);
-            }
-        }
-
-        public static byte[] ComputeSHA256(string data)
-        {
-            return ComputeSHA256(Encoding.UTF8.GetBytes(data));
-        }
-
-        public static byte[] ComputeHMACSHA256(byte[] data, byte[] key)
-        {
-            using (HMACSHA256 hashAlgorithm = new HMACSHA256(key))
-            {
-                return hashAlgorithm.ComputeHash(data);
-            }
-        }
-
-        public static byte[] ComputeHMACSHA256(string data, string key)
-        {
-            return ComputeHMACSHA256(Encoding.UTF8.GetBytes(data), Encoding.UTF8.GetBytes(key));
-        }
-
-        public static byte[] ComputeHMACSHA256(byte[] data, string key)
-        {
-            return ComputeHMACSHA256(data, Encoding.UTF8.GetBytes(key));
-        }
-
-        public static byte[] ComputeHMACSHA256(string data, byte[] key)
-        {
-            return ComputeHMACSHA256(Encoding.UTF8.GetBytes(data), key);
-        }
-
-        public static T[] GetEnums<T>()
-        {
-            return (T[])Enum.GetValues(typeof(T));
+            sb.Append(random.Next(10));
         }
         
-        public static string GetProperName(string name, bool keepCase = false)
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Opens a URL in the default browser
+    /// </summary>
+    public static void OpenURL(string url)
+    {
+        if (string.IsNullOrEmpty(url)) return;
+
+        try
         {
-             StringBuilder sb = new StringBuilder();
-
-             bool number = false;
-
-             for (int i = 0; i < name.Length; i++)
-             {
-                 char c = name[i];
-
-                 if (i > 0 && (char.IsUpper(c) || (!number && char.IsNumber(c))))
-                 {
-                     sb.Append(' ');
-
-                     if (keepCase)
-                     {
-                         sb.Append(c);
-                     }
-                     else
-                     {
-                         sb.Append(char.ToLowerInvariant(c));
-                     }
-                 }
-                 else
-                 {
-                     sb.Append(c);
-                 }
-
-                 number = char.IsNumber(c);
-             }
-
-             return sb.ToString();
-        }
-
-        public static int CompareVersion(Version version1, Version version2, bool ignoreRevision = false)
-        {
-            if (ignoreRevision)
+            Process.Start(new ProcessStartInfo
             {
-                version1 = new Version(Math.Max(version1.Major, 0), Math.Max(version1.Minor, 0), Math.Max(version1.Build, 0));
-                version2 = new Version(Math.Max(version2.Major, 0), Math.Max(version2.Minor, 0), Math.Max(version2.Build, 0));
-            }
-
-            return version1.CompareTo(version2);
+                FileName = url,
+                UseShellExecute = true
+            });
         }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Failed to open URL: {url}, Error: {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// Parses a string to an enum value
+    /// </summary>
+    public static T ParseEnum<T>(string value, T defaultValue = default) where T : struct, Enum
+    {
+        if (Enum.TryParse<T>(value, out T result))
+        {
+            return result;
+        }
+        
+        return defaultValue;
+    }
+
+    /// <summary>
+    /// Converts bytes to a human-readable string
+    /// </summary>
+    public static string GetBytesReadable(long bytes)
+    {
+        if (bytes <= 0) return "0 B";
+
+        string[] sizes = { "B", "KB", "MB", "GB", "TB", "PB" };
+        int order = 0;
+        double size = bytes;
+
+        while (size >= 1024 && order < sizes.Length - 1)
+        {
+            order++;
+            size /= 1024;
+        }
+
+        return $"{size:0.##} {sizes[order]}";
+    }
+
+    /// <summary>
+    /// Repeats a string n times
+    /// </summary>
+    public static string RepeatString(string str, int count)
+    {
+        if (string.IsNullOrEmpty(str) || count <= 0) return string.Empty;
+        
+        StringBuilder sb = new StringBuilder(str.Length * count);
+        
+        for (int i = 0; i < count; i++)
+        {
+            sb.Append(str);
+        }
+        
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Adds zero-width space characters between each character
+    /// </summary>
+    public static string AddZerWidthSpaces(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+
+        const char zeroWidthSpace = '\u200B';
+        StringBuilder sb = new StringBuilder(text.Length * 2);
+
+        for (int i = 0; i < text.Length; i++)
+        {
+            sb.Append(text[i]);
+            if (i < text.Length - 1)
+            {
+                sb.Append(zeroWidthSpace);
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Checks if a string is a valid URL
+    /// </summary>
+    public static bool IsValidURL(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        
+        return Uri.TryCreate(url, UriKind.Absolute, out Uri? uriResult)
+            && (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+    }
+
+    /// <summary>
+    /// Gets a timestamp string
+    /// </summary>
+    public static string GetTimestamp(DateTime dateTime)
+    {
+        return dateTime.ToString("yyyy-MM-dd_HH-mm-ss", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Gets current timestamp
+    /// </summary>
+    public static string GetTimestamp()
+    {
+        return GetTimestamp(DateTime.Now);
     }
 }
