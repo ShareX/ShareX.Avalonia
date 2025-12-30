@@ -1,39 +1,58 @@
 using System;
 using System.Drawing;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Avalonia.UI.Views.RegionCapture;
 
 namespace ShareX.Avalonia.UI.Services
 {
     public class ScreenCaptureService : IScreenCaptureService
     {
+        private readonly IScreenCaptureService _platformImpl;
+
+        public ScreenCaptureService(IScreenCaptureService platformImpl)
+        {
+            _platformImpl = platformImpl;
+        }
+
+        public Task<Image?> CaptureRectAsync(Rectangle rect)
+        {
+            return _platformImpl.CaptureRectAsync(rect);
+        }
+
+        public Task<Image?> CaptureFullScreenAsync()
+        {
+            return _platformImpl.CaptureFullScreenAsync();
+        }
+
+        public Task<Image?> CaptureActiveWindowAsync(IWindowService windowService)
+        {
+            return _platformImpl.CaptureActiveWindowAsync(windowService);
+        }
+
         public async Task<Image?> CaptureRegionAsync()
         {
-            // For now, capture fullscreen until region selection UI is implemented
-            return await Task.Run(() =>
+            System.Drawing.Rectangle selection = System.Drawing.Rectangle.Empty;
+
+            // Show UI window on UI thread
+            await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                try
-                {
-                    // Get screen bounds from PlatformServices if available, otherwise use fallback
-                    var bounds = PlatformServices.IsInitialized 
-                        ? PlatformServices.Screen.GetPrimaryScreenBounds()
-                        : new Rectangle(0, 0, 1920, 1080);
-                    
-                    var bitmap = new Bitmap(bounds.Width, bounds.Height);
-                    
-                    using (var graphics = Graphics.FromImage(bitmap))
-                    {
-                        graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
-                    }
-                    
-                    return (Image)bitmap;
-                }
-                catch (Exception)
-                {
-                    // Capture failed - return null
-                    return null;
-                }
+                var window = new RegionCaptureWindow();
+                window.Show();
+                selection = await window.GetResultAsync();
             });
+
+            if (selection.IsEmpty || selection.Width <= 0 || selection.Height <= 0)
+            {
+                return null;
+            }
+
+            // Small delay to allow window to close fully
+            await Task.Delay(200);
+
+            // Delegate capture to platform implementation
+            return await _platformImpl.CaptureRectAsync(selection);
         }
     }
 }

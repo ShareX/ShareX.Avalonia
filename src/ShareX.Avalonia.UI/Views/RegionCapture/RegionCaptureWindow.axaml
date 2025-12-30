@@ -1,0 +1,31 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="ShareX.Avalonia.UI.Views.RegionCapture.RegionCaptureWindow"
+        Title="RegionCaptureWindow"
+        TransparencyLevelHint="Transparent"
+        Background="{x:Null}"
+        SystemDecorations="None"
+        WindowState="FullScreen"
+        Topmost="True"
+        ShowInTaskbar="False"
+        PointerPressed="OnPointerPressed"
+        PointerMoved="OnPointerMoved"
+        PointerReleased="OnPointerReleased">
+    
+    <Canvas Name="SelectionCanvas" Background="#01000000">
+        <Border Name="SelectionBorder"
+                BorderBrush="Red"
+                BorderThickness="1"
+                Background="#20FFFFFF"
+                IsVisible="False" />
+        
+        <TextBlock Name="InfoText" 
+                   Foreground="White" 
+                   Background="#80000000" 
+                   Padding="5" 
+                   IsVisible="False"/>
+    </Canvas>
+</Window>

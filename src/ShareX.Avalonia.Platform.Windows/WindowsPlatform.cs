@@ -35,10 +35,15 @@ namespace ShareX.Avalonia.Platform.Windows
         /// <summary>
         /// Initializes all Windows platform services
         /// </summary>
-        public static void Initialize()
+        public static void Initialize(IScreenCaptureService? screenCaptureService = null)
         {
             var screenService = new WindowsScreenService();
-            var screenCaptureService = new WindowsScreenCaptureService(screenService);
+            
+            // If no service provided, use default Windows GDI+ implementation
+            if (screenCaptureService == null)
+            {
+                screenCaptureService = new WindowsScreenCaptureService(screenService);
+            }
             
             PlatformServices.Initialize(
                 platformInfo: new WindowsPlatformInfo(),

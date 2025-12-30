@@ -43,35 +43,41 @@ namespace ShareX.Avalonia.Platform.Windows
         }
 
         /// <summary>
-        /// Captures a region of the screen.
-        /// Currently captures the entire primary screen - region selection UI to be added.
+        /// Captures a specific region of the screen
         /// </summary>
-        public async Task<Image?> CaptureRegionAsync()
+        public async Task<Image?> CaptureRectAsync(Rectangle rect)
         {
             return await Task.Run(() =>
             {
                 try
                 {
-                    // Get primary screen bounds
-                    var bounds = _screenService.GetPrimaryScreenBounds();
-                    
-                    // Create bitmap to hold the capture
-                    var bitmap = new Bitmap(bounds.Width, bounds.Height);
+                    if (rect.Width <= 0 || rect.Height <= 0) return null;
+
+                    var bitmap = new Bitmap(rect.Width, rect.Height);
                     
                     using (var graphics = Graphics.FromImage(bitmap))
                     {
-                        // Capture screen
-                        graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
+                        graphics.CopyFromScreen(rect.X, rect.Y, 0, 0, rect.Size);
                     }
                     
                     return (Image)bitmap;
                 }
                 catch (Exception)
                 {
-                    // TODO: Log error
                     return null;
                 }
             });
+        }
+
+        /// <summary>
+        /// Captures a region of the screen.
+        /// On Windows platform layer, this just falls back to fullscreen or throws, 
+        /// as UI interaction should be handled by the UI layer wrapper.
+        /// </summary>
+        public async Task<Image?> CaptureRegionAsync()
+        {
+            // Default to fullscreen if called directly without UI wrapper
+            return await CaptureFullScreenAsync();
         }
 
         /// <summary>

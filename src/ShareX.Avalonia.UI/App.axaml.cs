@@ -12,26 +12,6 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        
-        // Initialize Platform Services
-        InitializePlatformServices();
-    }
-
-    private void InitializePlatformServices()
-    {
-        var platformInfo = new Services.PlatformInfoService();
-        var screenService = new Services.ScreenService();
-        var clipboardService = new Services.ClipboardService();
-        var windowService = new Services.WindowService();
-        var screenCaptureService = new Services.ScreenCaptureService();
-
-        ShareX.Avalonia.Platform.Abstractions.PlatformServices.Initialize(
-            platformInfo,
-            screenService,
-            clipboardService,
-            windowService,
-            screenCaptureService
-        );
     }
 
     public override void OnFrameworkInitializationCompleted()
