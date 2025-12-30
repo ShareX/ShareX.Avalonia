@@ -1,48 +1,299 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
-        xmlns:views="using:ShareX.Avalonia.UI.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="600"
+        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="ShareX.Avalonia.UI.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="ShareX.Avalonia"
-        Width="900" Height="600">
+        Title="ShareX"
+        Width="1200" Height="800"
+        Background="#1E1E2E"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome">
 
     <Design.DataContext>
         <vm:MainViewModel/>
     </Design.DataContext>
 
-    <TabControl>
-        <!-- Capture Tab -->
-        <TabItem Header="Capture">
-            <Grid RowDefinitions="Auto, *, Auto" Margin="20">
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10">
-                    <Button Command="{Binding CaptureRegionCommand}" Content="Capture Region" />
-                    <Button Command="{Binding CaptureAndUploadCommand}" Content="Capture &amp; Upload" />
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        
+        <!-- Header Row with Logo and Window Controls -->
+        <Grid Grid.Row="0" Height="40" Background="#1E1E2E" ColumnDefinitions="*,Auto">
+            <TextBlock Grid.Column="0" 
+                       Text="ShareX" 
+                       FontSize="16" 
+                       FontWeight="Bold" 
+                       Foreground="White"
+                       VerticalAlignment="Center"
+                       Margin="20,0,0,0"/>
+            
+            <!-- Window Controls -->
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="0">
+                <Button Content="—" Width="46" Height="40" 
+                        Background="Transparent" 
+                        Foreground="White"
+                        Click="OnMinimizeClick"/>
+                <Button Content="□" Width="46" Height="40" 
+                        Background="Transparent" 
+                        Foreground="White"
+                        Click="OnMaximizeClick"/>
+                <Button Content="✕" Width="46" Height="40" 
+                        Background="Transparent" 
+                        Foreground="White"
+                        Click="OnCloseClick"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- Top Control Bar -->
+        <Grid Grid.Row="1" Background="#252535" Padding="20,15">
+            <StackPanel Spacing="15">
+                <!-- Capture Modes and Tools Row -->
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <!-- Capture Mode Buttons -->
+                    <Button Command="{Binding CaptureFullscreenCommand}"
+                            Background="#8B5CF6"
+                            Foreground="White"
+                            Padding="20,10"
+                            CornerRadius="20"
+                            FontWeight="SemiBold">
+                        Fullscreen
+                    </Button>
+                    <Button Command="{Binding CaptureRegionCommand}"
+                            Background="#14B8A6"
+                            Foreground="White"
+                            Padding="20,10"
+                            CornerRadius="20"
+                            FontWeight="SemiBold">
+                        Region
+                    </Button>
+                    <Button Command="{Binding CaptureWindowCommand}"
+                            Background="#EC4899"
+                            Foreground="White"
+                            Padding="20,10"
+                            CornerRadius="20"
+                            FontWeight="SemiBold">
+                        Window
+                    </Button>
+                    <Button Command="{Binding ClearCommand}"
+                            Background="#374151"
+                            Foreground="White"
+                            Padding="20,10"
+                            CornerRadius="20">
+                        Clear
+                    </Button>
+
+                    <!-- Separator -->
+                    <Border Width="1" Background="#404050" Margin="10,0"/>
+
+                    <!-- Drawing Tools (Icon buttons) -->
+                    <Button Content="▭" ToolTip.Tip="Rectangle" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="○" ToolTip.Tip="Circle" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="→" ToolTip.Tip="Arrow" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="—" ToolTip.Tip="Line" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="T" ToolTip.Tip="Text" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="✂" ToolTip.Tip="Crop" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
                 </StackPanel>
 
-                <ListBox Grid.Row="1" ItemsSource="{Binding Tasks}" Margin="0,10">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Orientation="Horizontal" Spacing="10">
-                                <TextBlock Text="{Binding Info.FileName}" FontWeight="Bold"/>
-                                <TextBlock Text="{Binding Status}"/>
-                                <TextBlock Text="{Binding Info.Result.URL}" Foreground="Blue"/>
-                            </StackPanel>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-                
-                <TextBlock Grid.Row="2" Text="Ready" />
-            </Grid>
-        </TabItem>
+                <!-- Color and Actions Row -->
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                    <TextBlock Text="Color:" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <!-- Color Swatches -->
+                    <Border Width="30" Height="30" Background="#EF4444" CornerRadius="6" Cursor="Hand"/>
+                    <Border Width="30" Height="30" Background="#F59E0B" CornerRadius="6" Cursor="Hand"/>
+                    <Border Width="30" Height="30" Background="#10B981" CornerRadius="6" Cursor="Hand"/>
+                    <Border Width="30" Height="30" Background="#3B82F6" CornerRadius="6" Cursor="Hand"/>
+                    <Border Width="30" Height="30" Background="#8B5CF6" CornerRadius="6" Cursor="Hand"/>
+                    <Border Width="30" Height="30" Background="#EC4899" CornerRadius="6" Cursor="Hand"/>
+                    
+                    <Border Width="1" Background="#404050" Margin="10,0"/>
+                    
+                    <TextBlock Text="Width:" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <ComboBox SelectedIndex="1" Width="80" Background="#374151" Foreground="White">
+                        <ComboBoxItem>2px</ComboBoxItem>
+                        <ComboBoxItem>4px</ComboBoxItem>
+                        <ComboBoxItem>6px</ComboBoxItem>
+                        <ComboBoxItem>8px</ComboBoxItem>
+                    </ComboBox>
 
-        <!-- History Tab -->
-        <TabItem Header="History">
-            <views:HistoryView />
-        </TabItem>
-    </TabControl>
+                    <Border Width="1" Background="#404050" Margin="10,0"/>
+
+                    <!-- Action buttons -->
+                    <Button Content="↶" ToolTip.Tip="Undo" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="↷" ToolTip.Tip="Redo" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                    <Button Content="🗑" ToolTip.Tip="Delete" Width="40" Height="40" Background="#374151" Foreground="White" CornerRadius="8"/>
+                </StackPanel>
+            </StackPanel>
+        </Grid>
+
+        <!-- Main Content Area with Preview and Sidebar -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,300">
+            
+            <!-- Central Preview Canvas -->
+            <Grid Grid.Column="0" Margin="20">
+                <Border Background="{Binding CanvasBackground}"
+                        CornerRadius="{Binding CanvasCornerRadius}"
+                        Padding="{Binding CanvasPadding}"
+                        BoxShadow="{Binding CanvasShadow}">
+                    <!-- Preview Image -->
+                    <Border Background="#FFFFFF"
+                            CornerRadius="{Binding PreviewCornerRadius}"
+                            ClipToBounds="True">
+                        <Image Source="{Binding PreviewImage}"
+                               Stretch="Uniform"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"/>
+                        
+                        <!-- Placeholder when no image -->
+                        <TextBlock Text="No image captured"
+                                   Foreground="#6B7280"
+                                   FontSize="20"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"
+                                   IsVisible="{Binding !HasPreviewImage}"/>
+                    </Border>
+                </Border>
+            </Grid>
+
+            <!-- Right Sidebar (Settings Panel) -->
+            <Border Grid.Column="1" Background="#252535" Padding="20">
+                <ScrollViewer>
+                    <StackPanel Spacing="25">
+                        <TextBlock Text="Settings" 
+                                   FontSize="18" 
+                                   FontWeight="Bold" 
+                                   Foreground="White"/>
+
+                        <!-- Padding Slider -->
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Padding" Foreground="#9CA3AF"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PreviewPadding, StringFormat='{}{0}px'}" Foreground="White"/>
+                            </Grid>
+                            <Slider Minimum="0" 
+                                    Maximum="200" 
+                                    Value="{Binding PreviewPadding}"
+                                    Background="#374151"/>
+                        </StackPanel>
+
+                        <!-- Corner Radius Slider -->
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Corner Radius" Foreground="#9CA3AF"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PreviewCornerRadius, StringFormat='{}{0}px'}" Foreground="White"/>
+                            </Grid>
+                            <Slider Minimum="0" 
+                                    Maximum="50" 
+                                    Value="{Binding PreviewCornerRadius}"
+                                    Background="#374151"/>
+                        </StackPanel>
+
+                        <!-- Shadow Blur Slider -->
+                        <StackPanel Spacing="8">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Shadow Blur" Foreground="#9CA3AF"/>
+                                <TextBlock Grid.Column="1" Text="{Binding ShadowBlur, StringFormat='{}{0}px'}" Foreground="White"/>
+                            </Grid>
+                            <Slider Minimum="0" 
+                                    Maximum="100" 
+                                    Value="{Binding ShadowBlur}"
+                                    Background="#374151"/>
+                        </StackPanel>
+
+                        <!-- Output Ratio -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Output Ratio" Foreground="#9CA3AF"/>
+                            <UniformGrid Columns="3" Rows="2">
+                                <Button Content="Auto" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="1:1" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="4:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="16:9" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="9:16" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="21:9" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                            </UniformGrid>
+                        </StackPanel>
+
+                        <!-- Background Selection -->
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Background" Foreground="#9CA3AF"/>
+                            <UniformGrid Columns="4" Rows="2">
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#667EEA" Offset="0"/>
+                                            <GradientStop Color="#764BA2" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#1E3A8A" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#F59E0B" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#10B981" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#EF4444" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#8B5CF6" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#EC4899" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#374151" Cursor="Hand"/>
+                            </UniformGrid>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+
+        <!-- Bottom Footer -->
+        <Border Grid.Row="3" Background="#252535" BorderBrush="#404050" BorderThickness="0,1,0,0" Padding="20,12">
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto">
+                <!-- Image Dimensions -->
+                <TextBlock Grid.Column="0" 
+                           Text="{Binding ImageDimensions, StringFormat='Image: {0}'}" 
+                           Foreground="#6B7280"
+                           VerticalAlignment="Center"/>
+
+                <!-- Format Toggle -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" Margin="0,0,15,0">
+                    <ToggleButton Content="PNG" 
+                                  IsChecked="{Binding IsPngFormat}"
+                                  Width="60" 
+                                  Background="#374151" 
+                                  Foreground="White"
+                                  CornerRadius="6"/>
+                    <ToggleButton Content="JPEG" 
+                                  IsChecked="{Binding !IsPngFormat}"
+                                  Width="60" 
+                                  Background="#374151" 
+                                  Foreground="White"
+                                  CornerRadius="6"/>
+                </StackPanel>
+
+                <!-- Action Buttons -->
+                <Button Grid.Column="3" 
+                        Content="Copy" 
+                        Command="{Binding CopyCommand}"
+                        Width="100"
+                        Background="Transparent"
+                        BorderBrush="#6B7280"
+                        BorderThickness="1"
+                        Foreground="White"
+                        CornerRadius="8"
+                        Margin="0,0,10,0"/>
+                
+                <Button Grid.Column="4" 
+                        Content="Quick Save" 
+                        Command="{Binding QuickSaveCommand}"
+                        Width="120"
+                        Background="#14B8A6"
+                        Foreground="White"
+                        CornerRadius="8"
+                        Margin="0,0,10,0"/>
+                
+                <Button Grid.Column="5" 
+                        Content="Save As..." 
+                        Command="{Binding SaveAsCommand}"
+                        Width="120"
+                        Background="#8B5CF6"
+                        Foreground="White"
+                        CornerRadius="8"/>
+            </Grid>
+        </Border>
+    </Grid>
 
 </Window>

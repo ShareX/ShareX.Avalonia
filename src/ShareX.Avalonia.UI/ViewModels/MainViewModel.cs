@@ -1,64 +1,178 @@
-using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Core.Managers;
-using ShareX.Avalonia.Core.Tasks;
-using ShareX.Avalonia.Core;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
-using System.Linq; // For now
-using System;
-using ShareX.Avalonia.Common;
-
+using Avalonia;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using ShareX.Avalonia.Core;
+using ShareX.Avalonia.Core.Managers;
+using ShareX.Avalonia.Core.Tasks;
 using ShareX.Avalonia.Uploaders;
 
 namespace ShareX.Avalonia.UI.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {
-        public ObservableCollection<WorkerTask> Tasks { get; } = new ObservableCollection<WorkerTask>();
+        [ObservableProperty]
+        private ObservableCollection<WorkerTask> _tasks;
+
+        [ObservableProperty]
+        private Bitmap? _previewImage;
+
+        [ObservableProperty]
+        private bool _hasPreviewImage;
+
+        [ObservableProperty]
+        private double _previewPadding = 50;
+
+        [ObservableProperty]
+        private double _previewCornerRadius = 16;
+
+        [ObservableProperty]
+        private double _shadowBlur = 30;
+
+        [ObservableProperty]
+        private string _imageDimensions = "No image";
+
+        [ObservableProperty]
+        private bool _isPngFormat = true;
+
+        [ObservableProperty]
+        private IBrush _canvasBackground;
+
+        [ObservableProperty]
+        private double _canvasCornerRadius = 0;
+
+        [ObservableProperty]
+        private Thickness _canvasPadding;
+
+        [ObservableProperty]
+        private BoxShadows _canvasShadow;
 
         public MainViewModel()
         {
-            // Sync with TaskManager. 
-            // In a real app we'd bind to an event or ObservableCollection from TaskManager.
-            // For now, let's just poll or link manually.
-            // TaskManager doesn't expose ObservableCollection yet. 
-            // Let's modify TaskManager later to support this, or just wrap it.
-        }
-
-        [RelayCommand]
-        public async Task CaptureRegion()
-        {
-            var settings = new TaskSettings(); // Create fresh instance
-            
-            // Just start a task to test the pipeline
-            settings.Job = HotkeyType.RectangleRegion;
-            settings.AfterCaptureJob = AfterCaptureTasks.SaveImageToFile;
-            
-            await TaskManager.Instance.StartTask(settings);
-            
-            // Refresh list (temporary until we have events)
-            UpdateTaskList();
-        }
-
-        [RelayCommand]
-        public async Task CaptureAndUpload()
-        {
-             var settings = new TaskSettings();
-             settings.Job = HotkeyType.RectangleRegion;
-             settings.AfterCaptureJob = AfterCaptureTasks.SaveImageToFile | AfterCaptureTasks.UploadImageToHost;
-             settings.ImageDestination = ImageDestination.Imgur;
-             
-             await TaskManager.Instance.StartTask(settings);
-             UpdateTaskList();
-        }
-
-        private void UpdateTaskList() 
-        {
-            Tasks.Clear();
-            foreach(var task in TaskManager.Instance.Tasks)
+            _tasks = new ObservableCollection<WorkerTask>();
+            _canvasBackground = new LinearGradientBrush
             {
-                Tasks.Add(task);
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.Parse("#667EEA"), 0),
+                    new GradientStop(Color.Parse("#764BA2"), 1)
+                }
+            };
+            UpdateCanvasProperties();
+        }
+
+        partial void OnPreviewPaddingChanged(double value)
+        {
+            UpdateCanvasProperties();
+        }
+
+        partial void OnShadowBlurChanged(double value)
+        {
+            UpdateCanvasProperties();
+        }
+
+        private void UpdateCanvasProperties()
+        {
+            CanvasPadding = new Thickness(PreviewPadding);
+            CanvasShadow = new BoxShadows(new BoxShadow
+            {
+                Blur = ShadowBlur,
+                Color = Color.FromArgb(80, 0, 0, 0),
+                OffsetX = 0,
+                OffsetY = 10
+            });
+        }
+
+        [RelayCommand]
+        private async Task CaptureFullscreen()
+        {
+            await ExecuteCapture(HotkeyType.PrintScreen);
+        }
+
+        [RelayCommand]
+        private async Task CaptureRegion()
+        {
+            await ExecuteCapture(HotkeyType.RectangleRegion);
+        }
+
+        [RelayCommand]
+        private async Task CaptureWindow()
+        {
+            await ExecuteCapture(HotkeyType.ActiveWindow);
+        }
+
+        [RelayCommand]
+        private async Task CaptureAndUpload()
+        {
+            await ExecuteCapture(HotkeyType.RectangleRegion, AfterCaptureTasks.UploadImageToHost);
+        }
+
+        [RelayCommand]
+        private void Clear()
+        {
+            PreviewImage = null;
+            HasPreviewImage = false;
+            ImageDimensions = "No image";
+        }
+
+        [RelayCommand]
+        private async Task Copy()
+        {
+            if (PreviewImage == null) return;
+            // TODO: Copy image to clipboard
+            await Task.CompletedTask;
+        }
+
+        [RelayCommand]
+        private async Task QuickSave()
+        {
+            if (PreviewImage == null) return;
+            // TODO: Quick save to default location
+            await Task.CompletedTask;
+        }
+
+        [RelayCommand]
+        private async Task SaveAs()
+        {
+            if (PreviewImage == null) return;
+            // TODO: Show save dialog
+            await Task.CompletedTask;
+        }
+
+        private async Task ExecuteCapture(HotkeyType jobType, AfterCaptureTasks afterCapture = AfterCaptureTasks.SaveImageToFile)
+        {
+            var settings = new TaskSettings
+            {
+                Job = jobType,
+                AfterCaptureJob = afterCapture
+            };
+
+            var task = WorkerTask.Create(settings);
+            Tasks.Add(task);
+            await task.StartAsync();
+
+            // Update preview if capture succeeded
+            if (task.Info?.Metadata?.Image != null)
+            {
+                UpdatePreview(task.Info.Metadata.Image);
             }
+        }
+
+        private void UpdatePreview(System.Drawing.Image image)
+        {
+            // Convert System.Drawing.Image to Avalonia Bitmap
+            using var ms = new System.IO.MemoryStream();
+            image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            ms.Position = 0;
+            PreviewImage = new Bitmap(ms);
+            HasPreviewImage = true;
+            ImageDimensions = $"{image.Width} x {image.Height}";
         }
     }
 }
