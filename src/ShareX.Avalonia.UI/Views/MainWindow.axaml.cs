@@ -130,6 +130,11 @@ namespace ShareX.Avalonia.UI.Views
         private readonly Stack<Control> _undoStack = new();
         private readonly Stack<Control> _redoStack = new();
 
+        // Selection State
+        private Control? _selectedShape;
+        private Point _lastDragPoint;
+        private bool _isDraggingShape;
+
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
@@ -152,6 +157,8 @@ namespace ShareX.Avalonia.UI.Views
                 {
                     canvas.Children.Remove(shape);
                     _redoStack.Push(shape);
+                    
+                    if (_selectedShape == shape) _selectedShape = null;
                 }
             }
         }
@@ -172,27 +179,54 @@ namespace ShareX.Avalonia.UI.Views
 
         private void PerformDelete()
         {
-            // Simple delete last item for now, or TODO: Implement selection
-            // If we implement selection, we delete the selected item.
-            // For now, let's treat Delete key as "Undo" if no selection, or just do nothing?
-            // User expects Delete to delete selected.
-            // Since we have no selection logic yet, maybe do nothing or warn.
-            // Let's implement Delete Last if no selection? No, that's confusing with Undo.
-            // Leaving empty until selection is implemented.
+            if (_selectedShape != null)
+            {
+                var canvas = this.FindControl<Canvas>("AnnotationCanvas");
+                if (canvas != null && canvas.Children.Contains(_selectedShape))
+                {
+                    canvas.Children.Remove(_selectedShape);
+                    
+                    // We treat a deletion as an undoable action? 
+                    // Ideally, we move it to undo stack, but our Undo logic is strict stack pop.
+                    // If we delete middle item, stack is broken.
+                    // For now, complex undo history is out of scope. 
+                    // Simple deletion.
+                    _selectedShape = null;
+                }
+            }
         }
+
 
         private void OnCanvasPointerPressed(object sender, PointerPressedEventArgs e)
         {
             if (DataContext is not MainViewModel vm) return;
-            if (vm.ActiveTool == EditorTool.Select) return;
-
             var canvas = sender as Canvas;
             if (canvas == null) return;
+
+            var point = e.GetPosition(canvas);
+
+            if (vm.ActiveTool == EditorTool.Select)
+            {
+                // Hit test
+                var source = e.Source as Control;
+                if (source != null && source != canvas && canvas.Children.Contains(source))
+                {
+                    _selectedShape = source;
+                    _lastDragPoint = point;
+                    _isDraggingShape = true;
+                    // Visual feedback could be added here (e.g. bounding box)
+                }
+                else
+                {
+                    _selectedShape = null;
+                }
+                return;
+            }
 
             // Clear Redo stack on new action
             _redoStack.Clear();
 
-            _startPoint = e.GetPosition(canvas);
+            _startPoint = point;
             _isDrawing = true;
 
             var brush = new SolidColorBrush(Color.Parse(vm.SelectedColor));
@@ -289,13 +323,27 @@ namespace ShareX.Avalonia.UI.Views
 
         private void OnCanvasPointerMoved(object sender, PointerEventArgs e)
         {
-            if (!_isDrawing || _currentShape == null) return;
-            
             var canvas = sender as Canvas;
             if (canvas == null) return;
-
             var currentPoint = e.GetPosition(canvas);
 
+            if (_isDraggingShape && _selectedShape != null)
+            {
+                var deltaX = currentPoint.X - _lastDragPoint.X;
+                var deltaY = currentPoint.Y - _lastDragPoint.Y;
+
+                var left = Canvas.GetLeft(_selectedShape);
+                var top = Canvas.GetTop(_selectedShape);
+
+                Canvas.SetLeft(_selectedShape, left + deltaX);
+                Canvas.SetTop(_selectedShape, top + deltaY);
+
+                _lastDragPoint = currentPoint;
+                return;
+            }
+
+            if (!_isDrawing || _currentShape == null) return;
+            
             if (_currentShape is global::Avalonia.Controls.Shapes.Line line)
             {
                 line.EndPoint = currentPoint;
@@ -366,6 +414,12 @@ namespace ShareX.Avalonia.UI.Views
 
         private void OnCanvasPointerReleased(object sender, PointerReleasedEventArgs e)
         {
+            if (_isDraggingShape)
+            {
+                _isDraggingShape = false;
+                return;
+            }
+
             if (_isDrawing)
             {
                 _isDrawing = false;
