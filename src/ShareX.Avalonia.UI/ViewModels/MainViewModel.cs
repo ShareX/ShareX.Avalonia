@@ -125,12 +125,63 @@ namespace ShareX.Avalonia.UI.ViewModels
             await ExecuteCapture(HotkeyType.RectangleRegion, AfterCaptureTasks.UploadImageToHost);
         }
 
+        // Static color palette for annotation toolbar
+        public static string[] ColorPalette => new[]
+        {
+            "#EF4444", "#F97316", "#EAB308", "#22C55E",
+            "#0EA5E9", "#6366F1", "#A855F7", "#EC4899",
+            "#FFFFFF", "#000000", "#64748B", "#1E293B"
+        };
+
+        // Static stroke widths
+        public static int[] StrokeWidths => new[] { 2, 4, 6, 8, 10 };
+
+        [RelayCommand]
+        private void SelectTool(EditorTool tool)
+        {
+            ActiveTool = tool;
+        }
+
+        [RelayCommand]
+        private void SetColor(string color)
+        {
+            SelectedColor = color;
+        }
+
+        [RelayCommand]
+        private void SetStrokeWidth(int width)
+        {
+            StrokeWidth = width;
+        }
+
+        [RelayCommand]
+        private void Undo()
+        {
+            // TODO: Implement undo stack
+            StatusText = "Undo (not yet implemented)";
+        }
+
+        [RelayCommand]
+        private void Redo()
+        {
+            // TODO: Implement redo stack
+            StatusText = "Redo (not yet implemented)";
+        }
+
+        [RelayCommand]
+        private void DeleteSelected()
+        {
+            // TODO: Delete selected annotation
+            StatusText = "Delete selected (not yet implemented)";
+        }
+
         [RelayCommand]
         private void Clear()
         {
             PreviewImage = null;
             HasPreviewImage = false;
             ImageDimensions = "No image";
+            StatusText = "Ready";
         }
 
         [RelayCommand]
