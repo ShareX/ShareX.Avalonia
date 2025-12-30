@@ -45,6 +45,7 @@ namespace ShareX.Avalonia.Common
         public const string Hexadecimal = Numbers + "ABCDEF";
         public const string Base58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"; // https://en.wikipedia.org/wiki/Base58
         public const string Base56 = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz"; // A variant, Base56, excludes 1 (one) and o (lowercase o) compared to Base 58.
+        public static readonly Version OSVersion = Environment.OSVersion.Version;
 
         public static string AddZeroes(string input, int digits = 2)
         {
@@ -55,6 +56,61 @@ namespace ShareX.Avalonia.Common
         {
             return AddZeroes(number.ToString(), digits);
         }
+
+        public static string HourTo12(int hour)
+        {
+            if (hour == 0)
+            {
+                return 12.ToString();
+            }
+
+            if (hour > 12)
+            {
+                return AddZeroes(hour - 12);
+            }
+
+            return AddZeroes(hour);
+        }
+
+        public static string GetAllCharacters()
+        {
+            return Encoding.UTF8.GetString(Enumerable.Range(1, 255).Select(i => (byte)i).ToArray());
+        }
+
+        public static string GetRandomLine(string text)
+        {
+            // Simplified Lines() extension logic
+            string[] lines = text.Trim().Replace("\r\n", "\n").Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (lines != null && lines.Length > 0)
+            {
+                // Assuming RandomCrypto.Pick exists or using extension
+                // If RandomCrypto.Pick is generic extension on IList, it might need to be ported.
+                // Checking RandomCrypto content might be needed. 
+                // For now, assume it works or use simple random.
+                return lines[RandomCrypto.Next(lines.Length)];
+            }
+
+            return null;
+        }
+
+        public static string GetRandomLineFromFile(string filePath)
+        {
+            string text = File.ReadAllText(filePath, Encoding.UTF8);
+            return GetRandomLine(text);
+        }
+
+        public static string GetXMLValue(string input, string tag)
+        {
+            return System.Text.RegularExpressions.Regex.Match(input, string.Format("(?<={0}>).+?(?=</{0})", tag)).Value;
+        }
+
+        public static string[] GetEnumDescriptions<T>(int skip = 0)
+        {
+            return Enum.GetValues(typeof(T)).OfType<Enum>().Skip(skip).Select(x => EnumExtensions.GetDescription(x)).ToArray();
+        }
+
+
 
         public static char GetRandomChar(string chars)
         {

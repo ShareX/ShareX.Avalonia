@@ -270,10 +270,12 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] GitHubUpdateManager.cs
 - [x] GradientInfo.cs
 - [x] GradientStop.cs
+- [x] GraphicsExtensions.cs
 - [x] GraphicsPathExtensions.cs
 - [x] GraphicsQualityManager.cs
 - [x] GrayscaleQuantizer.cs
 - [x] Helpers.cs
+- [x] MathHelpers.cs
 - [x] HotkeyInfo.cs
 - [x] HSB.cs
 - [x] HttpClientFactory.cs
