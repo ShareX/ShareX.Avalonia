@@ -1,4 +1,4 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
     ShareX.Avalonia - The Avalonia UI implementation of ShareX
@@ -91,7 +91,7 @@ namespace ShareX.Avalonia.Uploaders.FileUploaders
                 ms.Write(cryptoData.Salt, 0, cryptoData.Salt.Length);
                 byte[] encryptedFn = EncryptBytes(cryptoData, fileNameBytes);
                 ms.Write(encryptedFn, 0, encryptedFn.Length);
-                encryptedFileName = Helpers.BytesToHex(ms.ToArray());
+                encryptedFileName = GeneralHelpers.BytesToHex(ms.ToArray());
             }
             string bytesLengthHex = fullUploadSize.ToString("X4"); // To Hex
             DateTime expiryTime = DateTime.UtcNow.AddDays(30); // Defaults from the web client
@@ -265,3 +265,4 @@ namespace ShareX.Avalonia.Uploaders.FileUploaders
         }
     }
 }
+

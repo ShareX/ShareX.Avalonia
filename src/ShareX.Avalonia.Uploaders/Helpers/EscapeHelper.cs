@@ -1,4 +1,4 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
     ShareX.Avalonia - The Avalonia UI implementation of ShareX
@@ -34,8 +34,8 @@ namespace ShareX.Avalonia.Uploaders
         public string EscapeableCharacter { get; set; } = "%";
         public bool KeepEscapeCharacter { get; set; }
 
-        private string escapeCharacterReserve = Helpers.GetRandomAlphanumeric(32);
-        private string escapeableCharacterReserve = Helpers.GetRandomAlphanumeric(32);
+        private string escapeCharacterReserve = GeneralHelpers.GetRandomAlphanumericString(32);
+        private string escapeableCharacterReserve = GeneralHelpers.GetRandomAlphanumericString(32);
 
         public string Parse(string input, Func<string, string> action)
         {
@@ -56,3 +56,4 @@ namespace ShareX.Avalonia.Uploaders
         }
     }
 }
+

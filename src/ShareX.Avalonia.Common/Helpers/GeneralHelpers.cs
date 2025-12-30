@@ -34,7 +34,7 @@ namespace ShareX.Avalonia.Common;
 /// <summary>
 /// General helper methods
 /// </summary>
-public static class Helpers
+public static class GeneralHelpers
 {
     public const string Alphanumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     

@@ -1,4 +1,4 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
     ShareX.Avalonia - The Avalonia UI implementation of ShareX
@@ -60,7 +60,7 @@ namespace ShareX.Avalonia.Uploaders
             IPAddress ip = IPAddress.Loopback;
             int port = WebHelpers.GetRandomUnusedPort();
             string redirectURI = string.Format($"http://{ip}:{port}/");
-            string state = Helpers.GetRandomAlphanumeric(32);
+            string state = GeneralHelpers.GetRandomAlphanumericString(32);
 
             OAuth.RedirectURI = redirectURI;
             OAuth.State = state;
@@ -136,3 +136,4 @@ namespace ShareX.Avalonia.Uploaders
         }
     }
 }
+

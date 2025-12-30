@@ -1,4 +1,4 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
     ShareX.Avalonia - The Avalonia UI implementation of ShareX
@@ -232,7 +232,7 @@ namespace ShareX.Avalonia.Uploaders
 
         private static string GenerateNonce()
         {
-            return Helpers.GetRandomAlphanumeric(12);
+            return GeneralHelpers.GetRandomAlphanumericString(12);
         }
 
         private static string NormalizeUrl(string url)
@@ -260,3 +260,4 @@ namespace ShareX.Avalonia.Uploaders
         }
     }
 }
+

@@ -1,4 +1,4 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
     ShareX.Avalonia - The Avalonia UI implementation of ShareX
@@ -56,7 +56,7 @@ namespace ShareX.Avalonia.Uploaders.FileUploaders
 
         public override UploadResult Upload(Stream stream, string fileName)
         {
-            DropName = "ShareX_" + Helpers.GetRandomAlphanumeric(10);
+            DropName = "ShareX_" + GeneralHelpers.GetRandomAlphanumericString(10);
             DropDescription = "";
             Drop drop = CreateDrop(DropName, DropDescription, false, false, false);
 
@@ -126,3 +126,4 @@ namespace ShareX.Avalonia.Uploaders.FileUploaders
         }
     }
 }
+
