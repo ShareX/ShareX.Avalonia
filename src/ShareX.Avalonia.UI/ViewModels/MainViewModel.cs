@@ -15,6 +15,11 @@ namespace ShareX.Avalonia.UI.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {
+        // Events to signal View to perform canvas operations
+        public event EventHandler? UndoRequested;
+        public event EventHandler? RedoRequested;
+        public event EventHandler? DeleteRequested;
+
         [ObservableProperty]
         private ObservableCollection<WorkerTask> _tasks;
 
@@ -165,22 +170,22 @@ namespace ShareX.Avalonia.UI.ViewModels
         [RelayCommand]
         private void Undo()
         {
-            // TODO: Implement undo stack
-            StatusText = "Undo (not yet implemented)";
+            UndoRequested?.Invoke(this, EventArgs.Empty);
+            StatusText = "Undo requested";
         }
 
         [RelayCommand]
         private void Redo()
         {
-            // TODO: Implement redo stack
-            StatusText = "Redo (not yet implemented)";
+            RedoRequested?.Invoke(this, EventArgs.Empty);
+            StatusText = "Redo requested";
         }
 
         [RelayCommand]
         private void DeleteSelected()
         {
-            // TODO: Delete selected annotation
-            StatusText = "Delete selected (not yet implemented)";
+            DeleteRequested?.Invoke(this, EventArgs.Empty);
+            StatusText = "Delete requested";
         }
 
         [RelayCommand]

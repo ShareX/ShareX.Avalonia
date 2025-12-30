@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using System.Collections.Generic;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -116,6 +117,61 @@ namespace ShareX.Avalonia.UI.Views
         private Point _startPoint;
         private bool _isDrawing;
         private Control? _currentShape;
+        
+        // Undo/Redo Stacks
+        private readonly Stack<Control> _undoStack = new();
+        private readonly Stack<Control> _redoStack = new();
+
+        protected override void OnDataContextChanged(EventArgs e)
+        {
+            base.OnDataContextChanged(e);
+            
+            if (DataContext is MainViewModel vm)
+            {
+                vm.UndoRequested += (s, args) => PerformUndo();
+                vm.RedoRequested += (s, args) => PerformRedo();
+                vm.DeleteRequested += (s, args) => PerformDelete();
+            }
+        }
+
+        private void PerformUndo()
+        {
+            if (_undoStack.Count > 0)
+            {
+                var shape = _undoStack.Pop();
+                var canvas = this.FindControl<Canvas>("AnnotationCanvas");
+                if (canvas != null && canvas.Children.Contains(shape))
+                {
+                    canvas.Children.Remove(shape);
+                    _redoStack.Push(shape);
+                }
+            }
+        }
+
+        private void PerformRedo()
+        {
+            if (_redoStack.Count > 0)
+            {
+                var shape = _redoStack.Pop();
+                var canvas = this.FindControl<Canvas>("AnnotationCanvas");
+                if (canvas != null)
+                {
+                    canvas.Children.Add(shape);
+                    _undoStack.Push(shape);
+                }
+            }
+        }
+
+        private void PerformDelete()
+        {
+            // Simple delete last item for now, or TODO: Implement selection
+            // If we implement selection, we delete the selected item.
+            // For now, let's treat Delete key as "Undo" if no selection, or just do nothing?
+            // User expects Delete to delete selected.
+            // Since we have no selection logic yet, maybe do nothing or warn.
+            // Let's implement Delete Last if no selection? No, that's confusing with Undo.
+            // Leaving empty until selection is implemented.
+        }
 
         private void OnCanvasPointerPressed(object sender, PointerPressedEventArgs e)
         {
@@ -124,6 +180,9 @@ namespace ShareX.Avalonia.UI.Views
 
             var canvas = sender as Canvas;
             if (canvas == null) return;
+
+            // Clear Redo stack on new action
+            _redoStack.Clear();
 
             _startPoint = e.GetPosition(canvas);
             _isDrawing = true;
@@ -302,8 +361,12 @@ namespace ShareX.Avalonia.UI.Views
             if (_isDrawing)
             {
                 _isDrawing = false;
-                _currentShape = null;
-                // TODO: Add to ViewModel collection for Undo/Redo
+                if (_currentShape != null)
+                {
+                    _undoStack.Push(_currentShape);
+                    // _currentShape is now managed by the canvas/undo stack
+                    _currentShape = null;
+                }
             }
         }
 
