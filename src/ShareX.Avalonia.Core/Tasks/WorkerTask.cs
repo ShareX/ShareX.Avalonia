@@ -72,20 +72,48 @@ namespace ShareX.Avalonia.Core.Tasks
             Status = TaskStatus.Working;
             OnStatusChanged();
 
-            // Perform Capture Phase
-            if (Info.TaskSettings.Job == HotkeyType.RectangleRegion && PlatformServices.IsInitialized)
+            // Perform Capture Phase based on Job Type
+            if (PlatformServices.IsInitialized)
             {
-                var image = await PlatformServices.ScreenCapture.CaptureRegionAsync();
+                System.Drawing.Image? image = null;
+                
+                switch (Info.TaskSettings.Job)
+                {
+                    case HotkeyType.PrintScreen:
+                        image = await PlatformServices.ScreenCapture.CaptureFullScreenAsync();
+                        break;
+                        
+                    case HotkeyType.RectangleRegion:
+                        image = await PlatformServices.ScreenCapture.CaptureRegionAsync();
+                        break;
+                        
+                    case HotkeyType.ActiveWindow:
+                        if (PlatformServices.Window != null)
+                        {
+                            image = await PlatformServices.ScreenCapture.CaptureActiveWindowAsync(PlatformServices.Window);
+                        }
+                        break;
+                }
                 
                 if (image is System.Drawing.Bitmap bitmap)
                 {
                     Info.Metadata.Image = bitmap;
+                    DebugHelper.WriteLine($"Captured image: {bitmap.Width}x{bitmap.Height}");
                 }
                 else if (image != null)
                 {
-                    // Handle other image types if needed or error
-                    DebugHelper.WriteLine("Captured image is not a valid Bitmap.");
+                    // Convert to Bitmap if it's a different Image type
+                    Info.Metadata.Image = new System.Drawing.Bitmap(image);
+                    DebugHelper.WriteLine($"Converted image to Bitmap: {image.Width}x{image.Height}");
                 }
+                else
+                {
+                    DebugHelper.WriteLine($"Capture returned null for job type: {Info.TaskSettings.Job}");
+                }
+            }
+            else
+            {
+                DebugHelper.WriteLine("PlatformServices not initialized - cannot capture");
             }
 
             // Execute Capture Job (File Save, Clipboard, etc)
