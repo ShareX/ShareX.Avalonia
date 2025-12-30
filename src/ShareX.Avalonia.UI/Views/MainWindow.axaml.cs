@@ -157,11 +157,61 @@ namespace ShareX.Avalonia.UI.Views
                         EndPoint = _startPoint
                     };
                     break;
+                case EditorTool.Arrow:
+                    _currentShape = new global::Avalonia.Controls.Shapes.Path
+                    {
+                        Stroke = brush,
+                        StrokeThickness = vm.StrokeWidth,
+                        Fill = brush, // Fill arrowhead
+                        Data = new PathGeometry()
+                    };
+                    break;
+                case EditorTool.Text:
+                    // For text, we create a TextBox directly
+                    var textBox = new TextBox
+                    {
+                        Foreground = brush,
+                        Background = Brushes.Transparent,
+                        BorderThickness = new Thickness(1), // Visible border while editing
+                        BorderBrush = Brushes.White, 
+                        FontSize = Math.Max(12, vm.StrokeWidth * 4),
+                        Text = "Text",
+                        Padding = new Thickness(4),
+                        MinWidth = 50
+                    };
+                    
+                    // Position it
+                    Canvas.SetLeft(textBox, _startPoint.X);
+                    Canvas.SetTop(textBox, _startPoint.Y);
+                    
+                    // Add logic to remove border when lost focus?
+                    textBox.LostFocus += (s, args) => 
+                    {
+                        if (s is TextBox tb)
+                        {
+                            tb.BorderThickness = new Thickness(0);
+                            if (string.IsNullOrWhiteSpace(tb.Text))
+                            {
+                                // Remove empty text boxes
+                                var parentKey = tb.Parent as Panel;
+                                parentKey?.Children.Remove(tb);
+                            }
+                        }
+                    };
+
+                    canvas.Children.Add(textBox);
+                    textBox.Focus();
+                    
+                    // We don't set _currentShape because we don't resize text via drag creation typically
+                    // But if we wanted drag-rect creation for text box size, we could.
+                    // For now, click-to-type.
+                    _isDrawing = false; 
+                    return; 
             }
 
             if (_currentShape != null)
             {
-                if (vm.ActiveTool != EditorTool.Line)
+                if (vm.ActiveTool != EditorTool.Line && vm.ActiveTool != EditorTool.Arrow)
                 {
                     Canvas.SetLeft(_currentShape, _startPoint.X);
                     Canvas.SetTop(_currentShape, _startPoint.Y);
@@ -182,6 +232,11 @@ namespace ShareX.Avalonia.UI.Views
             if (_currentShape is global::Avalonia.Controls.Shapes.Line line)
             {
                 line.EndPoint = currentPoint;
+            }
+            else if (_currentShape is global::Avalonia.Controls.Shapes.Path arrowPath && DataContext is MainViewModel vm)
+            {
+                // Update Arrow Geometry
+                arrowPath.Data = CreateArrowGeometry(_startPoint, currentPoint, vm.StrokeWidth * 3);
             }
             else
             {
@@ -205,6 +260,41 @@ namespace ShareX.Avalonia.UI.Views
                     Canvas.SetTop(ellipse, y);
                 }
             }
+        }
+
+        private Geometry CreateArrowGeometry(Point start, Point end, double headSize)
+        {
+            var geometry = new StreamGeometry();
+            using (var ctx = geometry.Open())
+            {
+                // Draw line
+                ctx.BeginFigure(start, false);
+                ctx.LineTo(end);
+
+                // Calculate arrow head
+                var d = end - start;
+                var length = Math.Sqrt(d.X * d.X + d.Y * d.Y);
+                
+                if (length > 0)
+                {
+                    var ux = d.X / length;
+                    var uy = d.Y / length;
+
+                    // Arrow head points
+                    var p1 = new Point(end.X - headSize * ux + headSize * 0.5 * uy, end.Y - headSize * uy - headSize * 0.5 * ux);
+                    var p2 = new Point(end.X - headSize * ux - headSize * 0.5 * uy, end.Y - headSize * uy + headSize * 0.5 * ux);
+
+                    // Draw head as a separate figure or continuation?
+                    // Let's draw it as a filled triangle at the end
+                    ctx.EndFigure(false);
+                    
+                    ctx.BeginFigure(end, true); // Filled
+                    ctx.LineTo(p1);
+                    ctx.LineTo(p2);
+                    ctx.LineTo(end);
+                }
+            }
+            return geometry;
         }
 
         private void OnCanvasPointerReleased(object sender, PointerReleasedEventArgs e)
