@@ -335,7 +335,7 @@ Gap report derived from comparing the ShareX libraries against the Avalonia proj
 - [x] WshShell.cs
 - [x] XmlColor.cs
 - [x] XmlFont.cs
-- [ ] XMLUpdateChecker.cs
+- [x] XMLUpdateChecker.cs
 
 ### ShareX.HistoryLib
 - [ ] HistoryItemManager.cs
