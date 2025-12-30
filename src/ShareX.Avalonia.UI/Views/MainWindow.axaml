@@ -256,20 +256,32 @@
                         <!-- Output Ratio -->
                         <StackPanel Spacing="8">
                             <TextBlock Text="Output Ratio" Foreground="#9CA3AF"/>
-                            <UniformGrid Columns="3" Rows="2">
-                                <Button Content="Auto" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                            <UniformGrid Columns="3" Rows="3">
+                                <Button Content="Auto" Margin="2" Background="#8B5CF6" Foreground="White" CornerRadius="8"/>
                                 <Button Content="1:1" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
                                 <Button Content="4:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="3:2" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
                                 <Button Content="16:9" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="5:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
                                 <Button Content="9:16" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="21:9" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="3:4" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
+                                <Button Content="2:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
                             </UniformGrid>
                         </StackPanel>
 
-                        <!-- Background Selection -->
+                        <!-- Gradient Presets -->
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Background" Foreground="#9CA3AF"/>
-                            <UniformGrid Columns="4" Rows="2">
+                            <TextBlock Text="Gradient Presets" Foreground="#9CA3AF"/>
+                            <UniformGrid Columns="4" Rows="6">
+                                <!-- Row 1: Sunset, Ocean, Forest, Fire -->
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#F093FB" Offset="0"/>
+                                            <GradientStop Color="#F5576C" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
                                 <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
                                     <Border.Background>
                                         <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
@@ -278,13 +290,185 @@
                                         </LinearGradientBrush>
                                     </Border.Background>
                                 </Border>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#1E3A8A" Cursor="Hand"/>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#F59E0B" Cursor="Hand"/>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#10B981" Cursor="Hand"/>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#EF4444" Cursor="Hand"/>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#8B5CF6" Cursor="Hand"/>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#EC4899" Cursor="Hand"/>
-                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#374151" Cursor="Hand"/>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#11998E" Offset="0"/>
+                                            <GradientStop Color="#38EF7D" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#F12711" Offset="0"/>
+                                            <GradientStop Color="#F5AF19" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                
+                                <!-- Row 2: Cool Blue, Lavender, Aqua, Grape -->
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#2193B0" Offset="0"/>
+                                            <GradientStop Color="#6DD5ED" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#B8B8FF" Offset="0"/>
+                                            <GradientStop Color="#D6A4FF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#13547A" Offset="0"/>
+                                            <GradientStop Color="#80D0C7" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#7F00FF" Offset="0"/>
+                                            <GradientStop Color="#E100FF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                
+                                <!-- Row 3: Peach, Sky, Warm, Mint -->
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#FFB88C" Offset="0"/>
+                                            <GradientStop Color="#DE6262" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#56CCF2" Offset="0"/>
+                                            <GradientStop Color="#2F80ED" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#FFD93D" Offset="0"/>
+                                            <GradientStop Color="#FF6B6B" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#00B09B" Offset="0"/>
+                                            <GradientStop Color="#96C93D" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                
+                                <!-- Row 4: Midnight, Carbon, Deep Space, Noir -->
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#232526" Offset="0"/>
+                                            <GradientStop Color="#414345" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#373B44" Offset="0"/>
+                                            <GradientStop Color="#4286F4" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#000428" Offset="0"/>
+                                            <GradientStop Color="#004E92" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#0F2027" Offset="0"/>
+                                            <GradientStop Color="#2C5364" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                
+                                <!-- Row 5: Royal, Rose Gold, Emerald, Amethyst -->
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#141E30" Offset="0"/>
+                                            <GradientStop Color="#243B55" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#E8CBC0" Offset="0"/>
+                                            <GradientStop Color="#636FA4" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#076585" Offset="0"/>
+                                            <GradientStop Color="#FFF" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#9D50BB" Offset="0"/>
+                                            <GradientStop Color="#6E48AA" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                
+                                <!-- Row 6: Neon, Aurora, Candy, Clean -->
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#FF0844" Offset="0"/>
+                                            <GradientStop Color="#FFB199" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#00C9FF" Offset="0"/>
+                                            <GradientStop Color="#92FE9D" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Cursor="Hand">
+                                    <Border.Background>
+                                        <LinearGradientBrush StartPoint="0%,0%" EndPoint="100%,100%">
+                                            <GradientStop Color="#D53369" Offset="0"/>
+                                            <GradientStop Color="#DAAE51" Offset="1"/>
+                                        </LinearGradientBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Width="50" Height="50" Margin="4" CornerRadius="10" Background="#FFFFFF" Cursor="Hand"/>
                             </UniformGrid>
                         </StackPanel>
                     </StackPanel>
