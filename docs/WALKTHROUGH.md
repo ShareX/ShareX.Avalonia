@@ -1,61 +1,48 @@
 # ShareX.Avalonia Porting Walkthrough
 
-**Last Updated**: 2025-12-30 19:55  
-**Overall Progress**: ~56%  
-**Build Status**: Core libraries at 0 errors
+**Last Updated**: 2025-12-30 20:05  
+**Overall Progress**: ~58%  
+**Build Status**: 9/15 projects at 0 errors
 
-## Priority 3: Core Library Progress
+## Session Summary
 
-### Phases Complete
+### Priorities Completed
 
-| Phase | Content | Files | Lines | Status |
-|-------|---------|-------|-------|--------|
-| 1 | Foundation (Enums, Settings, Config) | 4 | ~1,165 | ✅ |
-| 2 | Task Infrastructure | 3 | ~240 | ✅ |
-| 3 | Managers | 2 | ~430 | ✅ |
-| 4 | Core Logic (TaskHelpers) | 1 | ~340 | ✅ |
-| **Total** | | **10** | **~2,175** | |
+| Priority | Library | Before | After | Status |
+|----------|---------|--------|-------|--------|
+| 1 | Uploaders | 7 | 0 | ✅ |
+| 2 | Common | 100+ | 0 | ✅ |
+| 3 | Core | - | 0 | ✅ (Phases 1-4) |
+| 4 | HistoryLib | 7 | 0 | ✅ |
+| 5 | ImageEffects | 2 | 32* | ⚠️ |
+| 6 | MediaLib | 6 | 0 | ✅ |
 
-### Core Library Structure
+*ImageEffects has NuGet version conflicts (System.Drawing.Common 9.0.0 vs 10.0.1)
+
+### Core Library Complete
+
 ```
-ShareX.Avalonia.Core/
+ShareX.Avalonia.Core/ (~2,200 lines)
 ├── Enums.cs (24 enumerations)
-├── Helpers/
-│   └── TaskHelpers.cs
-├── Managers/
-│   ├── SettingManager.cs
-│   └── RecentTaskManager.cs
-└── Models/
-    ├── ApplicationConfig.cs
-    ├── HotkeySettings.cs
-    ├── TaskInfo.cs
-    ├── TaskMetadata.cs
-    └── TaskSettings.cs
+├── Helpers/TaskHelpers.cs
+├── Managers/SettingManager.cs, RecentTaskManager.cs
+└── Models/ApplicationConfig.cs, TaskSettings.cs, TaskInfo.cs, etc.
 ```
 
-### Key Design Decisions
+### Key Fixes Applied
 
-1. **SettingManager**: Uses `JsonHelpers` for direct serialization instead of `SettingsBase.Load/Save`
-2. **TaskHelpers**: Refactored to use `SettingManager.Settings` instead of `Program.Settings`
-3. **MVVM Compliance**: All managers free of WinForms dependencies, use events for UI notification
+- **HistoryLib**: FileHelpersLite→FileHelpers, Helpers→GeneralHelpers
+- **MediaLib**: Resources ambiguity, GetDescription, MeasureText, DrawRectangle
+- **Core**: Complete MVVM-compliant implementation
 
-### Build Status
-- ✅ ShareX.Avalonia.Core: 0 errors
-- ✅ ShareX.Avalonia.Common: 0 errors
-- ✅ ShareX.Avalonia.Uploaders: 0 errors
-- ✅ 7 projects building clean
+### Remaining Work
 
-## Priorities Completed
+- **ImageEffects**: Investigate System.Drawing.Common version compatibility
+- **ScreenCaptureLib**: Complex, requires platform abstraction
+- **App/UI Projects**: Depend on above libraries
 
-| Priority | Library | Status |
-|----------|---------|--------|
-| 1 | ShareX.Avalonia.Uploaders | ✅ 0 errors |
-| 2 | ShareX.Avalonia.Common | ✅ 100% non-UI |
-| 3 | ShareX.Avalonia.Core | 🔄 Phase 4 in progress |
+## Files Updated
 
-## Next Steps
-
-- Priority 4: HistoryLib (7 errors)
-- Priority 5: ImageEffectsLib (2 errors)
-- Priority 6: MediaLib (6 errors)
-- Priority 7: ScreenCaptureLib (Complex)
+- `docs/WALKTHROUGH.md`: This file
+- `NEXT_STEPS.md`: Updated priorities
+- Multiple source files across History, Media, Core
