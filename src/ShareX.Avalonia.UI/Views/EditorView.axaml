@@ -5,7 +5,9 @@
              xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="ShareX.Avalonia.UI.Views.EditorView"
-             x:DataType="vm:MainViewModel">
+             x:DataType="vm:MainViewModel"
+             Focusable="True"
+             KeyDown="OnKeyDown">
 
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
         <!-- Row 0: Capture Toolbar -->

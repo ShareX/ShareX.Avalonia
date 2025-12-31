@@ -27,6 +27,33 @@ namespace ShareX.Avalonia.UI.Views
         private bool _isDraggingHandle;
         private global::Avalonia.Controls.Shapes.Rectangle? _draggedHandle;
         
+        private void OnKeyDown(object sender, KeyEventArgs e)
+        {
+            if (DataContext is MainViewModel vm)
+            {
+                if (e.Key == Key.Delete)
+                {
+                    vm.DeleteSelectedCommand.Execute(null);
+                }
+                else if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
+                {
+                     if (e.Key == Key.Z)
+                     {
+                         vm.UndoCommand.Execute(null);
+                     }
+                     else if (e.Key == Key.Y) // Standard Redo
+                     {
+                         vm.RedoCommand.Execute(null);
+                     }
+                }
+                // Ctrl+Shift+Z is also common for Redo, check modifiers
+                else if (e.KeyModifiers.HasFlag(KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.Z)
+                {
+                    vm.RedoCommand.Execute(null);
+                }
+            }
+        }
+        
         private void UpdateSelectionHandles()
         {
             var overlay = this.FindControl<Canvas>("OverlayCanvas");
@@ -66,6 +93,14 @@ namespace ShareX.Avalonia.UI.Views
         private void CreateHandle(double x, double y, string tag)
         {
             var overlay = this.FindControl<Canvas>("OverlayCanvas");
+            
+            // Determine cursor based on position tag
+            Cursor cursor = Cursor.Parse("Hand");
+            if (tag.Contains("TopLeft") || tag.Contains("BottomRight")) cursor = new Cursor(StandardCursorType.SizeNorthWestSouthEast);
+            else if (tag.Contains("TopRight") || tag.Contains("BottomLeft")) cursor = new Cursor(StandardCursorType.SizeNorthEastSouthWest);
+            else if (tag.Contains("Top") || tag.Contains("Bottom")) cursor = new Cursor(StandardCursorType.SizeNorthSouth);
+            else if (tag.Contains("Left") || tag.Contains("Right")) cursor = new Cursor(StandardCursorType.SizeWestEast);
+
             var handle = new global::Avalonia.Controls.Shapes.Rectangle
             {
                 Width = 10,
@@ -74,7 +109,7 @@ namespace ShareX.Avalonia.UI.Views
                 Stroke = Brushes.Blue,
                 StrokeThickness = 1,
                 Tag = tag, // Store position intent
-                Cursor = Cursor.Parse("Hand") 
+                Cursor = cursor
             };
             
             // Center the handle
