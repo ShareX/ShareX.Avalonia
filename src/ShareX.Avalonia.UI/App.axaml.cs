@@ -31,6 +31,9 @@ public partial class App : Application
             };
             
             InitializeHotkeys();
+            
+            // Register UI Service
+            Platform.Abstractions.PlatformServices.RegisterUIService(new Services.AvaloniaUIService());
         }
 
         base.OnFrameworkInitializationCompleted();

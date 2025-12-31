@@ -227,5 +227,35 @@ namespace ShareX.Avalonia.UI.Views
             base.OnDataContextChanged(e);
             // Setup listeners if needed
         }
+            public void NavigateToEditor()
+        {
+            var navView = this.FindControl<NavigationView>("NavView");
+            if (navView != null)
+            {
+                // Navigate to Editor (Tag="Editor")
+                foreach (var item in navView.MenuItems)
+                {
+                    if (item is NavigationViewItem navItem && navItem.Tag?.ToString() == "Editor")
+                    {
+                        navView.SelectedItem = navItem;
+                        break;
+                    }
+                }
+            }
+            
+            // Ensure window is visible and active
+            if (!this.IsVisible)
+            {
+                this.Show();
+            }
+            
+            if (this.WindowState == WindowState.Minimized)
+            {
+                this.WindowState = WindowState.Maximized;
+            }
+            
+            this.Activate();
+            this.Focus();
         }
+    }
 }

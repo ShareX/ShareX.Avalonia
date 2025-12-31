@@ -7,6 +7,7 @@ using ShareX.Avalonia.Core;
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.Core.Tasks;
 using ShareX.Avalonia.Common.Helpers;
+using ShareX.Avalonia.Platform.Abstractions;
 
 namespace ShareX.Avalonia.Core.Tasks.Processors
 {
@@ -25,8 +26,21 @@ namespace ShareX.Avalonia.Core.Tasks.Processors
 
             if (settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.CopyImageToClipboard))
             {
-                 // TODO: Use IClipboardService
-                 DebugHelper.WriteLine("CopyImageToClipboard requested");
+                 if (PlatformServices.IsInitialized && info.Metadata?.Image != null)
+                 {
+                     PlatformServices.Clipboard.SetImage(info.Metadata.Image);
+                     DebugHelper.WriteLine("Image copied to clipboard.");
+                 }
+            }
+
+             if (settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateImage))
+            {
+                 if (info.Metadata.Image != null)
+                 {
+                     // Open in Editor using UI Service
+                     // This decouples Core from UI dependencies
+                     await PlatformServices.UI.ShowEditorAsync(info.Metadata.Image);
+                 }
             }
             
             // TODO: Add other tasks

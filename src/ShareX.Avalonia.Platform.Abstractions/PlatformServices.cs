@@ -76,6 +76,14 @@ namespace ShareX.Avalonia.Platform.Abstractions
             set => _screenCaptureService = value;
         }
 
+        private static IUIService? _uiService;
+        public static IUIService UI
+        {
+            get => _uiService ?? throw new InvalidOperationException("UI service not initialized. Call RegisterUIService() first.");
+            private set => _uiService = value;
+        }
+
+
         /// <summary>
         /// Checks if platform services have been initialized
         /// </summary>
@@ -100,6 +108,12 @@ namespace ShareX.Avalonia.Platform.Abstractions
             _screenCaptureService = screenCaptureService ?? throw new ArgumentNullException(nameof(screenCaptureService));
             _hotkeyService = hotkeyService ?? throw new ArgumentNullException(nameof(hotkeyService));
         }
+
+        public static void RegisterUIService(IUIService uiService)
+        {
+            _uiService = uiService ?? throw new ArgumentNullException(nameof(uiService));
+        }
+
 
         /// <summary>
         /// Resets all platform services (mainly for testing)

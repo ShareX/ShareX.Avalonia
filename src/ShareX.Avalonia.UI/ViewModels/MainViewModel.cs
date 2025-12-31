@@ -603,7 +603,7 @@ namespace ShareX.Avalonia.UI.ViewModels
 
         private System.Drawing.Image? _currentSourceImage;
 
-        private void UpdatePreview(System.Drawing.Image image)
+        public void UpdatePreview(System.Drawing.Image image)
         {
             // Store source image for operations like Crop
             _currentSourceImage = image;

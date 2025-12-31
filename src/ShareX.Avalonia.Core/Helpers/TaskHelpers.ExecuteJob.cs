@@ -26,6 +26,7 @@
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.Core;
 using ShareX.Avalonia.Core.Hotkeys;
+using ShareX.Avalonia.Core.Managers;
 using System;
 using System.Threading.Tasks;
 
@@ -41,64 +42,39 @@ public static partial class TaskHelpers
     {
         DebugHelper.WriteLine($"Executing job: {job}");
 
-        Image? capturedImage = null;
+        if (!PlatformServices.IsInitialized)
+        {
+            DebugHelper.WriteLine("Platform services not initialized.");
+            return;
+        }
+
+        // Create default settings if none provided
+        if (taskSettings == null)
+        {
+            taskSettings = new TaskSettings();
+            
+            // Apply job-specific defaults if needed
+            if (taskSettings.Job == HotkeyType.None)
+            {
+                taskSettings.Job = job;
+            }
+        }
+
+        // Ensure the job type in settings matches the requested job
+        if (taskSettings.Job != job && job != HotkeyType.None)
+        {
+            taskSettings.Job = job;
+        }
 
         try 
         {
-            if (!PlatformServices.IsInitialized)
-            {
-                DebugHelper.WriteLine("Platform services not initialized.");
-                return;
-            }
-
-            switch (job)
-            {
-                case HotkeyType.RectangleRegion:
-                    DebugHelper.WriteLine("Execute: Rectangle Region Capture");
-                    capturedImage = await PlatformServices.ScreenCapture.CaptureRegionAsync();
-                    break;
-
-                case HotkeyType.PrintScreen:
-                    DebugHelper.WriteLine("Execute: Fullscreen Capture");
-                    capturedImage = await PlatformServices.ScreenCapture.CaptureFullScreenAsync();
-                    break;
-
-                case HotkeyType.ActiveWindow:
-                    DebugHelper.WriteLine("Execute: Active Window Capture");
-                    capturedImage = await PlatformServices.ScreenCapture.CaptureActiveWindowAsync(PlatformServices.Window);
-                    break;
-
-                case HotkeyType.ClipboardUpload:
-                    DebugHelper.WriteLine("Execute: Clipboard Upload");
-                    // await UploadManager.ClipboardUpload(taskSettings);
-                    break;
-                    
-                default:
-                    DebugHelper.WriteLine($"Job type {job} not implemented yet.");
-                    break;
-            }
-
-            if (capturedImage != null)
-            {
-                DebugHelper.WriteLine("Capture successful. Starting workflow...");
-                // Create a basic workflow task for now (Capture -> Upload -> Clipboard)
-                // In the future this should respect TaskSettings.AfterCaptureJob
-                var workflow = WorkflowTask.CreateImageUploadTask(capturedImage, $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png");
-                await workflow.ExecuteAsync();
-                
-                if (workflow.Result?.IsSuccess == true)
-                {
-                    DebugHelper.WriteLine($"Job completed successfully. URL: {workflow.Result.URL}");
-                }
-                else
-                {
-                    DebugHelper.WriteLine($"Job failed. Errors: {string.Join(", ", workflow.Result?.Errors ?? new())}");
-                }
-            }
+            // Start the task via TaskManager
+            // This ensures it appears in the UI and follows the standard lifecycle
+            await TaskManager.Instance.StartTask(taskSettings);
         }
         catch (Exception ex)
         {
-            DebugHelper.WriteException(ex, $"Error executing job {job}");
+            DebugHelper.WriteException(ex, $"Error starting job {job}");
         }
     }
 }
