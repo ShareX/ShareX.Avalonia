@@ -39,7 +39,53 @@ namespace ShareX.Ava.Common;
 /// </summary>
 public static class GeneralHelpers
 {
-    public const string Alphanumeric = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    public const string Numbers = "0123456789";
+    public const string AlphabetCapital = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    public const string Alphabet = "abcdefghijklmnopqrstuvwxyz";
+    public const string Alphanumeric = Numbers + AlphabetCapital + Alphabet;
+    public const string AlphanumericInverse = Numbers + Alphabet + AlphabetCapital;
+    public const string Hexadecimal = Numbers + "ABCDEF";
+    public const string Base58 = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+    public const string Base56 = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
+
+    public static string AddZeroes(string input, int digits = 2)
+    {
+        return input.PadLeft(digits, '0');
+    }
+
+    public static string AddZeroes(int number, int digits = 2)
+    {
+        return AddZeroes(number.ToString(), digits);
+    }
+
+    public static string HourTo12(int hour)
+    {
+        if (hour == 0) return "12";
+        if (hour > 12) return AddZeroes(hour - 12);
+        return AddZeroes(hour);
+    }
+
+    public static char GetRandomChar(string chars)
+    {
+        if (string.IsNullOrEmpty(chars)) return ' ';
+        return chars[random.Next(chars.Length)];
+    }
+
+    public static string RepeatGenerator(int count, Func<string> generator)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count; i++)
+        {
+            sb.Append(generator());
+        }
+        return sb.ToString();
+    }
+    
+    public static T Pick<T>(IList<T> list)
+    {
+        if (list == null || list.Count == 0) return default;
+        return list[random.Next(list.Count)];
+    }
     
     private static readonly Random random = new Random();
 

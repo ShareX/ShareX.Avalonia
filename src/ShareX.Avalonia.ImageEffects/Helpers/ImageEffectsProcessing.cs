@@ -39,9 +39,10 @@ namespace ShareX.Ava.ImageEffects.Helpers
             using var paint = new SKPaint();
             paint.ImageFilter = SKImageFilter.CreateBlur(radius, radius);
 
-            var result = new SKBitmap(bmp.Width, bmp.Height);
+            var result = new SKBitmap(bmp.Info);
             using (var canvas = new SKCanvas(result))
             {
+                canvas.Clear(SKColors.Transparent);
                 canvas.DrawBitmap(bmp, 0, 0, paint);
             }
             return result;
@@ -93,10 +94,11 @@ namespace ShareX.Ava.ImageEffects.Helpers
              int width = (int)Math.Ceiling(bounds.Width);
              int height = (int)Math.Ceiling(bounds.Height);
 
-             var result = new SKBitmap(width, height);
+             var result = new SKBitmap(new SKImageInfo(width, height, bmp.ColorType, bmp.AlphaType, bmp.ColorSpace));
              using (var canvas = new SKCanvas(result))
              {
                  canvas.Clear(SKColors.Transparent);
+
                  // Translate so the bounding box fits in (0,0) to (width,height)
                  canvas.Translate(-bounds.Left, -bounds.Top);
                  canvas.DrawBitmap(bmp, 0, 0, paint);
@@ -142,7 +144,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
             int newWidth = (int)Math.Ceiling(rect.Width);
             int newHeight = (int)Math.Ceiling(rect.Height);
 
-            SKBitmap result = new SKBitmap(newWidth, newHeight);
+            SKBitmap result = new SKBitmap(new SKImageInfo(newWidth, newHeight, bmp.ColorType, bmp.AlphaType, bmp.ColorSpace));
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 canvas.Clear(backgroundColor ?? SKColors.Transparent);
@@ -163,7 +165,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
         {
             if (!horizontal && !vertical) return bmp;
 
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 canvas.Clear();
@@ -222,7 +224,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
         {
             if (radius <= 0) return bmp;
 
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 canvas.Clear(backgroundColor);
@@ -256,7 +258,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
              int newWidth = bmp.Width + left + right;
              int newHeight = bmp.Height + top + bottom;
              
-             SKBitmap result = new SKBitmap(newWidth, newHeight);
+             SKBitmap result = new SKBitmap(new SKImageInfo(newWidth, newHeight, bmp.ColorType, bmp.AlphaType, bmp.ColorSpace));
              using (SKCanvas canvas = new SKCanvas(result))
              {
                  canvas.Clear(color);
@@ -381,7 +383,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
              int width = bmp.Width + extra;
              int height = bmp.Height + extra;
              
-             SKBitmap result = new SKBitmap(width, height);
+             SKBitmap result = new SKBitmap(new SKImageInfo(width, height, bmp.ColorType, bmp.AlphaType, bmp.ColorSpace));
              using (SKCanvas canvas = new SKCanvas(result))
              {
                  canvas.Clear(SKColors.Transparent);
@@ -430,7 +432,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
 
         public static SKBitmap DrawBackground(SKBitmap bmp, SKColor color)
         {
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 // Draw background first
@@ -444,7 +446,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
         public static SKBitmap DrawCheckerboard(SKBitmap bmp, int size, SKColor c1, SKColor c2)
         {
             if (size <= 0) size = 10;
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 // Draw checkerboard
@@ -584,7 +586,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
 
         public static SKBitmap ApplyColorMatrix(SKBitmap bmp, float[] matrix)
         {
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 using (SKPaint paint = new SKPaint())
@@ -606,7 +608,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
                 table[i] = (byte)Math.Min(255, (int)((Math.Pow(i / 255.0, 1.0 / gamma) * 255.0) + 0.5));
             }
             
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 using (SKPaint paint = new SKPaint())
@@ -621,7 +623,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
 
         public static SKBitmap Colorize(SKBitmap bmp, SKColor color)
         {
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 canvas.DrawBitmap(bmp, 0, 0);
@@ -658,9 +660,10 @@ namespace ShareX.Ava.ImageEffects.Helpers
                 true
             );
             
-            var result = new SKBitmap(bmp.Width, bmp.Height);
+            var result = new SKBitmap(bmp.Info);
             using (var canvas = new SKCanvas(result))
             {
+                canvas.Clear(SKColors.Transparent);
                 canvas.DrawBitmap(bmp, 0, 0, paint);
             }
             return result;
@@ -669,7 +672,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
         {
             if (opacity >= 1.0f) return bmp;
 
-            SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+            SKBitmap result = new SKBitmap(bmp.Info);
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 using (SKPaint paint = new SKPaint())
@@ -827,7 +830,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
             int width = (int)Math.Ceiling(union.Width);
             int height = (int)Math.Ceiling(union.Height);
             
-            SKBitmap result = new SKBitmap(width, height);
+            SKBitmap result = new SKBitmap(new SKImageInfo(width, height, bmp.ColorType, bmp.AlphaType, bmp.ColorSpace));
             using (SKCanvas canvas = new SKCanvas(result))
             {
                 canvas.Clear(SKColors.Transparent);
@@ -937,7 +940,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
              
              if (depth <= 0 || range <= 0) return bmp;
              
-             SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+             SKBitmap result = new SKBitmap(bmp.Info);
              using (SKCanvas canvas = new SKCanvas(result))
              {
                  canvas.Clear(SKColors.Transparent);
@@ -1060,7 +1063,7 @@ namespace ShareX.Ava.ImageEffects.Helpers
              // Similar to TornEdge but with regular sine wave
              if (depth <= 0 || range <= 0) return bmp;
              
-             SKBitmap result = new SKBitmap(bmp.Width, bmp.Height);
+             SKBitmap result = new SKBitmap(bmp.Info);
              using (SKCanvas canvas = new SKCanvas(result))
              {
                  canvas.Clear(SKColors.Transparent);

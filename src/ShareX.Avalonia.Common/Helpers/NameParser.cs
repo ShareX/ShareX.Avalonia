@@ -143,13 +143,124 @@ namespace ShareX.Ava.Common
             sb.Replace("%cn", Environment.MachineName);
             sb.Replace("%n", Environment.NewLine);
 
-            if (sb.ToString().Contains("%i", StringComparison.Ordinal))
+            if (sb.ToString().Contains("%i", StringComparison.Ordinal)
+                || sb.ToString().Contains("%ib", StringComparison.Ordinal)
+                || sb.ToString().Contains("%iB", StringComparison.Ordinal)
+                || sb.ToString().Contains("%iAa", StringComparison.Ordinal)
+                || sb.ToString().Contains("%iaA", StringComparison.Ordinal)
+                || sb.ToString().Contains("%ia", StringComparison.Ordinal)
+                || sb.ToString().Contains("%iA", StringComparison.Ordinal)
+                || sb.ToString().Contains("%ix", StringComparison.Ordinal)
+                || sb.ToString().Contains("%iX", StringComparison.Ordinal))
             {
                 AutoIncrementNumber++;
-                sb.Replace("%i", AutoIncrementNumber.ToString("d", CultureInfo.InvariantCulture));
+
+                // Base
+                try
+                {
+                    foreach (Tuple<string, int[]> entry in ListEntryWithValues(sb.ToString(), "%ib", 2))
+                    {
+                        sb.Replace(entry.Item1, GeneralHelpers.AddZeroes(AutoIncrementNumber.ToBase(entry.Item2[0], GeneralHelpers.AlphanumericInverse), entry.Item2[1]));
+                    }
+                    foreach (Tuple<string, int[]> entry in ListEntryWithValues(sb.ToString(), "%iB", 2))
+                    {
+                        sb.Replace(entry.Item1, GeneralHelpers.AddZeroes(AutoIncrementNumber.ToBase(entry.Item2[0], GeneralHelpers.Alphanumeric), entry.Item2[1]));
+                    }
+                }
+                catch
+                {
+                }
+
+                // Alphanumeric Dual Case (Base 62)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%iAa"))
+                {
+                    sb.Replace(entry.Item1, GeneralHelpers.AddZeroes(AutoIncrementNumber.ToBase(62, GeneralHelpers.Alphanumeric), entry.Item2));
+                }
+                sb.Replace("%iAa", AutoIncrementNumber.ToBase(62, GeneralHelpers.Alphanumeric));
+
+                // Alphanumeric Dual Case (Base 62)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%iaA"))
+                {
+                    sb.Replace(entry.Item1, GeneralHelpers.AddZeroes(AutoIncrementNumber.ToBase(62, GeneralHelpers.AlphanumericInverse), entry.Item2));
+                }
+                sb.Replace("%iaA", AutoIncrementNumber.ToBase(62, GeneralHelpers.AlphanumericInverse));
+
+                // Alphanumeric Single Case (Base 36)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%ia"))
+                {
+                    sb.Replace(entry.Item1, GeneralHelpers.AddZeroes(AutoIncrementNumber.ToBase(36, GeneralHelpers.Alphanumeric), entry.Item2).ToLowerInvariant());
+                }
+                sb.Replace("%ia", AutoIncrementNumber.ToBase(36, GeneralHelpers.Alphanumeric).ToLowerInvariant());
+
+                // Alphanumeric Single Case Capital (Base 36)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%iA"))
+                {
+                    sb.Replace(entry.Item1, GeneralHelpers.AddZeroes(AutoIncrementNumber.ToBase(36, GeneralHelpers.Alphanumeric), entry.Item2).ToUpperInvariant());
+                }
+                sb.Replace("%iA", AutoIncrementNumber.ToBase(36, GeneralHelpers.Alphanumeric).ToUpperInvariant());
+
+                // Hexadecimal (Base 16)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%ix"))
+                {
+                    sb.Replace(entry.Item1, AutoIncrementNumber.ToString("x" + entry.Item2.ToString()));
+                }
+                sb.Replace("%ix", AutoIncrementNumber.ToString("x"));
+
+                // Hexadecimal Capital (Base 16)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%iX"))
+                {
+                    sb.Replace(entry.Item1, AutoIncrementNumber.ToString("X" + entry.Item2.ToString()));
+                }
+                sb.Replace("%iX", AutoIncrementNumber.ToString("X"));
+
+                // Number (Base 10)
+                foreach (Tuple<string, int> entry in ListEntryWithValue(sb.ToString(), "%i"))
+                {
+                    sb.Replace(entry.Item1, AutoIncrementNumber.ToString("d" + entry.Item2.ToString()));
+                }
+                sb.Replace("%i", AutoIncrementNumber.ToString("d"));
+            }
+            
+            string result = sb.ToString();
+
+            // Random generators
+            foreach (Tuple<string, int> entry in ListEntryWithValue(result, "%rna"))
+            {
+                result = result.Replace(entry.Item1, GeneralHelpers.RepeatGenerator(entry.Item2, () => GeneralHelpers.GetRandomChar(GeneralHelpers.Base56).ToString()));
             }
 
-            return sb.ToString();
+            foreach (Tuple<string, int> entry in ListEntryWithValue(result, "%rn"))
+            {
+                result = result.Replace(entry.Item1, GeneralHelpers.RepeatGenerator(entry.Item2, () => GeneralHelpers.GetRandomChar(GeneralHelpers.Numbers).ToString()));
+            }
+
+            foreach (Tuple<string, int> entry in ListEntryWithValue(result, "%ra"))
+            {
+                result = result.Replace(entry.Item1, GeneralHelpers.RepeatGenerator(entry.Item2, () => GeneralHelpers.GetRandomChar(GeneralHelpers.Alphanumeric).ToString()));
+            }
+
+            foreach (Tuple<string, int> entry in ListEntryWithValue(result, "%rx"))
+            {
+                result = result.Replace(entry.Item1, GeneralHelpers.RepeatGenerator(entry.Item2, () => GeneralHelpers.GetRandomChar(GeneralHelpers.Hexadecimal.ToLowerInvariant()).ToString()));
+            }
+            
+            foreach (Tuple<string, int> entry in ListEntryWithValue(result, "%rX"))
+            {
+                result = result.Replace(entry.Item1, GeneralHelpers.RepeatGenerator(entry.Item2, () => GeneralHelpers.GetRandomChar(GeneralHelpers.Hexadecimal.ToUpperInvariant()).ToString()));
+            }
+            
+            // Default random replacements (single char if no argument, though logical default is usually length 1 or ignored? Original logic doesn't explicitly handle no-arg %ra other than as a single replacement in some contexts, but here let's stick to explicit replacements if needed. 
+            // Actually original code handles %rna, %rn etc without arguments as single char too.
+            
+            result = result.Replace("%rna", GeneralHelpers.GetRandomChar(GeneralHelpers.Base56).ToString());
+            result = result.Replace("%rn", GeneralHelpers.GetRandomChar(GeneralHelpers.Numbers).ToString());
+            result = result.Replace("%ra", GeneralHelpers.GetRandomChar(GeneralHelpers.Alphanumeric).ToString());
+            result = result.Replace("%rx", GeneralHelpers.GetRandomChar(GeneralHelpers.Hexadecimal.ToLowerInvariant()).ToString());
+            result = result.Replace("%rX", GeneralHelpers.GetRandomChar(GeneralHelpers.Hexadecimal.ToUpperInvariant()).ToString());
+            result = result.Replace("%guid", Guid.NewGuid().ToString().ToLowerInvariant());
+            result = result.Replace("%GUID", Guid.NewGuid().ToString().ToUpperInvariant());
+
+            return result;
         }
 
         private string SanitizeByType(string text)
@@ -170,6 +281,66 @@ namespace ShareX.Ava.Common
         private static string RemoveCharacters(string text, char[] invalidChars)
         {
             return new string(text.Where(c => !invalidChars.Contains(c)).ToArray());
+        }
+
+        private IEnumerable<Tuple<string, string[]>> ListEntryWithArguments(string text, string entry, int elements)
+        {
+            int index = 0;
+            while ((index = text.IndexOf(entry + "{", index, StringComparison.Ordinal)) != -1)
+            {
+                int closeIndex = text.IndexOf("}", index, StringComparison.Ordinal);
+                if (closeIndex != -1)
+                {
+                    string fullMatch = text.Substring(index, closeIndex - index + 1);
+                    string content = text.Substring(index + entry.Length + 1, closeIndex - (index + entry.Length + 1));
+                    string[] args = content.Split(',');
+                    
+                    if (elements > args.Length)
+                    {
+                        Array.Resize(ref args, elements);
+                    }
+                    
+                    yield return new Tuple<string, string[]>(fullMatch, args);
+                    
+                    index = closeIndex + 1;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+
+        private IEnumerable<Tuple<string, string>> ListEntryWithArgument(string text, string entry)
+        {
+            foreach (Tuple<string, string[]> o in ListEntryWithArguments(text, entry, 1))
+            {
+                yield return new Tuple<string, string>(o.Item1, o.Item2[0]);
+            }
+        }
+
+        private IEnumerable<Tuple<string, int[]>> ListEntryWithValues(string text, string entry, int elements)
+        {
+            foreach (Tuple<string, string[]> o in ListEntryWithArguments(text, entry, elements))
+            {
+                int[] a = new int[o.Item2.Length];
+                for (int i = 0; i < o.Item2.Length; ++i)
+                {
+                    if (int.TryParse(o.Item2[i], out int n))
+                    {
+                        a[i] = n;
+                    }
+                }
+                yield return new Tuple<string, int[]>(o.Item1, a);
+            }
+        }
+
+        private IEnumerable<Tuple<string, int>> ListEntryWithValue(string text, string entry)
+        {
+            foreach (Tuple<string, int[]> o in ListEntryWithValues(text, entry, 1))
+            {
+                yield return new Tuple<string, int>(o.Item1, o.Item2[0]);
+            }
         }
     }
 }

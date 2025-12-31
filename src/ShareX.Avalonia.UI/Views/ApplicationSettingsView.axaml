@@ -86,46 +86,7 @@
                 </ScrollViewer>
             </TabItem>
             
-            <!-- Hotkeys Tab -->
-            <TabItem Header="Hotkeys">
-                <Grid RowDefinitions="*,120,Auto" Margin="20">
-                    <!-- Hotkeys List using HotkeySelectionControl -->
-                    <ScrollViewer Grid.Row="0" Margin="0,0,0,10">
-                        <ItemsControl ItemsSource="{Binding HotkeySettings.Hotkeys}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <views:HotkeySelectionControl Margin="0,0,0,5"/>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
-                    
-                    <!-- DEBUG: Event Log TextBox -->
-                    <Border Grid.Row="1" BorderBrush="Orange" BorderThickness="2" CornerRadius="4" Margin="0,0,0,10">
-                        <Grid RowDefinitions="Auto,*">
-                            <TextBlock Grid.Row="0" Text="DEBUG LOG (copy and paste this):" Foreground="Orange" FontWeight="Bold" Margin="5"/>
-                            <TextBox Grid.Row="1" 
-                                     x:Name="DebugLogTextBox"
-                                     AcceptsReturn="True" 
-                                     IsReadOnly="True"
-                                     TextWrapping="Wrap"
-                                     FontFamily="Consolas"
-                                     FontSize="11"
-                                     Foreground="Lime"
-                                     Background="#1E1E1E"/>
-                        </Grid>
-                    </Border>
 
-                    <!-- Action Buttons -->
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
-                        <Button Content="Add" Command="{Binding HotkeySettings.AddCommand}"/>
-                        <Button Content="Duplicate" Command="{Binding HotkeySettings.DuplicateCommand}"/>
-                        <Button Content="Remove" Command="{Binding HotkeySettings.RemoveCommand}"/>
-                        <Border Width="1" Background="Gray" Margin="5,0"/>
-                        <Button Content="Reset Defaults" Command="{Binding HotkeySettings.ResetCommand}"/>
-                    </StackPanel>
-                </Grid>
-            </TabItem>
 
             <!-- History Tab -->
             <TabItem Header="History">

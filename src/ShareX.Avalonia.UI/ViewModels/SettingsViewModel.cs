@@ -51,6 +51,28 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private HotkeySettingsViewModel _hotkeySettings;
 
+        // Task Settings - Upload / File Naming
+        [ObservableProperty]
+        private string _nameFormatPattern;
+
+        [ObservableProperty]
+        private string _nameFormatPatternActiveWindow;
+
+        [ObservableProperty]
+        private bool _fileUploadUseNamePattern;
+
+        [ObservableProperty]
+        private bool _fileUploadReplaceProblematicCharacters;
+
+        [ObservableProperty]
+        private bool _uRLRegexReplace;
+
+        [ObservableProperty]
+        private string _uRLRegexReplacePattern;
+
+        [ObservableProperty]
+        private string _uRLRegexReplaceReplacement;
+
         public SettingsViewModel()
         {
             HotkeySettings = new HotkeySettingsViewModel();
@@ -77,6 +99,15 @@ namespace ShareX.Ava.UI.ViewModels
             CaptureTransparent = true;
             CaptureShadow = true;
             CaptureClientArea = false;
+
+            // Task Settings - File Naming Defaults
+            NameFormatPattern = "%y%mo%dT%h%mi_%ra{10}";
+            NameFormatPatternActiveWindow = "%y%mo%dT%h%mi_%pn_%ra{10}";
+            FileUploadUseNamePattern = false;
+            FileUploadReplaceProblematicCharacters = false;
+            URLRegexReplace = false;
+            URLRegexReplacePattern = "^https?://(.+)$";
+            URLRegexReplaceReplacement = "https://$1";
         }
 
         [RelayCommand]

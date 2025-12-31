@@ -63,7 +63,36 @@
 
             <!-- Upload Tab -->
             <TabItem Header="Upload">
-                 <TextBlock Text="Upload settings placeholder" Margin="20" Foreground="Gray"/>
+                <ScrollViewer>
+                    <StackPanel Margin="20" Spacing="20">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="File naming" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="Name pattern:" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Text="{Binding NameFormatPattern}"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="Active window name pattern:" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Text="{Binding NameFormatPatternActiveWindow}"/>
+                                    </Grid>
+                                    <CheckBox IsChecked="{Binding FileUploadUseNamePattern}" Content="Use name pattern for file uploaders"/>
+                                    <CheckBox IsChecked="{Binding FileUploadReplaceProblematicCharacters}" Content="Replace potentially problematic characters"/>
+                                    <CheckBox IsChecked="{Binding URLRegexReplace}" Content="Perform regex replace on URL"/>
+                                    <Grid ColumnDefinitions="Auto, 10, *" IsVisible="{Binding URLRegexReplace}">
+                                        <TextBlock Grid.Column="0" Text="Regex pattern:" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Text="{Binding URLRegexReplacePattern}"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, *" IsVisible="{Binding URLRegexReplace}">
+                                        <TextBlock Grid.Column="0" Text="Replacement:" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Text="{Binding URLRegexReplaceReplacement}"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
             <!-- Actions Tab -->

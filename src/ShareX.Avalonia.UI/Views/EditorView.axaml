@@ -281,7 +281,7 @@
                                     <!-- Image Layer -->
                                     <Image Name="PreviewImageControl"
                                            Source="{Binding PreviewImage}"
-                                           Stretch="Fill"
+                                           Stretch="Uniform"
                                            HorizontalAlignment="Stretch"
                                            VerticalAlignment="Stretch"/>
 

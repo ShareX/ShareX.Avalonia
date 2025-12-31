@@ -177,7 +177,7 @@ public class TaskSettingsImage
 
     #endregion Image / Thumbnail
 
-    // TODO: Add ImageEffectPresets when ImageEffectsLib is ported
+    public List<ImageEffectPreset> ImageEffectPresets = new List<ImageEffectPreset>();
 }
 
 /// <summary>
@@ -215,10 +215,10 @@ public class TaskSettingsCapture
 
     #endregion Capture / Screen recorder
 
-    // TODO: Add RegionCaptureOptions when ScreenCaptureLib is ported
-    // TODO: Add FFmpegOptions when MediaLib is ported
-    // TODO: Add ScrollingCaptureOptions when ScreenCaptureLib is ported
-    // TODO: Add OCROptions when ScreenCaptureLib is ported
+    public RegionCaptureOptions RegionCaptureOptions = new RegionCaptureOptions();
+    public FFmpegOptions FFmpegOptions = new FFmpegOptions();
+    public ScrollingCaptureOptions ScrollingCaptureOptions = new ScrollingCaptureOptions();
+    public OCROptions OCROptions = new OCROptions();
 }
 
 /// <summary>
@@ -265,14 +265,14 @@ public class TaskSettingsTools
     public string ScreenColorPickerFormatCtrl = "$r255, $g255, $b255";
     public string ScreenColorPickerInfoText = "RGB: $r255, $g255, $b255$nHex: $hex$nX: $x Y: $y";
     
-    // TODO: Add PinToScreenOptions when ScreenCaptureLib is ported
-    // TODO: Add IndexerSettings when using ShareX.Ava.Indexer
-    // TODO: Add ImageBeautifierOptions when MediaLib is ported
-    // TODO: Add ImageCombinerOptions when MediaLib is ported
-    // TODO: Add VideoConverterOptions when MediaLib is ported
-    // TODO: Add VideoThumbnailOptions when MediaLib is ported
-    // TODO: Add BorderlessWindowSettings
-    // TODO: Add AIOptions
+    public PinToScreenOptions PinToScreenOptions = new PinToScreenOptions();
+    public IndexerSettings IndexerSettings = new IndexerSettings();
+    public ImageBeautifierOptions ImageBeautifierOptions = new ImageBeautifierOptions();
+    public ImageCombinerOptions ImageCombinerOptions = new ImageCombinerOptions();
+    public VideoConverterOptions VideoConverterOptions = new VideoConverterOptions();
+    public VideoThumbnailOptions VideoThumbnailOptions = new VideoThumbnailOptions();
+    public BorderlessWindowSettings BorderlessWindowSettings = new BorderlessWindowSettings();
+    public AIOptions AIOptions = new AIOptions();
 }
 
 /// <summary>

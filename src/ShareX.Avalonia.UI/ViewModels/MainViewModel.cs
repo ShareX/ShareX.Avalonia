@@ -68,6 +68,28 @@ namespace ShareX.Ava.UI.ViewModels
         private bool _hasPreviewImage;
 
         [ObservableProperty]
+        private double _imageWidth;
+
+        [ObservableProperty]
+        private double _imageHeight;
+
+        partial void OnPreviewImageChanged(Bitmap? value)
+        {
+            if (value != null)
+            {
+                ImageWidth = value.Size.Width;
+                ImageHeight = value.Size.Height;
+                HasPreviewImage = true;
+            }
+            else
+            {
+                ImageWidth = 0;
+                ImageHeight = 0;
+                HasPreviewImage = false;
+            }
+        }
+
+        [ObservableProperty]
         private double _previewPadding = 50;
 
         [ObservableProperty]
@@ -212,8 +234,8 @@ namespace ShareX.Ava.UI.ViewModels
                 EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
                 GradientStops = new GradientStops
                 {
-                    new GradientStop(Color.Parse(start), 0),
-                    new GradientStop(Color.Parse(end), 1)
+                    new Avalonia.Media.GradientStop(Color.Parse(start), 0),
+                    new Avalonia.Media.GradientStop(Color.Parse(end), 1)
                 }
             };
 
@@ -259,7 +281,7 @@ namespace ShareX.Ava.UI.ViewModels
                     var stops = new GradientStops();
                     foreach (var stop in linear.GradientStops)
                     {
-                        stops.Add(new GradientStop(stop.Color, stop.Offset));
+                        stops.Add(new Avalonia.Media.GradientStop(stop.Color, stop.Offset));
                     }
 
                     return new LinearGradientBrush
@@ -435,7 +457,7 @@ namespace ShareX.Ava.UI.ViewModels
         private void Clear()
         {
             PreviewImage = null;
-            HasPreviewImage = false;
+            // HasPreviewImage = false; // Handled by OnPreviewImageChanged
             ImageDimensions = "No image";
             StatusText = "Ready";
             ResetNumberCounter();
@@ -613,7 +635,8 @@ namespace ShareX.Ava.UI.ViewModels
             image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
             ms.Position = 0;
             PreviewImage = new Bitmap(ms);
-            HasPreviewImage = true;
+            PreviewImage = new Bitmap(ms);
+            // HasPreviewImage = true; // Handled by OnPreviewImageChanged
             ImageDimensions = $"{image.Width} x {image.Height}";
             StatusText = $"Image: {image.Width} × {image.Height}";
         }
