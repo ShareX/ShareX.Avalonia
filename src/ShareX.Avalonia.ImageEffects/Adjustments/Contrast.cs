@@ -23,37 +23,42 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
-    internal class Contrast : ImageEffect
+    [Description("Contrast")]
+    public class Contrast : ImageEffect
     {
-        [DefaultValue(1f), Description("Pixel color = Pixel color * Value\r\nExample 1.5 will increase color of pixel 50%")]
-        public float Value { get; set; }
+        private int contrast;
+
+        [DefaultValue(0), Description("Value must be between -100 and 100.")]
+        public int Value
+        {
+            get => contrast;
+            set => contrast = MathHelpers.Clamp(value, -100, 100);
+        }
 
         public Contrast()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Contrast(Value).Apply(bmp);
-            }
+            // TODO
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Value.ToString();
         }
     }
 }
-
-
 

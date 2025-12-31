@@ -23,59 +23,78 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
-using DrawingPoint = System.Drawing.Point;
+using SkiaSharp;
+
+using ShareX.Avalonia.Common.Colors;
 
 namespace ShareX.Avalonia.ImageEffects
 {
-    [Description("Shadow")]
-    public class Shadow : ImageEffect
+    internal class Shadow : ImageEffect
     {
         private float opacity;
-        private int size;
 
         [DefaultValue(0.6f), Description("Choose a value between 0.1 and 1.0")]
         public float Opacity
         {
-            get => opacity;
-            set => opacity = value.Clamp(0.1f, 1.0f);
+            get
+            {
+                return opacity;
+            }
+            set
+            {
+                opacity = Math.Clamp(value, 0.1f, 1.0f);
+            }
         }
+
+        private int size;
 
         [DefaultValue(10)]
         public int Size
         {
-            get => size;
-            set => size = value.Max(0);
+            get
+            {
+                return size;
+            }
+            set
+            {
+                size = Math.Max(value, 0);
+            }
         }
 
         [DefaultValue(0f)]
         public float Darkness { get; set; }
 
-        [DefaultValue(typeof(Color), "Black")]
-        public Color Color { get; set; }
+        public SKColor Color { get; set; }
 
-        [DefaultValue(typeof(DrawingPoint), "0, 0")]
-        public DrawingPoint Offset { get; set; }
+        public SKPoint Offset { get; set; }
 
         [DefaultValue(true)]
         public bool AutoResize { get; set; }
 
         public Shadow()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Opacity = 0.6f;
+            Size = 10;
+            Darkness = 0f;
+            Color = SKColors.Black;
+            Offset = new SKPoint(0, 0);
+            AutoResize = true;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
             return ImageEffectsProcessing.AddShadow(bmp, Opacity, Size, Darkness + 1, Color, Offset, AutoResize);
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Size.ToString();
         }
     }
 }
+

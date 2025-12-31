@@ -23,45 +23,46 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
+// using ShareX.Avalonia.Common.Extensions;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
-    internal class Rotate : ImageEffect
+    [Description("Rotate")]
+    public class Rotate : ImageEffect
     {
-        [DefaultValue(0f), Description("Choose a value between -360 and 360.")]
+        [DefaultValue(90f)]
         public float Angle { get; set; }
 
-        [DefaultValue(true), Description("If true, output image will be larger than the input and no clipping will occur.")]
-        public bool Upsize { get; set; }
+        [DefaultValue(true)]
+        public bool Upsize { get; set; } = true;
 
-        [DefaultValue(false), Description("Upsize must be false for this setting to work. If true, clipping will occur or else image size will be reduced.")]
-        public bool Clip { get; set; }
+        [DefaultValue(true)]
+        public bool Clip { get; set; } = true;
+
+        // [DefaultValue(typeof(Color), "Transparent")]
+        public SKColor BackgroundColor { get; set; }
 
         public Rotate()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Angle = 90f;
+            BackgroundColor = SKColors.Transparent;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            if (Angle == 0)
-            {
-                return bmp;
-            }
-
-            using (bmp)
-            {
-                return ImageEffectsProcessing.RotateImage(bmp, Angle, Upsize, Clip);
-            }
+             // TODO: Rotate implementation
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            return Angle + "°";
+            return Angle.ToString();
         }
     }
 }

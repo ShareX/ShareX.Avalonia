@@ -23,22 +23,22 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects
 {
     [Description("Edge detect")]
     internal class EdgeDetect : ImageEffect
     {
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ConvolutionMatrixManager.EdgeDetect().Apply(bmp);
-            }
+            // ConvolutionMatrixManager not migrated yet
+            // return ConvolutionMatrixManager.EdgeDetect().Apply(bmp);
+            return bmp;
         }
     }
 }

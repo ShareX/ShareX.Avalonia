@@ -23,37 +23,43 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Saturation")]
     internal class Saturation : ImageEffect
     {
-        [DefaultValue(1f)]
-        public float Value { get; set; }
+        private float saturation;
+
+        [DefaultValue(1f), Description("Value must be between 0.0 and 5.0.")]
+        public float Value
+        {
+            get => saturation;
+            set => saturation = MathHelpers.Clamp(value, 0.0f, 5.0f);
+        }
 
         public Saturation()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Value = 1f;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Saturation(Value).Apply(bmp);
-            }
+            // TODO
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Value.ToString();
         }
     }
 }
-
-
 

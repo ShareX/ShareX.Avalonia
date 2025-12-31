@@ -23,41 +23,42 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
-using AnchorSides = ShareX.Avalonia.ImageEffects.Helpers.ImageEffectsProcessing.AnchorSides;
+using SkiaSharp;
+// using ShareX.Avalonia.Common.Drawing;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
     [Description("Auto crop")]
     public class AutoCrop : ImageEffect
     {
-        [DefaultValue(AnchorSides.Left | AnchorSides.Top | AnchorSides.Right | AnchorSides.Bottom)]
-        public AnchorSides Sides { get; set; }
+        [DefaultValue(10)]
+        public int Margin { get; set; }
 
-        [DefaultValue(0)]
-        public int Padding { get; set; }
+        public SKColor Color { get; set; }
+
+        [DefaultValue(10)]
+        public int Tolerance { get; set; }
 
         public AutoCrop()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Margin = 10;
+            Color = SKColors.Transparent;
+            Tolerance = 10;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.AutoCropImage(bmp, sameColorCrop: true, sides: Sides, padding: Padding);
+             return ImageEffectsProcessing.AutoCrop(bmp, Color, Tolerance, Margin);
         }
 
         protected override string? GetSummary()
         {
-            if (Padding > 0)
-            {
-                return Padding.ToString();
-            }
-
-            return null;
+            return $"{Margin}, {Tolerance}";
         }
     }
 }

@@ -23,44 +23,44 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects.Drawings
 {
-    [Description("Checkerboard")]
-    public class DrawCheckerboard : ImageEffect
+    [Description("Draw checkerboard")]
+    internal class DrawCheckerboard : ImageEffect
     {
-        private int size;
-
         [DefaultValue(10)]
-        public int Size
-        {
-            get => size;
-            set => size = value.Max(1);
-        }
+        public int Size { get; set; }
 
-        [DefaultValue(typeof(Color), "LightGray")]
-        public Color Color { get; set; }
+        // [DefaultValue(typeof(Color), "LightGray")]
+        public SKColor Color1 { get; set; }
 
-        [DefaultValue(typeof(Color), "White")]
-        public Color Color2 { get; set; }
+        // [DefaultValue(typeof(Color), "White")]
+        public SKColor Color2 { get; set; }
 
         public DrawCheckerboard()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Size = 10;
+            Color1 = SKColors.LightGray;
+            Color2 = SKColors.White;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.DrawCheckers(bmp, Size, Color, Color2);
+             // TODO: Draw checkerboard
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            return $"{Size}x{Size}";
+            return Size.ToString();
         }
     }
 }
+

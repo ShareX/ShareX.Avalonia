@@ -23,11 +23,12 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
-using AnchorSides = ShareX.Avalonia.ImageEffects.Helpers.ImageEffectsProcessing.AnchorSides;
+using SkiaSharp;
+
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -45,15 +46,18 @@ namespace ShareX.Avalonia.ImageEffects
 
         public WaveEdge()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Depth = 15;
+            Range = 20;
+            Sides = AnchorSides.All;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.WavyEdges(bmp, Depth, Range, Sides, Color.Transparent);
+            return ImageEffectsProcessing.DrawWaveEdge(bmp, Depth, Range, Sides);
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return $"{Depth}, {Range}";
         }

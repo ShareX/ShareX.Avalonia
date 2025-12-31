@@ -23,55 +23,31 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
-    internal class Flip : ImageEffect
+    [Description("Flip")]
+    public class Flip : ImageEffect
     {
         [DefaultValue(false)]
-        public bool Horizontally { get; set; }
+        public bool Horizontal { get; set; }
 
         [DefaultValue(false)]
-        public bool Vertically { get; set; }
+        public bool Vertical { get; set; }
 
         public Flip()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            RotateFlipType flipType = RotateFlipType.RotateNoneFlipNone;
-
-            if (Horizontally && Vertically)
-            {
-                flipType = RotateFlipType.RotateNoneFlipXY;
-            }
-            else if (Horizontally)
-            {
-                flipType = RotateFlipType.RotateNoneFlipX;
-            }
-            else if (Vertically)
-            {
-                flipType = RotateFlipType.RotateNoneFlipY;
-            }
-
-            if (flipType != RotateFlipType.RotateNoneFlipNone)
-            {
-                bmp.RotateFlip(flipType);
-            }
-
-            return bmp;
-        }
-
-        protected override string GetSummary()
-        {
-            return $"{Horizontally}, {Vertically}";
+            return ImageEffectsProcessing.Flip(bmp, Horizontal, Vertical);
         }
     }
 }
-

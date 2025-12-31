@@ -23,25 +23,32 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+using ShareX.Avalonia.Common;
+using ShareX.Avalonia.ImageEffects.Helpers;
+using System.ComponentModel;
+using SkiaSharp;
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
-    [Description("Black & white")]
+    [Description("Black & White")]
     internal class BlackWhite : ImageEffect
     {
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.BlackWhite().Apply(bmp);
-            }
+            float[] matrix = new float[] {
+                0.2126f, 0.7152f, 0.0722f, 0, 0,
+                0.2126f, 0.7152f, 0.0722f, 0, 0,
+                0.2126f, 0.7152f, 0.0722f, 0, 0,
+                0, 0, 0, 1, 0
+            };
+            return ImageEffectsProcessing.ApplyColorMatrix(bmp, matrix);
         }
     }
 }
-
-
-

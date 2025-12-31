@@ -23,69 +23,50 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Common.Colors;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Drawing2D;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects.Drawings
 {
-    [Description("Border")]
+    [Description("Draw border")]
     public class DrawBorder : ImageEffect
     {
-        [DefaultValue(BorderType.Outside)]
-        public BorderType Type { get; set; }
-
-        private int size;
-
         [DefaultValue(1)]
-        public int Size
-        {
-            get => size;
-            set => size = value.Max(1);
-        }
+        public int Size { get; set; }
 
-        [DefaultValue(DashStyle.Solid)]
-        public DashStyle DashStyle { get; set; }
+        // [DefaultValue(typeof(Color), "Black")]
+        public SKColor Color { get; set; }
 
-        [DefaultValue(typeof(Color), "Black")]
-        public Color Color { get; set; }
+        // [DefaultValue(typeof(Color), "Transparent")]
+        public SKColor InsideColor { get; set; }
+
+        [DefaultValue(0)]
+        public int Offset { get; set; }
 
         [DefaultValue(false)]
-        public bool UseGradient { get; set; }
-
-        public GradientInfo Gradient { get; set; }
+        public bool UseCenterColor { get; set; }
 
         public DrawBorder()
         {
-            this.ApplyDefaultPropertyValues();
-            AddDefaultGradient();
+            // this.ApplyDefaultPropertyValues();
+            Size = 1;
+            Color = SKColors.Black;
+            InsideColor = SKColors.Transparent;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            if (UseGradient && Gradient != null && Gradient.IsValid)
-            {
-                return ImageEffectsProcessing.DrawBorder(bmp, Gradient, Size, Type, DashStyle);
-            }
-
-            return ImageEffectsProcessing.DrawBorder(bmp, Color, Size, Type, DashStyle);
+             // TODO: Draw border
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            return Size + "px";
-        }
-
-        private void AddDefaultGradient()
-        {
-            Gradient = new GradientInfo();
-            Gradient.Colors.Add(new GradientStop(Color.FromArgb(68, 120, 194), 0f));
-            Gradient.Colors.Add(new GradientStop(Color.FromArgb(13, 58, 122), 50f));
-            Gradient.Colors.Add(new GradientStop(Color.FromArgb(6, 36, 78), 50f));
-            Gradient.Colors.Add(new GradientStop(Color.FromArgb(23, 89, 174), 100f));
+            return Size.ToString();
         }
     }
 }
+

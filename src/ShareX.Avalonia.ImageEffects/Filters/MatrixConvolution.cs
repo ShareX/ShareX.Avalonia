@@ -23,10 +23,11 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -62,27 +63,20 @@ namespace ShareX.Avalonia.ImageEffects
 
         public MatrixConvolution()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            X1Y1 = 1;
+            Factor = 1.0;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                ConvolutionMatrix cm = new ConvolutionMatrix();
-                cm[0, 0] = X0Y0 / Factor;
-                cm[0, 1] = X1Y0 / Factor;
-                cm[0, 2] = X2Y0 / Factor;
-                cm[1, 0] = X0Y1 / Factor;
-                cm[1, 1] = X1Y1 / Factor;
-                cm[1, 2] = X2Y1 / Factor;
-                cm[2, 0] = X0Y2 / Factor;
-                cm[2, 1] = X1Y2 / Factor;
-                cm[2, 2] = X2Y2 / Factor;
-                cm.Offset = Offset;
-                return cm.Apply(bmp);
-            }
+            float[] kernel = new float[] {
+                X0Y0, X1Y0, X2Y0,
+                X0Y1, X1Y1, X2Y1,
+                X0Y2, X1Y2, X2Y2
+            };
+            
+            return ImageEffectsProcessing.ApplyConvolutionMatrix(bmp, kernel, 3, (float)Factor, Offset);
         }
     }
 }
-

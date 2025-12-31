@@ -23,20 +23,21 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System.Drawing;
+using SkiaSharp;
+using System.ComponentModel;
 
 namespace ShareX.Avalonia.ImageEffects
 {
     internal class Sharpen : ImageEffect
     {
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ConvolutionMatrixManager.Sharpen().Apply(bmp);
-            }
+             // TODO: Matrix convolution shim
+             return bmp;
         }
     }
 }
+

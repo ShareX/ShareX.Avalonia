@@ -23,44 +23,39 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Common.Helpers;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects.Drawings
 {
-    [Description("Background image")]
+    [Description("Draw background image")]
     public class DrawBackgroundImage : ImageEffect
     {
         [DefaultValue("")]
-        public string ImageFilePath { get; set; }
+        public string ImagePath { get; set; }
 
-        [DefaultValue(true)]
-        public bool Center { get; set; }
+        // [DefaultValue(ContentAlignment.MiddleCenter)]
+        // public ContentAlignment Anchor { get; set; }
 
-        [DefaultValue(false)]
-        public bool Tile { get; set; }
+        [DefaultValue(typeof(CanvasMargin), "0, 0, 0, 0")]
+        public CanvasMargin Margin { get; set; }
+
+        [DefaultValue(DrawImageSizeMode.DontResize)]
+        public DrawImageSizeMode SizeMode { get; set; }
 
         public DrawBackgroundImage()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.DrawBackgroundImage(bmp, ImageFilePath, Center, Tile);
-        }
-
-        protected override string? GetSummary()
-        {
-            if (!string.IsNullOrEmpty(ImageFilePath))
-            {
-                return System.IO.Path.GetFileName(ImageFilePath);
-            }
-
-            return null;
+             // TODO: Draw background image
+             return bmp;
         }
     }
 }
+

@@ -23,37 +23,43 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Gamma")]
     internal class Gamma : ImageEffect
     {
-        [DefaultValue(1f), Description("Min 0.1, Max 5.0")]
-        public float Value { get; set; }
+        private float gamma;
+
+        [DefaultValue(1f), Description("Value must be between 0.1 and 5.0.")]
+        public float Value
+        {
+            get => gamma;
+            set => gamma = MathHelpers.Clamp(value, 0.1f, 5.0f);
+        }
 
         public Gamma()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Value = 1f;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.ChangeGamma(bmp, Value);
-            }
+            // TODO
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Value.ToString();
         }
     }
 }
-
-
 

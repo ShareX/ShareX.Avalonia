@@ -23,10 +23,12 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
+
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -50,16 +52,17 @@ namespace ShareX.Avalonia.ImageEffects
 
         public ColorDepth()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            BitsPerChannel = 4;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            ImageEffectsProcessing.ColorDepth(bmp, BitsPerChannel);
-            return bmp;
+             ImageEffectsProcessing.ColorDepth(bmp, BitsPerChannel);
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             string summary = BitsPerChannel + " bit";
 
@@ -72,3 +75,4 @@ namespace ShareX.Avalonia.ImageEffects
         }
     }
 }
+

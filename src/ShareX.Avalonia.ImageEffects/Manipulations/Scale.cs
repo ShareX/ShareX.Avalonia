@@ -23,58 +23,56 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
-    internal class Scale : ImageEffect
+    [Description("Scale")]
+    public class Scale : ImageEffect
     {
-        [DefaultValue(100f), Description("Use width percentage as 0 to maintain aspect ratio by automatically adjusting width.")]
-        public float WidthPercentage { get; set; }
+        private float x;
+        private float y;
 
-        [DefaultValue(0f), Description("Use height percentage as 0 to maintain aspect ratio by automatically adjusting height.")]
-        public float HeightPercentage { get; set; }
+        [DefaultValue(1f)]
+        public float X
+        {
+            get => x;
+            set => x = Math.Max(value, 0f);
+        }
+
+        [DefaultValue(1f)]
+        public float Y
+        {
+            get => y;
+            set => y = Math.Max(value, 0f);
+        }
 
         public Scale()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            X = 1f;
+            Y = 1f;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            if (WidthPercentage <= 0 && HeightPercentage <= 0)
+            if (X == 1 && Y == 1)
             {
                 return bmp;
             }
 
-            int width = (int)Math.Round(WidthPercentage / 100 * bmp.Width);
-            int height = (int)Math.Round(HeightPercentage / 100 * bmp.Height);
-            Size size = ImageEffectsProcessing.ApplyAspectRatio(width, height, bmp);
-
-            return ImageEffectsProcessing.ResizeImage(bmp, size);
+            // TODO: Scale implementation
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            string summary = WidthPercentage.ToString();
-
-            if (WidthPercentage > 0)
-            {
-                summary += "%";
-            }
-
-            summary += ", " + HeightPercentage.ToString();
-
-            if (HeightPercentage > 0)
-            {
-                summary += "%";
-            }
-
-            return summary;
+            return $"{X}, {Y}";
         }
     }
 }

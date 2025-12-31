@@ -23,39 +23,52 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
     [Description("Rounded corners")]
-    public class RoundedCorners : ImageEffect
+    internal class RoundedCorners : ImageEffect
     {
-        private int cornerRadius;
-
         [DefaultValue(20)]
-        public int CornerRadius
-        {
-            get => cornerRadius;
-            set => cornerRadius = Math.Max(0, value);
-        }
+        public int CornerRadius { get; set; }
+
+        [DefaultValue(false)]
+        public bool RoundTopLeft { get; set; }
+
+        [DefaultValue(false)]
+        public bool RoundTopRight { get; set; }
+
+        [DefaultValue(false)]
+        public bool RoundBottomLeft { get; set; }
+
+        [DefaultValue(false)]
+        public bool RoundBottomRight { get; set; }
+
+        // [DefaultValue(typeof(Color), "Transparent")]
+        public SKColor BackgroundColor { get; set; }
 
         public RoundedCorners()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            CornerRadius = 20;
+            BackgroundColor = SKColors.Transparent;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.RoundedCorners(bmp, CornerRadius);
+            // TODO: Rounded corners implementation
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return CornerRadius.ToString();
         }
     }
 }
+

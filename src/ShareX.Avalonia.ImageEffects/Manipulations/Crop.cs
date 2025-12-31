@@ -23,12 +23,14 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
     internal class Crop : ImageEffect
     {
@@ -46,10 +48,10 @@ namespace ShareX.Avalonia.ImageEffects
 
         public Crop()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
             int width = bmp.Width - (Left + Right);
             int height = bmp.Height - (Top + Bottom);
@@ -58,12 +60,13 @@ namespace ShareX.Avalonia.ImageEffects
             {
                 return bmp;
             }
-
-            Rectangle rect = new Rectangle(Left, Top, width, height);
-            return ImageEffectsProcessing.CropBitmap(bmp, rect);
+            
+            // SKRect rect = new SKRect(Left, Top, Left + width, Top + height);
+            // return ImageEffectsProcessing.CropBitmap(bmp, rect);
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return $"{Left}, {Top}, {Right}, {Bottom}";
         }

@@ -23,10 +23,11 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -38,25 +39,26 @@ namespace ShareX.Avalonia.ImageEffects
         [DefaultValue(0)]
         public int BorderSize { get; set; }
 
-        [DefaultValue(typeof(Color), "Transparent")]
-        public Color BorderColor { get; set; }
+        // [DefaultValue(typeof(Color), "Transparent")]
+        public SKColor BorderColor { get; set; }
 
         public Pixelate()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Size = 16;
+            BorderColor = SKColors.Transparent;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ImageEffectsProcessing.Pixelate(bmp, Size, BorderSize, BorderColor);
-            }
+             ImageEffectsProcessing.Pixelate(bmp, Size);
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return $"{Size}, {BorderSize}";
         }
     }
 }
+

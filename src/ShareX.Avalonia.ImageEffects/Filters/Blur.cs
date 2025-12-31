@@ -23,10 +23,12 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
+
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -43,31 +45,25 @@ namespace ShareX.Avalonia.ImageEffects
             }
             set
             {
-                radius = value.Max(3);
-
-                if (radius.IsEvenNumber())
-                {
-                    radius++;
-                }
+                radius = Math.Max(value, 3);
             }
         }
 
         public Blur()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues(); // Helper requires updating or removal
+            Radius = 15;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ImageEffectsProcessing.BoxBlur(bmp, Radius);
-            }
+            return ImageEffectsProcessing.ApplyBlur(bmp, Radius);
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Radius.ToString();
         }
     }
 }
+

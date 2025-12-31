@@ -23,40 +23,44 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
-    internal class Alpha : ImageEffect
+    [Description("Alpha")]
+    public class Alpha : ImageEffect
     {
-        [DefaultValue(1f), Description("Pixel alpha = Pixel alpha * Value\r\nExample 0.5 will decrease alpha of pixel 50%")]
-        public float Value { get; set; }
+        private float alpha;
 
-        [DefaultValue(0f), Description("Pixel alpha = Pixel alpha + Addition\r\nExample 0.5 will increase alpha of pixel 127.5")]
-        public float Addition { get; set; }
+        [DefaultValue(1f)]
+        public float Opacity
+        {
+            get => alpha;
+            set => alpha = MathHelpers.Clamp(value, 0f, 1f);
+        }
+
+        [DefaultValue(false)]
+        public bool SetAlpha { get; set; }
 
         public Alpha()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Opacity = 1f;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Alpha(Value, Addition).Apply(bmp);
-            }
+            return ImageEffectsProcessing.ApplyOpacity(bmp, Opacity);
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            return $"{Value}, {Addition}";
+            return Opacity.ToString();
         }
     }
 }
-
-
-

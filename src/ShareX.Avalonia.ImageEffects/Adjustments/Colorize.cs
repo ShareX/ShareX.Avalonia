@@ -23,41 +23,31 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Colorize")]
     internal class Colorize : ImageEffect
     {
-        [DefaultValue(typeof(Color), "Red")]
-        public Color Color { get; set; }
-
-        [DefaultValue(0f)]
-        public float Value { get; set; }
+        // [DefaultValue(typeof(Color), "Red")]
+        public SKColor Color { get; set; }
 
         public Colorize()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Color = SKColors.Red;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Colorize(Color, Value).Apply(bmp);
-            }
-        }
-
-        protected override string GetSummary()
-        {
-            return $"{Color.R}, {Color.G}, {Color.B}";
+            // TODO
+            return bmp;
         }
     }
 }
-
-
-
 

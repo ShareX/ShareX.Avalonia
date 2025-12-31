@@ -23,37 +23,42 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Hue")]
     internal class Hue : ImageEffect
     {
-        [DefaultValue(0f), Description("From 0 to 360")]
-        public float Angle { get; set; }
+        private int hue;
+
+        [DefaultValue(0), Description("Value must be between -180 and 180.")]
+        public int Value
+        {
+            get => hue;
+            set => hue = MathHelpers.Clamp(value, -180, 180);
+        }
 
         public Hue()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Hue(Angle).Apply(bmp);
-            }
+             // TODO
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            return Angle + "°";
+            return Value.ToString();
         }
     }
 }
-
-
 

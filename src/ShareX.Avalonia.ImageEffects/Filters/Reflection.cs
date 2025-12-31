@@ -23,10 +23,12 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System.Drawing;
 using System.ComponentModel;
+using SkiaSharp;
+
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -41,21 +43,21 @@ namespace ShareX.Avalonia.ImageEffects
         public int Percentage
         {
             get => percentage;
-            set => percentage = value.Clamp(1, 100);
+            set => percentage = MathHelpers.Clamp(value, 1, 100);
         }
 
         [DefaultValue(255), Description("Reflection transparency start from this value to MinAlpha.\nValue need to be between 0 to 255.")]
         public int MaxAlpha
         {
             get => maxAlpha;
-            set => maxAlpha = value.Clamp(0, 255);
+            set => maxAlpha = MathHelpers.Clamp(value, 0, 255);
         }
 
         [DefaultValue(0), Description("Reflection transparency start from MaxAlpha to this value.\nValue need to be between 0 to 255.")]
         public int MinAlpha
         {
             get => minAlpha;
-            set => minAlpha = value.Clamp(0, 255);
+            set => minAlpha = MathHelpers.Clamp(value, 0, 255);
         }
 
         [DefaultValue(0), Description("Reflection start position will be: Screenshot height + Offset")]
@@ -69,15 +71,19 @@ namespace ShareX.Avalonia.ImageEffects
 
         public Reflection()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Percentage = 20;
+            MaxAlpha = 255;
+            MinAlpha = 0;
+            SkewSize = 25;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
             return ImageEffectsProcessing.DrawReflection(bmp, Percentage, MaxAlpha, MinAlpha, Offset, Skew, SkewSize);
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Percentage.ToString();
         }

@@ -23,23 +23,33 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System.Drawing;
+using System.ComponentModel;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Polaroid")]
     internal class Polaroid : ImageEffect
     {
-        public override Bitmap Apply(Bitmap bmp)
+        [DefaultValue(5)]
+        public int Margin { get; set; }
+
+        [DefaultValue(true)]
+        public bool Rotate { get; set; }
+
+        public Polaroid()
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Polaroid().Apply(bmp);
-            }
+            // this.ApplyDefaultPropertyValues();
+            Margin = 5;
+            Rotate = true;
+        }
+
+        public override SKBitmap Apply(SKBitmap bmp)
+        {
+            return ImageEffectsProcessing.DrawPolaroid(bmp, Margin, Rotate);
         }
     }
 }
-
-
-

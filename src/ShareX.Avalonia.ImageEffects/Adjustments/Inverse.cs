@@ -23,23 +23,22 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System.Drawing;
+using System.ComponentModel;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Inverse")]
     internal class Inverse : ImageEffect
     {
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Inverse().Apply(bmp);
-            }
+            // TODO
+            return bmp;
         }
     }
 }
-
-
 

@@ -23,10 +23,12 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
+
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -40,35 +42,40 @@ namespace ShareX.Avalonia.ImageEffects
         public int Size
         {
             get => size;
-            set => size = value.Max(1);
+            set => size = Math.Max(value, 1);
         }
 
         [DefaultValue(0)]
         public int Padding
         {
             get => padding;
-            set => padding = value.Max(0);
+            set => padding = Math.Max(value, 0);
         }
 
-        [DefaultValue(typeof(Color), "Black")]
-        public Color Color { get; set; }
+        // [DefaultValue(typeof(Color), "Black")]
+        public SKColor Color { get; set; }
 
         [DefaultValue(false)]
         public bool OutlineOnly { get; set; }
 
         public Outline()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Size = 1;
+            Padding = 0;
+            Color = SKColors.Black;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.Outline(bmp, Size, Color, Padding, OutlineOnly);
+            // return ImageEffectsProcessing.Outline(bmp, Size, Color, Padding, OutlineOnly);
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Size.ToString();
         }
     }
 }
+

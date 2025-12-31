@@ -23,37 +23,22 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Sepia")]
     internal class Sepia : ImageEffect
     {
-        [DefaultValue(1f)]
-        public float Value { get; set; }
-
-        public Sepia()
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            this.ApplyDefaultPropertyValues();
-        }
-
-        public override Bitmap Apply(Bitmap bmp)
-        {
-            using (bmp)
-            {
-                return ColorMatrixManager.Sepia(Value).Apply(bmp);
-            }
-        }
-
-        protected override string GetSummary()
-        {
-            return Value.ToString();
+             // TODO
+             return bmp;
         }
     }
 }
-
-
 

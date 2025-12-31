@@ -23,74 +23,40 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
-using System;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
+    [Description("Canvas")]
     public class Canvas : ImageEffect
     {
         [DefaultValue(typeof(CanvasMargin), "0, 0, 0, 0")]
         public CanvasMargin Margin { get; set; }
 
-        [DefaultValue(CanvasMarginMode.AbsoluteSize), Description("How the margin around the canvas will be calculated.")]
-        public CanvasMarginMode MarginMode { get; set; }
-
-        [DefaultValue(typeof(Color), "Transparent")]
-        public Color Color { get; set; }
+        // [DefaultValue(typeof(Color), "White")]
+        public SKColor Color { get; set; }
 
         public Canvas()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Color = SKColors.White;
         }
 
-        public enum CanvasMarginMode
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            AbsoluteSize,
-            PercentageOfCanvas
-        }
-
-        public override Bitmap Apply(Bitmap bmp)
-        {
-            CanvasMargin canvasMargin;
-
-            if (MarginMode == CanvasMarginMode.PercentageOfCanvas)
-            {
-                canvasMargin = new CanvasMargin
-                {
-                    Left = (int)Math.Round(Margin.Left / 100f * bmp.Width),
-                    Right = (int)Math.Round(Margin.Right / 100f * bmp.Width),
-                    Top = (int)Math.Round(Margin.Top / 100f * bmp.Height),
-                    Bottom = (int)Math.Round(Margin.Bottom / 100f * bmp.Height)
-                };
-            }
-            else
-            {
-                canvasMargin = Margin;
-            }
-
-            Bitmap bmpResult = ImageEffectsProcessing.AddCanvas(bmp, canvasMargin, Color);
-
-            if (bmpResult == null)
-            {
-                return bmp;
-            }
-
-            bmp.Dispose();
-            return bmpResult;
+             // TODO: Canvas resize implementation
+             return bmp;
         }
 
         protected override string? GetSummary()
         {
-            if (Margin.All == -1)
-            {
-                return $"{Margin.Left}, {Margin.Top}, {Margin.Right}, {Margin.Bottom}";
-            }
-
-            return Margin.All.ToString();
+            return Margin.ToString();
         }
     }
 }
+

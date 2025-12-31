@@ -23,12 +23,13 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Manipulations
 {
     public class Resize : ImageEffect
     {
@@ -43,7 +44,8 @@ namespace ShareX.Avalonia.ImageEffects
 
         public Resize()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Width = 250;
         }
 
         public Resize(int width, int height)
@@ -52,41 +54,20 @@ namespace ShareX.Avalonia.ImageEffects
             Height = height;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
             if (Width <= 0 && Height <= 0)
             {
                 return bmp;
             }
 
-            Size size = ImageEffectsProcessing.ApplyAspectRatio(Width, Height, bmp);
-
-            if ((Mode == ResizeMode.ResizeIfBigger && bmp.Width <= size.Width && bmp.Height <= size.Height) ||
-                (Mode == ResizeMode.ResizeIfSmaller && bmp.Width >= size.Width && bmp.Height >= size.Height))
-            {
-                return bmp;
-            }
-
-            return ImageEffectsProcessing.ResizeImage(bmp, size);
+            // TODO: Resize implementation
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
-            string summary = Width.ToString();
-
-            if (Width > 0)
-            {
-                summary += "px";
-            }
-
-            summary += ", " + Height.ToString();
-
-            if (Height > 0)
-            {
-                summary += "px";
-            }
-
-            return summary;
+            return Width.ToString();
         }
     }
 }

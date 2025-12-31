@@ -23,37 +23,42 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
+    [Description("Brightness")]
     internal class Brightness : ImageEffect
     {
-        [DefaultValue(0f), Description("Pixel color = Pixel color + Value\r\nExample 0.5 will increase color of pixel 127.5")]
-        public float Value { get; set; }
+        private int brightness;
+
+        [DefaultValue(0), Description("Value must be between -255 and 255.")]
+        public int Value
+        {
+            get => brightness;
+            set => brightness = MathHelpers.Clamp(value, -255, 255);
+        }
 
         public Brightness()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            using (bmp)
-            {
-                return ColorMatrixManager.Brightness(Value).Apply(bmp);
-            }
+            // TODO
+            return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return Value.ToString();
         }
     }
 }
-
-
 

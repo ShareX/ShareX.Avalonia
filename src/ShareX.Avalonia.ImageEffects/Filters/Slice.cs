@@ -23,10 +23,11 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -40,14 +41,14 @@ namespace ShareX.Avalonia.ImageEffects
         public int MinSliceHeight
         {
             get => minSliceHeight;
-            set => minSliceHeight = value.Max(1);
+            set => minSliceHeight = Math.Max(value, 1);
         }
 
         [DefaultValue(100)]
         public int MaxSliceHeight
         {
             get => maxSliceHeight;
-            set => maxSliceHeight = value.Max(1);
+            set => maxSliceHeight = Math.Max(value, 1);
         }
 
         [DefaultValue(0)]
@@ -58,25 +59,23 @@ namespace ShareX.Avalonia.ImageEffects
 
         public Slice()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            MinSliceHeight = 10;
+            MaxSliceHeight = 100;
+            MinSliceShift = 0;
+            MaxSliceShift = 10;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            int minSliceHeight = Math.Min(MinSliceHeight, MaxSliceHeight);
-            int maxSliceHeight = Math.Max(MinSliceHeight, MaxSliceHeight);
-            int minSliceShift = Math.Min(MinSliceShift, MaxSliceShift);
-            int maxSliceShift = Math.Max(MinSliceShift, MaxSliceShift);
-
-            using (bmp)
-            {
-                return ImageEffectsProcessing.Slice(bmp, minSliceHeight, maxSliceHeight, minSliceShift, maxSliceShift);
-            }
+             // TODO: Skia slice implementation
+             return bmp;
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return $"{MinSliceHeight}, {MaxSliceHeight}";
         }
     }
 }
+

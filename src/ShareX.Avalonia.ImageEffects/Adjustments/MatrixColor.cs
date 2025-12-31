@@ -23,84 +23,88 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Imaging;
+using SkiaSharp;
 
-namespace ShareX.Avalonia.ImageEffects
+namespace ShareX.Avalonia.ImageEffects.Adjustments
 {
     [Description("Color matrix")]
-    internal class MatrixColor : ImageEffect
+    public class MatrixColor : ImageEffect
     {
-        [DefaultValue(1f), Description("Red = (Red * Rr) + (Green * Rg) + (Blue * Rb) + (Alpha * Ra) + Ro")]
-        public float Rr { get; set; }
+        [DefaultValue(1f)]
+        public float Matrix00 { get; set; }
         [DefaultValue(0f)]
-        public float Rg { get; set; }
+        public float Matrix01 { get; set; }
         [DefaultValue(0f)]
-        public float Rb { get; set; }
+        public float Matrix02 { get; set; }
         [DefaultValue(0f)]
-        public float Ra { get; set; }
+        public float Matrix03 { get; set; }
         [DefaultValue(0f)]
-        public float Ro { get; set; }
+        public float Matrix04 { get; set; }
 
         [DefaultValue(0f)]
-        public float Gr { get; set; }
+        public float Matrix10 { get; set; }
         [DefaultValue(1f)]
-        public float Gg { get; set; }
+        public float Matrix11 { get; set; }
         [DefaultValue(0f)]
-        public float Gb { get; set; }
+        public float Matrix12 { get; set; }
         [DefaultValue(0f)]
-        public float Ga { get; set; }
+        public float Matrix13 { get; set; }
         [DefaultValue(0f)]
-        public float Go { get; set; }
+        public float Matrix14 { get; set; }
 
         [DefaultValue(0f)]
-        public float Br { get; set; }
+        public float Matrix20 { get; set; }
         [DefaultValue(0f)]
-        public float Bg { get; set; }
+        public float Matrix21 { get; set; }
         [DefaultValue(1f)]
-        public float Bb { get; set; }
+        public float Matrix22 { get; set; }
         [DefaultValue(0f)]
-        public float Ba { get; set; }
+        public float Matrix23 { get; set; }
         [DefaultValue(0f)]
-        public float Bo { get; set; }
+        public float Matrix24 { get; set; }
 
         [DefaultValue(0f)]
-        public float Ar { get; set; }
+        public float Matrix30 { get; set; }
         [DefaultValue(0f)]
-        public float Ag { get; set; }
+        public float Matrix31 { get; set; }
         [DefaultValue(0f)]
-        public float Ab { get; set; }
+        public float Matrix32 { get; set; }
         [DefaultValue(1f)]
-        public float Aa { get; set; }
+        public float Matrix33 { get; set; }
         [DefaultValue(0f)]
-        public float Ao { get; set; }
+        public float Matrix34 { get; set; }
+
+        [DefaultValue(0f)]
+        public float Matrix40 { get; set; }
+        [DefaultValue(0f)]
+        public float Matrix41 { get; set; }
+        [DefaultValue(0f)]
+        public float Matrix42 { get; set; }
+        [DefaultValue(0f)]
+        public float Matrix43 { get; set; }
+        [DefaultValue(1f)]
+        public float Matrix44 { get; set; }
 
         public MatrixColor()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Matrix00 = 1f; Matrix11 = 1f; Matrix22 = 1f; Matrix33 = 1f; Matrix44 = 1f;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            ColorMatrix colorMatrix = new ColorMatrix(new[]
-            {
-                new float[] { Rr, Gr, Br, Ar, 0 },
-                new float[] { Rg, Gg, Bg, Ag, 0 },
-                new float[] { Rb, Gb, Bb, Ab, 0 },
-                new float[] { Ra, Ga, Ba, Aa, 0 },
-                new float[] { Ro, Go, Bo, Ao, 1 }
-            });
-
-            using (bmp)
-            {
-                return colorMatrix.Apply(bmp);
-            }
+             float[] matrix = new float[] {
+                 Matrix00, Matrix01, Matrix02, Matrix03, Matrix04,
+                 Matrix10, Matrix11, Matrix12, Matrix13, Matrix14,
+                 Matrix20, Matrix21, Matrix22, Matrix23, Matrix24,
+                 Matrix30, Matrix31, Matrix32, Matrix33, Matrix34
+             };
+             
+             return ImageEffectsProcessing.ApplyColorMatrix(bmp, matrix);
         }
     }
 }
-
-
-

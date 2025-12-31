@@ -23,11 +23,12 @@
 
 #endregion License Information (GPL v3)
 
+
 using ShareX.Avalonia.Common;
 using ShareX.Avalonia.ImageEffects.Helpers;
 using System.ComponentModel;
-using System.Drawing;
-using AnchorSides = ShareX.Avalonia.ImageEffects.Helpers.ImageEffectsProcessing.AnchorSides;
+using SkiaSharp;
+// using AnchorSides = ShareX.Avalonia.ImageEffects.Helpers.ImgeEffectsProcessing.AnchorSides;
 
 namespace ShareX.Avalonia.ImageEffects
 {
@@ -48,15 +49,19 @@ namespace ShareX.Avalonia.ImageEffects
 
         public TornEdge()
         {
-            this.ApplyDefaultPropertyValues();
+            // this.ApplyDefaultPropertyValues();
+            Depth = 15;
+            Range = 20;
+            Sides = AnchorSides.All;
+            CurvedEdges = true;
         }
 
-        public override Bitmap Apply(Bitmap bmp)
+        public override SKBitmap Apply(SKBitmap bmp)
         {
-            return ImageEffectsProcessing.TornEdges(bmp, Depth, Range, Sides, CurvedEdges, true, Color.Transparent);
+             return ImageEffectsProcessing.DrawTornEdge(bmp, Depth, Range, Sides, CurvedEdges);
         }
 
-        protected override string GetSummary()
+        protected override string? GetSummary()
         {
             return $"{Depth}, {Range}";
         }
