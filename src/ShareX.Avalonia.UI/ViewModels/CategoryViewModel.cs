@@ -44,11 +44,22 @@ public partial class CategoryViewModel : ViewModelBase
             {
                 // Reload instances to show the newly added one
                 LoadInstances();
+                dialog.Close();
             };
             
-            // Show dialog - for now just reload since we don't have window for ShowDialog
-            // This will be properly implemented when we have parent window reference
-            LoadInstances();
+            viewModel.OnCancelled += () =>
+            {
+                dialog.Close();
+            };
+            
+            // Show dialog - find parent window
+            var topLevel = global::Avalonia.Application.Current?.ApplicationLifetime as global::Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime;
+            var mainWindow = topLevel?.MainWindow;
+            
+            if (mainWindow != null)
+            {
+                await dialog.ShowDialog(mainWindow);
+            }
         }
         catch (Exception ex)
         {
