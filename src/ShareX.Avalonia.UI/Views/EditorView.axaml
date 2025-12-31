@@ -197,7 +197,7 @@
                                        HorizontalAlignment="Stretch"
                                        VerticalAlignment="Stretch"/>
 
-                                <!-- Annotation Layer -->
+                                <!-- Annotation Layer (Saved content) -->
                                 <Canvas Name="AnnotationCanvas"
                                         Background="Transparent"
                                         IsVisible="{Binding HasPreviewImage}"
@@ -207,12 +207,20 @@
                                         PointerPressed="OnCanvasPointerPressed"
                                         PointerMoved="OnCanvasPointerMoved"
                                         PointerReleased="OnCanvasPointerReleased">
-                                        <Rectangle Name="CropOverlay" 
-                                                   IsVisible="False"
-                                                   Stroke="White"
-                                                   StrokeThickness="2"
-                                                   StrokeDashArray="4,2"
-                                                   Fill="#80000000" />
+                                </Canvas>
+
+                                <!-- Overlay Layer (Transient UI: Selection handles, Crop) -->
+                                <Canvas Name="OverlayCanvas"
+                                        IsHitTestVisible="False"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch">
+                                    <Rectangle Name="CropOverlay" 
+                                               IsVisible="False"
+                                               Stroke="White"
+                                               StrokeThickness="2"
+                                               StrokeDashArray="4,2"
+                                               Fill="#80000000" />
+                                    <!-- Selection Handles will be added here dynamically -->
                                 </Canvas>
                             </Grid>
                         </Viewbox>

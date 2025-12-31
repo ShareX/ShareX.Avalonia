@@ -21,6 +21,69 @@ namespace ShareX.Avalonia.UI.Views
         private Control? _selectedShape;
         private Point _lastDragPoint;
         private bool _isDraggingShape;
+        
+        // Handles
+        private List<global::Avalonia.Controls.Shapes.Rectangle> _selectionHandles = new();
+        private bool _isDraggingHandle;
+        private global::Avalonia.Controls.Shapes.Rectangle? _draggedHandle;
+        
+        private void UpdateSelectionHandles()
+        {
+            var overlay = this.FindControl<Canvas>("OverlayCanvas");
+            if (overlay == null) return;
+
+            // Clear existing handles
+            foreach (var handle in _selectionHandles)
+            {
+                overlay.Children.Remove(handle);
+            }
+            _selectionHandles.Clear();
+
+            if (_selectedShape == null) return;
+
+            // Calculate bounds
+            var left = Canvas.GetLeft(_selectedShape);
+            var top = Canvas.GetTop(_selectedShape);
+            var width = _selectedShape.Bounds.Width;
+            var height = _selectedShape.Bounds.Height;
+            
+            // Allow handles even if Width/Height are NaN (e.g. Line)? 
+            // For now assume shapes have explicit size setting in OnPointerMoved
+            if (double.IsNaN(width)) width = _selectedShape.Width;
+            if (double.IsNaN(height)) height = _selectedShape.Height;
+
+            // Create 8 handles
+            CreateHandle(left, top, "TopLeft");
+            CreateHandle(left + width / 2, top, "TopCenter");
+            CreateHandle(left + width, top, "TopRight");
+            CreateHandle(left + width, top + height / 2, "RightCenter");
+            CreateHandle(left + width, top + height, "BottomRight");
+            CreateHandle(left + width / 2, top + height, "BottomCenter");
+            CreateHandle(left, top + height, "BottomLeft");
+            CreateHandle(left, top + height / 2, "LeftCenter");
+        }
+
+        private void CreateHandle(double x, double y, string tag)
+        {
+            var overlay = this.FindControl<Canvas>("OverlayCanvas");
+            var handle = new global::Avalonia.Controls.Shapes.Rectangle
+            {
+                Width = 10,
+                Height = 10,
+                Fill = Brushes.White,
+                Stroke = Brushes.Blue,
+                StrokeThickness = 1,
+                Tag = tag, // Store position intent
+                Cursor = Cursor.Parse("Hand") 
+            };
+            
+            // Center the handle
+            Canvas.SetLeft(handle, x - 5);
+            Canvas.SetTop(handle, y - 5);
+            
+            overlay.Children.Add(handle);
+            _selectionHandles.Add(handle);
+        }
 
         private Stack<Control> _undoStack = new();
         private Stack<Control> _redoStack = new();
@@ -119,31 +182,57 @@ namespace ShareX.Avalonia.UI.Views
 
             var point = e.GetPosition(canvas);
 
+            // Check if clicking a handle
+            if ((_selectedShape != null && vm.ActiveTool == EditorTool.Select) || vm.ActiveTool == EditorTool.Crop)
+            {
+                 var overlay = this.FindControl<Canvas>("OverlayCanvas");
+                 if (overlay != null)
+                 {
+                     var handle = e.Source as global::Avalonia.Controls.Shapes.Rectangle;
+                     if (handle != null && overlay.Children.Contains(handle))
+                     {
+                         _isDraggingHandle = true;
+                         _draggedHandle = handle;
+                         _startPoint = e.GetPosition(overlay); // Use overlay coords for handles
+                         
+                         // If we are cropping, ensure we are selecting the crop overlay
+                         if (vm.ActiveTool == EditorTool.Crop)
+                         {
+                              var cropOverlay = this.FindControl<global::Avalonia.Controls.Shapes.Rectangle>("CropOverlay");
+                              _selectedShape = cropOverlay;
+                         }
+                         return;
+                     }
+                 }
+            }
+
             if (vm.ActiveTool == EditorTool.Select)
             {
                 // Hit test - find the direct child of the canvas
-                var source = e.Source as global::Avalonia.Visual;
-                Control? target = null;
+                var hitSource = e.Source as global::Avalonia.Visual;
+                Control? hitTarget = null;
 
-                while (source != null && source != canvas)
+                while (hitSource != null && hitSource != canvas)
                 {
-                    if (canvas.Children.Contains(source as Control))
+                    if (canvas.Children.Contains(hitSource as Control))
                     {
-                        target = source as Control;
+                        hitTarget = hitSource as Control;
                         break;
                     }
-                    source = source.GetVisualParent();
+                    hitSource = hitSource.GetVisualParent();
                 }
 
-                if (target != null && target.Name != "CropOverlay")
+                if (hitTarget != null && hitTarget.Name != "CropOverlay")
                 {
-                    _selectedShape = target;
+                    _selectedShape = hitTarget;
                     _lastDragPoint = point;
                     _isDraggingShape = true;
+                    UpdateSelectionHandles();
                 }
                 else
                 {
                     _selectedShape = null;
+                    UpdateSelectionHandles();
                 }
                 return;
             }
@@ -319,6 +408,70 @@ namespace ShareX.Avalonia.UI.Views
             if (canvas == null) return;
             var currentPoint = e.GetPosition(canvas);
 
+            if (_isDraggingHandle && _draggedHandle != null && _selectedShape != null)
+            {
+                var handleTag = _draggedHandle.Tag?.ToString();
+                var deltaX = currentPoint.X - _startPoint.X;
+                var deltaY = currentPoint.Y - _startPoint.Y;
+                
+                // Get current bounds
+                var left = Canvas.GetLeft(_selectedShape);
+                var top = Canvas.GetTop(_selectedShape);
+                var width = _selectedShape.Bounds.Width;
+                var height = _selectedShape.Bounds.Height;
+                 if (double.IsNaN(width)) width = _selectedShape.Width;
+                 if (double.IsNaN(height)) height = _selectedShape.Height;
+
+                // Helper to update properties
+                // Rectangle/Ellipse use Width/Height
+                // Line uses Start/End Point
+                
+                if (_selectedShape is global::Avalonia.Controls.Shapes.Rectangle || _selectedShape is global::Avalonia.Controls.Shapes.Ellipse || _selectedShape is Grid)
+                {
+                    double newLeft = left;
+                    double newTop = top;
+                    double newWidth = width;
+                    double newHeight = height;
+
+                    if (handleTag.Contains("Right"))
+                    {
+                        newWidth = Math.Max(1, width + deltaX);
+                    }
+                    else if (handleTag.Contains("Left"))
+                    {
+                        var change = Math.Min(width - 1, deltaX);
+                        newLeft += change;
+                        newWidth -= change;
+                    }
+
+                    if (handleTag.Contains("Bottom"))
+                    {
+                        newHeight = Math.Max(1, height + deltaY);
+                    }
+                    else if (handleTag.Contains("Top"))
+                    {
+                        var change = Math.Min(height - 1, deltaY);
+                        newTop += change;
+                        newHeight -= change;
+                    }
+
+                    Canvas.SetLeft(_selectedShape, newLeft);
+                    Canvas.SetTop(_selectedShape, newTop);
+                    _selectedShape.Width = newWidth;
+                    _selectedShape.Height = newHeight;
+                }
+                else if (_selectedShape is global::Avalonia.Controls.Shapes.Line targetLine)
+                {
+                    // Line resizing logic... simpler? just move endpoints?
+                    // For now, let's just support moving lines, resizing lines via handles is tricky without a bounding box logic wrapper
+                    // We can skip line resizing for this iteration or treat it as a box (which might look weird)
+                }
+
+                _startPoint = currentPoint; // Update for next delta
+                UpdateSelectionHandles();
+                return;
+            }
+
             if (_isDraggingShape && _selectedShape != null)
             {
                 var deltaX = currentPoint.X - _lastDragPoint.X;
@@ -331,6 +484,7 @@ namespace ShareX.Avalonia.UI.Views
                 Canvas.SetTop(_selectedShape, top + deltaY);
 
                 _lastDragPoint = currentPoint;
+                UpdateSelectionHandles(); // Move handles with shape
                 return;
             }
 
@@ -404,6 +558,13 @@ namespace ShareX.Avalonia.UI.Views
 
         private void OnCanvasPointerReleased(object sender, PointerReleasedEventArgs e)
         {
+            if (_isDraggingHandle)
+            {
+                _isDraggingHandle = false;
+                _draggedHandle = null;
+                return;
+            }
+
             if (_isDraggingShape)
             {
                 _isDraggingShape = false;
