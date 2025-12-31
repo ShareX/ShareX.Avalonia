@@ -7,8 +7,16 @@
              x:Class="ShareX.Avalonia.UI.Views.EffectsPanelView"
              x:DataType="vm:EffectsPanelViewModel">
 
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Resources/EffectParameterTemplates.axaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+
     <Border Background="#1E1E2E" CornerRadius="8" Padding="16">
-        <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
             <!-- Header -->
             <TextBlock Grid.Row="0" 
                        Text="Image Effects" 
@@ -74,8 +82,20 @@
                 </ListBox>
             </Border>
 
+            <!-- Parameter Panel -->
+            <Border Grid.Row="3"
+                    Background="#252535"
+                    CornerRadius="6"
+                    Padding="12"
+                    Margin="0,0,0,12"
+                    IsVisible="{Binding SelectedEffect, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <ContentControl Content="{Binding SelectedEffect}"
+                                ContentTemplate="{StaticResource GenericEffectParameterTemplate}"/>
+            </Border>
+
+
             <!-- Action Buttons -->
-            <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
+            <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                 <Button Content="Reset" 
                         Command="{Binding ResetEffectCommand}"
                         Background="#FFFFFF0D"

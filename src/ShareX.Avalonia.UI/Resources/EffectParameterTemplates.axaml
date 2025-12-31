@@ -1,0 +1,27 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:vm="using:ShareX.Avalonia.UI.ViewModels">
+
+    <!-- Generic Effect Parameter Panel -->
+    <!-- For now, show a simple message. Specific DataTemplates can be added later -->
+    <DataTemplate x:Key="GenericEffectParameterTemplate" DataType="vm:EffectViewModel">
+        <StackPanel Spacing="12">
+            <TextBlock Text="{Binding Name}" 
+                       FontWeight="Bold" 
+                       FontSize="14" 
+                       Foreground="White"/>
+            <TextBlock Text="{Binding Description}" 
+                       FontSize="12" 
+                       Foreground="#94A3B8"
+                       TextWrapping="Wrap"/>
+            
+            <!-- Placeholder for effect-specific controls -->
+            <TextBlock Text="Effect parameters will be configured here."
+                       FontSize="11"
+                       Foreground="#64748B"
+                       FontStyle="Italic"
+                       Margin="0,8,0,0"/>
+        </StackPanel>
+    </DataTemplate>
+
+</ResourceDictionary>
