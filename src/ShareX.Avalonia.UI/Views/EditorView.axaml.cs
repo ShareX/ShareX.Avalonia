@@ -629,7 +629,8 @@ namespace ShareX.Avalonia.UI.Views
         private async void OnCanvasPointerPressed(object sender, PointerPressedEventArgs e)
         {
             if (DataContext is not MainViewModel vm) return;
-            var canvas = sender as Canvas;
+            // Always draw on the main annotation canvas even if the overlay receives the event.
+            var canvas = this.FindControl<Canvas>("AnnotationCanvas") ?? sender as Canvas;
             if (canvas == null) return;
 
             // Ignore middle mouse to avoid creating annotations while panning
@@ -639,9 +640,9 @@ namespace ShareX.Avalonia.UI.Views
             var point = GetCanvasPosition(e, canvas);
 
             // Check if clicking a handle (always allow when a shape is selected, regardless of active tool)
-            if (_selectedShape != null || vm.ActiveTool == EditorTool.Crop)
+              if (_selectedShape != null || vm.ActiveTool == EditorTool.Crop)
             {
-                 var overlay = this.FindControl<Canvas>("OverlayCanvas");
+                  var overlay = this.FindControl<Canvas>("OverlayCanvas");
                  if (overlay != null)
                  {
                      var handle = e.Source as Shape;
@@ -698,6 +699,7 @@ namespace ShareX.Avalonia.UI.Views
 
             _startPoint = point;
             _isDrawing = true;
+            e.Pointer.Capture(canvas);
 
             var brush = new SolidColorBrush(Color.Parse(vm.SelectedColor));
 
@@ -924,6 +926,7 @@ namespace ShareX.Avalonia.UI.Views
                              StrokeThickness = (vm.ActiveTool == EditorTool.SmartEraser) ? 10 : vm.StrokeWidth,
                              Points = new Points { _startPoint }
                          };
+                         polyline.SetValue(Panel.ZIndexProperty, 1);
                          
                          FreehandAnnotation freehand;
                          if (vm.ActiveTool == EditorTool.SmartEraser) 
@@ -991,7 +994,8 @@ namespace ShareX.Avalonia.UI.Views
 
         private void OnCanvasPointerMoved(object sender, PointerEventArgs e)
         {
-            var canvas = sender as Canvas;
+            // Keep all drawing relative to the annotation canvas so overlay hit tests don't misplace strokes.
+            var canvas = this.FindControl<Canvas>("AnnotationCanvas") ?? sender as Canvas;
             if (canvas == null) return;
             var currentPoint = GetCanvasPosition(e, canvas);
 
@@ -1083,11 +1087,15 @@ namespace ShareX.Avalonia.UI.Views
             }
             else if (_currentShape is Polyline polyline)
             {
-                // Freehand drawing: Add point to existing points
-                // We must create a new collection or modify existing?
-                // Observable collection updates might trigger redraw
-                // Polyline.Points is a Points collection.
-                polyline.Points.Add(currentPoint);
+                // Freehand drawing: create a new Points collection to force property change and redraw.
+                var updated = new Points();
+                foreach (var p in polyline.Points)
+                {
+                    updated.Add(p);
+                }
+                updated.Add(currentPoint);
+                polyline.Points = updated;
+                polyline.InvalidateVisual();
                 
                 if (polyline.Tag is FreehandAnnotation freehand)
                 {
@@ -1218,12 +1226,14 @@ namespace ShareX.Avalonia.UI.Views
             {
                 _isDraggingHandle = false;
                 _draggedHandle = null;
+                e.Pointer.Capture(null);
                 return;
             }
 
             if (_isDraggingShape)
             {
                 _isDraggingShape = false;
+                e.Pointer.Capture(null);
                 return;
             }
 
@@ -1235,13 +1245,19 @@ namespace ShareX.Avalonia.UI.Views
                     var createdShape = _currentShape;
                     _undoStack.Push(createdShape);
 
-                    // Auto-select newly created shape so resize handles appear immediately
-                    _selectedShape = createdShape;
-                    UpdateSelectionHandles();
+                    // Auto-select newly created shape so resize handles appear immediately,
+                    // but skip selection for freehand pen/eraser strokes (Polyline) which
+                    // are not resizable with our current handle logic.
+                    if (createdShape is not Polyline)
+                    {
+                        _selectedShape = createdShape;
+                        UpdateSelectionHandles();
+                    }
 
                     // _currentShape is now managed by the canvas/undo stack
                     _currentShape = null;
                 }
+                e.Pointer.Capture(null);
             }
         }
 
