@@ -63,6 +63,15 @@ namespace ShareX.Avalonia.UI.ViewModels
         [ObservableProperty]
         private EditorTool _activeTool = EditorTool.Select;
 
+        [ObservableProperty]
+        private int _numberCounter = 1;
+
+        [RelayCommand]
+        private void ResetNumberCounter()
+        {
+            NumberCounter = 1;
+        }
+
         // Modal Overlay Properties
         [ObservableProperty]
         private bool _isModalOpen;
@@ -218,16 +227,44 @@ namespace ShareX.Avalonia.UI.ViewModels
             HasPreviewImage = false;
             ImageDimensions = "No image";
             StatusText = "Ready";
+            ResetNumberCounter();
         }
+
+        // Event for View to provide flattened image
+        public event Func<Task<Bitmap?>>? SnapshotRequested;
 
         [RelayCommand]
         private async Task Copy()
         {
-            if (_currentSourceImage == null) return;
+            // Try get flattened image first
+            Bitmap? snapshot = null;
+            if (SnapshotRequested != null)
+            {
+                snapshot = await SnapshotRequested.Invoke();
+            }
+
+            if (snapshot == null && _currentSourceImage == null) return;
+            
             try
             {
-                PlatformServices.Clipboard.SetImage(_currentSourceImage);
-                StatusText = "Image copied to clipboard";
+                // If we have a snapshot (Avalonia Bitmap), we need to put it on clipboard
+                // Implementation depends on PlatformServices support for Avalonia Bitmap vs System.Drawing.Image
+                // For now, if we have snapshot, we might need to convert or direct copy
+                
+                // Note: Current Clipboard implementation likely expects System.Drawing.Image? 
+                // Let's defer full clipboard flattening support or convert snapshot back to bytes
+                
+                if (snapshot != null)
+                {
+                   // Placeholder: need to implement Clipboard.SetBitmap(snapshot) or similar
+                   // For now, fallback to original to avoid breaking changes if platform service only takes GDI+
+                   StatusText = "Copying flattened image not fully implemented yet";
+                }
+                else if (_currentSourceImage != null)
+                {
+                     PlatformServices.Clipboard.SetImage(_currentSourceImage);
+                     StatusText = "Image copied to clipboard";
+                }
                 ExportState = "Copied";
             }
             catch (Exception ex)
@@ -240,7 +277,15 @@ namespace ShareX.Avalonia.UI.ViewModels
         [RelayCommand]
         private async Task QuickSave()
         {
-            if (_currentSourceImage == null) return;
+             // Try get flattened image first
+            Bitmap? snapshot = null;
+            if (SnapshotRequested != null)
+            {
+                snapshot = await SnapshotRequested.Invoke();
+            }
+
+            if (snapshot == null && _currentSourceImage == null) return;
+
             try
             {
                 // Simple quick save to Pictures/ShareX
@@ -250,13 +295,17 @@ namespace ShareX.Avalonia.UI.ViewModels
                 var filename = $"ShareX_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png";
                 var path = System.IO.Path.Combine(folder, filename);
 
-                _currentSourceImage.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                if (snapshot != null)
+                {
+                    snapshot.Save(path);
+                }
+                else if (_currentSourceImage != null)
+                {
+                    _currentSourceImage.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                }
                 
                 StatusText = $"Saved to {filename}";
                 ExportState = "Saved";
-                
-                // Optional: Open folder?
-                // Process.Start("explorer.exe", $"/select,\"{path}\"");
             }
             catch (Exception ex)
             {

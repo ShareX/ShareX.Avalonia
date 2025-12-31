@@ -179,44 +179,43 @@
                         CornerRadius="{Binding CanvasCornerRadius}"
                         Padding="{Binding CanvasPadding}"
                         BoxShadow="{Binding CanvasShadow}">
-                    <!-- Preview Image -->
+                    <!-- Preview Image & Canvas -->
                     <Border Background="#FFFFFF"
                             CornerRadius="{Binding PreviewCornerRadius}"
                             ClipToBounds="True">
-                        <Grid>
-                            <!-- Image Layer -->
-                            <Image Name="PreviewImageControl"
-                                   Source="{Binding PreviewImage}"
-                                   Stretch="Uniform"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center"/>
+                        <!-- Viewbox ensures we see the whole image scaled to fit -->
+                        <Viewbox Stretch="Uniform">
+                            <!-- Container sized to match actual image dimensions -->
+                            <Grid Name="CanvasContainer" 
+                                  Width="{Binding ImageWidth}" 
+                                  Height="{Binding ImageHeight}">
+                                
+                                <!-- Image Layer -->
+                                <Image Name="PreviewImageControl"
+                                       Source="{Binding PreviewImage}"
+                                       Stretch="Fill"
+                                       HorizontalAlignment="Stretch"
+                                       VerticalAlignment="Stretch"/>
 
-                            <!-- Annotation Layer -->
-                            <Canvas Name="AnnotationCanvas"
-                                    Background="Transparent"
-                                    IsVisible="{Binding HasPreviewImage}"
-                                    HorizontalAlignment="Stretch"
-                                    VerticalAlignment="Stretch"
-                                    Cursor="Cross"
-                                    PointerPressed="OnCanvasPointerPressed"
-                                    PointerMoved="OnCanvasPointerMoved"
-                                    PointerReleased="OnCanvasPointerReleased">
-                                    <Rectangle Name="CropOverlay" 
-                                               IsVisible="False"
-                                               Stroke="White"
-                                               StrokeThickness="2"
-                                               StrokeDashArray="4,2"
-                                               Fill="#80000000" />
-                            </Canvas>
-                            
-                            <!-- Placeholder when no image -->
-                            <TextBlock Text="No image captured"
-                                       Foreground="#6B7280"
-                                       FontSize="20"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center"
-                                       IsVisible="{Binding !HasPreviewImage}"/>
-                        </Grid>
+                                <!-- Annotation Layer -->
+                                <Canvas Name="AnnotationCanvas"
+                                        Background="Transparent"
+                                        IsVisible="{Binding HasPreviewImage}"
+                                        HorizontalAlignment="Stretch"
+                                        VerticalAlignment="Stretch"
+                                        Cursor="Cross"
+                                        PointerPressed="OnCanvasPointerPressed"
+                                        PointerMoved="OnCanvasPointerMoved"
+                                        PointerReleased="OnCanvasPointerReleased">
+                                        <Rectangle Name="CropOverlay" 
+                                                   IsVisible="False"
+                                                   Stroke="White"
+                                                   StrokeThickness="2"
+                                                   StrokeDashArray="4,2"
+                                                   Fill="#80000000" />
+                                </Canvas>
+                            </Grid>
+                        </Viewbox>
                     </Border>
                 </Border>
             </Grid>

@@ -39,6 +39,29 @@ namespace ShareX.Avalonia.UI.Views
                 vm.UndoRequested += (s, args) => PerformUndo();
                 vm.RedoRequested += (s, args) => PerformRedo();
                 vm.DeleteRequested += (s, args) => PerformDelete();
+                vm.SnapshotRequested += GetSnapshot;
+            }
+        }
+
+        public async System.Threading.Tasks.Task<global::Avalonia.Media.Imaging.Bitmap?> GetSnapshot()
+        {
+            var container = this.FindControl<Grid>("CanvasContainer");
+            if (container == null || container.Width <= 0 || container.Height <= 0) return null;
+            
+            // Wait for layout update if needed?
+            // Render the container to a bitmap
+            // Since the container is sized to the Image (e.g. 1920x1080), extracting it should yield full res
+            
+            try 
+            {
+                var rtb = new global::Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize((int)container.Width, (int)container.Height), new Vector(96, 96));
+                rtb.Render(container);
+                return rtb;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Snapshot failed: " + ex.Message);
+                return null;
             }
         }
         
@@ -98,11 +121,23 @@ namespace ShareX.Avalonia.UI.Views
 
             if (vm.ActiveTool == EditorTool.Select)
             {
-                // Hit test
-                var source = e.Source as Control;
-                if (source != null && source != canvas && canvas.Children.Contains(source) && source.Name != "CropOverlay")
+                // Hit test - find the direct child of the canvas
+                var source = e.Source as global::Avalonia.Visual;
+                Control? target = null;
+
+                while (source != null && source != canvas)
                 {
-                    _selectedShape = source;
+                    if (canvas.Children.Contains(source as Control))
+                    {
+                        target = source as Control;
+                        break;
+                    }
+                    source = source.GetVisualParent();
+                }
+
+                if (target != null && target.Name != "CropOverlay")
+                {
+                    _selectedShape = target;
                     _lastDragPoint = point;
                     _isDraggingShape = true;
                 }
@@ -209,7 +244,62 @@ namespace ShareX.Avalonia.UI.Views
                     canvas.Children.Add(textBox);
                     textBox.Focus();
                     _isDrawing = false; 
+                    canvas.Children.Add(textBox);
+                    textBox.Focus();
+                    _isDrawing = false; 
                     return; 
+
+                case EditorTool.Spotlight:
+                    _currentShape = new global::Avalonia.Controls.Shapes.Ellipse
+                    {
+                        Stroke = new SolidColorBrush(Color.Parse("#B0000000")), // Dark overlay
+                        StrokeThickness = 4000, // Massive stroke to cover the canvas
+                        Fill = Brushes.Transparent, // The 'hole'
+                        IsHitTestVisible = true // Allow selecting to move/delete
+                    };
+                    break;
+                    
+                case EditorTool.Number:
+                    // Create Number badge
+                    var numberGrid = new Grid
+                    {
+                        Width = 30,
+                        Height = 30
+                    };
+                    
+                    var bg = new global::Avalonia.Controls.Shapes.Ellipse
+                    {
+                        Fill = brush,
+                        Stroke = Brushes.White,
+                        StrokeThickness = 2
+                    };
+                    
+                    var numText = new TextBlock
+                    {
+                        Text = vm.NumberCounter.ToString(),
+                        Foreground = Brushes.White,
+                        HorizontalAlignment = global::Avalonia.Layout.HorizontalAlignment.Center,
+                        VerticalAlignment = global::Avalonia.Layout.VerticalAlignment.Center,
+                        FontWeight = FontWeight.Bold
+                    };
+                    
+                    numberGrid.Children.Add(bg);
+                    numberGrid.Children.Add(numText);
+                    
+                    // Position centered on click
+                    Canvas.SetLeft(numberGrid, _startPoint.X - 15);
+                    Canvas.SetTop(numberGrid, _startPoint.Y - 15);
+                    
+                    _currentShape = numberGrid;
+                    vm.NumberCounter++; // Increment for next click
+                    
+                    // Add immediately (single click tool)
+                    canvas.Children.Add(numberGrid);
+                    _undoStack.Push(numberGrid);
+                    _redoStack.Clear();
+                    _currentShape = null; 
+                    _isDrawing = false;
+                    return;
             }
 
             if (_currentShape != null)
