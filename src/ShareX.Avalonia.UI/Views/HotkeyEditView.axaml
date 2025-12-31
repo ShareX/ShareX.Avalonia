@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="300"
+        x:Class="ShareX.Avalonia.UI.Views.HotkeyEditView"
+        x:DataType="vm:HotkeyEditViewModel"
+        Title="{Binding WindowTitle}"
+        Width="400" Height="250"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="20">
+        <StackPanel Grid.Row="0" Spacing="15">
+            <!-- Job Selection -->
+            <StackPanel Spacing="5">
+                <TextBlock Text="Task:" FontWeight="SemiBold"/>
+                <ComboBox ItemsSource="{Binding AvailableJobs}" 
+                          SelectedItem="{Binding SelectedJob}"
+                          HorizontalAlignment="Stretch"/>
+            </StackPanel>
+
+            <!-- Key Configuration -->
+            <StackPanel Spacing="5">
+                <TextBlock Text="Hotkey:" FontWeight="SemiBold"/>
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox x:Name="KeyTextBox" 
+                             Text="{Binding Model.HotkeyInfo}"
+                             IsReadOnly="True"
+                             Watermark="Press key combination..."
+                             KeyDown="KeyTextBox_KeyDown"/>
+                    <Button Grid.Column="1" Content="Clear" Command="{Binding ClearCommand}" Margin="10,0,0,0"/>
+                </Grid>
+                <TextBlock Text="Click in the box and press keys to set." 
+                           FontSize="12" Foreground="Gray"/>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+            <Button Content="OK" Click="OkButton_Click" IsDefault="True" Width="80"/>
+            <Button Content="Cancel" Click="CancelButton_Click" IsCancel="True" Width="80"/>
+        </StackPanel>
+    </Grid>
+</Window>

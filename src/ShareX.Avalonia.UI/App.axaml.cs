@@ -35,7 +35,7 @@ public partial class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private Core.Hotkeys.HotkeyManager? _hotkeyManager;
+    public Core.Hotkeys.HotkeyManager? HotkeyManager { get; private set; }
 
     private void RegisterProviders()
     {
@@ -57,14 +57,14 @@ public partial class App : Application
         try
         {
             var hotkeyService = Platform.Abstractions.PlatformServices.Hotkey;
-            _hotkeyManager = new Core.Hotkeys.HotkeyManager(hotkeyService);
+            HotkeyManager = new Core.Hotkeys.HotkeyManager(hotkeyService);
             
             // Subscribe to hotkey triggers
-            _hotkeyManager.HotkeyTriggered += HotkeyManager_HotkeyTriggered;
+            HotkeyManager.HotkeyTriggered += HotkeyManager_HotkeyTriggered;
 
             // Load default hotkeys
             var defaultHotkeys = Core.Hotkeys.HotkeyManager.GetDefaultHotkeyList();
-            _hotkeyManager.UpdateHotkeys(defaultHotkeys);
+            HotkeyManager.UpdateHotkeys(defaultHotkeys);
             
             Console.WriteLine($"Initialized hotkey manager with {defaultHotkeys.Count} default hotkeys");
         }

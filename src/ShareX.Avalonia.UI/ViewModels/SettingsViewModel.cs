@@ -48,8 +48,12 @@ namespace ShareX.Avalonia.UI.ViewModels
         [ObservableProperty]
         private bool _captureClientArea;
 
+        [ObservableProperty]
+        private HotkeySettingsViewModel _hotkeySettings;
+
         public SettingsViewModel()
         {
+            HotkeySettings = new HotkeySettingsViewModel();
             LoadSettings();
         }
 
