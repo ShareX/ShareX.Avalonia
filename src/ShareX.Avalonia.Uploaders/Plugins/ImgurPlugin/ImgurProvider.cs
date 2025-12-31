@@ -29,7 +29,7 @@ using ShareX.Avalonia.Uploaders.PluginSystem;
 namespace ShareX.Avalonia.Uploaders.Plugins.ImgurPlugin;
 
 /// <summary>
-/// Imgur image uploader provider (supports Image and Text categories)
+/// Imgur image uploader provider (supports Image category only)
 /// </summary>
 public class ImgurProvider : UploaderProviderBase
 {
@@ -37,7 +37,7 @@ public class ImgurProvider : UploaderProviderBase
     public override string Name => "Imgur";
     public override string Description => "Upload images to Imgur - free image hosting service";
     public override Version Version => new Version(1, 0, 0);
-    public override UploaderCategory[] SupportedCategories =>  new[] { UploaderCategory.Image, UploaderCategory.Text };
+    public override UploaderCategory[] SupportedCategories => new[] { UploaderCategory.Image };
     public override Type ConfigModelType => typeof(ImgurConfigModel);
 
     public ImgurProvider()
@@ -64,10 +64,6 @@ public class ImgurProvider : UploaderProviderBase
             { 
                 UploaderCategory.Image, 
                 new[] { "png", "jpg", "jpeg", "gif", "apng", "bmp", "tiff", "webp", "mp4", "avi", "mov" } 
-            },
-            { 
-                UploaderCategory.Text, 
-                new[] { "txt", "log", "json", "xml", "md", "html", "css", "js" } 
             }
         };
     }
