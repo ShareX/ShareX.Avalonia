@@ -47,15 +47,17 @@ We have successfully implemented the Reimagined UI, Multi-monitor Region Capture
 ## Roadmap
 
 ### Phase 7: Polish & Distribution (Current)
-- [ ] **Export Logic Enhancement**:
-    - [x] Copy to Clipboard (Image) - Basic implementation exists
-    - [x] Save to File (Quick Save) - Basic implementation exists
-    - [ ] Upload to Host - Full integration with upload providers
+- [x] **Export Logic Enhancement**:
+    - [x] Copy to Clipboard - Native OS clipboard via PlatformServices (System.Drawing.Image)
+    - [x] Save to File (Quick Save) - Existing implementation functional
+    - [x] SaveAs Dialog - File picker with PNG/JPEG/BMP format selection
+    - [ ] Upload to Host - Full integration with upload providers (deferred)
 - [ ] **Testing & Verification**:
     - [ ] All annotation tools functional testing
     - [ ] All image effects verification
     - [ ] Keyboard shortcuts testing
     - [ ] Serialization save/load testing
+    - [ ] Copy/Paste in native apps (Paint, Word, etc.)
 - [ ] **Cross-Platform**:
     - [ ] Linux compatibility testing
     - [ ] macOS compatibility testing
