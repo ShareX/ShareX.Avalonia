@@ -279,6 +279,75 @@ must be treated as platform code and cannot be copied wholesale.
 - Remove hard-coded provider registration
 - Add plugin marketplace/discovery UI
 
+### TODO - Full Automation Workflow (Path B)
+
+**Goal**: Complete end-to-end automation matching ShareX feature parity
+
+**Status**: Path A (minimal automation) in progress. Path B deferred for future implementation.
+
+**Specification**: See `automation_workflow_plan.md` (brain artifacts)
+
+**Components needed**:
+1. **Task System** (~600 LOC)
+   - `WorkflowTask.cs` - Async automation engine with lifecycle management
+   - `TaskInfo.cs` - Task metadata and state
+   - `TaskManager.cs` - Queue orchestration with concurrency control
+   - `TaskStatus.cs` - Status enums and job types
+
+2. **Workflow Configuration** (~200 LOC)
+   - `AfterCaptureTasks` flags: AddImageEffects, AnnotateImage, SaveImageToFile, UploadImageToHost, etc.
+   - `AfterUploadTasks` flags: CopyURLToClipboard, OpenURL, ShortenURL, ShowQRCode, ShowNotification
+   - `UploadInfoParser` - Template-based clipboard format (`%url%`, `%filename%`, `%time%`, etc.)
+
+3. **Upload Integration** (~150 LOC)
+   - `UploadResult` model with URL/ThumbnailURL/DeletionURL/ShortenedURL
+   - `UploaderErrorManager` for error handling
+   - Progress tracking events
+   - Retry logic with secondary uploaders
+
+4. **After-Upload Automation** (~100 LOC)
+   - URL shortening integration
+   - Clipboard copy with custom formats
+   - Browser opening
+   - QR code generation
+   - Notification system
+
+5. **UI Integration** (~150 LOC)
+   - Progress indicator during upload
+   - Toast notifications
+   - Upload history panel
+   - Task list view
+
+**Implementation phases**:
+1. Core task system (WorkflowTask, TaskManager)
+2. Upload workflow integration
+3. After-upload automation (clipboard, notifications)
+4. Hotkey → full automation wiring
+5. Progress UI and history
+
+**Total effort**: ~1,200 LOC, 8-12 hours
+
+**Blockers**:
+- Annotation editor is blocking (modal). Need separate workflow path for "quick capture+upload" vs "editor mode"
+- Need async/await patterns throughout (ShareX uses threads)
+- Upload providers need `UploadAsync` method signatures
+
+**Path A (minimal) delivered**:
+- Basic WorkflowTask structure
+- Upload provider wiring
+- Simple "Copy URL after upload" to clipboard
+- Hotkey → Capture → Upload → URL workflow
+
+**Path B additions**:
+- Full task queue with concurrency limits
+- Comprehensive AfterCapture/AfterUpload pipelines
+- Progress tracking with percentage/speed/ETA
+- Notification system with customizable formats
+- Upload retry logic with fallback uploaders
+- Task history persistence
+- UI for task monitoring and management
+
+
 ## Backend Porting Checklist
 
 - [x] Expand UploadersLib settings/data stubs to match ShareX models.
