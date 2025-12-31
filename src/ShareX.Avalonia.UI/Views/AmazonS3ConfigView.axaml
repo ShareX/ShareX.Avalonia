@@ -1,0 +1,114 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
+             x:Class="ShareX.Avalonia.UI.Views.AmazonS3ConfigView"
+             x:DataType="vm:AmazonS3ConfigViewModel">
+    
+    <StackPanel Spacing="15">
+        <TextBlock Text="Amazon S3 Configuration" 
+                   FontSize="18" 
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <!-- Access Key ID -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Access Key ID *" FontWeight="Medium"/>
+            <TextBox Text="{Binding AccessKeyId}" 
+                     Watermark="Enter AWS Access Key ID"
+                     Width="400"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Secret Access Key -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Secret Access Key *" FontWeight="Medium"/>
+            <TextBox Text="{Binding SecretAccessKey}" 
+                     Watermark="Enter AWS Secret Access Key"
+                     PasswordChar="●"
+                     Width="400"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Bucket Name -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Bucket Name *" FontWeight="Medium"/>
+            <TextBox Text="{Binding BucketName}" 
+                     Watermark="my-bucket-name"
+                     Width="300"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Region -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Region *" FontWeight="Medium"/>
+            <ComboBox SelectedIndex="{Binding RegionIndex}"
+                      Width="250"
+                      HorizontalAlignment="Left">
+                <ComboBoxItem Content="us-east-1 (N. Virginia)"/>
+                <ComboBoxItem Content="us-west-1 (N. California)"/>
+                <ComboBoxItem Content="us-west-2 (Oregon)"/>
+                <ComboBoxItem Content="eu-west-1 (Ireland)"/>
+                <ComboBoxItem Content="eu-central-1 (Frankfurt)"/>
+                <ComboBoxItem Content="ap-southeast-1 (Singapore)"/>
+                <ComboBoxItem Content="ap-southeast-2 (Sydney)"/>
+                <ComboBoxItem Content="ap-northeast-1 (Tokyo)"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Object Prefix -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Object Prefix (Optional)" FontWeight="Medium"/>
+            <TextBox Text="{Binding ObjectPrefix}" 
+                     Watermark="uploads/"
+                     Width="300"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Example: 'uploads/' will save files as uploads/filename.png" 
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       TextWrapping="Wrap"
+                       MaxWidth="400"
+                       HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Custom Domain -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Custom Domain (Optional)" FontWeight="Medium"/>
+            <TextBox Text="{Binding CustomDomain}" 
+                     Watermark="https://cdn.example.com"
+                     Width="400"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Use custom domain instead of S3 URL for uploaded files" 
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        </StackPanel>
+
+        <!-- Storage Class -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Storage Class" FontWeight="Medium"/>
+            <ComboBox SelectedIndex="{Binding StorageClassIndex}"
+                      Width="200"
+                      HorizontalAlignment="Left">
+                <ComboBoxItem Content="STANDARD"/>
+                <ComboBoxItem Content="REDUCED_REDUNDANCY"/>
+                <ComboBoxItem Content="STANDARD_IA"/>
+                <ComboBoxItem Content="ONEZONE_IA"/>
+                <ComboBoxItem Content="INTELLIGENT_TIERING"/>
+            </ComboBox>
+        </StackPanel>
+
+        <!-- Set Public ACL -->
+        <CheckBox Content="Make uploads public (public-read ACL)"
+                  IsChecked="{Binding SetPublicACL}"
+                  Margin="0,5,0,0"/>
+
+        <!-- Status Message -->
+        <Border Background="{DynamicResource SystemFillColorAttentionBackground}"
+                Padding="10"
+                CornerRadius="4"
+                IsVisible="{Binding !!StatusMessage}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SystemFillColorAttention}"/>
+        </Border>
+    </StackPanel>
+</UserControl>

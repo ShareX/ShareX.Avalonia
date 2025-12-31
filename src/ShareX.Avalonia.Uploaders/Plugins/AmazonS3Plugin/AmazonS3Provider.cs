@@ -77,10 +77,10 @@ public class AmazonS3Provider : UploaderProviderBase
         };
     }
 
-    // UI view will be created later
     public override object? CreateConfigView()
     {
-        // TODO: Return S3ConfigView instance when UI is implemented
+        // Config views are created by UI layer to avoid circular dependencies
+        // UI will look up AmazonS3ConfigView based on ProviderId
         return null;
     }
 }

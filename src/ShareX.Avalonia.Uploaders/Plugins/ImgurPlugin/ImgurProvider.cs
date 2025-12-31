@@ -72,10 +72,10 @@ public class ImgurProvider : UploaderProviderBase
         };
     }
 
-    // UI view will be created in Phase 3
     public override object? CreateConfigView()
     {
-        // TODO: Return ImgurConfigView instance when UI is implemented
+        // Config views are created by UI layer to avoid circular dependencies
+        // UI will look up ImgurConfigView based on ProviderId
         return null;
     }
 }
