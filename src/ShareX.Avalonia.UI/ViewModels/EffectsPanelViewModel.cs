@@ -83,5 +83,14 @@ namespace ShareX.Avalonia.UI.ViewModels
         {
             SelectedEffect?.ResetParameters();
         }
+
+        /// <summary>
+        /// Select a category
+        /// </summary>
+        [RelayCommand]
+        private void SelectCategory(string category)
+        {
+            SelectedCategory = category;
+        }
     }
 }

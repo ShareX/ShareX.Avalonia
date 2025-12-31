@@ -61,7 +61,13 @@ namespace ShareX.Avalonia.UI.ViewModels
         private int _strokeWidth = 4;
 
         [ObservableProperty]
-        private EditorTool _activeTool = EditorTool.Select;
+        private EditorTool _activeTool = EditorTool.Rectangle;
+
+        [ObservableProperty]
+        private EffectsPanelViewModel _effectsPanel = new();
+
+        [ObservableProperty]
+        private bool _isEffectsPanelOpen;
 
         [ObservableProperty]
         private int _numberCounter = 1;
@@ -218,6 +224,13 @@ namespace ShareX.Avalonia.UI.ViewModels
         {
             DeleteRequested?.Invoke(this, EventArgs.Empty);
             StatusText = "Delete requested";
+        }
+
+        [RelayCommand]
+        private void ToggleEffectsPanel()
+        {
+            IsEffectsPanelOpen = !IsEffectsPanelOpen;
+            StatusText = IsEffectsPanelOpen ? "Effects panel opened" : "Effects panel closed";
         }
 
         [RelayCommand]

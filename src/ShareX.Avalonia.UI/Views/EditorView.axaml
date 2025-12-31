@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
+             xmlns:views="using:ShareX.Avalonia.UI.Views"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="ShareX.Avalonia.UI.Views.EditorView"
              x:DataType="vm:MainViewModel"
@@ -108,6 +109,10 @@
                                 Command="{Binding SelectToolCommand}" CommandParameter="{x:Static vm:EditorTool.Crop}"
                                 Background="{Binding ActiveTool, Converter={StaticResource ActiveToolToBackground}, ConverterParameter=Crop}" 
                                 Foreground="White" CornerRadius="8" ToolTip.Tip="Crop (C)"/>
+                        <Button Content="FX" Width="40" Height="40" 
+                                Command="{Binding ToggleEffectsPanelCommand}"
+                                Background="{Binding IsEffectsPanelOpen, Converter={StaticResource BoolToActiveBackgroundConverter}}" 
+                                Foreground="White" CornerRadius="8" ToolTip.Tip="Image Effects (F)"/>
                     </StackPanel>
                 </Border>
                 
@@ -610,6 +615,17 @@
                                VerticalAlignment="Center"/>
                 </StackPanel>
             </DockPanel>
+        </Border>
+
+        <!-- Effects Panel Overlay (Grid.RowSpan=5 to cover entire view) -->
+        <Border Grid.Row="0" Grid.RowSpan="5"
+                IsVisible="{Binding IsEffectsPanelOpen}"
+                Background="#80000000"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Stretch"
+                Width="400"
+                Padding="16">
+            <views:EffectsPanelView DataContext="{Binding EffectsPanel}"/>
         </Border>
     </Grid>
 </UserControl>

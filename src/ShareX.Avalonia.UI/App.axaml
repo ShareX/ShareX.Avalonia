@@ -11,6 +11,7 @@
         <converters:ActiveToolToBackgroundConverter x:Key="ActiveToolToBackground"/>
         <converters:SelectedColorToBorderConverter x:Key="SelectedColorToBorder"/>
         <converters:SelectedWidthToBackgroundConverter x:Key="SelectedWidthToBackground"/>
+        <converters:BoolToActiveBackgroundConverter x:Key="BoolToActiveBackgroundConverter"/>
     </Application.Resources>
 
     <Application.DataTemplates>
