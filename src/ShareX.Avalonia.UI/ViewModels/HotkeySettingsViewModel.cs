@@ -35,13 +35,21 @@ public partial class HotkeySettingsViewModel : ViewModelBase
 
     private void LoadHotkeys()
     {
+        System.Diagnostics.Debug.WriteLine($"[HotkeySettings] LoadHotkeys called, _manager={_manager != null}");
         Hotkeys.Clear();
         if (_manager != null)
         {
+            System.Diagnostics.Debug.WriteLine($"[HotkeySettings] Manager has {_manager.Hotkeys.Count} hotkeys");
             foreach (var hk in _manager.Hotkeys)
             {
+                System.Diagnostics.Debug.WriteLine($"[HotkeySettings] Adding hotkey: {hk.Job} - {hk.HotkeyInfo}");
                 Hotkeys.Add(new HotkeyItemViewModel(hk));
             }
+            System.Diagnostics.Debug.WriteLine($"[HotkeySettings] Hotkeys collection now has {Hotkeys.Count} items");
+        }
+        else
+        {
+            System.Diagnostics.Debug.WriteLine("[HotkeySettings] WARNING: Manager is NULL");
         }
     }
 

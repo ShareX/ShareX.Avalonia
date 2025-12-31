@@ -119,6 +119,15 @@ public class HotkeyInfo
         };
     }
 
+    /// <summary>
+    /// Convert to Avalonia KeyGesture for in-app hotkey binding
+    /// </summary>
+    public KeyGesture? ToKeyGesture()
+    {
+        if (!IsValid) return null;
+        return new KeyGesture(Key, Modifiers);
+    }
+
     public override bool Equals(object? obj)
     {
         if (obj is HotkeyInfo other)
@@ -141,5 +150,6 @@ public enum HotkeyStatus
 {
     NotConfigured,
     Registered,
-    Failed
+    Failed,
+    UnsupportedPlatform
 }

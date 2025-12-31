@@ -3,57 +3,105 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using ShareX.Avalonia.Core;
 using ShareX.Avalonia.Core.Hotkeys;
 using ShareX.Avalonia.Common;
+using ShareX.Avalonia.Platform.Abstractions;
 using ShareX.Avalonia.UI.ViewModels;
 using System;
 using System.Linq;
 
 namespace ShareX.Avalonia.UI.Views.Controls;
 
+/// <summary>
+/// A control for capturing and displaying hotkey combinations.
+/// Supports Normal and Recording modes as per user specification.
+/// </summary>
 public partial class HotkeySelectionControl : UserControl
 {
-    private bool _isEditing;
+    // Static debug log - writes to Debug output and collects in list
+    private static Action<string>? _debugLog;
+    private static readonly System.Collections.Generic.List<string> _debugMessages = new();
+    
+    public static void SetDebugCallback(Action<string> callback)
+    {
+        _debugLog = (msg) =>
+        {
+            _debugMessages.Add(msg);
+            System.Diagnostics.Debug.WriteLine($"[HotkeyDebug] {msg}");
+            callback(msg);
+        };
+    }
+    
+    public static void Log(string message)
+    {
+        var time = DateTime.Now.ToString("HH:mm:ss.fff");
+        _debugLog?.Invoke($"[{time}] {message}");
+    }
+    
+    public static string GetDebugLog() => string.Join("\n", _debugMessages);
+
+    private enum ControlMode
+    {
+        Normal,
+        Recording
+    }
+
+    private ControlMode _mode = ControlMode.Normal;
     private HotkeyItemViewModel? _viewModel;
     private IBrush? _originalBackground;
+    private Key _previousKey;
+    private KeyModifiers _previousModifiers;
     
-    // Yellow/amber color for editing mode
-    private static readonly IBrush EditingBackground = new SolidColorBrush(Color.FromRgb(255, 235, 120));
+    // Visual feedback colors
+    private static readonly IBrush RecordingBackground = new SolidColorBrush(Color.FromRgb(255, 235, 120));
+    private static readonly IBrush RecordingForeground = Brushes.Black;
 
     public HotkeySelectionControl()
     {
         InitializeComponent();
         
+        Log("HotkeySelectionControl: Constructor called");
+        
         DataContextChanged += OnDataContextChanged;
         Loaded += OnLoaded;
+        LostFocus += OnLostFocus;
     }
 
     private void OnLoaded(object? sender, RoutedEventArgs e)
     {
-        // Store original background
+        Log("OnLoaded: START");
+        
         _originalBackground = HotkeyButton.Background;
         
-        // Use AddHandler with handledEventsToo to capture KeyDown/KeyUp
-        // even when handled by button internal logic
+        // Set up debug logger if not already set - use static list for simplicity
+        if (_debugLog == null)
+        {
+            // Use a static StringBuilder that can be read later
+            _debugLog = (msg) => 
+            {
+                _debugMessages.Add(msg);
+                System.Diagnostics.Debug.WriteLine($"[HotkeyDebug] {msg}");
+            };
+            Log("Debug logger initialized (check Debug output and static _debugMessages)");
+        }
+        
+        // CRITICAL FIX: Add handlers directly to HotkeyButton (where focus is)
+        // Use both Tunnel and Bubble strategies to catch events in all phases
         HotkeyButton.AddHandler(
             KeyDownEvent, 
-            HotkeyButton_KeyDown, 
-            RoutingStrategies.Tunnel, 
+            OnPreviewKeyDown, 
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble, 
             handledEventsToo: true);
         
         HotkeyButton.AddHandler(
-            KeyUpEvent, 
-            HotkeyButton_KeyUp, 
-            RoutingStrategies.Tunnel, 
+            KeyUpEvent,
+            OnPreviewKeyUp,
+            RoutingStrategies.Tunnel | RoutingStrategies.Bubble,
             handledEventsToo: true);
-            
-        // Also handle on the UserControl itself for better capture
-        this.AddHandler(
-            KeyDownEvent,
-            OnUserControlKeyDown,
-            RoutingStrategies.Tunnel,
-            handledEventsToo: true);
+        
+        Log($"OnLoaded: END - HotkeyButton={HotkeyButton != null}");
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -64,6 +112,263 @@ public partial class HotkeySelectionControl : UserControl
         {
             PopulateTaskMenu();
         }
+    }
+
+    private void OnLostFocus(object? sender, RoutedEventArgs e)
+    {
+        // Cancel recording if focus is lost
+        if (_mode == ControlMode.Recording)
+        {
+            Log("OnLostFocus: Recording mode active, canceling");
+            CancelRecording();
+        }
+    }
+
+    #region Key Event Handlers
+
+    private void OnPreviewKeyDown(object? sender, global::Avalonia.Input.KeyEventArgs e)
+    {
+        Log($"OnPreviewKeyDown: Key={e.Key}, Mods={e.KeyModifiers}, Mode={_mode}");
+        
+        if (_mode != ControlMode.Recording || _viewModel == null) 
+        {
+            Log("OnPreviewKeyDown: Ignoring - not in recording mode or viewModel null");
+            return;
+        }
+        
+        // Mark as handled to prevent bubbling
+        e.Handled = true;
+        
+        var key = e.Key;
+        var modifiers = e.KeyModifiers;
+
+        // Escape cancels recording
+        if (key == Key.Escape)
+        {
+            CancelRecording();
+            return;
+        }
+
+        // Backspace or Delete clears the hotkey
+        if (key == Key.Back || key == Key.Delete)
+        {
+            ClearHotkey();
+            return;
+        }
+
+        // Check if this is a modifier-only key
+        if (IsModifierKey(key))
+        {
+            // Update display to show live modifier preview
+            UpdateRecordingDisplay(modifiers);
+            return;
+        }
+
+        // Non-modifier key pressed - commit the combination
+        CommitHotkey(key, modifiers);
+    }
+
+    private void OnPreviewKeyUp(object? sender, global::Avalonia.Input.KeyEventArgs e)
+    {
+        if (_mode != ControlMode.Recording || _viewModel == null) return;
+        
+        e.Handled = true;
+
+        // PrintScreen and some media keys only fire on KeyUp
+        if (e.Key == Key.PrintScreen || e.Key == Key.Snapshot)
+        {
+            CommitHotkey(e.Key, e.KeyModifiers);
+        }
+    }
+
+    #endregion
+
+    #region Recording State Machine
+
+    private void StartRecording()
+    {
+        Log("StartRecording: ENTERED");
+        
+        // Set mode and visual feedback FIRST, before any checks
+        _mode = ControlMode.Recording;
+        Log("StartRecording: Mode set to Recording");
+        
+        // Visual feedback: yellow background - MUST happen even if ViewModel is null
+        HotkeyButton.Background = RecordingBackground;
+        HotkeyButton.Foreground = RecordingForeground;
+        HotkeyButton.Content = "Press a key...";
+        Log("StartRecording: Visual feedback set (yellow)");
+        
+        // Take keyboard focus - critical for capturing keys
+        HotkeyButton.Focusable = true;
+        HotkeyButton.Focus();
+        Log($"StartRecording: Focus set, IsFocused={HotkeyButton.IsFocused}");
+        
+        // Now handle ViewModel-specific logic
+        if (_viewModel != null)
+        {
+            _previousKey = _viewModel.Model.HotkeyInfo.Key;
+            _previousModifiers = _viewModel.Model.HotkeyInfo.Modifiers;
+            Log($"StartRecording: Saved previous key={_previousKey}, mods={_previousModifiers}");
+        }
+        else
+        {
+            Log("StartRecording: WARNING - _viewModel is NULL");
+        }
+        
+        // Disable global hotkeys while recording
+        if (global::Avalonia.Application.Current is App app && app.HotkeyManager != null)
+        {
+            app.HotkeyManager.IgnoreHotkeys = true;
+            Log("StartRecording: Global hotkeys disabled");
+        }
+        
+        Log("StartRecording: COMPLETED");
+    }
+
+    private void StopRecording()
+    {
+        _mode = ControlMode.Normal;
+        
+        // Re-enable global hotkeys
+        if (global::Avalonia.Application.Current is App app && app.HotkeyManager != null)
+        {
+            app.HotkeyManager.IgnoreHotkeys = false;
+            
+            // Re-register the hotkey with new binding
+            if (_viewModel != null)
+            {
+                app.HotkeyManager.RegisterHotkey(_viewModel.Model);
+            }
+        }
+
+        // Restore visual appearance
+        HotkeyButton.Background = _originalBackground ?? Brushes.Transparent;
+        HotkeyButton.ClearValue(Button.ForegroundProperty);
+        
+        _viewModel?.Refresh();
+        UpdateButtonContent();
+        
+        OnHotkeyChanged();
+    }
+
+    private void CancelRecording()
+    {
+        if (_viewModel != null)
+        {
+            // Restore previous value
+            _viewModel.Model.HotkeyInfo.Key = _previousKey;
+            _viewModel.Model.HotkeyInfo.Modifiers = _previousModifiers;
+        }
+        
+        StopRecording();
+    }
+
+    private void CommitHotkey(Key key, KeyModifiers modifiers)
+    {
+        if (_viewModel == null) return;
+        
+        // Validate: must not be modifier-only
+        if (key == Key.None || IsModifierKey(key))
+        {
+            // Reject - don't commit
+            return;
+        }
+        
+        _viewModel.Model.HotkeyInfo.Key = key;
+        _viewModel.Model.HotkeyInfo.Modifiers = modifiers;
+        
+        StopRecording();
+    }
+
+    private void ClearHotkey()
+    {
+        if (_viewModel != null)
+        {
+            _viewModel.Model.HotkeyInfo.Key = Key.None;
+            _viewModel.Model.HotkeyInfo.Modifiers = KeyModifiers.None;
+        }
+        
+        StopRecording();
+    }
+
+    private void UpdateRecordingDisplay(KeyModifiers modifiers)
+    {
+        var parts = new System.Collections.Generic.List<string>();
+        
+        if (modifiers.HasFlag(KeyModifiers.Control)) parts.Add("Ctrl");
+        if (modifiers.HasFlag(KeyModifiers.Alt)) parts.Add("Alt");
+        if (modifiers.HasFlag(KeyModifiers.Shift)) parts.Add("Shift");
+        if (modifiers.HasFlag(KeyModifiers.Meta)) parts.Add("Win");
+        
+        if (parts.Count > 0)
+        {
+            HotkeyButton.Content = string.Join(" + ", parts) + " + ...";
+        }
+        else
+        {
+            HotkeyButton.Content = "Press a key...";
+        }
+    }
+
+    #endregion
+
+    #region Event Handlers
+
+    private void HotkeyButton_Click(object? sender, RoutedEventArgs e)
+    {
+        Log($"HotkeyButton_Click: FIRED - current mode={_mode}");
+        
+        if (_mode == ControlMode.Recording)
+        {
+            Log("HotkeyButton_Click: Already recording, canceling");
+            CancelRecording();
+        }
+        else
+        {
+            Log("HotkeyButton_Click: Starting recording");
+            StartRecording();
+        }
+    }
+
+    private void TaskButton_Click(object? sender, RoutedEventArgs e)
+    {
+        TaskContextMenu?.Open(TaskButton);
+    }
+
+    private void EditButton_Click(object? sender, RoutedEventArgs e)
+    {
+        // TODO: Open TaskSettings editor dialog
+        TaskContextMenu?.Open(TaskButton);
+    }
+
+    #endregion
+
+    #region Helpers
+
+    private void UpdateButtonContent()
+    {
+        if (_viewModel != null)
+        {
+            var info = _viewModel.Model.HotkeyInfo;
+            if (info.IsValid)
+            {
+                HotkeyButton.Content = info.ToString();
+            }
+            else
+            {
+                HotkeyButton.Content = "None";
+            }
+        }
+    }
+
+    private bool IsModifierKey(Key key)
+    {
+        return key == Key.LeftCtrl || key == Key.RightCtrl ||
+               key == Key.LeftAlt || key == Key.RightAlt ||
+               key == Key.LeftShift || key == Key.RightShift ||
+               key == Key.LWin || key == Key.RWin ||
+               key == Key.DeadCharProcessed; // Also skip this pseudo-key
     }
 
     private void PopulateTaskMenu()
@@ -95,155 +400,9 @@ public partial class HotkeySelectionControl : UserControl
         }
     }
 
-    private void TaskButton_Click(object? sender, RoutedEventArgs e)
-    {
-        TaskContextMenu?.Open(TaskButton);
-    }
+    #endregion
 
-    private void HotkeyButton_Click(object? sender, RoutedEventArgs e)
-    {
-        if (_isEditing)
-        {
-            // Click while editing stops editing
-            StopEditing();
-        }
-        else
-        {
-            StartEditing();
-        }
-    }
-    
-    private void OnUserControlKeyDown(object? sender, global::Avalonia.Input.KeyEventArgs e)
-    {
-        // Forward to button handler if we're in editing mode
-        if (_isEditing)
-        {
-            HotkeyButton_KeyDown(sender, e);
-        }
-    }
-
-    private void HotkeyButton_KeyDown(object? sender, global::Avalonia.Input.KeyEventArgs e)
-    {
-        if (!_isEditing || _viewModel == null) return;
-        
-        e.Handled = true;
-
-        if (e.Key == Key.Escape)
-        {
-            // Cancel editing without saving
-            _viewModel.Model.HotkeyInfo.Key = Key.None;
-            _viewModel.Model.HotkeyInfo.Modifiers = KeyModifiers.None;
-            StopEditing();
-            return;
-        }
-
-        // Skip modifier-only keys - just update display
-        if (IsModifierKey(e.Key))
-        {
-            // Update display to show modifiers being pressed
-            _viewModel.Model.HotkeyInfo.Modifiers = e.KeyModifiers;
-            _viewModel.Refresh();
-            UpdateButtonDisplay();
-            return;
-        }
-
-        // Capture the key combination
-        _viewModel.Model.HotkeyInfo.Key = e.Key;
-        _viewModel.Model.HotkeyInfo.Modifiers = e.KeyModifiers;
-        
-        StopEditing();
-    }
-
-    private void HotkeyButton_KeyUp(object? sender, global::Avalonia.Input.KeyEventArgs e)
-    {
-        if (!_isEditing || _viewModel == null) return;
-        
-        e.Handled = true;
-
-        // PrintScreen doesn't trigger KeyDown, only KeyUp
-        if (e.Key == Key.PrintScreen)
-        {
-            _viewModel.Model.HotkeyInfo.Key = e.Key;
-            _viewModel.Model.HotkeyInfo.Modifiers = e.KeyModifiers;
-            StopEditing();
-        }
-    }
-
-    private void StartEditing()
-    {
-        if (_viewModel == null) return;
-        
-        _isEditing = true;
-        
-        // Temporarily disable global hotkeys
-        if (global::Avalonia.Application.Current is App app && app.HotkeyManager != null)
-        {
-            app.HotkeyManager.IgnoreHotkeys = true;
-        }
-
-        // Clear current hotkey
-        _viewModel.Model.HotkeyInfo.Key = Key.None;
-        _viewModel.Model.HotkeyInfo.Modifiers = KeyModifiers.None;
-        _viewModel.Refresh();
-        
-        // Update button appearance to indicate editing mode (yellowish)
-        HotkeyButton.Background = EditingBackground;
-        HotkeyButton.Foreground = Brushes.Black;
-        HotkeyButton.Content = "Press a key...";
-        
-        // Ensure button has focus to receive key events
-        HotkeyButton.Focus();
-    }
-
-    private void StopEditing()
-    {
-        _isEditing = false;
-        
-        // Re-enable global hotkeys
-        if (global::Avalonia.Application.Current is App app && app.HotkeyManager != null)
-        {
-            app.HotkeyManager.IgnoreHotkeys = false;
-            
-            // Re-register the hotkey with the new binding
-            if (_viewModel != null)
-            {
-                app.HotkeyManager.RegisterHotkey(_viewModel.Model);
-            }
-        }
-
-        // Restore button appearance
-        HotkeyButton.Background = _originalBackground ?? Brushes.Transparent;
-        HotkeyButton.ClearValue(Button.ForegroundProperty);
-        
-        _viewModel?.Refresh();
-        UpdateButtonDisplay();
-        
-        // Raise event for parent to update
-        OnHotkeyChanged();
-    }
-    
-    private void UpdateButtonDisplay()
-    {
-        if (_viewModel != null)
-        {
-            HotkeyButton.Content = _viewModel.KeyString;
-        }
-    }
-
-    private bool IsModifierKey(Key key)
-    {
-        return key == Key.LeftCtrl || key == Key.RightCtrl ||
-               key == Key.LeftAlt || key == Key.RightAlt ||
-               key == Key.LeftShift || key == Key.RightShift ||
-               key == Key.LWin || key == Key.RWin;
-    }
-
-    private void EditButton_Click(object? sender, RoutedEventArgs e)
-    {
-        // TODO: Open TaskSettings editor dialog
-        // For now, just open the task menu as a placeholder
-        TaskContextMenu?.Open(TaskButton);
-    }
+    #region Events
 
     public event EventHandler? HotkeyChanged;
     public event EventHandler? Selected;
@@ -256,5 +415,18 @@ public partial class HotkeySelectionControl : UserControl
     protected virtual void OnSelected()
     {
         Selected?.Invoke(this, EventArgs.Empty);
+    }
+
+    #endregion
+}
+
+/// <summary>
+/// Keyboard focus helper for Avalonia
+/// </summary>
+internal static class Keyboard
+{
+    public static void Focus(Control control)
+    {
+        control.Focus(NavigationMethod.Directional);
     }
 }

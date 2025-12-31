@@ -12,7 +12,7 @@
             CornerRadius="4" 
             Padding="8,4"
             Background="{DynamicResource SystemControlBackgroundAltHighBrush}">
-        <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+        <Grid ColumnDefinitions="Auto,*,Auto">
             <!-- Status Icon -->
             <Ellipse Grid.Column="0" 
                      Width="10" Height="10" 
@@ -57,16 +57,8 @@
                         Padding="10,4"
                         Focusable="True"
                         Cursor="Hand"
-                        KeyDown="HotkeyButton_KeyDown"
-                        KeyUp="HotkeyButton_KeyUp"
                         Click="HotkeyButton_Click"/>
             </Border>
-            
-            <!-- Edit Button -->
-            <Button Grid.Column="3" 
-                    Content="Edit"
-                    Click="EditButton_Click"
-                    Padding="10,4"/>
         </Grid>
     </Border>
 </UserControl>
