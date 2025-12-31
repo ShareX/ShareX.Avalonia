@@ -43,6 +43,12 @@ namespace ShareX.Avalonia.UI.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {
+        public sealed class GradientPreset
+        {
+            public required string Name { get; init; }
+            public required IBrush Brush { get; init; }
+        }
+
         [ObservableProperty]
         private string _exportState = "";
 
@@ -129,6 +135,8 @@ namespace ShareX.Avalonia.UI.ViewModels
         [ObservableProperty]
         private IBrush _canvasBackground;
 
+        public ObservableCollection<GradientPreset> GradientPresets { get; }
+
         [ObservableProperty]
         private double _canvasCornerRadius = 0;
 
@@ -155,16 +163,8 @@ namespace ShareX.Avalonia.UI.ViewModels
         {
             Current = this;
             _tasks = new ObservableCollection<WorkerTask>();
-            _canvasBackground = new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-                GradientStops = new GradientStops
-                {
-                    new GradientStop(Color.Parse("#667EEA"), 0),
-                    new GradientStop(Color.Parse("#764BA2"), 1)
-                }
-            };
+            GradientPresets = BuildGradientPresets();
+            _canvasBackground = CopyBrush(GradientPresets[1].Brush);
 
             // Get version from assembly
             var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
@@ -183,6 +183,14 @@ namespace ShareX.Avalonia.UI.ViewModels
             UpdateCanvasProperties();
         }
 
+        [RelayCommand]
+        private void ApplyGradientPreset(GradientPreset preset)
+        {
+            // Clone to avoid accidental brush sharing between controls
+            CanvasBackground = CopyBrush(preset.Brush);
+            StatusText = $"Gradient set to {preset.Name}";
+        }
+
         private void UpdateCanvasProperties()
         {
             CanvasPadding = new Thickness(PreviewPadding);
@@ -193,6 +201,78 @@ namespace ShareX.Avalonia.UI.ViewModels
                 OffsetX = 0,
                 OffsetY = 10
             });
+        }
+
+        private static ObservableCollection<GradientPreset> BuildGradientPresets()
+        {
+            static LinearGradientBrush Make(string start, string end) => new()
+            {
+                StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
+                GradientStops = new GradientStops
+                {
+                    new GradientStop(Color.Parse(start), 0),
+                    new GradientStop(Color.Parse(end), 1)
+                }
+            };
+
+            return new ObservableCollection<GradientPreset>
+            {
+                new() { Name = "Sunset", Brush = Make("#F093FB", "#F5576C") },
+                new() { Name = "Ocean", Brush = Make("#667EEA", "#764BA2") },
+                new() { Name = "Forest", Brush = Make("#11998E", "#38EF7D") },
+                new() { Name = "Fire", Brush = Make("#F12711", "#F5AF19") },
+                new() { Name = "Cool Blue", Brush = Make("#2193B0", "#6DD5ED") },
+                new() { Name = "Lavender", Brush = Make("#B8B8FF", "#D6A4FF") },
+                new() { Name = "Aqua", Brush = Make("#13547A", "#80D0C7") },
+                new() { Name = "Grape", Brush = Make("#7F00FF", "#E100FF") },
+                new() { Name = "Peach", Brush = Make("#FFB88C", "#DE6262") },
+                new() { Name = "Sky", Brush = Make("#56CCF2", "#2F80ED") },
+                new() { Name = "Warm", Brush = Make("#F2994A", "#F2C94C") },
+                new() { Name = "Mint", Brush = Make("#00B09B", "#96C93D") },
+                new() { Name = "Midnight", Brush = Make("#232526", "#414345") },
+                new() { Name = "Carbon", Brush = Make("#373B44", "#4286F4") },
+                new() { Name = "Deep Space", Brush = Make("#000428", "#004E92") },
+                new() { Name = "Noir", Brush = Make("#0F2027", "#2C5364") },
+                new() { Name = "Royal", Brush = Make("#141E30", "#243B55") },
+                new() { Name = "Rose Gold", Brush = Make("#E8CBC0", "#636FA4") },
+                new() { Name = "Emerald", Brush = Make("#076585", "#FFFFFF") },
+                new() { Name = "Amethyst", Brush = Make("#9D50BB", "#6E48AA") },
+                new() { Name = "Neon", Brush = Make("#FF0844", "#FFB199") },
+                new() { Name = "Aurora", Brush = Make("#00C9FF", "#92FE9D") },
+                new() { Name = "Candy", Brush = Make("#D53369", "#DAAE51") },
+                new() { Name = "Clean", Brush = new SolidColorBrush(Color.Parse("#FFFFFF")) }
+            };
+        }
+
+        private static IBrush CopyBrush(IBrush brush)
+        {
+            switch (brush)
+            {
+                case SolidColorBrush solid:
+                    return new SolidColorBrush(solid.Color)
+                    {
+                        Opacity = solid.Opacity
+                    };
+                case LinearGradientBrush linear:
+                    var stops = new GradientStops();
+                    foreach (var stop in linear.GradientStops)
+                    {
+                        stops.Add(new GradientStop(stop.Color, stop.Offset));
+                    }
+
+                    return new LinearGradientBrush
+                    {
+                        StartPoint = linear.StartPoint,
+                        EndPoint = linear.EndPoint,
+                        GradientStops = stops,
+                        SpreadMethod = linear.SpreadMethod,
+                        Opacity = linear.Opacity
+                    };
+                default:
+                    // Fall back to the original reference if an unsupported brush type is supplied.
+                    return brush;
+            }
         }
 
         partial void OnZoomChanged(double value)
