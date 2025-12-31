@@ -1,10 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.UI.Services;
+using ShareX.Ava.UI.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 
-namespace ShareX.Avalonia.UI.ViewModels
+namespace ShareX.Ava.UI.ViewModels
 {
     /// <summary>
     /// ViewModel for the Effects Panel

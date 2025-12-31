@@ -27,7 +27,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class GitHubUpdateManager : IDisposable
     {

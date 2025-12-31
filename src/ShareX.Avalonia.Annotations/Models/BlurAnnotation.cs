@@ -1,11 +1,11 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using ShareX.Avalonia.ImageEffects.Helpers;
+using ShareX.Ava.ImageEffects.Helpers;
 using SkiaSharp;
 using System.IO;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Blur annotation - applies blur to the region

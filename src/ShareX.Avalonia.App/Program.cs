@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 using Avalonia;
 using System;
 
-namespace ShareX.Avalonia.App
+namespace ShareX.Ava.App
 {
     internal class Program
     {
@@ -44,17 +44,17 @@ namespace ShareX.Avalonia.App
             if (OperatingSystem.IsWindows())
             {
                 // Create Windows platform services
-                var screenService = new ShareX.Avalonia.Platform.Windows.WindowsScreenService();
+                var screenService = new ShareX.Ava.Platform.Windows.WindowsScreenService();
                 
                 // Create Windows capture service (GDI+)
-                var winCaptureService = new ShareX.Avalonia.Platform.Windows.WindowsScreenCaptureService(screenService);
+                var winCaptureService = new ShareX.Ava.Platform.Windows.WindowsScreenCaptureService(screenService);
                 
                 // Create UI capture service (Wrapper with Region UI)
                 // This delegates to winCaptureService for actual capture
-                var uiCaptureService = new ShareX.Avalonia.UI.Services.ScreenCaptureService(winCaptureService);
+                var uiCaptureService = new ShareX.Ava.UI.Services.ScreenCaptureService(winCaptureService);
                 
                 // Initialize Windows platform with our UI wrapper
-                ShareX.Avalonia.Platform.Windows.WindowsPlatform.Initialize(uiCaptureService);
+                ShareX.Ava.Platform.Windows.WindowsPlatform.Initialize(uiCaptureService);
             }
             else
             {
@@ -65,7 +65,7 @@ namespace ShareX.Avalonia.App
         }
 
         public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<ShareX.Avalonia.UI.App>()
+            => AppBuilder.Configure<ShareX.Ava.UI.App>()
                 .UsePlatformDetect()
                 .LogToTrace();
     }

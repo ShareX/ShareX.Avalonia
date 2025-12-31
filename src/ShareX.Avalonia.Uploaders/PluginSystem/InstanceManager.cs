@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json;
 
-namespace ShareX.Avalonia.Uploaders.PluginSystem;
+namespace ShareX.Ava.Uploaders.PluginSystem;
 
 /// <summary>
 /// Manages uploader instances - lifecycle, persistence, default selection
@@ -42,7 +42,7 @@ public class InstanceManager
     private InstanceManager()
     {
         // TODO: Get proper config path from app settings
-        var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ShareX.Avalonia");
+        var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ShareX.Ava");
         Directory.CreateDirectory(configDir);
         _configFilePath = Path.Combine(configDir, "uploader-instances.json");
         

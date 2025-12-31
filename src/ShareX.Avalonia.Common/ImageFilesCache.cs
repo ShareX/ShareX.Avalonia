@@ -27,7 +27,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class ImageFilesCache : IDisposable
     {

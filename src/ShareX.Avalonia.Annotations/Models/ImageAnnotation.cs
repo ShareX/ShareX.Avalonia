@@ -3,7 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using System.IO;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Image annotation - stickers or inserted images

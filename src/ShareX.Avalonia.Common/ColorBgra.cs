@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     [StructLayout(LayoutKind.Explicit)]
     public struct ColorBgra

@@ -1,14 +1,14 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Avalonia.Core;
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Core;
+using ShareX.Ava.Common;
+using ShareX.Ava.Platform.Abstractions;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 public partial class HotkeyItemViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private ShareX.Avalonia.Core.Hotkeys.HotkeySettings _model;
+    private ShareX.Ava.Core.Hotkeys.HotkeySettings _model;
 
     public string Description => 
         string.IsNullOrEmpty(Model.TaskSettings.Description) 
@@ -20,7 +20,7 @@ public partial class HotkeyItemViewModel : ViewModelBase
     // Expose Status for binding - reads from Model.HotkeyInfo.Status
     public Platform.Abstractions.HotkeyStatus Status => Model.HotkeyInfo.Status;
 
-    public HotkeyItemViewModel(ShareX.Avalonia.Core.Hotkeys.HotkeySettings model)
+    public HotkeyItemViewModel(ShareX.Ava.Core.Hotkeys.HotkeySettings model)
     {
         _model = model;
     }

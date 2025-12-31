@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
-             x:Class="ShareX.Avalonia.UI.Views.ImgurConfigView"
+             xmlns:vm="using:ShareX.Ava.UI.ViewModels"
+             x:Class="ShareX.Ava.UI.Views.ImgurConfigView"
              x:DataType="vm:ImgurConfigViewModel">
     
     <StackPanel Spacing="15">

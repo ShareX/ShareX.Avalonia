@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class XMLUpdateChecker : UpdateChecker
     {

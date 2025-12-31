@@ -2,10 +2,10 @@ using System.Collections.ObjectModel;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Core.Tasks;
-using ShareX.Avalonia.History;
+using ShareX.Ava.Core.Tasks;
+using ShareX.Ava.History;
 
-namespace ShareX.Avalonia.UI.ViewModels
+namespace ShareX.Ava.UI.ViewModels
 {
     public partial class HistoryViewModel : ViewModelBase
     {

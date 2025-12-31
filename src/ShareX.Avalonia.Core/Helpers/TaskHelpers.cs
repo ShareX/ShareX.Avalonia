@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 
-namespace ShareX.Avalonia.Core;
+namespace ShareX.Ava.Core;
 
 /// <summary>
 /// Task-related helper methods for file naming, folder management, and image processing.

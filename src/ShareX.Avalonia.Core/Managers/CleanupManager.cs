@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Linq;
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 
-namespace ShareX.Avalonia.Core.Managers
+namespace ShareX.Ava.Core.Managers
 {
     public class CleanupManager
     {

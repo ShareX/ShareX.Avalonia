@@ -4,7 +4,7 @@ using Avalonia.Media.Imaging;
 using SkiaSharp;
 using System.IO;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Magnify annotation - zooms into the area

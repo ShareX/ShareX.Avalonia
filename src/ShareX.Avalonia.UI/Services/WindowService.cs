@@ -1,8 +1,8 @@
 using System;
 using System.Drawing;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Platform.Abstractions;
 
-namespace ShareX.Avalonia.UI.Services
+namespace ShareX.Ava.UI.Services
 {
     public class WindowService : IWindowService
     {

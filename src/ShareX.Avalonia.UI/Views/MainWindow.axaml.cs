@@ -7,11 +7,11 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using ShareX.Avalonia.UI.ViewModels;
-using ShareX.Avalonia.Annotations.Models;
+using ShareX.Ava.UI.ViewModels;
+using ShareX.Ava.Annotations.Models;
 using FluentAvalonia.UI.Controls;
 
-namespace ShareX.Avalonia.UI.Views
+namespace ShareX.Ava.UI.Views
 {
     public partial class MainWindow : Window
     {

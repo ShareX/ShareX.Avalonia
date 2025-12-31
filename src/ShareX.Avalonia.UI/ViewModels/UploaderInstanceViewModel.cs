@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Avalonia.Uploaders.PluginSystem;
+using ShareX.Ava.Uploaders.PluginSystem;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for a single uploader instance in the list

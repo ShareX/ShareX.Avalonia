@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -25,11 +25,11 @@
 
 using System.Resources;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static class Resources
     {
-        private static readonly ResourceManager resourceManager = new ResourceManager("ShareX.Avalonia.Common.Resources", typeof(Resources).Assembly);
+        private static readonly ResourceManager resourceManager = new ResourceManager("ShareX.Ava.Common.Resources", typeof(Resources).Assembly);
 
         public static ResourceManager ResourceManager => resourceManager;
     }

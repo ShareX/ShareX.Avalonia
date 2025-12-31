@@ -2,7 +2,7 @@ using global::Avalonia;
 using global::Avalonia.Media;
 using SkiaSharp;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Base class for effect annotations (Blur, Pixelate, Highlight)

@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -24,15 +24,15 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Uploaders;
+using ShareX.Ava.Common;
+using ShareX.Ava.Uploaders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 
-namespace ShareX.Avalonia.Core;
+namespace ShareX.Ava.Core;
 
 /// <summary>
 /// Main task settings configuration class
@@ -266,7 +266,7 @@ public class TaskSettingsTools
     public string ScreenColorPickerInfoText = "RGB: $r255, $g255, $b255$nHex: $hex$nX: $x Y: $y";
     
     // TODO: Add PinToScreenOptions when ScreenCaptureLib is ported
-    // TODO: Add IndexerSettings when using ShareX.Avalonia.Indexer
+    // TODO: Add IndexerSettings when using ShareX.Ava.Indexer
     // TODO: Add ImageBeautifierOptions when MediaLib is ported
     // TODO: Add ImageCombinerOptions when MediaLib is ported
     // TODO: Add VideoConverterOptions when MediaLib is ported

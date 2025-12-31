@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -32,14 +32,14 @@ using Avalonia.Media.Imaging;
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Core;
-using ShareX.Avalonia.Core.Managers;
-using ShareX.Avalonia.Core.Tasks;
-using ShareX.Avalonia.Platform.Abstractions;
-using ShareX.Avalonia.Uploaders;
-using ShareX.Avalonia.Annotations.Models;
+using ShareX.Ava.Core;
+using ShareX.Ava.Core.Managers;
+using ShareX.Ava.Core.Tasks;
+using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.Uploaders;
+using ShareX.Ava.Annotations.Models;
 
-namespace ShareX.Avalonia.UI.ViewModels
+namespace ShareX.Ava.UI.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {

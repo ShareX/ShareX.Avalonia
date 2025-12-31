@@ -3,7 +3,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.UI.Views
+namespace ShareX.Ava.UI.Views
 {
     public partial class ApplicationSettingsView : UserControl
     {

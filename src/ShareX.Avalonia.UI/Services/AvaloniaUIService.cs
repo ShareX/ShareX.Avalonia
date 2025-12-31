@@ -4,10 +4,10 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using ShareX.Avalonia.Platform.Abstractions;
-using ShareX.Avalonia.UI.ViewModels;
+using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.UI.ViewModels;
 
-namespace ShareX.Avalonia.UI.Services
+namespace ShareX.Ava.UI.Services
 {
     public class AvaloniaUIService : IUIService
     {

@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Common.Helpers;
+using ShareX.Ava.Common;
+using ShareX.Ava.Common.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ShareX.Avalonia.History
+namespace ShareX.Ava.History
 {
     public class HistoryManagerMock : HistoryManager
     {
@@ -58,7 +58,7 @@ namespace ShareX.Avalonia.History
             HistoryItem historyItem = new HistoryItem()
             {
                 FileName = fileName,
-                FilePath = @"..\..\..\ShareX.Avalonia.Common\Resources\ShareX_Logo.png",
+                FilePath = @"..\..\..\ShareX.Ava.Common\Resources\ShareX_Logo.png",
                 DateTime = DateTime.Now.AddSeconds(-RandomFast.Next(0, 1000000)),
                 Type = "Image",
                 Host = "Amazon S3",

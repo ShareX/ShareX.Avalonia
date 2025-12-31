@@ -1,7 +1,7 @@
 using System;
-using ShareX.Avalonia.Common.Native;
+using ShareX.Ava.Common.Native;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static class DesktopIconManager
     {

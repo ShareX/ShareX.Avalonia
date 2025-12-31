@@ -2,7 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 
-namespace ShareX.Avalonia.UI.Views
+namespace ShareX.Ava.UI.Views
 {
     public partial class HotkeySettingsView : UserControl
     {

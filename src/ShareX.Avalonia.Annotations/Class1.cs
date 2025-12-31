@@ -1,4 +1,4 @@
-﻿namespace ShareX.Avalonia.Annotations;
+namespace ShareX.Ava.Annotations;
 
 public class Class1
 {

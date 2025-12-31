@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 
-namespace ShareX.Avalonia.Common.Helpers
+namespace ShareX.Ava.Common.Helpers
 {
     public static class ShortcutHelpers
     {

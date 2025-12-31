@@ -1,19 +1,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Core.Hotkeys;
-using ShareX.Avalonia.Core;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Core.Hotkeys;
+using ShareX.Ava.Core;
+using ShareX.Ava.Platform.Abstractions;
 using Avalonia.Input;
 using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 public partial class HotkeyEditViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private ShareX.Avalonia.Core.Hotkeys.HotkeySettings _model;
+    private ShareX.Ava.Core.Hotkeys.HotkeySettings _model;
 
     [ObservableProperty]
     private Key _selectedKey;
@@ -28,7 +28,7 @@ public partial class HotkeyEditViewModel : ViewModelBase
 
     public string WindowTitle => Model.HotkeyInfo.Id == 0 ? "Add Hotkey" : "Edit Hotkey";
 
-    public HotkeyEditViewModel(ShareX.Avalonia.Core.Hotkeys.HotkeySettings model)
+    public HotkeyEditViewModel(ShareX.Ava.Core.Hotkeys.HotkeySettings model)
     {
         _model = model;
         _selectedKey = model.HotkeyInfo.Key;

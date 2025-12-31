@@ -27,7 +27,7 @@ using System;
 using System.IO;
 using System.Text;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class NativeMessagingHost
     {

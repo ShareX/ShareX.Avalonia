@@ -2,7 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using System;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Speech Balloon annotation with tail

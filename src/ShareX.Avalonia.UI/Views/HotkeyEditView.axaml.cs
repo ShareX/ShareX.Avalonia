@@ -1,9 +1,9 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
-using ShareX.Avalonia.UI.ViewModels;
+using ShareX.Ava.UI.ViewModels;
 
-namespace ShareX.Avalonia.UI.Views;
+namespace ShareX.Ava.UI.Views;
 
 public partial class HotkeyEditView : Window
 {

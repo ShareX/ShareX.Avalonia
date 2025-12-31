@@ -1,11 +1,11 @@
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.ImageEffects;
+using ShareX.Ava.Common;
+using ShareX.Ava.ImageEffects;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace ShareX.Avalonia.UI.Services
+namespace ShareX.Ava.UI.Services
 {
     /// <summary>
     /// Service for discovering and cataloging all available ImageEffects

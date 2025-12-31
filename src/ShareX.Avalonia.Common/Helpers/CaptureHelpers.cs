@@ -1,9 +1,9 @@
 using System;
 using System.Drawing;
 using System.Linq;
-using ShareX.Avalonia.Common.Native;
+using ShareX.Ava.Common.Native;
 
-namespace ShareX.Avalonia.Common.Helpers
+namespace ShareX.Ava.Common.Helpers
 {
     public static class CaptureHelpers
     {
@@ -240,9 +240,9 @@ namespace ShareX.Avalonia.Common.Helpers
                     Rectangle windowRectangle = windowInfo.Rectangle;
                     
                     // Use platform service for screen information
-                    if (ShareX.Avalonia.Platform.Abstractions.PlatformServices.IsInitialized)
+                    if (ShareX.Ava.Platform.Abstractions.PlatformServices.IsInitialized)
                     {
-                        var screenInfo = ShareX.Avalonia.Platform.Abstractions.PlatformServices.Screen.GetScreenFromRectangle(windowRectangle);
+                        var screenInfo = ShareX.Ava.Platform.Abstractions.PlatformServices.Screen.GetScreenFromRectangle(windowRectangle);
                         Rectangle monitorRectangle = screenInfo.Bounds;
                         return windowRectangle.Contains(monitorRectangle);
                     }

@@ -4,15 +4,15 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
-using ShareX.Avalonia.Core;
-using ShareX.Avalonia.Core.Hotkeys;
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Platform.Abstractions;
-using ShareX.Avalonia.UI.ViewModels;
+using ShareX.Ava.Core;
+using ShareX.Ava.Core.Hotkeys;
+using ShareX.Ava.Common;
+using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.UI.ViewModels;
 using System;
 using System.Linq;
 
-namespace ShareX.Avalonia.UI.Views.Controls;
+namespace ShareX.Ava.UI.Views.Controls;
 
 /// <summary>
 /// A control for capturing and displaying hotkey combinations.
@@ -29,7 +29,7 @@ public partial class HotkeySelectionControl : UserControl
         _debugLog = (msg) =>
         {
             _debugMessages.Add(msg);
-            ShareX.Avalonia.Common.DebugHelper.WriteLine($"[Hotkey] {msg}");
+            ShareX.Ava.Common.DebugHelper.WriteLine($"[Hotkey] {msg}");
             callback(msg);
         };
     }
@@ -39,7 +39,7 @@ public partial class HotkeySelectionControl : UserControl
         var time = DateTime.Now.ToString("HH:mm:ss.fff");
         var formattedMsg = $"[{time}] {message}";
         // Also log to DebugHelper for file logging
-        ShareX.Avalonia.Common.DebugHelper.WriteLine($"[Hotkey] {message}");
+        ShareX.Ava.Common.DebugHelper.WriteLine($"[Hotkey] {message}");
         _debugLog?.Invoke(formattedMsg);
     }
     

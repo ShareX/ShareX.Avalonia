@@ -1,6 +1,6 @@
 using System.Drawing;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public struct MyColor
     {

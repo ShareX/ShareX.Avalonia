@@ -1,6 +1,6 @@
 using System;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public delegate void ColorEventHandler(object sender, ColorEventArgs e);
 

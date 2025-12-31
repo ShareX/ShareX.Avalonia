@@ -1,11 +1,11 @@
 using System.Drawing;
 using System.Threading.Tasks;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Platform.Abstractions;
 using Avalonia;
 using Avalonia.Input.Platform;
 using System.Linq;
 
-namespace ShareX.Avalonia.UI.Services
+namespace ShareX.Ava.UI.Services
 {
     public class ClipboardService : IClipboardService
     {

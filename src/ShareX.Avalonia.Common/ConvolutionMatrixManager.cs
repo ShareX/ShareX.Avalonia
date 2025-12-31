@@ -31,7 +31,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static class ConvolutionMatrixManager
     {

@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Avalonia.Uploaders.PluginSystem;
+using ShareX.Ava.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 public partial class DestinationSettingsViewModel : ViewModelBase
 {

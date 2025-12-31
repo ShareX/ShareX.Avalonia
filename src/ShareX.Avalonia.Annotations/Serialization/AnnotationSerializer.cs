@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
-using ShareX.Avalonia.Annotations.Models;
+using ShareX.Ava.Annotations.Models;
 
-namespace ShareX.Avalonia.Annotations.Serialization
+namespace ShareX.Ava.Annotations.Serialization
 {
     public static class AnnotationSerializer
     {

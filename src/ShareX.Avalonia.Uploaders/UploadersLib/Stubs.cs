@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -23,8 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Uploaders;
+using ShareX.Ava.Common;
+using ShareX.Ava.Uploaders;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -32,15 +32,15 @@ using System.IO;
 
 namespace ShareX.UploadersLib.FileUploaders
 {
-    public class FTPAccount : ShareX.Avalonia.Uploaders.FileUploaders.FTPAccount
+    public class FTPAccount : ShareX.Ava.Uploaders.FileUploaders.FTPAccount
     {
     }
 
-    public class AmazonS3Settings : ShareX.Avalonia.Uploaders.FileUploaders.AmazonS3Settings
+    public class AmazonS3Settings : ShareX.Ava.Uploaders.FileUploaders.AmazonS3Settings
     {
     }
 
-    public class PomfUploader : ShareX.Avalonia.Uploaders.FileUploaders.PomfUploader
+    public class PomfUploader : ShareX.Ava.Uploaders.FileUploaders.PomfUploader
     {
         public PomfUploader()
         {

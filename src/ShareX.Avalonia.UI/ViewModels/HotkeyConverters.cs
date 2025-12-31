@@ -1,10 +1,10 @@
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Platform.Abstractions;
 using System;
 using System.Globalization;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 /// <summary>
 /// Converts HotkeyStatus to a status color (green=registered, yellow=not configured, red=failed)

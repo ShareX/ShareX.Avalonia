@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Platform.Abstractions;
 using System;
 using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace ShareX.Avalonia.Platform.Windows
+namespace ShareX.Ava.Platform.Windows
 {
     /// <summary>
     /// Windows implementation of IClipboardService using System.Windows.Forms.Clipboard

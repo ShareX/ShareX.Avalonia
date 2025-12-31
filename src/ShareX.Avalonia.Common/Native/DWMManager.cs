@@ -1,6 +1,6 @@
 using System;
 
-namespace ShareX.Avalonia.Common.Native
+namespace ShareX.Ava.Common.Native
 {
     public class DWMManager : IDisposable
     {

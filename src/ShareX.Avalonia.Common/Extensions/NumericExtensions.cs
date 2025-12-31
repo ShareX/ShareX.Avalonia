@@ -25,7 +25,7 @@
 
 using System;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static class NumericExtensions
     {

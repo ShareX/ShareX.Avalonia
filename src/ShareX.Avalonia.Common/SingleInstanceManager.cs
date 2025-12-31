@@ -31,7 +31,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class SingleInstanceManager : IDisposable
     {

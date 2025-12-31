@@ -28,7 +28,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 

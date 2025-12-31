@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -27,9 +27,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 
-namespace ShareX.Avalonia.Common.GIF
+namespace ShareX.Ava.Common.GIF
 {
     public class GifClass
     {

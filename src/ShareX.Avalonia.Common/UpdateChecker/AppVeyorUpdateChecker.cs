@@ -27,7 +27,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class AppVeyorUpdateChecker : UpdateChecker
     {
@@ -98,7 +98,7 @@ namespace ShareX.Avalonia.Common
             }
             catch (Exception e)
             {
-                ShareX.Avalonia.Common.DebugHelper.WriteException(e);
+                ShareX.Ava.Common.DebugHelper.WriteException(e);
             }
 
             Status = UpdateStatus.UpdateCheckFailed;

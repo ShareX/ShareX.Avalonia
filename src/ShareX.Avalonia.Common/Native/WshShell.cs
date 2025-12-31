@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Avalonia.Common.Native
+namespace ShareX.Ava.Common.Native
 {
     [ComImport, Guid("72C24DD5-D70A-438B-8A42-98424B88AFB8")]
     public class WshShell

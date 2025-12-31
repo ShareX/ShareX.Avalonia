@@ -1,9 +1,9 @@
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Core;
+using ShareX.Ava.Core;
 
-namespace ShareX.Avalonia.UI.ViewModels
+namespace ShareX.Ava.UI.ViewModels
 {
     public partial class SettingsViewModel : ViewModelBase
     {

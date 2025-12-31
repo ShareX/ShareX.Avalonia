@@ -31,7 +31,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     // SlashType moved to Enums.cs
 

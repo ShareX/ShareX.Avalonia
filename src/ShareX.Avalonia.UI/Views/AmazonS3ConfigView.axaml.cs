@@ -1,6 +1,6 @@
 using Avalonia.Controls;
 
-namespace ShareX.Avalonia.UI.Views;
+namespace ShareX.Ava.UI.Views;
 
 public partial class AmazonS3ConfigView : UserControl
 {

@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -23,9 +23,9 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Uploaders.FileUploaders;
+using ShareX.Ava.Uploaders.FileUploaders;
 
-namespace ShareX.Avalonia.Uploaders.Plugins.AmazonS3Plugin;
+namespace ShareX.Ava.Uploaders.Plugins.AmazonS3Plugin;
 
 /// <summary>
 /// Configuration model for Amazon S3 uploader

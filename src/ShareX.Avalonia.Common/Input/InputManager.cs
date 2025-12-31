@@ -27,9 +27,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using static ShareX.Avalonia.Common.NativeMethods;
+using static ShareX.Ava.Common.NativeMethods;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class InputManager
     {

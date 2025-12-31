@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -27,10 +27,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using Avalonia.Data.Converters;
 using Avalonia.Media;
-using ShareX.Avalonia.UI.ViewModels;
-using ShareX.Avalonia.Annotations.Models;
+using ShareX.Ava.UI.ViewModels;
+using ShareX.Ava.Annotations.Models;
 
-namespace ShareX.Avalonia.UI.Converters
+namespace ShareX.Ava.UI.Converters
 {
     /// <summary>
     /// Converts EditorTool comparison to background color for tool button highlighting

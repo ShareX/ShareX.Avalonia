@@ -26,7 +26,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class FFmpegUpdateChecker : GitHubUpdateChecker
     {

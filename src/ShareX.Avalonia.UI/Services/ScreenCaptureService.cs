@@ -2,10 +2,10 @@ using System;
 using System.Drawing;
 using System.Threading.Tasks;
 using Avalonia.Threading;
-using ShareX.Avalonia.Platform.Abstractions;
-using ShareX.Avalonia.UI.Views.RegionCapture;
+using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.UI.Views.RegionCapture;
 
-namespace ShareX.Avalonia.UI.Services
+namespace ShareX.Ava.UI.Services
 {
     public class ScreenCaptureService : IScreenCaptureService
     {

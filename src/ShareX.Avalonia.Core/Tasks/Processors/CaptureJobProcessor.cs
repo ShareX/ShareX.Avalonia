@@ -3,13 +3,13 @@ using System.IO;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
-using ShareX.Avalonia.Core;
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Core.Tasks;
-using ShareX.Avalonia.Common.Helpers;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Core;
+using ShareX.Ava.Common;
+using ShareX.Ava.Core.Tasks;
+using ShareX.Ava.Common.Helpers;
+using ShareX.Ava.Platform.Abstractions;
 
-namespace ShareX.Avalonia.Core.Tasks.Processors
+namespace ShareX.Ava.Core.Tasks.Processors
 {
     public class CaptureJobProcessor : IJobProcessor
     {

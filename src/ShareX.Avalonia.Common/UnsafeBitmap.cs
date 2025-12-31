@@ -27,7 +27,7 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public unsafe class UnsafeBitmap : IDisposable
     {

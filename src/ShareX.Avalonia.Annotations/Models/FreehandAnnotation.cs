@@ -3,7 +3,7 @@ using Avalonia.Media;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Freehand pen/drawing annotation

@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -31,14 +31,14 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
 using Avalonia.Threading;
-using ShareX.Avalonia.UI.ViewModels;
-using ShareX.Avalonia.Annotations.Models;
+using ShareX.Ava.UI.ViewModels;
+using ShareX.Ava.Annotations.Models;
 using Avalonia.Platform.Storage;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace ShareX.Avalonia.UI.Views
+namespace ShareX.Ava.UI.Views
 {
     public partial class EditorView : UserControl
     {
@@ -455,7 +455,7 @@ namespace ShareX.Avalonia.UI.Views
                 using var drawingImage = System.Drawing.Image.FromStream(memoryStream);
                 
                 // Use platform-specific clipboard service for native OS compatibility
-                ShareX.Avalonia.Platform.Abstractions.PlatformServices.Clipboard.SetImage(drawingImage);
+                ShareX.Ava.Platform.Abstractions.PlatformServices.Clipboard.SetImage(drawingImage);
             }
             catch (Exception ex)
             {

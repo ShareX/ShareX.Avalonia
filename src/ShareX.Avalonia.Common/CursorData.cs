@@ -28,7 +28,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class CursorData
     {

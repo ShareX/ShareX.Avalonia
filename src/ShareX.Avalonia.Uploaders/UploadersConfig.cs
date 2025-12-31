@@ -1,7 +1,7 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -23,14 +23,14 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 using ShareX.UploadersLib.FileUploaders;
 using ShareX.UploadersLib.ImageUploaders;
 using ShareX.UploadersLib.TextUploaders;
 using ShareX.UploadersLib.URLShorteners;
 using System.Collections.Generic;
 
-namespace ShareX.Avalonia.Uploaders
+namespace ShareX.Ava.Uploaders
 {
     public class UploadersConfig : SettingsBase<UploadersConfig>
     {

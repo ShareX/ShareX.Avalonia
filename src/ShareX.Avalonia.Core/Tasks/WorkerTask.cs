@@ -1,14 +1,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using ShareX.Avalonia.Core;
+using ShareX.Ava.Core;
 
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 
-using ShareX.Avalonia.Core.Tasks.Processors;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Core.Tasks.Processors;
+using ShareX.Ava.Platform.Abstractions;
 
-namespace ShareX.Avalonia.Core.Tasks
+namespace ShareX.Ava.Core.Tasks
 {
     public class WorkerTask
     {

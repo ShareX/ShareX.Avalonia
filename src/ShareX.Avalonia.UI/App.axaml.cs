@@ -2,14 +2,14 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.UI.Views;
-using ShareX.Avalonia.UI.ViewModels;
-using ShareX.Avalonia.Uploaders.PluginSystem;
-using ShareX.Avalonia.Uploaders.Plugins.ImgurPlugin;
-using ShareX.Avalonia.Uploaders.Plugins.AmazonS3Plugin;
+using ShareX.Ava.Common;
+using ShareX.Ava.UI.Views;
+using ShareX.Ava.UI.ViewModels;
+using ShareX.Ava.Uploaders.PluginSystem;
+using ShareX.Ava.Uploaders.Plugins.ImgurPlugin;
+using ShareX.Ava.Uploaders.Plugins.AmazonS3Plugin;
 
-namespace ShareX.Avalonia.UI;
+namespace ShareX.Ava.UI;
 
 public partial class App : Application
 {

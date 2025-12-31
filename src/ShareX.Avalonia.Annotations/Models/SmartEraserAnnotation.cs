@@ -1,7 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 
-namespace ShareX.Avalonia.Annotations.Models;
+namespace ShareX.Ava.Annotations.Models;
 
 /// <summary>
 /// Smart Eraser annotation - intended to remove content (placeholder)

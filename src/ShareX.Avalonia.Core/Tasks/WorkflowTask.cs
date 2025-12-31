@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -22,16 +22,16 @@
 */
 
 #endregion License Information (GPL v3)
-using ShareX.Avalonia.Uploaders.PluginSystem;
-using ShareX.Avalonia.Uploaders; // For GenericUploader and UploadResult
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Uploaders.PluginSystem;
+using ShareX.Ava.Uploaders; // For GenericUploader and UploadResult
+using ShareX.Ava.Platform.Abstractions;
 using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Core.Tasks;
+namespace ShareX.Ava.Core.Tasks;
 
 /// <summary>
 /// Represents a minimal workflow task for quick automation (Path A)

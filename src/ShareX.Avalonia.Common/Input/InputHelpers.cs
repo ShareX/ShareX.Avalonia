@@ -25,7 +25,7 @@
 
 using System.Drawing;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static class InputHelpers
     {

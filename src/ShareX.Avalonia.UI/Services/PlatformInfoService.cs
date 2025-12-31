@@ -1,8 +1,8 @@
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Platform.Abstractions;
 using System;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Avalonia.UI.Services
+namespace ShareX.Ava.UI.Services
 {
     public class PlatformInfoService : IPlatformInfo
     {

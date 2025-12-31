@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -26,7 +26,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace ShareX.Avalonia.Uploaders.PluginSystem;
+namespace ShareX.Ava.Uploaders.PluginSystem;
 
 /// <summary>
 /// Custom AssemblyLoadContext for plugin isolation
@@ -78,8 +78,8 @@ public class PluginLoadContext : AssemblyLoadContext
         var name = assemblyName.Name;
         
         // These should come from the host app, not plugin
-        return name == "ShareX.Avalonia.Uploaders" ||
-               name == "ShareX.Avalonia.Common" ||
+        return name == "ShareX.Ava.Uploaders" ||
+               name == "ShareX.Ava.Common" ||
                name == "Newtonsoft.Json" ||
                name?.StartsWith("System.") == true ||
                name?.StartsWith("Microsoft.") == true ||

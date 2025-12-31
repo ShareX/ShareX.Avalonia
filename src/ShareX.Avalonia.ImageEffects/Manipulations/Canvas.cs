@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -24,13 +24,13 @@
 #endregion License Information (GPL v3)
 
 
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.ImageEffects.Helpers;
+using ShareX.Ava.Common;
+using ShareX.Ava.ImageEffects.Helpers;
 using System.ComponentModel;
 using SkiaSharp;
 
 
-namespace ShareX.Avalonia.ImageEffects.Manipulations
+namespace ShareX.Ava.ImageEffects.Manipulations
 {
     [Description("Canvas")]
     public class Canvas : ImageEffect

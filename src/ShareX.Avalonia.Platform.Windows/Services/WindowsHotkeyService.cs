@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -24,7 +24,7 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Input;
-using ShareX.Avalonia.Platform.Abstractions;
+using ShareX.Ava.Platform.Abstractions;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -33,9 +33,9 @@ using System.Runtime.InteropServices;
 using System.Threading;
 
 // Only import DebugHelper from Common, not the whole namespace
-using DebugHelper = ShareX.Avalonia.Common.DebugHelper;
+using DebugHelper = ShareX.Ava.Common.DebugHelper;
 
-namespace ShareX.Avalonia.Platform.Windows;
+namespace ShareX.Ava.Platform.Windows;
 
 /// <summary>
 /// Windows implementation of global hotkey registration using RegisterHotKey API
@@ -151,7 +151,7 @@ public class WindowsHotkeyService : IHotkeyService
         _messageThreadId = GetCurrentThreadId();
 
         // Create a message-only window
-        _hwnd = CreateWindowEx(0, "STATIC", "ShareX.Avalonia.HotkeyWindow",
+        _hwnd = CreateWindowEx(0, "STATIC", "ShareX.Ava.HotkeyWindow",
             0, 0, 0, 0, 0, new IntPtr(-3) /* HWND_MESSAGE */, IntPtr.Zero,
             GetModuleHandle(null), IntPtr.Zero);
 

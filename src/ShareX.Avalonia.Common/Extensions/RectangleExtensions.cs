@@ -8,7 +8,7 @@ using DrawingRectangleF = System.Drawing.RectangleF;
 using DrawingSize = System.Drawing.Size;
 using DrawingSizeF = System.Drawing.SizeF;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static class RectangleExtensions
     {

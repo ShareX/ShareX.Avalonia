@@ -2,9 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 
-namespace ShareX.Avalonia.Common.Native
+namespace ShareX.Ava.Common.Native
 {
     public enum TaskbarProgressBarStatus
     {

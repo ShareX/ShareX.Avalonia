@@ -26,9 +26,9 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
-using ShareX.Avalonia.Common.Helpers;
+using ShareX.Ava.Common.Helpers;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class WindowInfo
     {

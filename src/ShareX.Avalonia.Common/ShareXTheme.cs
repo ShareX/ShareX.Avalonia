@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Common;
 
 // using System.Drawing.Design; // Not available in .NET Core / Avalonia Common usually?
 // using System.Windows.Forms.Design;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class ShareXTheme
     {

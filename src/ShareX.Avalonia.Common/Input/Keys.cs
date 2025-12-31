@@ -25,7 +25,7 @@
 
 using System;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     // Simplified Keys enum compatible with System.Windows.Forms.Keys
     [Flags]

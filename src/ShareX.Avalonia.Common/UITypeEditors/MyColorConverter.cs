@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Drawing;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class MyColorConverter : ColorConverter
     {

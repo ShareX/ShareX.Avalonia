@@ -1,17 +1,17 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Core;
+using ShareX.Ava.Core;
 
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 public partial class HotkeySettingsViewModel : ViewModelBase
 {
     public ObservableCollection<HotkeyItemViewModel> Hotkeys { get; } = new();
 
-    public Func<ShareX.Avalonia.Core.Hotkeys.HotkeySettings, Task<bool>>? EditHotkeyRequester { get; set; }
+    public Func<ShareX.Ava.Core.Hotkeys.HotkeySettings, Task<bool>>? EditHotkeyRequester { get; set; }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(RemoveCommand))]
@@ -59,7 +59,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
         if (_manager == null) return;
         
         // Create new hotkey with default settings
-        var newHotkey = new ShareX.Avalonia.Core.Hotkeys.HotkeySettings();
+        var newHotkey = new ShareX.Ava.Core.Hotkeys.HotkeySettings();
         
         // Add to list (user will configure inline via HotkeySelectionControl)
         _manager.Hotkeys.Add(newHotkey);
@@ -107,7 +107,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
         if (SelectedHotkey != null && _manager != null)
         {
             // Shallow copy for now, deep would be better
-            var clone = new ShareX.Avalonia.Core.Hotkeys.HotkeySettings(SelectedHotkey.Model.Job, 
+            var clone = new ShareX.Ava.Core.Hotkeys.HotkeySettings(SelectedHotkey.Model.Job, 
                 new Platform.Abstractions.HotkeyInfo(
                     SelectedHotkey.Model.HotkeyInfo.Key, 
                     SelectedHotkey.Model.HotkeyInfo.Modifiers));

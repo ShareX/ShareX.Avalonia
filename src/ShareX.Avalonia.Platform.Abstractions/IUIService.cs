@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Platform.Abstractions
+namespace ShareX.Ava.Platform.Abstractions
 {
     /// <summary>
     /// Service for interacting with the main UI (e.g. navigation, showing windows)

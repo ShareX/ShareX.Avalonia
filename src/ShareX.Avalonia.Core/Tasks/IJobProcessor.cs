@@ -1,9 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using System.Threading;
-using ShareX.Avalonia.Core;
+using ShareX.Ava.Core;
 
-namespace ShareX.Avalonia.Core.Tasks
+namespace ShareX.Ava.Core.Tasks
 {
     public interface IJobProcessor
     {

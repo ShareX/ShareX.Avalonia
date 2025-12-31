@@ -1,7 +1,7 @@
-﻿#region License Information (GPL v3)
+#region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -25,13 +25,13 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Common.Helpers;
+using ShareX.Ava.Common;
+using ShareX.Ava.Common.Helpers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace ShareX.Avalonia.History
+namespace ShareX.Ava.History
 {
     public class HistoryManagerJSON : HistoryManager
     {

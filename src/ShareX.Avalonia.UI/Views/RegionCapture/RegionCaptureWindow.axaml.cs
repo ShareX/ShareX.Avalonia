@@ -7,7 +7,7 @@ using Avalonia.Media;
 using System.Drawing; // For Rectangle return type
 using Point = Avalonia.Point;
 
-namespace ShareX.Avalonia.UI.Views.RegionCapture
+namespace ShareX.Ava.UI.Views.RegionCapture
 {
     public partial class RegionCaptureWindow : Window
     {

@@ -3,11 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ShareX.Avalonia.Core;
-using ShareX.Avalonia.Core.Tasks;
-using ShareX.Avalonia.Common;
+using ShareX.Ava.Core;
+using ShareX.Ava.Core.Tasks;
+using ShareX.Ava.Common;
 
-namespace ShareX.Avalonia.Core.Managers
+namespace ShareX.Ava.Core.Managers
 {
     public class TaskManager
     {

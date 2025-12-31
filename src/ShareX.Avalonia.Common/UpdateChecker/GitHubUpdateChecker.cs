@@ -28,7 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public class GitHubUpdateChecker : UpdateChecker
     {

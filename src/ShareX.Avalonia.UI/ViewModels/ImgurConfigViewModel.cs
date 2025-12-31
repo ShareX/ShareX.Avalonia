@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
-using ShareX.Avalonia.Uploaders;
-using ShareX.Avalonia.Uploaders.Plugins.ImgurPlugin;
+using ShareX.Ava.Uploaders;
+using ShareX.Ava.Uploaders.Plugins.ImgurPlugin;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for Imgur configuration

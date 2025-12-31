@@ -1,7 +1,7 @@
 #region License Information (GPL v3)
 
 /*
-    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    ShareX.Ava - The Avalonia UI implementation of ShareX
     Copyright (c) 2007-2025 ShareX Team
 
     This program is free software; you can redistribute it and/or
@@ -24,14 +24,14 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Input;
-using ShareX.Avalonia.Platform.Abstractions;
-using ShareX.Avalonia.Core;
+using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace ShareX.Avalonia.Core.Hotkeys;
+namespace ShareX.Ava.Core.Hotkeys;
 
 /// <summary>
 /// High-level hotkey management - orchestrates registration and triggering

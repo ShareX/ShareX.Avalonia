@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Avalonia.ImageEffects;
+using ShareX.Ava.ImageEffects;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace ShareX.Avalonia.UI.ViewModels
+namespace ShareX.Ava.UI.ViewModels
 {
     /// <summary>
     /// ViewModel wrapper for ImageEffect instances with observable properties

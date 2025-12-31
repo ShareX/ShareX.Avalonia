@@ -3,7 +3,7 @@
 using System.Runtime.Versioning;
 #endif
 
-namespace ShareX.Avalonia.Common.Helpers
+namespace ShareX.Ava.Common.Helpers
 {
     public static class ClipboardHelpers
     {

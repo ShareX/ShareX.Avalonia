@@ -1,6 +1,6 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:vm="using:ShareX.Avalonia.UI.ViewModels">
+                    xmlns:vm="using:ShareX.Ava.UI.ViewModels">
 
     <!-- Generic Effect Parameter Panel -->
     <!-- For now, show a simple message. Specific DataTemplates can be added later -->

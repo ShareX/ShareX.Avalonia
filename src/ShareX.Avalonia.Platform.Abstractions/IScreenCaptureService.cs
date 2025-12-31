@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using System.Drawing;
 
-namespace ShareX.Avalonia.Platform.Abstractions
+namespace ShareX.Ava.Platform.Abstractions
 {
     public interface IScreenCaptureService
     {

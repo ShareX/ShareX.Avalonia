@@ -26,7 +26,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public abstract class UpdateChecker
     {

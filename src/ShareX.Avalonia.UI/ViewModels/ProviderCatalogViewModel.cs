@@ -1,10 +1,10 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Avalonia.Common;
-using ShareX.Avalonia.Uploaders.PluginSystem;
+using ShareX.Ava.Common;
+using ShareX.Ava.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
 
-namespace ShareX.Avalonia.UI.ViewModels;
+namespace ShareX.Ava.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for the provider catalog dialog

@@ -27,7 +27,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ShareX.Avalonia.Common
+namespace ShareX.Ava.Common
 {
     public static partial class NativeMethods
     {
