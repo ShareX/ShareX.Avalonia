@@ -35,7 +35,7 @@ namespace ShareX.Avalonia.Core;
 /// Task-related helper methods for file naming, folder management, and image processing.
 /// Extracted from ShareX TaskHelpers - contains only pure logic (no UI dependencies).
 /// </summary>
-public static class TaskHelpers
+public static partial class TaskHelpers
 {
     #region File Naming
 

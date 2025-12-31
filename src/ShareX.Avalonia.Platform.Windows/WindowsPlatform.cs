@@ -50,7 +50,8 @@ namespace ShareX.Avalonia.Platform.Windows
                 screenService: screenService,
                 clipboardService: new WindowsClipboardService(),
                 windowService: new WindowsWindowService(),
-                screenCaptureService: screenCaptureService
+                screenCaptureService: screenCaptureService,
+                hotkeyService: new WindowsHotkeyService()
             );
         }
     }

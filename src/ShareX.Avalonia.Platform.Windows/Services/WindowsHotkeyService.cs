@@ -1,0 +1,365 @@
+#region License Information (GPL v3)
+
+/*
+    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    Copyright (c) 2007-2025 ShareX Team
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
+*/
+
+#endregion License Information (GPL v3)
+
+using Avalonia.Input;
+using ShareX.Avalonia.Platform.Abstractions;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading;
+
+namespace ShareX.Avalonia.Platform.Windows;
+
+/// <summary>
+/// Windows implementation of global hotkey registration using RegisterHotKey API
+/// </summary>
+public class WindowsHotkeyService : IHotkeyService
+{
+    private const int WM_HOTKEY = 0x0312;
+
+    private readonly Dictionary<ushort, HotkeyInfo> _registeredHotkeys = new();
+    private readonly object _lock = new();
+    private ushort _nextId = 1;
+    private bool _disposed;
+    private IntPtr _hwnd;
+    private Thread? _messageThread;
+    private bool _running;
+
+    public event EventHandler<HotkeyTriggeredEventArgs>? HotkeyTriggered;
+    public bool IsSuspended { get; set; }
+
+    #region P/Invoke
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr CreateWindowEx(
+        uint dwExStyle, string lpClassName, string lpWindowName,
+        uint dwStyle, int x, int y, int nWidth, int nHeight,
+        IntPtr hWndParent, IntPtr hMenu, IntPtr hInstance, IntPtr lpParam);
+
+    [DllImport("user32.dll")]
+    private static extern bool DestroyWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern bool GetMessage(out MSG lpMsg, IntPtr hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+
+    [DllImport("user32.dll")]
+    private static extern bool TranslateMessage(ref MSG lpMsg);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr DispatchMessage(ref MSG lpMsg);
+
+    [DllImport("user32.dll")]
+    private static extern bool PostMessage(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("kernel32.dll")]
+    private static extern ushort GlobalAddAtom(string lpString);
+
+    [DllImport("kernel32.dll")]
+    private static extern ushort GlobalDeleteAtom(ushort nAtom);
+
+    [DllImport("kernel32.dll")]
+    private static extern IntPtr GetModuleHandle(string? lpModuleName);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MSG
+    {
+        public IntPtr hwnd;
+        public uint message;
+        public IntPtr wParam;
+        public IntPtr lParam;
+        public uint time;
+        public POINT pt;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct POINT
+    {
+        public int x;
+        public int y;
+    }
+
+    // Modifier flags for RegisterHotKey
+    private const uint MOD_ALT = 0x0001;
+    private const uint MOD_CONTROL = 0x0002;
+    private const uint MOD_SHIFT = 0x0004;
+    private const uint MOD_WIN = 0x0008;
+    private const uint MOD_NOREPEAT = 0x4000;
+
+    private const uint WM_QUIT = 0x0012;
+
+    #endregion
+
+    public WindowsHotkeyService()
+    {
+        StartMessageLoop();
+    }
+
+    private void StartMessageLoop()
+    {
+        _running = true;
+        _messageThread = new Thread(MessageLoop)
+        {
+            IsBackground = true,
+            Name = "HotkeyMessageLoop"
+        };
+        _messageThread.SetApartmentState(ApartmentState.STA);
+        _messageThread.Start();
+
+        // Wait for window to be created
+        SpinWait.SpinUntil(() => _hwnd != IntPtr.Zero, TimeSpan.FromSeconds(5));
+    }
+
+    private void MessageLoop()
+    {
+        // Create a message-only window
+        _hwnd = CreateWindowEx(0, "STATIC", "ShareX.Avalonia.HotkeyWindow",
+            0, 0, 0, 0, 0, new IntPtr(-3) /* HWND_MESSAGE */, IntPtr.Zero,
+            GetModuleHandle(null), IntPtr.Zero);
+
+        if (_hwnd == IntPtr.Zero)
+        {
+            Debug.WriteLine("Failed to create hotkey window");
+            return;
+        }
+
+        Debug.WriteLine($"Hotkey window created: 0x{_hwnd:X}");
+
+        while (_running && GetMessage(out MSG msg, IntPtr.Zero, 0, 0))
+        {
+            if (msg.message == WM_HOTKEY)
+            {
+                ushort id = (ushort)msg.wParam.ToInt32();
+                ProcessHotkey(id);
+            }
+            else
+            {
+                TranslateMessage(ref msg);
+                DispatchMessage(ref msg);
+            }
+        }
+
+        DestroyWindow(_hwnd);
+        _hwnd = IntPtr.Zero;
+    }
+
+    private void ProcessHotkey(ushort id)
+    {
+        if (IsSuspended) return;
+
+        lock (_lock)
+        {
+            if (_registeredHotkeys.TryGetValue(id, out var hotkeyInfo))
+            {
+                Debug.WriteLine($"Hotkey triggered: {hotkeyInfo}");
+
+                // Marshal to UI thread if needed
+                global::Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+                {
+                    HotkeyTriggered?.Invoke(this, new HotkeyTriggeredEventArgs(hotkeyInfo));
+                });
+            }
+        }
+    }
+
+    public bool RegisterHotkey(HotkeyInfo hotkeyInfo)
+    {
+        if (!hotkeyInfo.IsValid)
+        {
+            hotkeyInfo.Status = HotkeyStatus.NotConfigured;
+            return false;
+        }
+
+        if (_hwnd == IntPtr.Zero)
+        {
+            hotkeyInfo.Status = HotkeyStatus.Failed;
+            return false;
+        }
+
+        lock (_lock)
+        {
+            // Generate unique ID
+            if (hotkeyInfo.Id == 0)
+            {
+                hotkeyInfo.Id = _nextId++;
+            }
+
+            uint modifiers = GetModifiers(hotkeyInfo.Modifiers);
+            uint vk = KeyToVirtualKey(hotkeyInfo.Key);
+
+            bool result = RegisterHotKey(_hwnd, hotkeyInfo.Id, modifiers, vk);
+
+            if (result)
+            {
+                hotkeyInfo.Status = HotkeyStatus.Registered;
+                _registeredHotkeys[hotkeyInfo.Id] = hotkeyInfo;
+                Debug.WriteLine($"Hotkey registered: {hotkeyInfo} (ID: {hotkeyInfo.Id})");
+            }
+            else
+            {
+                hotkeyInfo.Status = HotkeyStatus.Failed;
+                int error = Marshal.GetLastWin32Error();
+                Debug.WriteLine($"Failed to register hotkey: {hotkeyInfo} (Error: {error})");
+            }
+
+            return result;
+        }
+    }
+
+    public bool UnregisterHotkey(HotkeyInfo hotkeyInfo)
+    {
+        if (hotkeyInfo.Id == 0 || _hwnd == IntPtr.Zero)
+            return false;
+
+        lock (_lock)
+        {
+            bool result = UnregisterHotKey(_hwnd, hotkeyInfo.Id);
+
+            if (result)
+            {
+                _registeredHotkeys.Remove(hotkeyInfo.Id);
+                hotkeyInfo.Status = HotkeyStatus.NotConfigured;
+                Debug.WriteLine($"Hotkey unregistered: {hotkeyInfo}");
+            }
+            else
+            {
+                hotkeyInfo.Status = HotkeyStatus.Failed;
+                Debug.WriteLine($"Failed to unregister hotkey: {hotkeyInfo}");
+            }
+
+            return result;
+        }
+    }
+
+    public void UnregisterAll()
+    {
+        lock (_lock)
+        {
+            foreach (var kvp in _registeredHotkeys)
+            {
+                UnregisterHotKey(_hwnd, kvp.Key);
+                kvp.Value.Status = HotkeyStatus.NotConfigured;
+            }
+            _registeredHotkeys.Clear();
+        }
+    }
+
+    public bool IsRegistered(HotkeyInfo hotkeyInfo)
+    {
+        lock (_lock)
+        {
+            return hotkeyInfo.Id != 0 && _registeredHotkeys.ContainsKey(hotkeyInfo.Id);
+        }
+    }
+
+    private static uint GetModifiers(KeyModifiers modifiers)
+    {
+        uint result = MOD_NOREPEAT; // Prevent repeat triggers
+
+        if (modifiers.HasFlag(KeyModifiers.Control))
+            result |= MOD_CONTROL;
+        if (modifiers.HasFlag(KeyModifiers.Alt))
+            result |= MOD_ALT;
+        if (modifiers.HasFlag(KeyModifiers.Shift))
+            result |= MOD_SHIFT;
+        if (modifiers.HasFlag(KeyModifiers.Meta))
+            result |= MOD_WIN;
+
+        return result;
+    }
+
+    private static uint KeyToVirtualKey(Key key)
+    {
+        // Avalonia Key enum maps closely to Windows virtual key codes
+        return key switch
+        {
+            Key.Back => 0x08,
+            Key.Tab => 0x09,
+            Key.Return => 0x0D,
+            Key.Escape => 0x1B,
+            Key.Space => 0x20,
+            Key.PageUp => 0x21,
+            Key.PageDown => 0x22,
+            Key.End => 0x23,
+            Key.Home => 0x24,
+            Key.Left => 0x25,
+            Key.Up => 0x26,
+            Key.Right => 0x27,
+            Key.Down => 0x28,
+            Key.Insert => 0x2D,
+            Key.Delete => 0x2E,
+            >= Key.D0 and <= Key.D9 => (uint)(0x30 + (key - Key.D0)),
+            >= Key.A and <= Key.Z => (uint)(0x41 + (key - Key.A)),
+            >= Key.NumPad0 and <= Key.NumPad9 => (uint)(0x60 + (key - Key.NumPad0)),
+            >= Key.F1 and <= Key.F24 => (uint)(0x70 + (key - Key.F1)),
+            Key.PrintScreen => 0x2C,
+            Key.Scroll => 0x91,
+            Key.Pause => 0x13,
+            Key.NumLock => 0x90,
+            Key.Capital => 0x14,
+            Key.Add => 0x6B,
+            Key.Subtract => 0x6D,
+            Key.Multiply => 0x6A,
+            Key.Divide => 0x6F,
+            Key.Decimal => 0x6E,
+            Key.OemComma => 0xBC,
+            Key.OemPeriod => 0xBE,
+            Key.OemMinus => 0xBD,
+            Key.OemPlus => 0xBB,
+            Key.Oem1 => 0xBA, // ;:
+            Key.Oem2 => 0xBF, // /?
+            Key.Oem3 => 0xC0, // `~
+            Key.Oem4 => 0xDB, // [{
+            Key.Oem5 => 0xDC, // \|
+            Key.Oem6 => 0xDD, // ]}
+            Key.Oem7 => 0xDE, // '"
+            _ => (uint)key // Direct mapping for many keys
+        };
+    }
+
+    public void Dispose()
+    {
+        if (_disposed) return;
+
+        _running = false;
+        UnregisterAll();
+
+        if (_hwnd != IntPtr.Zero)
+        {
+            PostMessage(_hwnd, WM_QUIT, IntPtr.Zero, IntPtr.Zero);
+        }
+
+        _messageThread?.Join(TimeSpan.FromSeconds(2));
+
+        _disposed = true;
+        GC.SuppressFinalize(this);
+    }
+}

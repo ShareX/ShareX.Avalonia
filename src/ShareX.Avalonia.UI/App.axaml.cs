@@ -28,10 +28,14 @@ public partial class App : Application
             {
                 DataContext = new ViewModels.MainViewModel(),
             };
+            
+            InitializeHotkeys();
         }
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    private Core.Hotkeys.HotkeyManager? _hotkeyManager;
 
     private void RegisterProviders()
     {
@@ -44,5 +48,37 @@ public partial class App : Application
         ProviderCatalog.RegisterProvider(s3Provider);
 
         Console.WriteLine("Registered built-in providers: Imgur, Amazon S3");
+    }
+
+    private void InitializeHotkeys()
+    {
+        if (!Platform.Abstractions.PlatformServices.IsInitialized) return;
+
+        try
+        {
+            var hotkeyService = Platform.Abstractions.PlatformServices.Hotkey;
+            _hotkeyManager = new Core.Hotkeys.HotkeyManager(hotkeyService);
+            
+            // Subscribe to hotkey triggers
+            _hotkeyManager.HotkeyTriggered += HotkeyManager_HotkeyTriggered;
+
+            // Load default hotkeys
+            var defaultHotkeys = Core.Hotkeys.HotkeyManager.GetDefaultHotkeyList();
+            _hotkeyManager.UpdateHotkeys(defaultHotkeys);
+            
+            Console.WriteLine($"Initialized hotkey manager with {defaultHotkeys.Count} default hotkeys");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to initialize hotkeys: {ex.Message}");
+        }
+    }
+
+    private async void HotkeyManager_HotkeyTriggered(object? sender, Core.Hotkeys.HotkeySettings settings)
+    {
+        Console.WriteLine($"Hotkey triggered: {settings}");
+        
+        // Execute the job associated with the hotkey
+        await Core.Helpers.TaskHelpers.ExecuteJob(settings.Job, settings.TaskSettings);
     }
 }

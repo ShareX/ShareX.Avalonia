@@ -401,11 +401,11 @@ public class HotkeySettingsViewModel : ViewModelBase
 
 | Phase | Hours | Dependencies |
 |-------|-------|--------------|
-| Phase 1: Platform Abstraction | 2-3h | None |
-| Phase 2: Windows Implementation | 3-4h | Phase 1 |
-| Phase 3: Core Management | 2-3h | Phase 2 |
-| Phase 4: TaskHelpers | 4-5h | Phase 3 |
-| Phase 5: UI Integration | 2-3h | Phase 3 |
+- **Phase 1: Platform Abstraction** (Estimated: 2h) - **Status: COMPLETE**
+- **Phase 2: Windows Implementation** (Estimated: 4h) - **Status: COMPLETE**
+- **Phase 3: Core Hotkey Management** (Estimated: 3h) - **Status: COMPLETE**
+- **Phase 4: TaskHelpers Integration** (Estimated: 2h) - **Status: COMPLETE**
+- **Phase 5: UI Integration** (Estimated: 4h) - **Status: Pending**
 | **Total** | **13-18h** | |
 
 ---
