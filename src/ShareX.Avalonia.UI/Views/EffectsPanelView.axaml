@@ -93,7 +93,6 @@
                                 ContentTemplate="{StaticResource GenericEffectParameterTemplate}"/>
             </Border>
 
-
             <!-- Action Buttons -->
             <StackPanel Grid.Row="4" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Right">
                 <Button Content="Reset" 
@@ -103,6 +102,7 @@
                         Padding="16,8"
                         CornerRadius="8"/>
                 <Button Content="Apply" 
+                        Command="{Binding $parent[UserControl].((vm:MainViewModel)DataContext).ApplyEffectCommand}"
                         Background="#8B5CF6"
                         Foreground="White"
                         Padding="16,8"

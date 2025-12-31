@@ -234,6 +234,42 @@ namespace ShareX.Avalonia.UI.ViewModels
         }
 
         [RelayCommand]
+        private void ApplyEffect()
+        {
+            if (EffectsPanel.SelectedEffect == null)
+            {
+                StatusText = "No effect selected";
+                return;
+            }
+
+            if (PreviewImage == null)
+            {
+                StatusText = "No image to apply effect to";
+                return;
+            }
+
+            try
+            {
+                StatusText = $"Applying {EffectsPanel.SelectedEffect.Name}...";
+
+                // Convert Avalonia Bitmap to SKBitmap
+                using var skBitmap = Helpers.BitmapConversionHelpers.ToSKBitmap(PreviewImage);
+
+                // Apply effect
+                using var resultBitmap = EffectsPanel.SelectedEffect.Apply(skBitmap);
+
+                // Convert back to Avalonia Bitmap
+                PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(resultBitmap);
+
+                StatusText = $"Applied {EffectsPanel.SelectedEffect.Name}";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Error applying effect: {ex.Message}";
+            }
+        }
+
+        [RelayCommand]
         private void Clear()
         {
             PreviewImage = null;
