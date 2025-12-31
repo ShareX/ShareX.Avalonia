@@ -128,30 +128,126 @@ namespace ShareX.Avalonia.Platform.Windows
             if (image == null)
                 return;
 
-            // Windows clipboard operations may fail due to other applications
-            // Implement retry logic with delays
-            Exception? lastException = null;
-            for (int i = 0; i < 5; i++)
+            try
             {
-                try
+                // Convert Image to DIB (Device Independent Bitmap) format for clipboard
+                using (var ms = new MemoryStream())
                 {
-                    Clipboard.SetImage(image);
-                    return; // Success
-                }
-                catch (Exception ex)
-                {
-                    lastException = ex;
-                    System.Diagnostics.Debug.WriteLine($"Clipboard SetImage attempt {i + 1} failed: {ex.Message}");
+                    image.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                    ms.Position = 0;
+
+                    // Read BMP header to skip it (clipboard wants DIB, not BMP)
+                    byte[] bmpData = ms.ToArray();
                     
-                    if (i < 4) // Don't sleep on last attempt
+                    // BMP file header is 14 bytes, we need to skip it for DIB
+                    int dibOffset = 14;
+                    int dibSize = bmpData.Length - dibOffset;
+                    
+                    // Allocate global memory for clipboard
+                    IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)dibSize);
+                    if (hGlobal == IntPtr.Zero)
+                        throw new InvalidOperationException("Failed to allocate global memory for clipboard");
+
+                    try
                     {
-                        System.Threading.Thread.Sleep(100); // Wait 100ms before retry
+                        // Lock the memory and copy DIB data
+                        IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
+                        if (pGlobal == IntPtr.Zero)
+                            throw new InvalidOperationException("Failed to lock global memory");
+
+                        try
+                        {
+                            System.Runtime.InteropServices.Marshal.Copy(bmpData, dibOffset, pGlobal, dibSize);
+                        }
+                        finally
+                        {
+                            NativeMethods.GlobalUnlock(hGlobal);
+                        }
+
+                        // Open clipboard with retry logic
+                        bool clipboardOpened = false;
+                        for (int i = 0; i < 5; i++)
+                        {
+                            if (NativeMethods.OpenClipboard(IntPtr.Zero))
+                            {
+                                clipboardOpened = true;
+                                break;
+                            }
+                            System.Threading.Thread.Sleep(100);
+                        }
+
+                        if (!clipboardOpened)
+                            throw new InvalidOperationException("Failed to open clipboard after 5 attempts");
+
+                        try
+                        {
+                            // Empty clipboard and set new data
+                            NativeMethods.EmptyClipboard();
+                            
+                            IntPtr result = NativeMethods.SetClipboardData(NativeMethods.CF_DIB, hGlobal);
+                            if (result == IntPtr.Zero)
+                            {
+                                throw new InvalidOperationException("Failed to set clipboard data");
+                            }
+                            
+                            // Success - clipboard now owns the memory, don't free it
+                            hGlobal = IntPtr.Zero;
+                        }
+                        finally
+                        {
+                            NativeMethods.CloseClipboard();
+                        }
+                    }
+                    finally
+                    {
+                        // Only free if we still own the memory (SetClipboardData failed)
+                        if (hGlobal != IntPtr.Zero)
+                        {
+                            NativeMethods.GlobalFree(hGlobal);
+                        }
                     }
                 }
             }
-            
-            // If all retries failed, throw the exception
-            throw new InvalidOperationException($"Failed to set clipboard image after 5 attempts: {lastException?.Message}", lastException);
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to set clipboard image: {ex.Message}");
+                throw;
+            }
+        }
+
+        // Native methods for direct clipboard access
+        private static class NativeMethods
+        {
+            public const uint GMEM_MOVEABLE = 0x0002;
+            public const uint CF_DIB = 8;
+
+            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+
+            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr GlobalLock(IntPtr hMem);
+
+            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+            public static extern bool GlobalUnlock(IntPtr hMem);
+
+            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
+            public static extern IntPtr GlobalFree(IntPtr hMem);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+            public static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+            public static extern bool CloseClipboard();
+
+            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+            public static extern bool EmptyClipboard();
+
+            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+            public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
         }
 
         public string[]? GetFileDropList()
