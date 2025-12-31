@@ -50,6 +50,10 @@ namespace ShareX.Avalonia.UI.Views
         private const double MaxZoom = 4.0;
         private const double ZoomStep = 0.1;
 
+        private bool _isPanning;
+        private Point _panStart;
+        private Vector _panOrigin;
+
         // Selection state
         private Control? _selectedShape;
         private Point _lastDragPoint;
@@ -107,6 +111,55 @@ namespace ShareX.Avalonia.UI.Views
             }
 
             e.Handled = true;
+        }
+
+        private void OnScrollViewerPointerPressed(object? sender, PointerPressedEventArgs e)
+        {
+            if (sender is not ScrollViewer scrollViewer) return;
+
+            var properties = e.GetCurrentPoint(scrollViewer).Properties;
+            if (!properties.IsMiddleButtonPressed) return;
+
+            _isPanning = true;
+            _panStart = e.GetPosition(scrollViewer);
+            _panOrigin = scrollViewer.Offset;
+            scrollViewer.Cursor = new Cursor(StandardCursorType.SizeAll);
+            e.Pointer.Capture(scrollViewer);
+            e.Handled = true;
+        }
+
+        private void OnScrollViewerPointerMoved(object? sender, PointerEventArgs e)
+        {
+            if (!_isPanning || sender is not ScrollViewer scrollViewer) return;
+
+            var current = e.GetPosition(scrollViewer);
+            var delta = current - _panStart;
+
+            var target = new Vector(
+                _panOrigin.X - delta.X,
+                _panOrigin.Y - delta.Y);
+
+            var maxX = Math.Max(0, scrollViewer.Extent.Width - scrollViewer.Viewport.Width);
+            var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+
+            scrollViewer.Offset = new Vector(
+                Math.Clamp(target.X, 0, maxX),
+                Math.Clamp(target.Y, 0, maxY));
+
+            e.Handled = true;
+        }
+
+        private void OnScrollViewerPointerReleased(object? sender, PointerReleasedEventArgs e)
+        {
+            if (sender is not ScrollViewer scrollViewer) return;
+
+            if (_isPanning)
+            {
+                _isPanning = false;
+                scrollViewer.Cursor = null;
+                e.Pointer.Capture(null);
+                e.Handled = true;
+            }
         }
         
         private void OnKeyDown(object sender, KeyEventArgs e)
@@ -568,6 +621,10 @@ namespace ShareX.Avalonia.UI.Views
             if (DataContext is not MainViewModel vm) return;
             var canvas = sender as Canvas;
             if (canvas == null) return;
+
+            // Ignore middle mouse to avoid creating annotations while panning
+            var props = e.GetCurrentPoint(canvas).Properties;
+            if (props.IsMiddleButtonPressed) return;
 
             var point = GetCanvasPosition(e, canvas);
 

@@ -254,7 +254,10 @@
                     <ScrollViewer Name="CanvasScrollViewer"
                                   Background="Transparent"
                                   HorizontalScrollBarVisibility="Auto"
-                                  VerticalScrollBarVisibility="Auto">
+                                  VerticalScrollBarVisibility="Auto"
+                                  PointerPressed="OnScrollViewerPointerPressed"
+                                  PointerMoved="OnScrollViewerPointerMoved"
+                                  PointerReleased="OnScrollViewerPointerReleased">
                         <!-- Preview Image & Canvas -->
                         <Border Background="#FFFFFF"
                                 CornerRadius="{Binding PreviewCornerRadius}"
