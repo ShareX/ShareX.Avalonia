@@ -9,12 +9,16 @@ using CommunityToolkit.Mvvm.Input;
 using ShareX.Avalonia.Core;
 using ShareX.Avalonia.Core.Managers;
 using ShareX.Avalonia.Core.Tasks;
+using ShareX.Avalonia.Platform.Abstractions;
 using ShareX.Avalonia.Uploaders;
 
 namespace ShareX.Avalonia.UI.ViewModels
 {
     public partial class MainViewModel : ViewModelBase
     {
+        [ObservableProperty]
+        private string _exportState = "";
+
         // Events to signal View to perform canvas operations
         public event EventHandler? UndoRequested;
         public event EventHandler? RedoRequested;
@@ -200,24 +204,53 @@ namespace ShareX.Avalonia.UI.ViewModels
         [RelayCommand]
         private async Task Copy()
         {
-            if (PreviewImage == null) return;
-            // TODO: Copy image to clipboard
+            if (_currentSourceImage == null) return;
+            try
+            {
+                PlatformServices.Clipboard.SetImage(_currentSourceImage);
+                StatusText = "Image copied to clipboard";
+                ExportState = "Copied";
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Copy failed: {ex.Message}";
+            }
             await Task.CompletedTask;
         }
 
         [RelayCommand]
         private async Task QuickSave()
         {
-            if (PreviewImage == null) return;
-            // TODO: Quick save to default location
+            if (_currentSourceImage == null) return;
+            try
+            {
+                // Simple quick save to Pictures/ShareX
+                var folder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ShareX");
+                if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
+
+                var filename = $"ShareX_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png";
+                var path = System.IO.Path.Combine(folder, filename);
+
+                _currentSourceImage.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                
+                StatusText = $"Saved to {filename}";
+                ExportState = "Saved";
+                
+                // Optional: Open folder?
+                // Process.Start("explorer.exe", $"/select,\"{path}\"");
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Save failed: {ex.Message}";
+            }
             await Task.CompletedTask;
         }
 
         [RelayCommand]
         private async Task SaveAs()
         {
-            if (PreviewImage == null) return;
-            // TODO: Show save dialog
+            if (_currentSourceImage == null) return;
+            StatusText = "Save As not implemented (Dialog Service required)";
             await Task.CompletedTask;
         }
 
