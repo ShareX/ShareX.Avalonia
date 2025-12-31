@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Avalonia.Core;
@@ -104,6 +105,15 @@ namespace ShareX.Avalonia.UI.ViewModels
 
         [ObservableProperty]
         private BoxShadows _canvasShadow;
+
+        // Event for View to provide flattened image
+        public event Func<Task<Bitmap?>>? SnapshotRequested;
+        
+        // Event for View to show SaveAs dialog and return selected path
+        public event Func<Task<string?>>? SaveAsRequested;
+
+        [ObservableProperty]
+        private string? _lastSavedPath;
 
 
 
@@ -280,48 +290,46 @@ namespace ShareX.Avalonia.UI.ViewModels
             ResetNumberCounter();
         }
 
-        // Event for View to provide flattened image
-        public event Func<Task<Bitmap?>>? SnapshotRequested;
+        // Event for View to handle clipboard copy (requires TopLevel access)
+        public event Func<Bitmap, Task>? CopyRequested;
 
         [RelayCommand]
         private async Task Copy()
         {
-            // Try get flattened image first
+            // Get flattened image with annotations
             Bitmap? snapshot = null;
             if (SnapshotRequested != null)
             {
                 snapshot = await SnapshotRequested.Invoke();
             }
 
-            if (snapshot == null && _currentSourceImage == null) return;
+            // Fallback to preview image if snapshot fails
+            var imageToUse = snapshot ?? PreviewImage;
+            if (imageToUse == null)
+            {
+                StatusText = "No image to copy";
+                return;
+            }
             
-            try
+            if (CopyRequested != null)
             {
-                // If we have a snapshot (Avalonia Bitmap), we need to put it on clipboard
-                // Implementation depends on PlatformServices support for Avalonia Bitmap vs System.Drawing.Image
-                // For now, if we have snapshot, we might need to convert or direct copy
-                
-                // Note: Current Clipboard implementation likely expects System.Drawing.Image? 
-                // Let's defer full clipboard flattening support or convert snapshot back to bytes
-                
-                if (snapshot != null)
+                try
                 {
-                   // Placeholder: need to implement Clipboard.SetBitmap(snapshot) or similar
-                   // For now, fallback to original to avoid breaking changes if platform service only takes GDI+
-                   StatusText = "Copying flattened image not fully implemented yet";
+                    await CopyRequested.Invoke(imageToUse);
+                    StatusText = snapshot != null 
+                        ? "Image with annotations copied to clipboard" 
+                        : "Image copied to clipboard";
+                    ExportState = "Copied";
                 }
-                else if (_currentSourceImage != null)
+                catch (Exception ex)
                 {
-                     PlatformServices.Clipboard.SetImage(_currentSourceImage);
-                     StatusText = "Image copied to clipboard";
+                    StatusText = $"Copy failed: {ex.Message}";
                 }
-                ExportState = "Copied";
             }
-            catch (Exception ex)
+            else
             {
-                StatusText = $"Copy failed: {ex.Message}";
+                StatusText = "Clipboard not available";
             }
-            await Task.CompletedTask;
         }
 
         [RelayCommand]
@@ -367,9 +375,50 @@ namespace ShareX.Avalonia.UI.ViewModels
         [RelayCommand]
         private async Task SaveAs()
         {
-            if (_currentSourceImage == null) return;
-            StatusText = "Save As not implemented (Dialog Service required)";
-            await Task.CompletedTask;
+            if (SaveAsRequested == null)
+            {
+                StatusText = "SaveAs dialog not available";
+                return;
+            }
+            
+            // Show file picker dialog via View
+            var path = await SaveAsRequested.Invoke();
+            if (string.IsNullOrEmpty(path))
+            {
+                StatusText = "Save cancelled";
+                return;
+            }
+            
+            // Get flattened image with annotations
+            Bitmap? snapshot = null;
+            if (SnapshotRequested != null)
+            {
+                snapshot = await SnapshotRequested.Invoke();
+            }
+            
+            var imageToSave = snapshot ?? PreviewImage;
+            if (imageToSave == null)
+            {
+                StatusText = "No image to save";
+                return;
+            }
+            
+            try
+            {
+                // Save based on file extension
+                var extension = System.IO.Path.GetExtension(path).ToLowerInvariant();
+                
+                imageToSave.Save(path);
+                
+                var filename = System.IO.Path.GetFileName(path);
+                StatusText = $"Saved to {filename}";
+                ExportState = "Saved";
+                LastSavedPath = path;
+            }
+            catch (Exception ex)
+            {
+                StatusText = $"Save failed: {ex.Message}";
+            }
         }
 
         private async Task ExecuteCapture(HotkeyType jobType, AfterCaptureTasks afterCapture = AfterCaptureTasks.SaveImageToFile)

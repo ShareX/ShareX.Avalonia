@@ -212,6 +212,8 @@ namespace ShareX.Avalonia.UI.Views
                 vm.RedoRequested += (s, args) => PerformRedo();
                 vm.DeleteRequested += (s, args) => PerformDelete();
                 vm.SnapshotRequested += GetSnapshot;
+                vm.SaveAsRequested += ShowSaveAsDialog;
+                vm.CopyRequested += CopyToClipboard;
             }
         }
 
@@ -234,6 +236,72 @@ namespace ShareX.Avalonia.UI.Views
             {
                 System.Diagnostics.Debug.WriteLine("Snapshot failed: " + ex.Message);
                 return null;
+            }
+        }
+
+        public async System.Threading.Tasks.Task<string?> ShowSaveAsDialog()
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.StorageProvider == null) return null;
+            
+            try
+            {
+                var file = await topLevel.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+                {
+                    Title = "Save Image",
+                    DefaultExtension = "png",
+                    FileTypeChoices = new[]
+                    {
+                        new FilePickerFileType("PNG Image") { Patterns = new[] { "*.png" } },
+                        new FilePickerFileType("JPEG Image") { Patterns = new[] { "*.jpg", "*.jpeg" } },
+                        new FilePickerFileType("Bitmap Image") { Patterns = new[] { "*.bmp" } }
+                    },
+                    SuggestedFileName = $"ShareX_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.png"
+                });
+                
+                return file?.Path.LocalPath;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("SaveAs dialog failed: " + ex.Message);
+                return null;
+            }
+        }
+
+        public async System.Threading.Tasks.Task CopyToClipboard(global::Avalonia.Media.Imaging.Bitmap image)
+        {
+            var topLevel = TopLevel.GetTopLevel(this);
+            if (topLevel?.Clipboard == null) 
+                throw new InvalidOperationException("Clipboard not available");
+            
+            try
+            {
+                // Convert Avalonia Bitmap to PNG bytes
+                using var memoryStream = new System.IO.MemoryStream();
+                image.Save(memoryStream);
+                memoryStream.Position = 0;
+                
+                // Read bytes
+                var imageBytes = memoryStream.ToArray();
+                
+                // Create a temporary file to copy image data
+                // Note: Avalonia clipboard doesn't have direct bitmap support
+                // We'll save to temp file and copy file path
+                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"sharex_clip_{Guid.NewGuid()}.png");
+                await System.IO.File.WriteAllBytesAsync(tempPath, imageBytes);
+                
+                // Copy file to clipboard
+                var dataObject = new global::Avalonia.Input.DataObject();
+                dataObject.Set(global::Avalonia.Input.DataFormats.Files, new[] { tempPath });
+                await topLevel.Clipboard.SetDataObjectAsync(dataObject);
+                
+                // Note: The temp file will remain, but this allows image to be pasted
+                // A cleanup mechanism could be added later
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Clipboard copy failed: {ex.Message}");
+                throw;
             }
         }
         
