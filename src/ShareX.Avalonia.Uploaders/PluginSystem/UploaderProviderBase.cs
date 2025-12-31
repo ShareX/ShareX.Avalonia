@@ -45,6 +45,9 @@ public abstract class UploaderProviderBase : IUploaderProvider
     /// </summary>
     public abstract Dictionary<UploaderCategory, string[]> GetSupportedFileTypes();
 
+    /// <summary>
+    /// Create an uploader instance from serialized JSON settings
+    /// </summary>
     public abstract Uploader CreateInstance(string settingsJson);
 
     /// <summary>

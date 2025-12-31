@@ -1,0 +1,14 @@
+{
+  "pluginId": "imgur",
+  "name": "Imgur Uploader",
+  "version": "1.0.0",
+  "author": "ShareX Team",
+  "description": "Upload images and videos to Imgur",
+  "apiVersion": "1.0",
+  "entryPoint": "ShareX.Imgur.Plugin.ImgurProvider",
+  "assemblyFileName": "ShareX.Imgur.Plugin.dll",
+  "supportedCategories": ["Image", "Text"],
+  "configViewId": "imgur",
+  "dependencies": [],
+  "homepageUrl": "https://imgur.com"
+}

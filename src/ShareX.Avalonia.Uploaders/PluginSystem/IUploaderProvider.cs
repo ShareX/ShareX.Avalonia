@@ -62,12 +62,13 @@ public interface IUploaderProvider
 
     /// <summary>
     /// Creates a configuration view for this provider (should be Avalonia.Controls.UserControl)
-    /// Returns null if using default property grid
+    /// Plugins can return their own XAML UI for configuration
+    /// Returns null if no custom UI provided (will use default property grid)
     /// </summary>
     object? CreateConfigView();
 
     /// <summary>
-    /// Creates an uploader instance from serialized JSON settings
+    /// Create an uploader instance from serialized JSON settings
     /// </summary>
     Uploader CreateInstance(string settingsJson);
 
