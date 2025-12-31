@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="500" d:DesignHeight="400"
+        x:Class="ShareX.Avalonia.UI.Views.ProviderCatalogDialog"
+        x:DataType="vm:ProviderCatalogViewModel"
+        Title="Add Uploader"
+        Width="500" Height="400"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False">
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <!-- Category Display -->
+        <StackPanel Grid.Row="0" Spacing="5" Margin="0,0,0,15">
+            <TextBlock Text="Select a provider to add:" FontWeight="SemiBold"/>
+            <TextBlock Text="{Binding Category, StringFormat='Category: {0}'}" 
+                       Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                       FontSize="12"/>
+        </StackPanel>
+
+        <!-- Provider List -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="4"
+                Padding="10">
+            <ListBox ItemsSource="{Binding AvailableProviders}"
+                     SelectedItem="{Binding SelectedProvider}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <StackPanel Spacing="5">
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Description}" 
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Border>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10" Margin="0,15,0,0">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" Width="100"/>
+            <Button Content="Add" Command="{Binding AddSelectedCommand}" Width="100"
+                    IsEnabled="{Binding SelectedProvider, Converter={x:Static ObjectConverters.IsNotNull}}"
+                    Classes="accent"/>
+        </StackPanel>
+    </Grid>
+</Window>

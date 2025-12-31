@@ -3,54 +3,138 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ShareX.Avalonia.UI.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="ShareX.Avalonia.UI.Views.DestinationSettingsView"
              x:DataType="vm:DestinationSettingsViewModel">
 
-    <Design.DataContext>
-        <vm:DestinationSettingsViewModel/>
-    </Design.DataContext>
-
-    <Grid RowDefinitions="Auto,*" Margin="20">
-        <TextBlock Grid.Row="0" Text="Destination Settings" FontSize="26" FontWeight="SemiBold" Margin="0,0,0,20"/>
-
-        <Grid Grid.Row="1" ColumnDefinitions="200,*">
-            <!-- Category Sidebar -->
-            <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
-                <ListBox ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" Background="Transparent">
+    <Grid ColumnDefinitions="200,*">
+        <!-- Category Sidebar -->
+        <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                BorderThickness="0,0,1,0"
+                Padding="10">
+            <StackPanel Spacing="5">
+                <TextBlock Text="Categories" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                <ListBox ItemsSource="{Binding Categories}"
+                         SelectedItem="{Binding SelectedCategory}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                            <TextBlock Text="{Binding Name}"/>
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
-            </Border>
+            </StackPanel>
+        </Border>
 
-            <!-- Uploader List and Configuration -->
-            <Grid Grid.Column="1" Margin="20,0,0,0" RowDefinitions="*,Auto">
-                <Border Grid.Row="0" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4">
-                    <Grid ColumnDefinitions="250,*">
-                        <!-- Uploader List -->
-                        <Border Grid.Column="0" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="0,0,1,0">
-                            <ListBox ItemsSource="{Binding SelectedCategory.Uploaders}" SelectedItem="{Binding SelectedUploader}" Background="Transparent">
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock Text="{Binding Name}"/>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                        </Border>
+        <!-- Instance List and Details -->
+        <Grid Grid.Column="1" RowDefinitions="Auto,*" Margin="20">
+            <!-- Header with Add Button -->
+            <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="0,0,0,15">
+                <TextBlock Grid.Column="0" Text="{Binding SelectedCategory.Name}" 
+                           FontSize="20" FontWeight="SemiBold"/>
+                <Button Grid.Column="1" Content="+ Add from Catalog" 
+                        Command="{Binding SelectedCategory.AddFromCatalogCommand}"/>
+            </Grid>
 
-                        <!-- Configuration Panel (Placeholder) -->
-                        <ScrollViewer Grid.Column="1">
-                            <StackPanel Margin="20" Spacing="10">
-                                <TextBlock Text="{Binding SelectedUploader.Name, StringFormat='Configuration: {0}'}" FontSize="18" FontWeight="SemiBold"/>
-                                <TextBlock Text="Configuration options will appear here." Foreground="Gray" FontStyle="Italic"/>
-                                <TextBlock Text="Future enhancement: Property grid or custom config panels." Foreground="Gray" FontSize="11"/>
-                            </StackPanel>
-                        </ScrollViewer>
-                    </Grid>
+            <!-- Instance List and Details -->
+            <Grid Grid.Row="1" RowDefinitions="*,Auto,280">
+                <!-- Instance List -->
+                <Border Grid.Row="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="10"
+                        Margin="0,0,0,10">
+                    <ListBox ItemsSource="{Binding SelectedCategory.Instances}"
+                             SelectedItem="{Binding SelectedCategory.SelectedInstance}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="Auto,*,Auto">
+                                    <Path Grid.Column="0" 
+                                          Data="M12,0A12,12,0,1,0,24,12,12,12,0,0,0,12,0ZM10.8,18.6L4.2,12l1.68-1.68L10.8,15.24l7.32-7.32L19.8,9.6Z"
+                                          Fill="{DynamicResource AccentFillColorDefaultBrush}"
+                                          Width="16" Height="16"
+                                          Margin="0,0,8,0"
+                                          IsVisible="{Binding IsDefault}"/>
+                                    <TextBlock Grid.Column="1" Text="{Binding DisplayName}" VerticalAlignment="Center"/>
+                                    <Button Grid.Column="2" Content="⋮" Padding="8,4" Margin="4,0,0,0">
+                                        <Button.Flyout>
+                                            <MenuFlyout>
+                                                <MenuItem Header="Set as Default" 
+                                                          Command="{Binding $parent[ListBox].((vm:DestinationSettingsViewModel)DataContext).SelectedCategory.SetAsDefaultCommand}"
+                                                          CommandParameter="{Binding}"/>
+                                                <MenuItem Header="Duplicate" 
+                                                          Command="{Binding $parent[ListBox].((vm:DestinationSettingsViewModel)DataContext).SelectedCategory.DuplicateInstanceCommand}"
+                                                          CommandParameter="{Binding}"/>
+                                                <Separator/>
+                                                <MenuItem Header="Remove" 
+                                                          Command="{Binding $parent[ListBox].((vm:DestinationSettingsViewModel)DataContext).SelectedCategory.RemoveInstanceCommand}"
+                                                          CommandParameter="{Binding}"/>
+                                            </MenuFlyout>
+                                        </Button.Flyout>
+                                    </Button>
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
                 </Border>
+
+                <Separator Grid.Row="1" Margin="0,10"/>
+
+                <!-- Instance Settings Panel -->
+                <Border Grid.Row="2" 
+                        Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        CornerRadius="4"
+                        Padding="15"
+                        Margin="0,10,0,0"
+                        IsVisible="{Binding SelectedCategory.SelectedInstance, Converter={x:Static ObjectConverters.IsNotNull}}">
+                    <ScrollViewer>
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Instance Settings" FontWeight="SemiBold" FontSize="16"/>
+                            
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Display Name:" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding SelectedCategory.SelectedInstance.DisplayName}" 
+                                         Watermark="Enter display name..."/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Provider:" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedCategory.SelectedInstance.ProviderId}" 
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+
+                            <StackPanel Spacing="5">
+                                <TextBlock Text="Category:" FontWeight="SemiBold"/>
+                                <TextBlock Text="{Binding SelectedCategory.SelectedInstance.Category}" 
+                                           Foreground="{DynamicResource TextFillColorSecondaryBrush}"/>
+                            </StackPanel>
+
+                            <!-- Provider-specific settings would go here -->
+                            <TextBlock Text="Provider-specific settings panel will be loaded here" 
+                                       Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                                       FontStyle="Italic"
+                                       Margin="0,10,0,0"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Empty State -->
+                <StackPanel Grid.Row="2" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            Spacing="10"
+                            IsVisible="{Binding SelectedCategory.SelectedInstance, Converter={x:Static ObjectConverters.IsNull}}">
+                    <TextBlock Text="No instance selected" 
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Select an instance from the list or add a new one" 
+                               Foreground="{DynamicResource TextFillColorTertiaryBrush}"
+                               HorizontalAlignment="Center"
+                               FontSize="12"/>
+                </StackPanel>
             </Grid>
         </Grid>
     </Grid>

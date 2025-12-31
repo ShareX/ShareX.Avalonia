@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.Avalonia.ViewModels"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.Avalonia.Services", "src\ShareX.Avalonia.Services\ShareX.Avalonia.Services.csproj", "{943A5394-A8E7-4DB8-9E28-081954A9C9AF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.Avalonia.Annotations", "src\ShareX.Avalonia.Annotations\ShareX.Avalonia.Annotations.csproj", "{BC985079-5C7C-4481-BDDB-CB771161641B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -225,6 +227,18 @@ Global
 		{943A5394-A8E7-4DB8-9E28-081954A9C9AF}.Release|x64.Build.0 = Release|Any CPU
 		{943A5394-A8E7-4DB8-9E28-081954A9C9AF}.Release|x86.ActiveCfg = Release|Any CPU
 		{943A5394-A8E7-4DB8-9E28-081954A9C9AF}.Release|x86.Build.0 = Release|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Debug|x64.Build.0 = Debug|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Debug|x86.Build.0 = Debug|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Release|x64.ActiveCfg = Release|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Release|x64.Build.0 = Release|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Release|x86.ActiveCfg = Release|Any CPU
+		{BC985079-5C7C-4481-BDDB-CB771161641B}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -245,5 +259,6 @@ Global
 		{EFCD5F4F-9CE6-4516-8DB4-4B7CC2D70560} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{1BA75A7B-3F6F-4BC0-A11F-4F95806799E2} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{943A5394-A8E7-4DB8-9E28-081954A9C9AF} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{BC985079-5C7C-4481-BDDB-CB771161641B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

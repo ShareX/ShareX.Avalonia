@@ -209,13 +209,38 @@ must be treated as platform code and cannot be copied wholesale.
   - `ShareX.Avalonia.Platform.*`: OS-specific implementations (Windows first, others later).
   - `ShareX.Avalonia.App` and `ShareX.Avalonia.UI`: Avalonia UI and view models (defer until backend is ready).
 
-## Future TODO - Uploaders Plug-in Architecture
+## Uploader Plugin System - Implementation Status
 
-- Extract common abstractions (e.g., `GenericUploader`, `UploaderService<T>`) into a core library referenced by the app and plug-ins.
-- Split each uploader into its own class library (one per `FileDestination` entry) so `ShareX.UploadersLib.<Uploader>.dll` can be built individually.
-- Replace in-assembly reflection with a dynamic plug-in loader that scans `C:\Users\<your-username>\AppData\Local\ShareX.Avalonia\Plugins` for uploader assemblies.
-- Remove hard-coded uploader enums and update configuration UI to list plug-ins discovered at runtime.
-- Update build/deployment scripts to package plug-in DLLs separately and load them on demand.
+### ✅ Completed: Multi-Instance Provider Catalog (Dec 2024)
+
+**Architecture implemented:**
+- Renamed `IUploaderPlugin` → `IUploaderProvider` with multi-category support
+- Separated provider (type) from instance (configured occurrence)
+- `ProviderCatalog`: Static registry for provider types
+- `InstanceManager`: Singleton for instance lifecycle, persistence, default selection
+- Models: `UploaderInstance`, `InstanceConfiguration` with JSON serialization
+- UI: `ProviderCatalogViewModel`, `CategoryViewModel`, `UploaderInstanceViewModel`
+- Full CRUD operations: Add from catalog, duplicate, rename, remove, set default
+- Cross-category support: Same provider (e.g., S3) can serve Image + Text + File
+
+**Providers updated:**
+- `ImgurProvider`: Supports Image + Text categories
+- `AmazonS3Provider`: Supports Image + Text + File categories
+
+**Files created:** 16 files (~1,500 LOC)
+- Core: UploaderInstance, InstanceConfiguration, IUploaderProvider, UploaderProviderBase, ProviderCatalog, InstanceManager, ProviderInitializer
+- Providers: ImgurProvider, AmazonS3Provider  
+- ViewModels: UploaderInstanceViewModel, CategoryViewModel, ProviderCatalogViewModel, ProviderViewModel
+- Views: DestinationSettingsView (updated), ProviderCatalogDialog
+
+**Persistence:** `%AppData%/ShareX.Avalonia/uploader-instances.json`
+
+### Future TODO - Dynamic Plugin Loading
+
+- Extract common abstractions into core library for third-party plugins
+- Implement DLL-based plugin loader scanning `%AppData%/ShareX.Avalonia/Plugins`
+- Remove hard-coded provider registration
+- Add plugin marketplace/discovery UI
 
 ## Backend Porting Checklist
 
@@ -563,9 +588,31 @@ Test coverage
 - Add manual test checklist for Windows on ARM64 devices
 - Track known limitations and workarounds in docs
 
-## TODO  Avalonia annotation subsystem
+## Annotation Subsystem - Implementation Status
 
-### Scope
+### ✅ Phase 1 Complete: Core Annotation Models (Dec 2024)
+
+**New project:** `ShareX.Avalonia.Annotations`  
+**Files created:** 10 files (~800 LOC)
+
+**Annotation types implemented:**
+- `EditorTool` enum: Select, Rectangle, Ellipse, Arrow, Line, Text, Number, Spotlight, Crop, Pen
+- `Annotation` abstract base class with rendering, hit-testing, bounds calculation
+- Concrete types: RectangleAnnotation, EllipseAnnotation, LineAnnotation, ArrowAnnotation, TextAnnotation, NumberAnnotation (auto-increment), SpotlightAnnotation (focus effect), CropAnnotation (resize handles)
+
+**Technical features:**
+- Avalonia `DrawingContext` rendering
+- Configurable hit testing (tolerance-based)
+- Color/stroke width support
+- Z-index for layering
+- Manual distance calculations (Avalonia API compatibility)
+- FormattedText for text rendering with bold/italic support
+
+**Build status:** ✅ Clean (0 errors)
+
+### Remaining Tasks
+
+#### Phase 2: Canvas Control (~6-8h)
 Implement the annotation subsystem for ShareX.Avalonia, replacing WinForms and System.Drawing with Avalonia and Skia. All features listed in the ShapeType enum must be available.
 
 ### Tasks
