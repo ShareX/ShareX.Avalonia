@@ -96,6 +96,8 @@ This project uses multiple AI developer agents working in parallel. See [MULTI_A
 
 - Update or add docs when behavior or usage changes.
 - Keep filenames and headings descriptive and stable.
+- **All .md files created during work (including artifacts in brain directory) must be committed to the GitHub repository.**
+- Ensure documentation artifacts are included in git commits alongside code changes.
 
 ## Security and Privacy
 
