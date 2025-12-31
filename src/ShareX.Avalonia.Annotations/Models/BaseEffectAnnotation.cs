@@ -1,0 +1,30 @@
+using Avalonia;
+using Avalonia.Media;
+
+namespace ShareX.Avalonia.Annotations.Models;
+
+/// <summary>
+/// Base class for effect annotations (Blur, Pixelate, Highlight)
+/// </summary>
+public abstract class BaseEffectAnnotation : Annotation
+{
+    /// <summary>
+    /// Effect radius / strength
+    /// </summary>
+    public double Amount { get; set; } = 10;
+
+    /// <summary>
+    /// Whether the effect is applied as a region (rectangle) or freehand
+    /// </summary>
+    public bool IsFreehand { get; set; }
+
+    public override Rect GetBounds()
+    {
+        return new Rect(StartPoint, EndPoint);
+    }
+
+    public override bool HitTest(Point point, double tolerance = 5)
+    {
+        return GetBounds().Inflate(tolerance).Contains(point);
+    }
+}

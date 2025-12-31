@@ -78,5 +78,50 @@ public enum EditorTool
     /// <summary>
     /// Freehand pen drawing
     /// </summary>
-    Pen
+    Pen,
+
+    /// <summary>
+    /// Freehand highlighter (translucent)
+    /// </summary>
+    Highlighter,
+
+    /// <summary>
+    /// Blur effect
+    /// </summary>
+    Blur,
+
+    /// <summary>
+    /// Pixelate effect
+    /// </summary>
+    Pixelate,
+
+    /// <summary>
+    /// Smart eraser
+    /// </summary>
+    SmartEraser,
+
+    /// <summary>
+    /// Magnify effect
+    /// </summary>
+    Magnify,
+
+    /// <summary>
+    /// Speech balloon
+    /// </summary>
+    SpeechBalloon,
+
+    /// <summary>
+    /// Insert image/sticker
+    /// </summary>
+    Image,
+
+    /// <summary>
+    /// Step/Sequence marker
+    /// </summary>
+    Step,
+
+    /// <summary>
+    /// Cursor stamp
+    /// </summary>
+    Cursor
 }
