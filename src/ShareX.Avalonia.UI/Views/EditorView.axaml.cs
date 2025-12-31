@@ -276,27 +276,20 @@ namespace ShareX.Avalonia.UI.Views
             
             try
             {
-                // Convert Avalonia Bitmap to PNG bytes
+                // Convert Avalonia Bitmap to PNG bytes in memory
                 using var memoryStream = new System.IO.MemoryStream();
                 image.Save(memoryStream);
                 memoryStream.Position = 0;
                 
-                // Read bytes
                 var imageBytes = memoryStream.ToArray();
                 
-                // Create a temporary file to copy image data
-                // Note: Avalonia clipboard doesn't have direct bitmap support
-                // We'll save to temp file and copy file path
-                var tempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"sharex_clip_{Guid.NewGuid()}.png");
-                await System.IO.File.WriteAllBytesAsync(tempPath, imageBytes);
-                
-                // Copy file to clipboard
+                // Use DataObject with PNG MIME type
                 var dataObject = new global::Avalonia.Input.DataObject();
-                dataObject.Set(global::Avalonia.Input.DataFormats.Files, new[] { tempPath });
-                await topLevel.Clipboard.SetDataObjectAsync(dataObject);
                 
-                // Note: The temp file will remain, but this allows image to be pasted
-                // A cleanup mechanism could be added later
+                // Set as PNG image data using MIME type
+                dataObject.Set("image/png", imageBytes);
+                
+                await topLevel.Clipboard.SetDataObjectAsync(dataObject);
             }
             catch (Exception ex)
             {
