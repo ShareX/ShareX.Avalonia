@@ -357,6 +357,7 @@ namespace ShareX.Avalonia.UI.Views
                 vm.UndoRequested += (s, args) => PerformUndo();
                 vm.RedoRequested += (s, args) => PerformRedo();
                 vm.DeleteRequested += (s, args) => PerformDelete();
+                vm.ClearAnnotationsRequested += (s, args) => ClearAllAnnotations();
                 vm.SnapshotRequested += GetSnapshot;
                 vm.SaveAsRequested += ShowSaveAsDialog;
                 vm.CopyRequested += CopyToClipboard;
@@ -555,6 +556,43 @@ namespace ShareX.Avalonia.UI.Views
                     _selectedShape = null;
                 }
             }
+        }
+
+        private void ClearAllAnnotations()
+        {
+            var canvas = this.FindControl<Canvas>("AnnotationCanvas");
+            if (canvas != null)
+            {
+                canvas.Children.Clear();
+            }
+
+            var overlay = this.FindControl<Canvas>("OverlayCanvas");
+            if (overlay != null)
+            {
+                foreach (var handle in _selectionHandles)
+                {
+                    overlay.Children.Remove(handle);
+                }
+            }
+            _selectionHandles.Clear();
+
+            var cropOverlay = this.FindControl<global::Avalonia.Controls.Shapes.Rectangle>("CropOverlay");
+            if (cropOverlay != null)
+            {
+                cropOverlay.IsVisible = false;
+                cropOverlay.Width = 0;
+                cropOverlay.Height = 0;
+            }
+
+            _selectedShape = null;
+            _currentShape = null;
+            _isDrawing = false;
+            _isDraggingHandle = false;
+            _draggedHandle = null;
+            _isDraggingShape = false;
+
+            _undoStack.Clear();
+            _redoStack.Clear();
         }
 
         private void ApplySelectedColor(string colorHex)

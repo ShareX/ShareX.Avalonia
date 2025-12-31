@@ -56,6 +56,7 @@ namespace ShareX.Avalonia.UI.ViewModels
         public event EventHandler? UndoRequested;
         public event EventHandler? RedoRequested;
         public event EventHandler? DeleteRequested;
+        public event EventHandler? ClearAnnotationsRequested;
 
         [ObservableProperty]
         private ObservableCollection<WorkerTask> _tasks;
@@ -359,6 +360,14 @@ namespace ShareX.Avalonia.UI.ViewModels
         {
             DeleteRequested?.Invoke(this, EventArgs.Empty);
             StatusText = "Delete requested";
+        }
+
+        [RelayCommand]
+        private void ClearAnnotations()
+        {
+            ClearAnnotationsRequested?.Invoke(this, EventArgs.Empty);
+            ResetNumberCounter();
+            StatusText = "Annotations cleared";
         }
 
         [RelayCommand]

@@ -236,9 +236,13 @@
                     </StackPanel>
                 </Border>
                 
-                <!-- Section 5: Delete -->
-                <Button Content="🗑" Width="32" Height="32" Background="#FFFFFF0D" Foreground="#F43F5E" CornerRadius="8" 
+                <!-- Section 5: Delete / Clear -->
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Content="🧹" Width="32" Height="32" Background="#FFFFFF0D" Foreground="#E2E8F0" CornerRadius="8"
+                        Command="{Binding ClearAnnotationsCommand}" ToolTip.Tip="Clear all annotations"/>
+                    <Button Content="🗑" Width="32" Height="32" Background="#FFFFFF0D" Foreground="#F43F5E" CornerRadius="8" 
                         Command="{Binding DeleteSelectedCommand}" ToolTip.Tip="Delete Selected (Del)"/>
+                </StackPanel>
             </StackPanel>
         </Border>
 
