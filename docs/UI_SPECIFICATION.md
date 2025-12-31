@@ -267,22 +267,27 @@ Row 6: Neon, Aurora, Candy, Clean
 ### When Screenshot Exists
 - **Ctrl+S**: Quick save
 - **Ctrl+Shift+S**: Save as
-- **Ctrl+C**: Copy to clipboard (stylized)
+- **Ctrl+C**: Copy to clipboard
 - **Ctrl+Z**: Undo
 - **Ctrl+Shift+Z** / **Ctrl+Y**: Redo
 - **Delete** / **Backspace**: Delete selected annotation
 - **Esc**: Cancel crop mode / deselect
 
-### Tool Selection
+### Tool Selection (✅ Implemented)
 - **V**: Select
 - **R**: Rectangle
 - **E**: Ellipse
 - **A**: Arrow
 - **L**: Line
+- **P**: Pen/Freehand
+- **H**: Highlighter
 - **T**: Text
-- **N**: Number
-- **S**: Spotlight
+- **B**: Speech Balloon
+- **N**: Number/Step
 - **C**: Crop
+- **M**: Magnify
+- **S**: Spotlight
+- **F**: Toggle FX (Effects) Panel
 
 ## Color Scheme
 

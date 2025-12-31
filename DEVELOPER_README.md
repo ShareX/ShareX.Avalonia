@@ -5,31 +5,54 @@
 This project follows the **MVVM (Model-View-ViewModel)** pattern using the `CommunityToolkit.Mvvm` library.
 
 ### Key Projects
-*   **ShareX.Avalonia.UI**: The main UI project using Avalonia. Contains Views, ViewModels, and App entry point.
-*   **ShareX.Avalonia.Core**: Contains core logic, task management (`WorkerTask`), and models.
-*   **ShareX.Avalonia.Platform.* **: Platform-specific implementations (e.g., `WindowsScreenCaptureService`).
-*   **ShareX.Avalonia.Services.Abstractions**: Interfaces for platform services (`IScreenCaptureService`, `IClipboardService`).
+*   **ShareX.Avalonia.App**: Main application entry point
+*   **ShareX.Avalonia.UI**: UI layer using Avalonia. Contains Views, ViewModels, and shared UI resources
+*   **ShareX.Avalonia.Core**: Core application logic, task management (`WorkerTask`), and business models
+*   **ShareX.Avalonia.Annotations**: Annotation system with 16+ annotation types and serialization support
+*   **ShareX.Avalonia.ImageEffects**: 50+ image effects (filters, adjustments, manipulations) using SkiaSharp
+*   **ShareX.Avalonia.Platform.***: Platform-specific implementations (e.g., `WindowsScreenCaptureService`)
+*   **ShareX.Avalonia.ScreenCapture**: Screen capture logic and region selection
+*   **ShareX.Avalonia.Uploaders**: Upload providers (Imgur, Amazon S3, etc.)
+*   **ShareX.Avalonia.History**: Capture history management
 
 ### Services & Dependency Injection
 Services are initialized in `Program.cs` and `App.axaml.cs`. We use a Service Locator pattern via `PlatformServices` static class for easy access in ViewModels (though Constructor Injection is preferred where possible).
 
 ### Annotation System
-The annotation system is built on a `Canvas` overlay in `MainWindow.axaml`.
-*   **Drawing**: Handled in code-behind (`MainWindow.axaml.cs`) for performance and direct pointer manipulation.
-*   **State**: `MainViewModel` manages the tool state (`ActiveTool`, `SelectedColor`, etc.).
-*   **Undo/Redo**: Implemented using `Stack<Control>` in the View to manage visual elements.
+The annotation system is built on a polymorphic model architecture with UI integration via `EditorView`:
+*   **Models**: Located in `ShareX.Avalonia.Annotations/Models/`, inheriting from base `Annotation` class
+*   **Types**: 16 annotation types including Rectangle, Ellipse, Arrow, Line, Text, Number, Blur, Pixelate, Magnify, Highlight, Freehand, SpeechBalloon, Image, Spotlight, SmartEraser, Crop
+*   **Drawing**: Handled in `EditorView.axaml.cs` for performance and direct pointer manipulation
+*   **State**: `MainViewModel` manages tool state (`ActiveTool`, `SelectedColor`, `StrokeWidth`, etc.)
+*   **Undo/Redo**: Implemented using `Stack<Control>` to manage visual elements on canvas
+*   **Serialization**: JSON-based using `System.Text.Json` with `[JsonDerivedType]` attributes for polymorphism
+*   **Keyboard Shortcuts**: V(Select), R(Rectangle), E(Ellipse), A(Arrow), L(Line), P(Pen), H(Highlighter), T(Text), B(Balloon), N(Number), C(Crop), M(Magnify), S(Spotlight), F(Effects Panel)
+
+### Image Effects System
+*   **Auto-Discovery**: Effects are discovered via reflection from `ShareX.Avalonia.ImageEffects` assembly
+*   **Categories**: Filters, Adjustments, Manipulations
+*   **Parameter Binding**: Dynamic UI generation for effect parameters
+*   **Integration**: `EffectsPanelView` provides UI, `MainViewModel` handles application logic
 
 ### Region Capture
-Located in `Views/RegionCapture/`.
-*   `RegionCaptureWindow`: Uses manual bounds calculation to span **all monitors** (Virtual Screen).
-*   Uses `System.Drawing.Graphics.CopyFromScreen` (GDI+) for pixel capture on Windows.
+Located in `Views/RegionCapture/`:
+*   `RegionCaptureWindow`: Spans **all monitors** (Virtual Screen) with crosshair cursor
+*   Multi-monitor DPI handling
+*   Uses `System.Drawing.Graphics.CopyFromScreen` (GDI+) for pixel capture on Windows
 
 ## Contribution
-1.  Follow the internal `task.md` for prioritized items.
-2.  Ensure code compiles with `dotnet build`.
-3.  Keep UI logic separated in ViewModels/Views appropriately.
+1.  Review project documentation and existing code patterns
+2.  Ensure code compiles with `dotnet build` (0 errors)
+3.  Follow MVVM separation: UI logic in Views, business logic in ViewModels
+4.  Add XML documentation for public APIs
+5.  Test on multiple platforms when possible
 
 ## Building
 ```bash
 dotnet build ShareX.Avalonia.sln
+```
+
+## Testing
+```bash
+dotnet test
 ```

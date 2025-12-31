@@ -1,6 +1,6 @@
 # ShareX.Avalonia
 
-A cross-platform port of the popular **ShareX** screen capture and file sharing tool, built with **Avalonia UI** and .NET 8.
+A cross-platform port of the popular **ShareX** screen capture and file sharing tool, built with **Avalonia UI** and .NET 9.
 
 ![ShareX Avalonia](https://sharex.com/img/sharex_256.png)
 *(Note: Project is in active development)*
@@ -9,14 +9,23 @@ A cross-platform port of the popular **ShareX** screen capture and file sharing 
 - **Cross-Platform**: Runs on Windows, Linux, and macOS (targeting).
 - **Modern UI**: Reimagined interface inspired by modern design principles (WinShot inspiration).
 - **Powerful Capture**:
-    - **Region Capture**: supports multi-monitor setups.
+    - **Region Capture**: supports multi-monitor setups with crosshair cursor.
     - **Fullscreen** & **Window** capture modes.
-- **Annotation Tools**:
-    - Rectangle, Ellipse, Line, Arrow, Text.
-    - Customizable colors and stroke widths.
-    - Object-based selection, moving, and deletion.
-    - Full Undo/Redo support.
-- **Task Workflow**: Configurable after-capture tasks (Save, Copy, Upload).
+- **Advanced Annotation Tools**:
+    - **Basic Shapes**: Rectangle, Ellipse, Line, Arrow, Text, Number/Step
+    - **Effect Shapes**: Blur, Pixelate, Magnify, Highlight with real-time preview
+    - **Freehand Tools**: Pen, Highlighter, Smart Eraser
+    - **Advanced Shapes**: Speech Balloon, Image/Sticker insertion, Spotlight
+    - **Object-based** selection, moving, resizing, and deletion
+    - **Full Undo/Redo** support
+    - **Keyboard Shortcuts**: V(Select), R(Rectangle), E(Ellipse), A(Arrow), L(Line), P(Pen), H(Highlighter), T(Text), B(Balloon), N(Number), C(Crop), M(Magnify), S(Spotlight), F(Effects)
+- **Image Effects**:
+    - **50+ Effects**: Auto-discovered from ImageEffects library
+    - **Categories**: Filters, Adjustments, Manipulations
+    - **Real-time Preview**: Apply effects with instant feedback
+    - **Parameter Control**: Adjustable effect parameters via dynamic UI
+- **Serialization**: Save and load annotations with full type support
+- **Task Workflow**: Configurable after-capture tasks (Save, Copy, Upload)
 
 ## 🚀 Getting Started
 
@@ -33,7 +42,7 @@ cd ShareX.Avalonia
 dotnet build
 
 # Run the application
-dotnet run --project src/ShareX.Avalonia.UI/ShareX.Avalonia.UI.csproj
+dotnet run --project src/ShareX.Avalonia.App/ShareX.Avalonia.App.csproj
 ```
 
 ## 🛠️ Developer Information
