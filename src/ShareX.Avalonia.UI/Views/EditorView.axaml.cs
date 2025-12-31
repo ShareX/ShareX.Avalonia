@@ -36,22 +36,94 @@ namespace ShareX.Avalonia.UI.Views
                 if (e.Key == Key.Delete)
                 {
                     vm.DeleteSelectedCommand.Execute(null);
+                    e.Handled = true;
+                    return;
                 }
                 else if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
                 {
                      if (e.Key == Key.Z)
                      {
                          vm.UndoCommand.Execute(null);
+                         e.Handled = true;
+                         return;
                      }
                      else if (e.Key == Key.Y) // Standard Redo
                      {
                          vm.RedoCommand.Execute(null);
+                         e.Handled = true;
+                         return;
                      }
                 }
                 // Ctrl+Shift+Z is also common for Redo, check modifiers
                 else if (e.KeyModifiers.HasFlag(KeyModifiers.Control | KeyModifiers.Shift) && e.Key == Key.Z)
                 {
                     vm.RedoCommand.Execute(null);
+                    e.Handled = true;
+                    return;
+                }
+
+                // Tool shortcuts (no modifiers)
+                if (e.KeyModifiers == KeyModifiers.None)
+                {
+                    switch (e.Key)
+                    {
+                        case Key.V:
+                            vm.SelectToolCommand.Execute(EditorTool.Select);
+                            e.Handled = true;
+                            break;
+                        case Key.R:
+                            vm.SelectToolCommand.Execute(EditorTool.Rectangle);
+                            e.Handled = true;
+                            break;
+                        case Key.E:
+                            vm.SelectToolCommand.Execute(EditorTool.Ellipse);
+                            e.Handled = true;
+                            break;
+                        case Key.A:
+                            vm.SelectToolCommand.Execute(EditorTool.Arrow);
+                            e.Handled = true;
+                            break;
+                        case Key.L:
+                            vm.SelectToolCommand.Execute(EditorTool.Line);
+                            e.Handled = true;
+                            break;
+                        case Key.P:
+                            vm.SelectToolCommand.Execute(EditorTool.Pen);
+                            e.Handled = true;
+                            break;
+                        case Key.H:
+                            vm.SelectToolCommand.Execute(EditorTool.Highlighter);
+                            e.Handled = true;
+                            break;
+                        case Key.T:
+                            vm.SelectToolCommand.Execute(EditorTool.Text);
+                            e.Handled = true;
+                            break;
+                        case Key.B:
+                            vm.SelectToolCommand.Execute(EditorTool.SpeechBalloon);
+                            e.Handled = true;
+                            break;
+                        case Key.N:
+                            vm.SelectToolCommand.Execute(EditorTool.Number);
+                            e.Handled = true;
+                            break;
+                        case Key.C:
+                            vm.SelectToolCommand.Execute(EditorTool.Crop);
+                            e.Handled = true;
+                            break;
+                        case Key.M:
+                            vm.SelectToolCommand.Execute(EditorTool.Magnify);
+                            e.Handled = true;
+                            break;
+                        case Key.S:
+                            vm.SelectToolCommand.Execute(EditorTool.Spotlight);
+                            e.Handled = true;
+                            break;
+                        case Key.F:
+                            vm.ToggleEffectsPanelCommand.Execute(null);
+                            e.Handled = true;
+                            break;
+                    }
                 }
             }
         }
