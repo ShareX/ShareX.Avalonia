@@ -128,14 +128,30 @@ namespace ShareX.Avalonia.Platform.Windows
             if (image == null)
                 return;
 
-            try
+            // Windows clipboard operations may fail due to other applications
+            // Implement retry logic with delays
+            Exception? lastException = null;
+            for (int i = 0; i < 5; i++)
             {
-                Clipboard.SetImage(image);
+                try
+                {
+                    Clipboard.SetImage(image);
+                    return; // Success
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    System.Diagnostics.Debug.WriteLine($"Clipboard SetImage attempt {i + 1} failed: {ex.Message}");
+                    
+                    if (i < 4) // Don't sleep on last attempt
+                    {
+                        System.Threading.Thread.Sleep(100); // Wait 100ms before retry
+                    }
+                }
             }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to set clipboard image: {ex.Message}");
-            }
+            
+            // If all retries failed, throw the exception
+            throw new InvalidOperationException($"Failed to set clipboard image after 5 attempts: {lastException?.Message}", lastException);
         }
 
         public string[]? GetFileDropList()
