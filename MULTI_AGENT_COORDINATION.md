@@ -11,8 +11,8 @@ This document defines the coordination rules for parallel development on ShareX.
 | Agent | Platform | Role | Primary Scope |
 |-------|----------|------|---------------|
 | **Antigravity** | Windows (Claude) | Lead Developer | Architecture, platform abstraction, integration, merge decisions |
-| **Codex** | macOS (VS Code) | Backend Developer | Core logic, Helpers, Media, History, CLI, Settings |
-| **Copilot** | Surface Laptop 7 (VS Code) | UI Developer | ViewModels, Views, Services, UI wiring |
+| **Codex** | Surface Laptop 5 (VS Code) | Backend Developer | Core logic, Helpers, Media, History, CLI, Settings |
+| **Copilot** | Surface Laptop 7 (VS2026 IDE) | UI Developer | ViewModels, Views, Services, UI wiring |
 
 ---
 
