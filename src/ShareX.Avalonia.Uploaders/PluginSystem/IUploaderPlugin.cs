@@ -80,4 +80,10 @@ public interface IUploaderPlugin
     /// Returns default configuration instance
     /// </summary>
     object GetDefaultConfig();
+
+    /// <summary>
+    /// Event raised when the plugin's configuration has changed.
+    /// The host subscribes to this event to trigger saving UploadersConfig.
+    /// </summary>
+    event EventHandler? ConfigChanged;
 }

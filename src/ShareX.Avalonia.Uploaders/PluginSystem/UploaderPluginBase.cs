@@ -58,4 +58,17 @@ public abstract class UploaderPluginBase : IUploaderPlugin
     }
 
     public abstract object GetDefaultConfig();
+
+    /// <summary>
+    /// Event raised when the plugin's configuration has changed
+    /// </summary>
+    public event EventHandler? ConfigChanged;
+
+    /// <summary>
+    /// Raises the ConfigChanged event. Derived classes should call this when their config is modified.
+    /// </summary>
+    protected virtual void OnConfigChanged()
+    {
+        ConfigChanged?.Invoke(this, EventArgs.Empty);
+    }
 }

@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using ShareX.Ava.Core;
 using ShareX.Ava.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
 
@@ -47,11 +48,20 @@ public partial class DestinationSettingsViewModel : ViewModelBase
         foreach (var p in allProviders)
         {
             Common.DebugHelper.WriteLine($"[DestinationSettings]   - {p.Name} ({p.ProviderId})");
+            
+            // Subscribe to config change events from each provider
+            p.ConfigChanged += Provider_ConfigChanged;
         }
         
         Common.DebugHelper.WriteLine("[DestinationSettings] ========================================");
         
         LoadCategories();
+    }
+
+    private void Provider_ConfigChanged(object? sender, EventArgs e)
+    {
+        // Save uploaders config when any provider's configuration changes
+        SettingManager.SaveUploadersConfigAsync();
     }
 
     private void LoadCategories()

@@ -7,6 +7,8 @@ namespace ShareX.Ava.UI.ViewModels
 {
     public partial class SettingsViewModel : ViewModelBase
     {
+        private bool _isLoading = true;
+
         [ObservableProperty]
         private string _screenshotsFolder;
 
@@ -77,6 +79,7 @@ namespace ShareX.Ava.UI.ViewModels
         {
             HotkeySettings = new HotkeySettingsViewModel();
             LoadSettings();
+            _isLoading = false;
         }
 
         private void LoadSettings()
@@ -111,6 +114,17 @@ namespace ShareX.Ava.UI.ViewModels
             URLRegexReplace = taskSettings.UploadSettings.URLRegexReplace;
             URLRegexReplacePattern = taskSettings.UploadSettings.URLRegexReplacePattern;
             URLRegexReplaceReplacement = taskSettings.UploadSettings.URLRegexReplaceReplacement;
+        }
+
+        protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            base.OnPropertyChanged(e);
+            
+            // Auto-save when any property changes (after initial load)
+            if (!_isLoading && e.PropertyName != nameof(HotkeySettings))
+            {
+                SaveSettings();
+            }
         }
 
         [RelayCommand]

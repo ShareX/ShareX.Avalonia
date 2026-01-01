@@ -53,6 +53,20 @@ public partial class HotkeySettingsViewModel : ViewModelBase
         }
     }
 
+    /// <summary>
+    /// Sync manager's hotkeys to config and save to disk
+    /// </summary>
+    private void SaveHotkeys()
+    {
+        if (_manager != null)
+        {
+            // Sync to config
+            SettingManager.HotkeysConfig.Hotkeys = _manager.Hotkeys;
+            // Save to disk
+            SettingManager.SaveHotkeysConfigAsync();
+        }
+    }
+
     [RelayCommand]
     private void Add()
     {
@@ -65,6 +79,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
         _manager.Hotkeys.Add(newHotkey);
         
         LoadHotkeys();
+        SaveHotkeys();
     }
 
     [RelayCommand(CanExecute = nameof(CanModifyHotkey))]
@@ -76,6 +91,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
             // Also remove from manager's list if separate
             _manager.Hotkeys.Remove(SelectedHotkey.Model);
             LoadHotkeys();
+            SaveHotkeys();
             SelectedHotkey = null;
         }
     }
@@ -97,6 +113,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
                     _manager.RegisterHotkey(SelectedHotkey.Model);
                 }
                 SelectedHotkey.Refresh();
+                SaveHotkeys();
             }
         }
     }
@@ -115,6 +132,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
             // Just add to list, user needs to change key
             _manager.Hotkeys.Add(clone);
             LoadHotkeys();
+            SaveHotkeys();
         }
     }
 
@@ -129,6 +147,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
              _manager.Hotkeys.RemoveAt(index);
              _manager.Hotkeys.Insert(index - 1, SelectedHotkey.Model);
              LoadHotkeys();
+             SaveHotkeys();
              SelectedHotkey = Hotkeys[index - 1];
          }
     }
@@ -143,6 +162,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
              _manager.Hotkeys.RemoveAt(index);
              _manager.Hotkeys.Insert(index + 1, SelectedHotkey.Model);
              LoadHotkeys();
+             SaveHotkeys();
              SelectedHotkey = Hotkeys[index + 1];
          }
     }
@@ -155,6 +175,7 @@ public partial class HotkeySettingsViewModel : ViewModelBase
             var defaults = Core.Hotkeys.HotkeyManager.GetDefaultHotkeyList();
             _manager.UpdateHotkeys(defaults);
             LoadHotkeys();
+            SaveHotkeys();
         }
     }
 
