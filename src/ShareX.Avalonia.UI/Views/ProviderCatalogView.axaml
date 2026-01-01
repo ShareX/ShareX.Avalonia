@@ -25,22 +25,44 @@
             <ItemsControl ItemsSource="{Binding AvailableProviders}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
-                                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
-                                BorderThickness="1"
-                                CornerRadius="6"
-                                Padding="16"
+                        <Button Command="{Binding SelectCommand}"
                                 Margin="0,0,0,12"
+                                Padding="0"
+                                HorizontalAlignment="Stretch"
+                                HorizontalContentAlignment="Stretch"
                                 Cursor="Hand"
-                                Tapped="OnProviderTapped"
-                                Tag="{Binding}">
-                            <Border.Styles>
-                                <Style Selector="Border:pointerover">
+                                Background="Transparent"
+                                BorderThickness="0">
+                            <Button.Styles>
+                                <Style Selector="Button">
+                                    <Setter Property="Template">
+                                        <ControlTemplate>
+                                            <Border Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                                                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                                    BorderThickness="1"
+                                                    CornerRadius="6"
+                                                    Padding="16">
+                                                <ContentPresenter Content="{TemplateBinding Content}"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter>
+                                </Style>
+                                <Style Selector="Button:pointerover /template/ Border">
                                     <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}"/>
                                     <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
                                 </Style>
-                            </Border.Styles>
+                                <Style Selector="Button[Tag=True] /template/ Border">
+                                    <Setter Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}"/>
+                                    <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
+                                    <Setter Property="BorderThickness" Value="2"/>
+                                </Style>
+                            </Button.Styles>
                             
+                            <!-- Bind Tag to IsSelected for styling -->
+                            <Button.Tag>
+                                <Binding Path="IsSelected"/>
+                            </Button.Tag>
+
                             <Grid ColumnDefinitions="Auto,*,Auto">
                                 <!-- Radio Indicator -->
                                 <Border Grid.Column="0"
@@ -82,7 +104,7 @@
                                       VerticalAlignment="Top"
                                       IsVisible="{Binding !!SupportedFileTypesDisplay}"/>
                             </Grid>
-                        </Border>
+                        </Button>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
