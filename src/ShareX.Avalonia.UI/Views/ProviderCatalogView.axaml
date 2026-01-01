@@ -24,8 +24,9 @@
         <ScrollViewer Grid.Row="1" Padding="20">
             <ItemsControl ItemsSource="{Binding AvailableProviders}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="vm:ProviderViewModel">
                         <Button Command="{Binding SelectCommand}"
+                                Classes.selected="{Binding IsSelected}"
                                 Margin="0,0,0,12"
                                 Padding="0"
                                 HorizontalAlignment="Stretch"
@@ -51,17 +52,12 @@
                                     <Setter Property="Background" Value="{DynamicResource CardBackgroundFillColorSecondaryBrush}"/>
                                     <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
                                 </Style>
-                                <Style Selector="Button[Tag=True] /template/ Border">
+                                <Style Selector="Button.selected /template/ Border">
                                     <Setter Property="Background" Value="{DynamicResource AccentFillColorSecondaryBrush}"/>
                                     <Setter Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}"/>
                                     <Setter Property="BorderThickness" Value="2"/>
                                 </Style>
                             </Button.Styles>
-                            
-                            <!-- Bind Tag to IsSelected for styling -->
-                            <Button.Tag>
-                                <Binding Path="IsSelected"/>
-                            </Button.Tag>
 
                             <Grid ColumnDefinitions="Auto,*,Auto">
                                 <!-- Radio Indicator -->
