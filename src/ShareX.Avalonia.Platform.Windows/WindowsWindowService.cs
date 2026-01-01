@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
+using ShareX.Ava.Common.Helpers;
 using ShareX.Ava.Platform.Abstractions;
 using System;
 using System.Collections.Generic;
@@ -59,7 +60,7 @@ namespace ShareX.Ava.Platform.Windows
 
         public Rectangle GetWindowBounds(IntPtr handle)
         {
-            return NativeMethods.GetWindowRect(handle);
+            return CaptureHelpers.GetWindowRectangle(handle);
         }
 
         public Rectangle GetWindowClientBounds(IntPtr handle)
