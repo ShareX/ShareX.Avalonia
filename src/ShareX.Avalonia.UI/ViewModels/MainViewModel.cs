@@ -461,6 +461,9 @@ namespace ShareX.Ava.UI.ViewModels
             ImageDimensions = "No image";
             StatusText = "Ready";
             ResetNumberCounter();
+            
+            // Clear annotations as well
+            ClearAnnotationsRequested?.Invoke(this, EventArgs.Empty);
         }
 
         // Event for View to handle clipboard copy (requires TopLevel access)
