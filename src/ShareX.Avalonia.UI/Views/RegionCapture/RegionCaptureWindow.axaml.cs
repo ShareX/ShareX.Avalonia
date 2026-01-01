@@ -183,9 +183,52 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             overlay.Data = darkeningGeometry;
         }
 
+        private void CancelSelection()
+        {
+            // Hide selection border and info text
+            var border = this.FindControl<Border>("SelectionBorder");
+            if (border != null)
+            {
+                border.IsVisible = false;
+            }
+
+            var infoText = this.FindControl<TextBlock>("InfoText");
+            if (infoText != null)
+            {
+                infoText.IsVisible = false;
+            }
+
+            // Reset to full screen dimming
+            InitializeFullScreenDarkening();
+
+            // Reset selection state
+            _isSelecting = false;
+        }
+
         private void OnPointerPressed(object sender, PointerPressedEventArgs e)
         {
             var point = e.GetCurrentPoint(this);
+            
+            // Handle right-click
+            if (point.Properties.IsRightButtonPressed)
+            {
+                if (_isSelecting)
+                {
+                    // Cancel current selection
+                    CancelSelection();
+                    e.Handled = true;
+                }
+                else
+                {
+                    // No active selection - close the window
+                    _tcs.TrySetResult(System.Drawing.Rectangle.Empty);
+                    Close();
+                    e.Handled = true;
+                }
+                return;
+            }
+            
+            // Handle left-click to start selection
             if (point.Properties.IsLeftButtonPressed)
             {
                 _startPoint = point.Position;
@@ -208,9 +251,18 @@ namespace ShareX.Ava.UI.Views.RegionCapture
 
         private void OnPointerMoved(object sender, PointerEventArgs e)
         {
+            // Check for right-click during drag to cancel selection
+            var point = e.GetCurrentPoint(this);
+            if (point.Properties.IsRightButtonPressed && _isSelecting)
+            {
+                CancelSelection();
+                e.Handled = true;
+                return;
+            }
+
             if (!_isSelecting) return;
 
-            var currentPoint = e.GetCurrentPoint(this).Position;
+            var currentPoint = point.Position;
             var border = this.FindControl<Border>("SelectionBorder");
             var infoText = this.FindControl<TextBlock>("InfoText");
 
