@@ -49,6 +49,7 @@ public class HotkeySettings
     /// The action to execute when this hotkey is triggered.
     /// Proxies to TaskSettings.Job.
     /// </summary>
+    [Newtonsoft.Json.JsonIgnore]
     public HotkeyType Job 
     { 
         get => TaskSettings.Job;
