@@ -144,7 +144,7 @@ namespace ShareX.Ava.UI.ViewModels
             taskSettings.UploadSettings.URLRegexReplacePattern = URLRegexReplacePattern;
             taskSettings.UploadSettings.URLRegexReplaceReplacement = URLRegexReplaceReplacement;
             
-            SettingManager.Save();
+            SettingManager.SaveApplicationConfig();
         }
 
         [RelayCommand]
