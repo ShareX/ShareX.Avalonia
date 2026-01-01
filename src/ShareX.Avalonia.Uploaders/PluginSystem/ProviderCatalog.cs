@@ -175,6 +175,40 @@ public static class ProviderCatalog
     /// </summary>
     public static bool ArePluginsLoaded() => _pluginsLoaded;
 
+    private static bool _builtInInitialized = false;
+
+    /// <summary>
+    /// Initialize built-in providers by scanning the current assembly
+    /// </summary>
+    public static void InitializeBuiltInProviders()
+    {
+        lock (_lock)
+        {
+            if (_builtInInitialized) return;
+
+            var providerTypes = typeof(ProviderCatalog).Assembly.GetTypes()
+                .Where(t => typeof(IUploaderProvider).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
+
+            foreach (var type in providerTypes)
+            {
+                try
+                {
+                    // Check if it has a parameterless constructor
+                    if (type.GetConstructor(Type.EmptyTypes) != null)
+                    {
+                        Activator.CreateInstance(type);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    DebugHelper.WriteLine($"Error initializing built-in provider {type.Name}: {ex.Message}");
+                }
+            }
+
+            _builtInInitialized = true;
+        }
+    }
+
     /// <summary>
     /// Clear all providers (for testing)
     /// </summary>
@@ -185,6 +219,7 @@ public static class ProviderCatalog
             _providers.Clear();
             _pluginMetadata.Clear();
             _pluginsLoaded = false;
+            _builtInInitialized = false;
         }
     }
 }

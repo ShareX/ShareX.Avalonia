@@ -37,7 +37,7 @@ public partial class ProviderCatalogViewModel : ViewModelBase
         
         foreach (var provider in providers)
         {
-            AvailableProviders.Add(new ProviderViewModel(provider));
+            AvailableProviders.Add(new ProviderViewModel(provider, Category));
         }
     }
 
@@ -93,13 +93,28 @@ public partial class ProviderViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isSelected;
 
+    [ObservableProperty]
+    private string _supportedFileTypesDisplay = string.Empty;
+
     public UploaderCategory[] SupportedCategories { get; }
 
-    public ProviderViewModel(IUploaderProvider provider)
+    public ProviderViewModel(IUploaderProvider provider, UploaderCategory? filterCategory = null)
     {
         _providerId = provider.ProviderId;
         _name = provider.Name;
         _description = provider.Description;
         SupportedCategories = provider.SupportedCategories;
+
+        // Display supported file types for the filter category if provided
+        if (filterCategory.HasValue)
+        {
+            var fileTypes = provider.GetSupportedFileTypes();
+            if (fileTypes.TryGetValue(filterCategory.Value, out var types))
+            {
+                var displayTypes = types.Take(8).Select(t => $".{t}");  
+                var typeStr = string.Join(", ", displayTypes);
+                SupportedFileTypesDisplay = types.Length > 8 ? $"{typeStr}, +{types.Length - 8} more" : typeStr;
+            }
+        }
     }
 }

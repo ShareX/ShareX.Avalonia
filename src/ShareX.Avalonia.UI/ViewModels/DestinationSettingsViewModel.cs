@@ -14,9 +14,28 @@ public partial class DestinationSettingsViewModel : ViewModelBase
 
     public DestinationSettingsViewModel()
     {
-        // Initialize providers on first load
-        ProviderInitializer.Initialize();
-        
+        // Constructor is now empty, initialization moved to Initialize()
+    }
+
+    public async Task Initialize()
+    {
+        // Initialize built-in providers
+        ProviderCatalog.InitializeBuiltInProviders();
+
+        // Load external plugins from Plugins folder
+        try
+        {
+            var pluginsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+            if (Directory.Exists(pluginsPath))
+            {
+                ProviderCatalog.LoadPlugins(pluginsPath);
+            }
+        }
+        catch (Exception ex)
+        {
+            Common.DebugHelper.WriteException(ex, "Failed to load plugins");
+        }
+
         LoadCategories();
     }
 

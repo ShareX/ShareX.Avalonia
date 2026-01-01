@@ -1,11 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 
-namespace ShareX.Imgur.Plugin.Views;
+namespace ShareX.Ava.UI.Views;
 
-public partial class ImgurConfigView : UserControl
+public partial class ProviderCatalogView : UserControl
 {
-    public ImgurConfigView()
+    public ProviderCatalogView()
     {
         InitializeComponent();
     }
