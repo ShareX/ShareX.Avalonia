@@ -40,18 +40,28 @@ public partial class AnnotationCanvasViewModel : ObservableObject
     private readonly Stack<string> _undoStack = new();
     private readonly Stack<string> _redoStack = new();
 
+    private int _numberCounter = 1;
+    public int NumberCounter
+    {
+        get => _numberCounter;
+        set => SetProperty(ref _numberCounter, value);
+    }
+
     public AnnotationCanvasViewModel()
     {
         Annotations = new ObservableCollection<Annotation>();
         PushState();
     }
 
-    public void AddAnnotation(Annotation annotation)
+    public void AddAnnotation(Annotation annotation, bool pushState = true)
     {
         Annotations.Add(annotation);
         SelectedAnnotation = annotation;
-        PushState();
-        _redoStack.Clear();
+        if (pushState)
+        {
+            PushState();
+            _redoStack.Clear();
+        }
     }
 
     public void RemoveSelected()
@@ -117,5 +127,10 @@ public partial class AnnotationCanvasViewModel : ObservableObject
             Annotations.Add(a);
         }
         SelectedAnnotation = null;
+    }
+
+    public void IncrementNumberCounter()
+    {
+        NumberCounter++;
     }
 }

@@ -37,6 +37,7 @@ using ShareX.Ava.UI.Controls;
 using System.ComponentModel;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using System;
 
 namespace ShareX.Ava.UI.Views
 {
@@ -62,15 +63,17 @@ namespace ShareX.Ava.UI.Views
         {
             base.OnLoaded(e);
 
-            if (this.FindControl<AnnotationCanvas>("AnnotationCanvasControl") is { } canvas)
-            {
-                canvas.ViewModel = _canvasViewModel;
-                canvas.Focusable = true;
-                canvas.Focus();
-            }
-
             if (DataContext is MainViewModel vm)
             {
+                if (this.FindControl<AnnotationCanvas>("AnnotationCanvasControl") is { } canvas)
+                {
+                    canvas.ViewModel = _canvasViewModel;
+                    canvas.Focusable = true;
+                    canvas.Focus();
+                    canvas.CropRequested += OnCropRequested;
+                    canvas.SourceImage = vm.PreviewImage;
+                }
+
                 vm.UndoRequested += OnUndoRequested;
                 vm.RedoRequested += OnRedoRequested;
                 vm.DeleteRequested += OnDeleteRequested;
@@ -88,6 +91,10 @@ namespace ShareX.Ava.UI.Views
 
         protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
         {
+            if (this.FindControl<AnnotationCanvas>("AnnotationCanvasControl") is { } canvas)
+            {
+                canvas.CropRequested -= OnCropRequested;
+            }
             if (DataContext is MainViewModel vm)
             {
                 vm.UndoRequested -= OnUndoRequested;
@@ -108,6 +115,7 @@ namespace ShareX.Ava.UI.Views
             _canvasViewModel.ActiveTool = vm.ActiveTool;
             _canvasViewModel.StrokeColor = vm.SelectedColor;
             _canvasViewModel.StrokeWidth = vm.StrokeWidth;
+            _canvasViewModel.NumberCounter = vm.NumberCounter;
         }
 
         private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -127,8 +135,15 @@ namespace ShareX.Ava.UI.Views
             }
             else if (e.PropertyName == nameof(MainViewModel.PreviewImage))
             {
-                // clear annotations on new image
                 _canvasViewModel.Clear();
+                if (this.FindControl<AnnotationCanvas>("AnnotationCanvasControl") is { } canvas)
+                {
+                    canvas.SourceImage = vm.PreviewImage;
+                }
+            }
+            else if (e.PropertyName == nameof(MainViewModel.NumberCounter))
+            {
+                _canvasViewModel.NumberCounter = vm.NumberCounter;
             }
         }
 
@@ -359,6 +374,27 @@ namespace ShareX.Ava.UI.Views
             messageBox.Content = panel;
 
             await messageBox.ShowDialog(TopLevel.GetTopLevel(this) as Window);
+        }
+
+        private void OnCropRequested(object? sender, Rect rect)
+        {
+            if (DataContext is not MainViewModel vm) return;
+            if (vm.PreviewImage == null) return;
+
+            var zoom = Math.Max(0.0001, vm.Zoom);
+            var x = (int)Math.Round(rect.X / zoom);
+            var y = (int)Math.Round(rect.Y / zoom);
+            var w = (int)Math.Round(rect.Width / zoom);
+            var h = (int)Math.Round(rect.Height / zoom);
+
+            x = Math.Clamp(x, 0, (int)vm.ImageWidth);
+            y = Math.Clamp(y, 0, (int)vm.ImageHeight);
+            w = Math.Clamp(w, 0, (int)vm.ImageWidth - x);
+            h = Math.Clamp(h, 0, (int)vm.ImageHeight - y);
+
+            vm.CropImage(x, y, w, h);
+            vm.StatusText = "Image cropped";
+            _canvasViewModel.Clear();
         }
 
         public void PerformCrop()

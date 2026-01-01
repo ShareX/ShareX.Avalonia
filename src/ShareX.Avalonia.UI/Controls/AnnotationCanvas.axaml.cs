@@ -9,11 +9,16 @@ using Avalonia.Media;
 using Avalonia.Markup.Xaml;
 using ShareX.Ava.Annotations.Models;
 using ShareX.Ava.UI.ViewModels;
+using ShareX.Ava.UI.Helpers;
+using SkiaSharp;
+using Avalonia.Media.Imaging;
 
 namespace ShareX.Ava.UI.Controls;
 
 public partial class AnnotationCanvas : UserControl
 {
+    public event EventHandler<Rect>? CropRequested;
+
     public static readonly StyledProperty<AnnotationCanvasViewModel?> ViewModelProperty =
         AvaloniaProperty.Register<AnnotationCanvas, AnnotationCanvasViewModel?>(nameof(ViewModel));
 
@@ -21,6 +26,15 @@ public partial class AnnotationCanvas : UserControl
     {
         get => GetValue(ViewModelProperty);
         set => SetValue(ViewModelProperty, value);
+    }
+
+    public static readonly StyledProperty<Bitmap?> SourceImageProperty =
+        AvaloniaProperty.Register<AnnotationCanvas, Bitmap?>(nameof(SourceImage));
+
+    public Bitmap? SourceImage
+    {
+        get => GetValue(SourceImageProperty);
+        set => SetValue(SourceImageProperty, value);
     }
 
     private Canvas? _canvas;
@@ -36,6 +50,25 @@ public partial class AnnotationCanvas : UserControl
     private TextBox? _textEditor;
 
     private const double HandleSize = 8;
+
+    private bool _isCropping;
+
+    private SKBitmap? _cachedSourceSk;
+
+    static AnnotationCanvas()
+    {
+        SourceImageProperty.Changed.AddClassHandler<AnnotationCanvas>((o, e) => o.OnSourceImageChanged());
+    }
+
+    private void OnSourceImageChanged()
+    {
+        _cachedSourceSk?.Dispose();
+        _cachedSourceSk = null;
+        if (SourceImage != null)
+        {
+            _cachedSourceSk = BitmapConversionHelpers.ToSKBitmap(SourceImage);
+        }
+    }
 
     public AnnotationCanvas()
     {
@@ -109,7 +142,7 @@ public partial class AnnotationCanvas : UserControl
             annotation.Render(context);
         }
 
-        if (ViewModel.SelectedAnnotation != null)
+        if (ViewModel.SelectedAnnotation != null && ViewModel.SelectedAnnotation is not CropAnnotation)
         {
             var bounds = ViewModel.SelectedAnnotation.GetBounds();
             var selectionPen = new Pen(Brushes.DodgerBlue, 1, dashStyle: new DashStyle(new double[] { 4, 4 }, 0));
@@ -191,9 +224,24 @@ public partial class AnnotationCanvas : UserControl
             return;
         }
 
-        _activeAnnotation = CreateAnnotation(ViewModel.ActiveTool, pos, ViewModel.StrokeColor, ViewModel.StrokeWidth);
+        if (ViewModel.ActiveTool == EditorTool.Crop)
+        {
+            var crop = new CropAnnotation { StartPoint = pos, EndPoint = pos };
+            _activeAnnotation = crop;
+            _isDrawing = true;
+            _isCropping = true;
+            ViewModel.AddAnnotation(crop, pushState: false);
+            e.Pointer.Capture(this);
+            return;
+        }
+
+        _activeAnnotation = CreateAnnotation(ViewModel.ActiveTool, pos, ViewModel.StrokeColor, ViewModel.StrokeWidth, ViewModel.NumberCounter);
         if (_activeAnnotation != null)
         {
+            if (_activeAnnotation is NumberAnnotation)
+            {
+                ViewModel.IncrementNumberCounter();
+            }
             ViewModel.AddAnnotation(_activeAnnotation);
             _isDrawing = true;
             e.Pointer.Capture(this);
@@ -236,8 +284,25 @@ public partial class AnnotationCanvas : UserControl
         if (_isDrawing)
         {
             _isDrawing = false;
+
+            if (_isCropping && _activeAnnotation is CropAnnotation crop)
+            {
+                var rect = new Rect(crop.StartPoint, crop.EndPoint);
+                rect = new Rect(Math.Min(rect.Left, rect.Right), Math.Min(rect.Top, rect.Bottom), Math.Abs(rect.Width), Math.Abs(rect.Height));
+                CropRequested?.Invoke(this, rect);
+                ViewModel.Annotations.Remove(crop);
+                _isCropping = false;
+            }
+            else
+            {
+                if (_activeAnnotation is BaseEffectAnnotation effect)
+                {
+                    UpdateEffect(effect);
+                }
+                ViewModel.CommitCurrentState();
+            }
+
             _activeAnnotation = null;
-            ViewModel.CommitCurrentState();
         }
 
         if (_isMoving || _isResizing)
@@ -245,6 +310,10 @@ public partial class AnnotationCanvas : UserControl
             _isMoving = false;
             _isResizing = false;
             _activeHandle = HandleKind.None;
+            if (ViewModel.SelectedAnnotation is BaseEffectAnnotation eff)
+            {
+                UpdateEffect(eff);
+            }
             ViewModel.CommitCurrentState();
         }
 
@@ -309,6 +378,13 @@ public partial class AnnotationCanvas : UserControl
             case FreehandAnnotation freehand:
                 freehand.Points.Add(current);
                 freehand.EndPoint = current;
+                break;
+            case CropAnnotation crop:
+                crop.EndPoint = current;
+                break;
+            case SpotlightAnnotation spot:
+                spot.EndPoint = current;
+                spot.CanvasSize = new Size(SourceImage?.Size.Width ?? Bounds.Width, SourceImage?.Size.Height ?? Bounds.Height);
                 break;
             default:
                 annotation.EndPoint = current;
@@ -379,7 +455,7 @@ public partial class AnnotationCanvas : UserControl
         }
     }
 
-    private Annotation? CreateAnnotation(EditorTool tool, Point start, string color, double width)
+    private Annotation? CreateAnnotation(EditorTool tool, Point start, string color, double width, int numberCounter)
     {
         switch (tool)
         {
@@ -392,12 +468,59 @@ public partial class AnnotationCanvas : UserControl
             case EditorTool.Arrow:
                 return new ArrowAnnotation { StartPoint = start, EndPoint = start, StrokeColor = color, StrokeWidth = width };
             case EditorTool.Highlighter:
-                return new HighlightAnnotation { StartPoint = start, EndPoint = start, StrokeColor = color, StrokeWidth = width };
+                var c = Color.Parse(color);
+                var hlColor = Color.FromArgb(0x55, c.R, c.G, c.B);
+                return new HighlightAnnotation { StartPoint = start, EndPoint = start, StrokeColor = hlColor.ToString(), StrokeWidth = width };
             case EditorTool.Pen:
                 return new FreehandAnnotation { StartPoint = start, EndPoint = start, StrokeColor = color, StrokeWidth = width, Points = new List<Point> { start } };
+            case EditorTool.SmartEraser:
+                var erase = new SmartEraserAnnotation { StartPoint = start, EndPoint = start, Points = new List<Point> { start } };
+                var sampled = SampleColor(start);
+                if (!string.IsNullOrEmpty(sampled)) erase.StrokeColor = sampled!;
+                return erase;
+            case EditorTool.Number:
+                return new NumberAnnotation
+                {
+                    StartPoint = start,
+                    EndPoint = start,
+                    StrokeColor = color,
+                    StrokeWidth = width,
+                    Number = numberCounter,
+                    Radius = Math.Max(12, width * 4),
+                    FontSize = Math.Max(12, width * 6)
+                };
+            case EditorTool.Crop:
+                return new CropAnnotation { StartPoint = start, EndPoint = start };
+            case EditorTool.Blur:
+                return new BlurAnnotation { StartPoint = start, EndPoint = start, StrokeColor = color, StrokeWidth = width };
+            case EditorTool.Pixelate:
+                return new PixelateAnnotation { StartPoint = start, EndPoint = start, StrokeColor = color, StrokeWidth = width };
+            case EditorTool.Magnify:
+                return new MagnifyAnnotation { StartPoint = start, EndPoint = start, StrokeColor = color, StrokeWidth = width };
+            case EditorTool.Spotlight:
+                return new SpotlightAnnotation { StartPoint = start, EndPoint = start, CanvasSize = new Size(SourceImage?.Size.Width ?? Bounds.Width, SourceImage?.Size.Height ?? Bounds.Height) };
+            case EditorTool.SpeechBalloon:
+                return new SpeechBalloonAnnotation { StartPoint = start, EndPoint = new Point(start.X + 120, start.Y + 80), StrokeColor = color, StrokeWidth = width };
             default:
                 return null;
         }
+    }
+
+    private string? SampleColor(Point point)
+    {
+        if (_cachedSourceSk == null) return null;
+        int x = (int)Math.Round(point.X);
+        int y = (int)Math.Round(point.Y);
+        if (x < 0 || y < 0 || x >= _cachedSourceSk.Width || y >= _cachedSourceSk.Height) return null;
+        var c = _cachedSourceSk.GetPixel(x, y);
+        return $"#{c.Red:X2}{c.Green:X2}{c.Blue:X2}";
+    }
+
+    private void UpdateEffect(BaseEffectAnnotation effect)
+    {
+        if (_cachedSourceSk == null) return;
+        effect.UpdateEffect(_cachedSourceSk);
+        InvalidateVisual();
     }
 
     private void BeginTextEdit(Point pos)
