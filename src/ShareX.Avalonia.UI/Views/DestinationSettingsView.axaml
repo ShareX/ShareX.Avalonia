@@ -67,14 +67,14 @@
                                         <Button.Flyout>
                                             <MenuFlyout>
                                                 <MenuItem Header="Set as Default" 
-                                                          Command="{Binding $parent[ListBox].((vm:DestinationSettingsViewModel)DataContext).SelectedCategory.SetAsDefaultCommand}"
+                                                          Command="{Binding $parent[ListBox].DataContext.SelectedCategory.SetAsDefaultCommand}"
                                                           CommandParameter="{Binding}"/>
                                                 <MenuItem Header="Duplicate" 
-                                                          Command="{Binding $parent[ListBox].((vm:DestinationSettingsViewModel)DataContext).SelectedCategory.DuplicateInstanceCommand}"
+                                                          Command="{Binding $parent[ListBox].DataContext.SelectedCategory.DuplicateInstanceCommand}"
                                                           CommandParameter="{Binding}"/>
                                                 <Separator/>
                                                 <MenuItem Header="Remove" 
-                                                          Command="{Binding $parent[ListBox].((vm:DestinationSettingsViewModel)DataContext).SelectedCategory.RemoveInstanceCommand}"
+                                                          Command="{Binding $parent[ListBox].DataContext.SelectedCategory.RemoveInstanceCommand}"
                                                           CommandParameter="{Binding}"/>
                                             </MenuFlyout>
                                         </Button.Flyout>
