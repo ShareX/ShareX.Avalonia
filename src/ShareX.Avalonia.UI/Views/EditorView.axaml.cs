@@ -427,6 +427,12 @@ namespace ShareX.Ava.UI.Views
                 return;
             }
 
+            // Skip handles for Grid controls (Number/Step tool) - they have fixed size and don't need resizing
+            if (_selectedShape is Grid)
+            {
+                return;
+            }
+
             // Skip handles for shapes without measurable bounds (e.g., other lines)
             if (_selectedShape.Bounds.Width <= 0 || _selectedShape.Bounds.Height <= 0) return;
 
@@ -864,6 +870,40 @@ namespace ShareX.Ava.UI.Views
                 }
             }
 
+            // Allow dragging selected shapes even when not in Select tool mode
+            // This enables immediate repositioning after creating an annotation
+            if (_selectedShape != null && vm.ActiveTool != EditorTool.Select)
+            {
+                // Hit test to see if we clicked on the selected shape
+                var hitSource = e.Source as global::Avalonia.Visual;
+                Control? hitTarget = null;
+
+                while (hitSource != null && hitSource != canvas)
+                {
+                    if (canvas.Children.Contains(hitSource as Control))
+                    {
+                        hitTarget = hitSource as Control;
+                        break;
+                    }
+                    hitSource = hitSource.GetVisualParent();
+                }
+
+                // If we clicked on the currently selected shape, start dragging it
+                if (hitTarget == _selectedShape)
+                {
+                    _lastDragPoint = point;
+                    _isDraggingShape = true;
+                    e.Pointer.Capture(canvas);
+                    return;
+                }
+                else
+                {
+                    // Clicked elsewhere, deselect and continue with new shape creation
+                    _selectedShape = null;
+                    UpdateSelectionHandles();
+                }
+            }
+
             if (vm.ActiveTool == EditorTool.Select)
             {
                 // Hit test - find the direct child of the canvas
@@ -1166,7 +1206,7 @@ namespace ShareX.Ava.UI.Views
                     break;
 
                 case EditorTool.Number:
-                    // Use existing number logic (it was here before)
+                    // Create number annotation
                     var numberGrid = new Grid
                     {
                         Width = 30,
@@ -1199,21 +1239,29 @@ namespace ShareX.Ava.UI.Views
                     vm.NumberCounter++;
 
                     canvas.Children.Add(numberGrid);
-                    _undoStack.Push(numberGrid);
-                    _redoStack.Clear();
-                    _currentShape = null;
-                    _isDrawing = false;
-                    return;
+                    // Number is positioned and added to canvas, but keep _isDrawing true
+                    // so it goes through OnCanvasPointerReleased for auto-selection
+                    break;
             }
 
             if (_currentShape != null)
             {
-                if (vm.ActiveTool != EditorTool.Line && vm.ActiveTool != EditorTool.Arrow && vm.ActiveTool != EditorTool.Pen && vm.ActiveTool != EditorTool.SmartEraser && vm.ActiveTool != EditorTool.Spotlight)
+                // Number tool already adds itself to canvas, so don't add it again
+                if (vm.ActiveTool == EditorTool.Number)
+                {
+                    // Number is already added to canvas, nothing more to do here
+                    // Keep _isDrawing true so it goes through OnCanvasPointerReleased properly
+                }
+                else if (vm.ActiveTool != EditorTool.Line && vm.ActiveTool != EditorTool.Arrow && vm.ActiveTool != EditorTool.Pen && vm.ActiveTool != EditorTool.SmartEraser && vm.ActiveTool != EditorTool.Spotlight)
                 {
                     Canvas.SetLeft(_currentShape, _startPoint.X);
                     Canvas.SetTop(_currentShape, _startPoint.Y);
+                    canvas.Children.Add(_currentShape);
                 }
-                canvas.Children.Add(_currentShape);
+                else
+                {
+                    canvas.Children.Add(_currentShape);
+                }
             }
         }
 
@@ -1334,6 +1382,17 @@ namespace ShareX.Ava.UI.Views
             {
                 var deltaX = currentPoint.X - _lastDragPoint.X;
                 var deltaY = currentPoint.Y - _lastDragPoint.Y;
+
+                // Special handling for moving Lines - update start and end points
+                if (_selectedShape is global::Avalonia.Controls.Shapes.Line targetLine)
+                {
+                    targetLine.StartPoint = new Point(targetLine.StartPoint.X + deltaX, targetLine.StartPoint.Y + deltaY);
+                    targetLine.EndPoint = new Point(targetLine.EndPoint.X + deltaX, targetLine.EndPoint.Y + deltaY);
+
+                    _lastDragPoint = currentPoint;
+                    UpdateSelectionHandles();
+                    return;
+                }
 
                 // Special handling for moving arrows - update stored endpoints
                 if (_selectedShape is global::Avalonia.Controls.Shapes.Path arrowPath && DataContext is MainViewModel vm)
