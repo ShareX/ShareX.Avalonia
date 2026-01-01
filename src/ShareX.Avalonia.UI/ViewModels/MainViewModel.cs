@@ -606,11 +606,13 @@ namespace ShareX.Ava.UI.ViewModels
 
         private async Task ExecuteCapture(HotkeyType jobType, AfterCaptureTasks afterCapture = AfterCaptureTasks.SaveImageToFile)
         {
-            var settings = new TaskSettings
-            {
-                Job = jobType,
-                AfterCaptureJob = afterCapture
-            };
+            // Clone default settings to use user's config (paths, patterns, etc.)
+            var defaultSettings = SettingManager.Settings.DefaultTaskSettings;
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(defaultSettings);
+            var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskSettings>(json)!; // Bang for non-null
+
+            settings.Job = jobType;
+            settings.AfterCaptureJob = afterCapture;
 
             var task = WorkerTask.Create(settings);
             Tasks.Add(task);
@@ -634,7 +636,6 @@ namespace ShareX.Ava.UI.ViewModels
             using var ms = new System.IO.MemoryStream();
             image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
             ms.Position = 0;
-            PreviewImage = new Bitmap(ms);
             PreviewImage = new Bitmap(ms);
             // HasPreviewImage = true; // Handled by OnPreviewImageChanged
             ImageDimensions = $"{image.Width} x {image.Height}";

@@ -34,6 +34,9 @@ namespace ShareX.Ava.App
         public static void Main(string[] args)
         {
             InitializePlatformServices();
+            
+            // Initialize settings
+            ShareX.Ava.Core.SettingManager.LoadInitialSettings();
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);

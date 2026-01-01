@@ -237,8 +237,8 @@ public class ApplicationConfig : SettingsBase<ApplicationConfig>
     [Category("Upload"), DefaultValue(100), Description("Large file size warning threshold in MB.")]
     public int ShowLargeFileSizeWarning { get; set; }
 
-    [Category("Paths"), DefaultValue(false), Description("Use machine-specific uploaders config.")]
-    public bool UseMachineSpecificUploadersConfig { get; set; }
+    [Category("Paths"), DefaultValue(true), Description("Use machine-specific uploaders config.")]
+    public bool UseMachineSpecificUploadersConfig { get; set; } = true;
 
     [Category("Paths"), Description("Custom uploaders config path.")]
     public string CustomUploadersConfigPath { get; set; } = "";

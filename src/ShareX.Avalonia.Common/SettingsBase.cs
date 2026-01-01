@@ -23,11 +23,307 @@
 
 #endregion License Information (GPL v3)
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using System.ComponentModel;
+using System.Text;
+
 namespace ShareX.Ava.Common
 {
     public abstract class SettingsBase<T> where T : SettingsBase<T>, new()
     {
+        public delegate void SettingsSavedEventHandler(T settings, string filePath, bool result);
+        public event SettingsSavedEventHandler? SettingsSaved;
+
+        public delegate void SettingsSaveFailedEventHandler(Exception e);
+        public event SettingsSaveFailedEventHandler? SettingsSaveFailed;
+
+        [Browsable(false), JsonIgnore]
         public string? FilePath { get; protected set; }
+
+        [Browsable(false)]
         public string? ApplicationVersion { get; set; }
+
+        [Browsable(false), JsonIgnore]
+        public bool IsFirstTimeRun { get; private set; }
+
+        [Browsable(false), JsonIgnore]
+        public bool IsUpgrade { get; private set; }
+
+        [Browsable(false), JsonIgnore]
+        public string? BackupFolder { get; set; }
+
+        [Browsable(false), JsonIgnore]
+        public bool CreateBackup { get; set; }
+
+        [Browsable(false), JsonIgnore]
+        public bool CreateWeeklyBackup { get; set; }
+
+        [Browsable(false), JsonIgnore]
+        public bool SupportDPAPIEncryption { get; set; }
+
+        public bool IsUpgradeFrom(string version)
+        {
+            // TODO: Implement Helpers.CompareVersion logic if needed
+            return IsUpgrade && String.Compare(ApplicationVersion, version, StringComparison.Ordinal) <= 0;
+        }
+
+        protected virtual void OnSettingsSaved(string filePath, bool result)
+        {
+            SettingsSaved?.Invoke((T)this, filePath, result);
+        }
+
+        protected virtual void OnSettingsSaveFailed(Exception e)
+        {
+            SettingsSaveFailed?.Invoke(e);
+        }
+
+        public bool Save(string filePath)
+        {
+            FilePath = filePath;
+            // ApplicationVersion = Helpers.GetApplicationVersion(); // TODO: Implement version retrieval
+
+            bool result = SaveInternal(FilePath);
+
+            OnSettingsSaved(FilePath, result);
+
+            return result;
+        }
+
+        public bool Save()
+        {
+            if (FilePath == null) return false;
+            return Save(FilePath);
+        }
+
+        public void SaveAsync(string filePath)
+        {
+            Task.Run(() => Save(filePath));
+        }
+
+        public void SaveAsync()
+        {
+            if (FilePath != null)
+            {
+                SaveAsync(FilePath);
+            }
+        }
+
+        public MemoryStream SaveToMemoryStream(bool supportDPAPIEncryption = false)
+        {
+            // ApplicationVersion = Helpers.GetApplicationVersion();
+
+            MemoryStream ms = new MemoryStream();
+            SaveToStream(ms, supportDPAPIEncryption, true);
+            return ms;
+        }
+
+        private bool SaveInternal(string filePath)
+        {
+            string typeName = GetType().Name;
+            System.Diagnostics.Debug.WriteLine($"{typeName} save started: {filePath}");
+
+            bool isSuccess = false;
+
+            try
+            {
+                if (!string.IsNullOrEmpty(filePath))
+                {
+                    lock (this)
+                    {
+                        string? directory = Path.GetDirectoryName(filePath);
+                        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                        {
+                            Directory.CreateDirectory(directory);
+                        }
+
+                        string tempFilePath = filePath + ".temp";
+
+                        using (FileStream fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write, FileShare.Read, 4096, FileOptions.WriteThrough))
+                        {
+                            SaveToStream(fileStream, SupportDPAPIEncryption);
+                        }
+
+                        // Basic JSON verification could go here
+
+                        if (File.Exists(filePath))
+                        {
+                            string? backupFilePath = null;
+
+                            if (CreateBackup && !string.IsNullOrEmpty(BackupFolder))
+                            {
+                                string fileName = Path.GetFileName(filePath);
+                                backupFilePath = Path.Combine(BackupFolder, fileName);
+                                if (!Directory.Exists(BackupFolder))
+                                {
+                                    Directory.CreateDirectory(BackupFolder);
+                                }
+                            }
+
+                            // .NET Standard 2.0 / .NET Core doesn't verify File.Replace across checks, but standard File.Replace is available in newer .NET
+                            // We'll use a manual move approach if needed or File.Replace
+                            try 
+                            {
+                                if (backupFilePath != null)
+                                {
+                                    // File.Replace doesn't always work as expected cross-platform for simple backup, manual copy/move is safer
+                                    File.Copy(filePath, backupFilePath, true);
+                                }
+                                File.Move(tempFilePath, filePath, true);
+                            }
+                            catch (Exception)
+                            {
+                                if (File.Exists(tempFilePath))
+                                {
+                                    // Fallback
+                                    File.Delete(filePath);
+                                    File.Move(tempFilePath, filePath);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            File.Move(tempFilePath, filePath);
+                        }
+                        
+                        // TODO: Weekly backup logic
+
+                        isSuccess = true;
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine(e);
+                OnSettingsSaveFailed(e);
+            }
+            finally
+            {
+                string status = isSuccess ? "successful" : "failed";
+                System.Diagnostics.Debug.WriteLine($"{typeName} save {status}: {filePath}");
+            }
+
+            return isSuccess;
+        }
+
+        private void SaveToStream(Stream stream, bool supportDPAPIEncryption = false, bool leaveOpen = false)
+        {
+            using (StreamWriter streamWriter = new StreamWriter(stream, new UTF8Encoding(false, true), 1024, leaveOpen))
+            using (JsonTextWriter jsonWriter = new JsonTextWriter(streamWriter))
+            {
+                JsonSerializer serializer = new JsonSerializer();
+
+                // TODO: DPAPI resolver if needed
+                // if (supportDPAPIEncryption) ...
+
+                serializer.Converters.Add(new StringEnumConverter());
+                serializer.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+                serializer.Formatting = Formatting.Indented;
+                serializer.Serialize(jsonWriter, this);
+                jsonWriter.Flush();
+            }
+        }
+
+        public static T Load(string filePath, string? backupFolder = null, bool fallbackSupport = true)
+        {
+            List<string> fallbackFilePaths = new List<string>();
+
+            if (fallbackSupport && !string.IsNullOrEmpty(filePath))
+            {
+                string tempFilePath = filePath + ".temp";
+                fallbackFilePaths.Add(tempFilePath);
+
+                if (!string.IsNullOrEmpty(backupFolder) && Directory.Exists(backupFolder))
+                {
+                    string fileName = Path.GetFileName(filePath);
+                    string backupFilePath = Path.Combine(backupFolder, fileName);
+                    fallbackFilePaths.Add(backupFilePath);
+                    
+                    // Weekly backups retrieval logic...
+                }
+            }
+
+            T setting = LoadInternal(filePath, fallbackFilePaths);
+
+            if (setting != null)
+            {
+                setting.FilePath = filePath;
+                setting.IsFirstTimeRun = string.IsNullOrEmpty(setting.ApplicationVersion);
+                // setting.IsUpgrade = ... 
+                setting.BackupFolder = backupFolder;
+            }
+
+            return setting;
+        }
+
+        private static T LoadInternal(string filePath, List<string>? fallbackFilePaths = null)
+        {
+            string typeName = typeof(T).Name;
+
+            if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
+            {
+                System.Diagnostics.Debug.WriteLine($"{typeName} load started: {filePath}");
+
+                try
+                {
+                    using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        if (fileStream.Length > 0)
+                        {
+                            T? settings;
+
+                            using (StreamReader streamReader = new StreamReader(fileStream))
+                            using (JsonTextReader jsonReader = new JsonTextReader(streamReader))
+                            {
+                                JsonSerializer serializer = new JsonSerializer();
+                                // serializer.ContractResolver = ...
+                                serializer.Converters.Add(new StringEnumConverter());
+                                serializer.DateTimeZoneHandling = DateTimeZoneHandling.Local;
+                                serializer.ObjectCreationHandling = ObjectCreationHandling.Replace;
+                                serializer.Error += Serializer_Error;
+                                settings = serializer.Deserialize<T>(jsonReader);
+                            }
+
+                            if (settings == null)
+                            {
+                                throw new Exception($"{typeName} object is null.");
+                            }
+
+                            System.Diagnostics.Debug.WriteLine($"{typeName} load finished: {filePath}");
+
+                            return settings;
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debug.WriteLine($"{typeName} load failed: {filePath}. Error: {e}");
+                }
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine($"{typeName} file does not exist: {filePath}");
+            }
+
+            if (fallbackFilePaths != null && fallbackFilePaths.Count > 0)
+            {
+                filePath = fallbackFilePaths[0];
+                fallbackFilePaths.RemoveAt(0);
+                return LoadInternal(filePath, fallbackFilePaths);
+            }
+
+            System.Diagnostics.Debug.WriteLine($"Loading new {typeName} instance.");
+
+            return new T();
+        }
+
+        private static void Serializer_Error(object? sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
+        {
+            // Handle missing enum values
+            if (e.ErrorContext.Error.Message.StartsWith("Error converting value"))
+            {
+                e.ErrorContext.Handled = true;
+            }
+        }
     }
 }

@@ -230,7 +230,7 @@ public class TaskSettingsUpload
 
     public bool UseCustomTimeZone = false;
     public TimeZoneInfo CustomTimeZone = TimeZoneInfo.Utc;
-    public string NameFormatPattern = "%ra{10}";
+    public string NameFormatPattern = "%y-%mo-%d_%h-%mi-%s";
     public string NameFormatPatternActiveWindow = "%pn_%ra{10}";
     public bool FileUploadUseNamePattern = false;
     public bool FileUploadReplaceProblematicCharacters = false;

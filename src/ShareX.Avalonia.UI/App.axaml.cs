@@ -34,6 +34,12 @@ public partial class App : Application
             
             // Register UI Service
             Platform.Abstractions.PlatformServices.RegisterUIService(new Services.AvaloniaUIService());
+
+            // Save settings on exit
+            desktop.Exit += (sender, args) =>
+            {
+                ShareX.Ava.Core.SettingManager.SaveAllSettings();
+            };
         }
 
         base.OnFrameworkInitializationCompleted();
