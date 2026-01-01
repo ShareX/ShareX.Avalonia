@@ -19,23 +19,51 @@ public partial class DestinationSettingsViewModel : ViewModelBase
 
     public async Task Initialize()
     {
+        Common.DebugHelper.WriteLine("[DestinationSettings] ========================================");
+        Common.DebugHelper.WriteLine("[DestinationSettings] Initializing destination settings...");
+        
         // Initialize built-in providers
+        Common.DebugHelper.WriteLine("[DestinationSettings] Initializing built-in providers...");
         ProviderCatalog.InitializeBuiltInProviders();
 
         // Load external plugins from Plugins folder
-        try
+        var pluginsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+        Common.DebugHelper.WriteLine($"[DestinationSettings] App base directory: {AppDomain.CurrentDomain.BaseDirectory}");
+        Common.DebugHelper.WriteLine($"[DestinationSettings] Plugins path: {pluginsPath}");
+        Common.DebugHelper.WriteLine($"[DestinationSettings] Plugins folder exists: {Directory.Exists(pluginsPath)}");
+        
+        if (Directory.Exists(pluginsPath))
         {
-            var pluginsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
-            if (Directory.Exists(pluginsPath))
+            var subdirs = Directory.GetDirectories(pluginsPath);
+            Common.DebugHelper.WriteLine($"[DestinationSettings] Found {subdirs.Length} subdirectory(ies) in Plugins folder");
+            foreach (var dir in subdirs)
+            {
+                Common.DebugHelper.WriteLine($"[DestinationSettings]   - {Path.GetFileName(dir)}");
+            }
+            
+            try
             {
                 ProviderCatalog.LoadPlugins(pluginsPath);
             }
+            catch (Exception ex)
+            {
+                Common.DebugHelper.WriteException(ex, "Failed to load plugins");
+            }
         }
-        catch (Exception ex)
+        else
         {
-            Common.DebugHelper.WriteException(ex, "Failed to load plugins");
+            Common.DebugHelper.WriteLine("[DestinationSettings] Plugins folder does not exist, skipping plugin loading");
         }
 
+        var allProviders = ProviderCatalog.GetAllProviders();
+        Common.DebugHelper.WriteLine($"[DestinationSettings] Total providers available: {allProviders.Count}");
+        foreach (var p in allProviders)
+        {
+            Common.DebugHelper.WriteLine($"[DestinationSettings]   - {p.Name} ({p.ProviderId})");
+        }
+        
+        Common.DebugHelper.WriteLine("[DestinationSettings] ========================================");
+        
         LoadCategories();
     }
 

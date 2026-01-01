@@ -47,18 +47,26 @@ public static class ProviderCatalog
         {
             if (_pluginsLoaded)
             {
-                DebugHelper.WriteLine("Plugins already loaded, skipping");
+                DebugHelper.WriteLine("[Plugins] Already loaded, skipping");
                 return;
             }
 
-            Console.WriteLine($"Loading plugins from: {pluginsDirectory}");
+            DebugHelper.WriteLine($"[Plugins] ========================================");
+            DebugHelper.WriteLine($"[Plugins] Loading plugins from: {pluginsDirectory}");
+            DebugHelper.WriteLine($"[Plugins] Directory exists: {Directory.Exists(pluginsDirectory)}");
+
+            if (!Directory.Exists(pluginsDirectory))
+            {
+                DebugHelper.WriteLine($"[Plugins] Creating Plugins directory...");
+                try { Directory.CreateDirectory(pluginsDirectory); } catch { }
+            }
 
             var discovery = new PluginDiscovery();
             var loader = new PluginLoader();
 
             // Discover all plugins
             var discovered = discovery.DiscoverPlugins(pluginsDirectory);
-            Console.WriteLine($"Discovered {discovered.Count} plugins");
+            DebugHelper.WriteLine($"[Plugins] Discovered {discovered.Count} plugin(s)");
 
             // Load each plugin
             int successCount = 0;
@@ -68,6 +76,7 @@ public static class ProviderCatalog
             {
                 try
                 {
+                    DebugHelper.WriteLine($"[Plugins] Attempting to load: {metadata.Manifest.Name} (id: {metadata.Manifest.PluginId})");
                     var provider = loader.LoadPlugin(metadata);
                     
                     if (provider != null && metadata.IsLoaded)
@@ -76,23 +85,26 @@ public static class ProviderCatalog
                         _providers[provider.ProviderId] = provider;
                         _pluginMetadata[provider.ProviderId] = metadata;
                         successCount++;
-                        DebugHelper.WriteLine($"✓ Loaded: {metadata.Manifest.Name}");
+                        DebugHelper.WriteLine($"[Plugins] ✓ SUCCESS: {metadata.Manifest.Name} (categories: {string.Join(", ", provider.SupportedCategories)})");
                     }
                     else
                     {
                         failureCount++;
-                        DebugHelper.WriteLine($"✗ Failed: {metadata.Manifest.Name} - {metadata.LoadError}");
+                        DebugHelper.WriteLine($"[Plugins] ✗ FAILED: {metadata.Manifest.Name} - {metadata.LoadError}");
                     }
                 }
                 catch (Exception ex)
                 {
                     failureCount++;
-                    DebugHelper.WriteLine($"✗ Error loading {metadata.Manifest.Name}: {ex.Message}");
+                    DebugHelper.WriteLine($"[Plugins] ✗ ERROR loading {metadata.Manifest.Name}: {ex.Message}");
+                    DebugHelper.WriteLine($"[Plugins]   Stack: {ex.StackTrace}");
                 }
             }
 
             _pluginsLoaded = true;
-            Console.WriteLine($"Plugin loading complete: {successCount} succeeded, {failureCount} failed");
+            DebugHelper.WriteLine($"[Plugins] Complete: {successCount} succeeded, {failureCount} failed");
+            DebugHelper.WriteLine($"[Plugins] Total providers in catalog: {_providers.Count}");
+            DebugHelper.WriteLine($"[Plugins] ========================================");
         }
     }
 
@@ -108,7 +120,7 @@ public static class ProviderCatalog
             if (!_providers.ContainsKey(provider.ProviderId))
             {
                 _providers[provider.ProviderId] = provider;
-                Console.WriteLine($"Registered provider: {provider.Name} ({provider.ProviderId})");
+                DebugHelper.WriteLine($"[Plugins] Registered provider: {provider.Name} ({provider.ProviderId})");
             }
         }
     }
