@@ -15,7 +15,17 @@
         PointerMoved="OnPointerMoved"
         PointerReleased="OnPointerReleased">
     
-    <Canvas Name="SelectionCanvas" Background="#01000000">
+    <Canvas Name="SelectionCanvas">
+        <!-- Background screenshot -->
+        <Image Name="BackgroundImage" 
+               Stretch="Fill"
+               RenderOptions.BitmapInterpolationMode="HighQuality" />
+        
+        <!-- Darkening overlay with cutout for selection - visible by default -->
+        <Path Name="DarkeningOverlay"
+              Fill="#80000000"
+              IsVisible="True" />
+        
         <Border Name="SelectionBorder"
                 BorderBrush="Red"
                 BorderThickness="1"

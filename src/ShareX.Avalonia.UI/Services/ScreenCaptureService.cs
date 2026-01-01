@@ -39,6 +39,10 @@ namespace ShareX.Ava.UI.Services
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 var window = new RegionCaptureWindow();
+                
+                // Capture screenshot and set as background BEFORE showing the window
+                await window.SetBackgroundScreenshot();
+                
                 window.Show();
                 selection = await window.GetResultAsync();
             });

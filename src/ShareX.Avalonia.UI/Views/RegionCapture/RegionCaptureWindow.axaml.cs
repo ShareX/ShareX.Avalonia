@@ -1,11 +1,15 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using System.Drawing; // For Rectangle return type
+using Avalonia.Media.Imaging;
 using Point = Avalonia.Point;
+using Rectangle = Avalonia.Controls.Shapes.Rectangle;
+using Path = Avalonia.Controls.Shapes.Path;
 
 namespace ShareX.Ava.UI.Views.RegionCapture
 {
@@ -17,6 +21,9 @@ namespace ShareX.Ava.UI.Views.RegionCapture
         // Result task completion source to return value to caller
         private readonly System.Threading.Tasks.TaskCompletionSource<System.Drawing.Rectangle> _tcs;
 
+        // Darkening overlay settings (configurable from RegionCaptureOptions)
+        private const byte DarkenOpacity = 128; // 0-255, where 128 is 50% opacity (can be calculated from BackgroundDimStrength)
+        
         public RegionCaptureWindow()
         {
             InitializeComponent();
@@ -36,6 +43,32 @@ namespace ShareX.Ava.UI.Views.RegionCapture
         public System.Threading.Tasks.Task<System.Drawing.Rectangle> GetResultAsync()
         {
             return _tcs.Task;
+        }
+
+        public async Task SetBackgroundScreenshot()
+        {
+            // Capture full screen before showing the window
+            if (ShareX.Ava.Platform.Abstractions.PlatformServices.IsInitialized)
+            {
+                var screenshot = await ShareX.Ava.Platform.Abstractions.PlatformServices.ScreenCapture.CaptureFullScreenAsync();
+                if (screenshot != null)
+                {
+                    // Convert System.Drawing.Image to Avalonia Bitmap
+                    using var memoryStream = new System.IO.MemoryStream();
+                    screenshot.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
+                    memoryStream.Position = 0;
+                    
+                    var avaloniaBitmap = new Bitmap(memoryStream);
+                    
+                    var backgroundImage = this.FindControl<Image>("BackgroundImage");
+                    if (backgroundImage != null)
+                    {
+                        backgroundImage.Source = avaloniaBitmap;
+                    }
+                    
+                    screenshot.Dispose();
+                }
+            }
         }
 
         protected override void OnOpened(EventArgs e)
@@ -73,30 +106,81 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 var totalWidth = maxX - minX;
                 var totalHeight = maxY - minY;
 
-                // Position and Size are in physical pixels (?) or logical?
-                // Window.Position is PixelPoint (physical).
-                // Window.Width/Height are logical (double).
-                
-                // Set Position (Physical)
                 Position = new PixelPoint(minX, minY);
-
-                // Set Size (Logical)
-                // We need to convert physical size to logical size based on scaling.
-                // Assuming uniform scaling or taking scaling of primary? 
-                // This is complex with mixed DPI. 
-                // For now, let's try setting Width/Height based on RenderScaling (approximated).
-                // Or use PlatformImpl to set bounds?
-                
-                // For a safe start, we just use the raw pixels divided by current scaling
-                // This might be slightly off on mixed DPI, but better than single monitor.
                 Width = totalWidth / RenderScaling;
                 Height = totalHeight / RenderScaling;
+                
+                // Size the background image and darkening overlay to match
+                var backgroundImage = this.FindControl<Image>("BackgroundImage");
+                if (backgroundImage != null)
+                {
+                    backgroundImage.Width = Width;
+                    backgroundImage.Height = Height;
+                }
+
+                // Initialize the darkening overlay to cover the entire screen
+                InitializeFullScreenDarkening();
             }
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+        }
+
+        private void InitializeFullScreenDarkening()
+        {
+            var overlay = this.FindControl<Path>("DarkeningOverlay");
+            if (overlay == null) return;
+
+            // Create a simple rectangle covering the entire screen (no cutout yet)
+            var darkeningGeometry = new PathGeometry();
+            var fullScreenFigure = new PathFigure 
+            { 
+                StartPoint = new Point(0, 0), 
+                IsClosed = true 
+            };
+            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(Width, 0) });
+            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(Width, Height) });
+            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(0, Height) });
+            darkeningGeometry.Figures.Add(fullScreenFigure);
+
+            overlay.Data = darkeningGeometry;
+            overlay.IsVisible = true;
+        }
+
+        private void UpdateDarkeningOverlay(double selX, double selY, double selWidth, double selHeight)
+        {
+            var overlay = this.FindControl<Path>("DarkeningOverlay");
+            if (overlay == null) return;
+
+            // Create geometry with EvenOdd fill rule to create a "cutout" effect
+            // This darkens the entire screen except the selection rectangle
+            var darkeningGeometry = new PathGeometry { FillRule = FillRule.EvenOdd };
+
+            // Outer rectangle: entire screen
+            var outerFigure = new PathFigure 
+            { 
+                StartPoint = new Point(0, 0), 
+                IsClosed = true 
+            };
+            outerFigure.Segments.Add(new LineSegment { Point = new Point(Width, 0) });
+            outerFigure.Segments.Add(new LineSegment { Point = new Point(Width, Height) });
+            outerFigure.Segments.Add(new LineSegment { Point = new Point(0, Height) });
+            darkeningGeometry.Figures.Add(outerFigure);
+
+            // Inner rectangle: selection area (this creates the "hole")
+            var innerFigure = new PathFigure 
+            { 
+                StartPoint = new Point(selX, selY), 
+                IsClosed = true 
+            };
+            innerFigure.Segments.Add(new LineSegment { Point = new Point(selX + selWidth, selY) });
+            innerFigure.Segments.Add(new LineSegment { Point = new Point(selX + selWidth, selY + selHeight) });
+            innerFigure.Segments.Add(new LineSegment { Point = new Point(selX, selY + selHeight) });
+            darkeningGeometry.Figures.Add(innerFigure);
+
+            overlay.Data = darkeningGeometry;
         }
 
         private void OnPointerPressed(object sender, PointerPressedEventArgs e)
@@ -116,6 +200,9 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                     border.Width = 0;
                     border.Height = 0;
                 }
+
+                // Update darkening overlay with zero-size selection (keeps full screen dimmed)
+                UpdateDarkeningOverlay(_startPoint.X, _startPoint.Y, 0, 0);
             }
         }
 
@@ -139,6 +226,9 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 Canvas.SetTop(border, y);
                 border.Width = width;
                 border.Height = height;
+
+                // Update darkening overlay to cut out the selection area
+                UpdateDarkeningOverlay(x, y, width, height);
                 
                 if (infoText != null)
                 {
