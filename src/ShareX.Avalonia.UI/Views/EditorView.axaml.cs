@@ -63,6 +63,9 @@ namespace ShareX.Ava.UI.Views
         private List<Shape> _selectionHandles = new();
         private bool _isDraggingHandle;
         private Shape? _draggedHandle;
+        
+        // Store arrow/line endpoints for editing
+        private Dictionary<Control, (Point Start, Point End)> _shapeEndpoints = new();
 
         private Point GetCanvasPosition(PointerEventArgs e, Canvas canvas)
         {
@@ -282,12 +285,32 @@ namespace ShareX.Ava.UI.Views
 
             if (_selectedShape == null) return;
 
-            // Skip handles for shapes without measurable bounds (e.g., lines)
+            // Special handling for Lines and Arrows - create endpoint handles
+            if (_selectedShape is global::Avalonia.Controls.Shapes.Line line)
+            {
+                CreateHandle(line.StartPoint.X, line.StartPoint.Y, "LineStart");
+                CreateHandle(line.EndPoint.X, line.EndPoint.Y, "LineEnd");
+                return;
+            }
+            
+            // Special handling for Arrow (Path with geometry)
+            if (_selectedShape is global::Avalonia.Controls.Shapes.Path arrowPath)
+            {
+                // Get stored start/end points from dictionary
+                if (_shapeEndpoints.TryGetValue(arrowPath, out var endpoints))
+                {
+                    CreateHandle(endpoints.Start.X, endpoints.Start.Y, "ArrowStart");
+                    CreateHandle(endpoints.End.X, endpoints.End.Y, "ArrowEnd");
+                }
+                return;
+            }
+
+            // Skip handles for shapes without measurable bounds (e.g., other lines)
             if (_selectedShape.Bounds.Width <= 0 || _selectedShape.Bounds.Height <= 0) return;
 
-            // Calculate bounds
-            var left = Canvas.GetLeft(_selectedShape);
-            var top = Canvas.GetTop(_selectedShape);
+            // Calculate bounds for regular shapes
+            var shapeLeft = Canvas.GetLeft(_selectedShape);
+            var shapeTop = Canvas.GetTop(_selectedShape);
             var width = _selectedShape.Bounds.Width;
             var height = _selectedShape.Bounds.Height;
             
@@ -296,15 +319,15 @@ namespace ShareX.Ava.UI.Views
             if (double.IsNaN(width)) width = _selectedShape.Width;
             if (double.IsNaN(height)) height = _selectedShape.Height;
 
-            // Create 8 handles
-            CreateHandle(left, top, "TopLeft");
-            CreateHandle(left + width / 2, top, "TopCenter");
-            CreateHandle(left + width, top, "TopRight");
-            CreateHandle(left + width, top + height / 2, "RightCenter");
-            CreateHandle(left + width, top + height, "BottomRight");
-            CreateHandle(left + width / 2, top + height, "BottomCenter");
-            CreateHandle(left, top + height, "BottomLeft");
-            CreateHandle(left, top + height / 2, "LeftCenter");
+            // Create 8 handles for regular shapes
+            CreateHandle(shapeLeft, shapeTop, "TopLeft");
+            CreateHandle(shapeLeft + width / 2, shapeTop, "TopCenter");
+            CreateHandle(shapeLeft + width, shapeTop, "TopRight");
+            CreateHandle(shapeLeft + width, shapeTop + height / 2, "RightCenter");
+            CreateHandle(shapeLeft + width, shapeTop + height, "BottomRight");
+            CreateHandle(shapeLeft + width / 2, shapeTop + height, "BottomCenter");
+            CreateHandle(shapeLeft, shapeTop + height, "BottomLeft");
+            CreateHandle(shapeLeft, shapeTop + height / 2, "LeftCenter");
         }
 
         private void CreateHandle(double x, double y, string tag)
@@ -843,6 +866,8 @@ namespace ShareX.Ava.UI.Views
                         Fill = brush, // Fill arrowhead
                         Data = new PathGeometry()
                     };
+                    // Store initial endpoint for later editing
+                    _shapeEndpoints[_currentShape] = (_startPoint, _startPoint);
                     break;
                 case EditorTool.Text:
                     // For text, we create a TextBox directly
@@ -1043,7 +1068,55 @@ namespace ShareX.Ava.UI.Views
                 var deltaX = currentPoint.X - _startPoint.X;
                 var deltaY = currentPoint.Y - _startPoint.Y;
                 
-                // Get current bounds
+                // Special handling for Line endpoints
+                if (_selectedShape is global::Avalonia.Controls.Shapes.Line targetLine)
+                {
+                    if (handleTag == "LineStart")
+                    {
+                        targetLine.StartPoint = currentPoint;
+                    }
+                    else if (handleTag == "LineEnd")
+                    {
+                        targetLine.EndPoint = currentPoint;
+                    }
+                    
+                    _startPoint = currentPoint;
+                    UpdateSelectionHandles();
+                    return;
+                }
+                
+                // Special handling for Arrow endpoints
+                if (_selectedShape is global::Avalonia.Controls.Shapes.Path arrowPath && DataContext is MainViewModel vm)
+                {
+                    // Get stored endpoints
+                    if (_shapeEndpoints.TryGetValue(arrowPath, out var endpoints))
+                    {
+                        Point arrowStart = endpoints.Start;
+                        Point arrowEnd = endpoints.End;
+                        
+                        // Update the appropriate endpoint
+                        if (handleTag == "ArrowStart")
+                        {
+                            arrowStart = currentPoint;
+                        }
+                        else if (handleTag == "ArrowEnd")
+                        {
+                            arrowEnd = currentPoint;
+                        }
+                        
+                        // Store updated endpoints
+                        _shapeEndpoints[arrowPath] = (arrowStart, arrowEnd);
+                        
+                        // Recreate arrow geometry with new points
+                        arrowPath.Data = CreateArrowGeometry(arrowStart, arrowEnd, vm.StrokeWidth * 3);
+                    }
+                    
+                    _startPoint = currentPoint;
+                    UpdateSelectionHandles();
+                    return;
+                }
+                
+                // Get current bounds for regular shapes
                 var left = Canvas.GetLeft(_selectedShape);
                 var top = Canvas.GetTop(_selectedShape);
                 var width = _selectedShape.Bounds.Width;
@@ -1053,7 +1126,6 @@ namespace ShareX.Ava.UI.Views
 
                 // Helper to update properties
                 // Rectangle/Ellipse use Width/Height
-                // Line uses Start/End Point
                 
                 if (_selectedShape is global::Avalonia.Controls.Shapes.Rectangle || _selectedShape is global::Avalonia.Controls.Shapes.Ellipse || _selectedShape is Grid)
                 {
@@ -1089,23 +1161,36 @@ namespace ShareX.Ava.UI.Views
                     _selectedShape.Width = newWidth;
                     _selectedShape.Height = newHeight;
                 }
-                else if (_selectedShape is global::Avalonia.Controls.Shapes.Line targetLine)
-                {
-                    // Line resizing logic... simpler? just move endpoints?
-                    // For now, let's just support moving lines, resizing lines via handles is tricky without a bounding box logic wrapper
-                    // We can skip line resizing for this iteration or treat it as a box (which might look weird)
-                }
 
                 _startPoint = currentPoint; // Update for next delta
                 UpdateSelectionHandles();
                 return;
             }
 
+
             if (_isDraggingShape && _selectedShape != null)
             {
                 var deltaX = currentPoint.X - _lastDragPoint.X;
                 var deltaY = currentPoint.Y - _lastDragPoint.Y;
 
+                // Special handling for moving arrows - update stored endpoints
+                if (_selectedShape is global::Avalonia.Controls.Shapes.Path arrowPath && DataContext is MainViewModel vm)
+                {
+                    if (_shapeEndpoints.TryGetValue(arrowPath, out var endpoints))
+                    {
+                        var newStart = new Point(endpoints.Start.X + deltaX, endpoints.Start.Y + deltaY);
+                        var newEnd = new Point(endpoints.End.X + deltaX, endpoints.End.Y + deltaY);
+                        
+                        _shapeEndpoints[arrowPath] = (newStart, newEnd);
+                        arrowPath.Data = CreateArrowGeometry(newStart, newEnd, vm.StrokeWidth * 3);
+                    }
+                    
+                    _lastDragPoint = currentPoint;
+                    UpdateSelectionHandles();
+                    return;
+                }
+                
+                // Regular shape moving
                 var left = Canvas.GetLeft(_selectedShape);
                 var top = Canvas.GetTop(_selectedShape);
 
@@ -1144,6 +1229,8 @@ namespace ShareX.Ava.UI.Views
             {
                 // Update Arrow Geometry
                 arrowPath.Data = CreateArrowGeometry(_startPoint, currentPoint, vm.StrokeWidth * 3);
+                // Store endpoints for later editing
+                _shapeEndpoints[arrowPath] = (_startPoint, currentPoint);
             }
             else
             {
@@ -1241,7 +1328,7 @@ namespace ShareX.Ava.UI.Views
 
                     // Modern arrow: narrower angle (20 degrees instead of 30)
                     var arrowAngle = Math.PI / 9; // 20 degrees for sleeker look
-                    
+                     
                     // Calculate arrowhead base point (where arrow meets the line)
                     var arrowBase = new Point(
                         end.X - headSize * ux,
