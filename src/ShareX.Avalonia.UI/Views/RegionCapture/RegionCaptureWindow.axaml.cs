@@ -313,9 +313,24 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 if (infoText != null)
                 {
                     infoText.IsVisible = true;
-                    infoText.Text = $"X: {x:F0}, Y: {y:F0} - {width:F0} x {height:F0}";
+                    // Format: "X: 1 Y: 1 W: 1 H: 1"
+                    infoText.Text = $"X: {x:F0} Y: {y:F0} W: {width:F0} H: {height:F0}";
+                    
+                    // Position label above the selection with more clearance
                     Canvas.SetLeft(infoText, x);
-                    Canvas.SetTop(infoText, y - 25);
+                    
+                    // Calculate vertical position - place above selection with padding
+                    var labelHeight = 30; // Approximate height of label with padding
+                    var topPadding = 5; // Additional padding from selection top
+                    var labelY = y - labelHeight - topPadding;
+                    
+                    // If label would go off top of screen, place it below the top edge
+                    if (labelY < 5)
+                    {
+                        labelY = 5;
+                    }
+                    
+                    Canvas.SetTop(infoText, labelY);
                 }
             }
         }
