@@ -36,6 +36,7 @@ public static class ProviderCatalog
     private static readonly Dictionary<string, PluginMetadata> _pluginMetadata = new();
     private static readonly object _lock = new();
     private static bool _pluginsLoaded = false;
+    private static readonly PluginLoader _pluginLoader = new(); // Keep contexts alive
 
     /// <summary>
     /// Load plugins from the specified directory
@@ -62,7 +63,6 @@ public static class ProviderCatalog
             }
 
             var discovery = new PluginDiscovery();
-            var loader = new PluginLoader();
 
             // Discover all plugins
             var discovered = discovery.DiscoverPlugins(pluginsDirectory);
@@ -77,7 +77,7 @@ public static class ProviderCatalog
                 try
                 {
                     DebugHelper.WriteLine($"[Plugins] Attempting to load: {metadata.Manifest.Name} (id: {metadata.Manifest.PluginId})");
-                    var provider = loader.LoadPlugin(metadata);
+                    var provider = _pluginLoader.LoadPlugin(metadata);
                     
                     if (provider != null && metadata.IsLoaded)
                     {
