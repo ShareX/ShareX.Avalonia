@@ -154,7 +154,7 @@ public class HotkeyManager : IDisposable
     /// </summary>
     public void RegisterAllHotkeys()
     {
-        foreach (var settings in Hotkeys)
+        foreach (var settings in Hotkeys.ToList())
         {
             RegisterHotkey(settings);
         }

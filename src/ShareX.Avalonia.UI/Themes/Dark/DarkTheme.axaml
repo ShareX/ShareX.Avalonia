@@ -1,7 +1,6 @@
 <Styles xmlns="https://github.com/avaloniaui"
        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Styles.Resources>
-    <!-- Base Colors -->
     <Color x:Key="BackgroundColor">#272727</Color>
     <Color x:Key="LightBackgroundColor">#2E2E2E</Color>
     <Color x:Key="DarkBackgroundColor">#222222</Color>
@@ -17,7 +16,6 @@
     <Color x:Key="SeparatorLightColor">#2C2C2C</Color>
     <Color x:Key="SeparatorDarkColor">#1F1F1F</Color>
 
-    <!-- Brushes -->
     <SolidColorBrush x:Key="BackgroundBrush" Color="{DynamicResource BackgroundColor}" />
     <SolidColorBrush x:Key="LightBackgroundBrush" Color="{DynamicResource LightBackgroundColor}" />
     <SolidColorBrush x:Key="DarkBackgroundBrush" Color="{DynamicResource DarkBackgroundColor}" />
@@ -31,11 +29,9 @@
     <SolidColorBrush x:Key="SeparatorLightBrush" Color="{DynamicResource SeparatorLightColor}" />
     <SolidColorBrush x:Key="SeparatorDarkBrush" Color="{DynamicResource SeparatorDarkColor}" />
 
-    <!-- Typography -->
     <FontFamily x:Key="AppFontFamily">Segoe UI</FontFamily>
     <x:Double x:Key="AppFontSize">13</x:Double>
 
-    <!-- Checkerboard -->
     <x:Double x:Key="CheckerSize">15</x:Double>
     <SolidColorBrush x:Key="CheckerColorBrush" Color="{DynamicResource CheckerColor}" />
     <SolidColorBrush x:Key="CheckerColor2Brush" Color="{DynamicResource CheckerColor2}" />
@@ -53,7 +49,6 @@
     </DrawingBrush>
   </Styles.Resources>
 
-  <!-- Base Styles -->
   <Style Selector="Window">
     <Setter Property="Background" Value="{DynamicResource BackgroundBrush}" />
     <Setter Property="FontFamily" Value="{DynamicResource AppFontFamily}" />
@@ -84,7 +79,6 @@
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
   </Style>
 
-  <!-- Inputs / surfaces -->
   <Style Selector="TextBox">
     <Setter Property="Background" Value="{DynamicResource DarkBackgroundBrush}" />
     <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -124,7 +118,6 @@
     <Setter Property="Background" Value="{DynamicResource MenuCheckBackgroundBrush}" />
   </Style>
 
-  <!-- Links -->
   <Style Selector="HyperlinkButton">
     <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
   </Style>
@@ -132,7 +125,6 @@
     <Setter Property="Foreground" Value="{DynamicResource LinkBrush}" />
   </Style>
 
-  <!-- Separators -->
   <Style Selector="Separator">
     <Setter Property="Template">
       <ControlTemplate>
