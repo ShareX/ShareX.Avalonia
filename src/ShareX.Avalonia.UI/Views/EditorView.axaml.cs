@@ -1369,6 +1369,17 @@ namespace ShareX.Ava.UI.Views
                 var deltaX = currentPoint.X - _lastDragPoint.X;
                 var deltaY = currentPoint.Y - _lastDragPoint.Y;
 
+                // Special handling for moving Lines - update start and end points
+                if (_selectedShape is global::Avalonia.Controls.Shapes.Line targetLine)
+                {
+                    targetLine.StartPoint = new Point(targetLine.StartPoint.X + deltaX, targetLine.StartPoint.Y + deltaY);
+                    targetLine.EndPoint = new Point(targetLine.EndPoint.X + deltaX, targetLine.EndPoint.Y + deltaY);
+
+                    _lastDragPoint = currentPoint;
+                    UpdateSelectionHandles();
+                    return;
+                }
+
                 // Special handling for moving arrows - update stored endpoints
                 if (_selectedShape is global::Avalonia.Controls.Shapes.Path arrowPath && DataContext is MainViewModel vm)
                 {
