@@ -64,6 +64,12 @@ namespace ShareX.Ava.UI.Views
 
         // Store arrow/line endpoints for editing
         private Dictionary<Control, (Point Start, Point End)> _shapeEndpoints = new();
+        
+        // Cached SKBitmap for effect updates (avoid repeated conversions)
+        private SkiaSharp.SKBitmap? _cachedSkBitmap;
+        
+        // Track if we're in the middle of creating an effect shape
+        private bool _isCreatingEffect;
 
         private Point GetCanvasPosition(PointerEventArgs e, Canvas canvas)
         {
@@ -622,6 +628,10 @@ namespace ShareX.Ava.UI.Views
 
             _undoStack.Clear();
             _redoStack.Clear();
+            
+            // Clean up cached bitmap
+            _cachedSkBitmap?.Dispose();
+            _cachedSkBitmap = null;
         }
 
         private void ApplySelectedColor(string colorHex)
@@ -1284,38 +1294,53 @@ namespace ShareX.Ava.UI.Views
 
         private void UpdateEffectVisual(Control shape)
         {
-            if (shape.Tag is BaseEffectAnnotation annotation && DataContext is MainViewModel vm && vm.PreviewImage != null)
+            // OPTIMIZATION: Skip expensive effect processing during drag
+            // Only show a simple preview rectangle while dragging
+            // Full effect is applied on mouse release
+            
+            if (shape.Tag is not BaseEffectAnnotation annotation) return;
+            
+            // During dragging, just show the preview fill color (no expensive processing)
+            if (_isDrawing)
             {
-                try
+                // Shape already has preview fill set, no need to update
+                return;
+            }
+            
+            if (DataContext is not MainViewModel vm || vm.PreviewImage == null) return;
+
+            try
+            {
+                double left = Canvas.GetLeft(shape);
+                double top = Canvas.GetTop(shape);
+                double width = shape.Bounds.Width;
+                double height = shape.Bounds.Height;
+
+                if (width <= 0 || height <= 0) return;
+
+                annotation.StartPoint = new Point(left, top);
+                annotation.EndPoint = new Point(left + width, top + height);
+
+                // Cache SKBitmap conversion to avoid repeated conversions
+                if (_cachedSkBitmap == null)
                 {
-                    double left = Canvas.GetLeft(shape);
-                    double top = Canvas.GetTop(shape);
-                    double width = shape.Bounds.Width;
-                    double height = shape.Bounds.Height;
+                    _cachedSkBitmap = Helpers.BitmapConversionHelpers.ToSKBitmap(vm.PreviewImage);
+                }
 
-                    if (width <= 0 || height <= 0) return;
+                annotation.UpdateEffect(_cachedSkBitmap);
 
-                    annotation.StartPoint = new Point(left, top);
-                    annotation.EndPoint = new Point(left + width, top + height);
-
-                    // Convert to SKBitmap 
-                    using var skBitmap = Helpers.BitmapConversionHelpers.ToSKBitmap(vm.PreviewImage);
-
-                    annotation.UpdateEffect(skBitmap);
-
-                    if (annotation.EffectBitmap != null && shape is Shape visibleShape)
+                if (annotation.EffectBitmap != null && shape is Shape shapeControl)
+                {
+                    shapeControl.Fill = new ImageBrush(annotation.EffectBitmap)
                     {
-                        visibleShape.Fill = new ImageBrush(annotation.EffectBitmap)
-                        {
-                            Stretch = Stretch.None,
-                            SourceRect = new RelativeRect(0, 0, width, height, RelativeUnit.Absolute)
-                        };
-                    }
+                        Stretch = Stretch.None,
+                        SourceRect = new RelativeRect(0, 0, width, height, RelativeUnit.Absolute)
+                    };
                 }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"Effect update failed: {ex.Message}");
-                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Effect update failed: {ex.Message}");
             }
         }
 
@@ -1402,6 +1427,12 @@ namespace ShareX.Ava.UI.Views
                     // are not resizable with our current handle logic.
                     if (createdShape is not Polyline)
                     {
+                        // Apply final effect for effect tools
+                        if (createdShape.Tag is BaseEffectAnnotation)
+                        {
+                            UpdateEffectVisual(createdShape);
+                        }
+                        
                         _selectedShape = createdShape;
                         UpdateSelectionHandles();
                     }
