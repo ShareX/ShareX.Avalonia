@@ -427,6 +427,12 @@ namespace ShareX.Ava.UI.Views
                 return;
             }
 
+            // Skip handles for Grid controls (Number/Step tool) - they have fixed size and don't need resizing
+            if (_selectedShape is Grid)
+            {
+                return;
+            }
+
             // Skip handles for shapes without measurable bounds (e.g., other lines)
             if (_selectedShape.Bounds.Width <= 0 || _selectedShape.Bounds.Height <= 0) return;
 
@@ -1200,7 +1206,7 @@ namespace ShareX.Ava.UI.Views
                     break;
 
                 case EditorTool.Number:
-                    // Use existing number logic (it was here before)
+                    // Create number annotation
                     var numberGrid = new Grid
                     {
                         Width = 30,
@@ -1233,21 +1239,29 @@ namespace ShareX.Ava.UI.Views
                     vm.NumberCounter++;
 
                     canvas.Children.Add(numberGrid);
-                    _undoStack.Push(numberGrid);
-                    _redoStack.Clear();
-                    _currentShape = null;
-                    _isDrawing = false;
-                    return;
+                    // Number is positioned and added to canvas, but keep _isDrawing true
+                    // so it goes through OnCanvasPointerReleased for auto-selection
+                    break;
             }
 
             if (_currentShape != null)
             {
-                if (vm.ActiveTool != EditorTool.Line && vm.ActiveTool != EditorTool.Arrow && vm.ActiveTool != EditorTool.Pen && vm.ActiveTool != EditorTool.SmartEraser && vm.ActiveTool != EditorTool.Spotlight)
+                // Number tool already adds itself to canvas, so don't add it again
+                if (vm.ActiveTool == EditorTool.Number)
+                {
+                    // Number is already added to canvas, nothing more to do here
+                    // Keep _isDrawing true so it goes through OnCanvasPointerReleased properly
+                }
+                else if (vm.ActiveTool != EditorTool.Line && vm.ActiveTool != EditorTool.Arrow && vm.ActiveTool != EditorTool.Pen && vm.ActiveTool != EditorTool.SmartEraser && vm.ActiveTool != EditorTool.Spotlight)
                 {
                     Canvas.SetLeft(_currentShape, _startPoint.X);
                     Canvas.SetTop(_currentShape, _startPoint.Y);
+                    canvas.Children.Add(_currentShape);
                 }
-                canvas.Children.Add(_currentShape);
+                else
+                {
+                    canvas.Children.Add(_currentShape);
+                }
             }
         }
 
