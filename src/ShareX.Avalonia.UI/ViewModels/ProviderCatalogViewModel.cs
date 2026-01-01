@@ -34,34 +34,50 @@ public partial class ProviderCatalogViewModel : ViewModelBase
         AvailableProviders.Clear();
         
         var providers = ProviderCatalog.GetProvidersByCategory(Category);
+        DebugHelper.WriteLine($"[ProviderCatalog] Loading {providers.Count} providers for category {Category}");
         
         foreach (var provider in providers)
         {
-            AvailableProviders.Add(new ProviderViewModel(provider, Category));
+            var vm = new ProviderViewModel(provider, Category);
+            AvailableProviders.Add(vm);
+            DebugHelper.WriteLine($"[ProviderCatalog] Added provider: {provider.Name} (ID: {provider.ProviderId}), IsSelected: {vm.IsSelected}");
         }
+        
+        DebugHelper.WriteLine($"[ProviderCatalog] Total providers in AvailableProviders: {AvailableProviders.Count}");
     }
 
     [RelayCommand]
     private void AddSelected()
     {
+        DebugHelper.WriteLine($"[ProviderCatalog] AddSelected called, AvailableProviders count: {AvailableProviders.Count}");
+        
+        // Log state of all providers
+        for (int i = 0; i < AvailableProviders.Count; i++)
+        {
+            var p = AvailableProviders[i];
+            DebugHelper.WriteLine($"[ProviderCatalog]   Provider {i}: {p.Name} (ID: {p.ProviderId}), IsSelected: {p.IsSelected}");
+        }
+        
         var selectedProvider = AvailableProviders.FirstOrDefault(p => p.IsSelected);
 
         if (selectedProvider == null)
         {
-            DebugHelper.WriteLine("No provider selected");
+            DebugHelper.WriteLine("[ProviderCatalog] No provider selected (all IsSelected are false)");
             return;
         }
 
         try
         {
+            DebugHelper.WriteLine($"[ProviderCatalog] Selected provider found: {selectedProvider.Name}");
+            
             var provider = ProviderCatalog.GetProvider(selectedProvider.ProviderId);
             if (provider == null)
             {
-                DebugHelper.WriteLine($"Provider not found in catalog: {selectedProvider.ProviderId}");
+                DebugHelper.WriteLine($"[ProviderCatalog] ERROR: Provider not found in catalog: {selectedProvider.ProviderId}");
                 return;
             }
 
-            DebugHelper.WriteLine($"Adding new instance for provider: {provider.Name}");
+            DebugHelper.WriteLine($"[ProviderCatalog] Adding new instance for provider: {provider.Name}");
 
             var instance = new UploaderInstance
             {
@@ -72,7 +88,9 @@ public partial class ProviderCatalogViewModel : ViewModelBase
             };
 
             InstanceManager.Instance.AddInstance(instance);
+            DebugHelper.WriteLine($"[ProviderCatalog] Instance added, invoking OnInstancesAdded callback...");
             OnInstancesAdded?.Invoke(new List<UploaderInstance> { instance });
+            DebugHelper.WriteLine($"[ProviderCatalog] OnInstancesAdded callback invoked");
         }
         catch (Exception ex)
         {
@@ -101,8 +119,20 @@ public partial class ProviderViewModel : ViewModelBase
     [ObservableProperty]
     private string _description = string.Empty;
 
-    [ObservableProperty]
     private bool _isSelected;
+    public bool IsSelected
+    {
+        get => _isSelected;
+        set
+        {
+            if (_isSelected != value)
+            {
+                _isSelected = value;
+                DebugHelper.WriteLine($"[ProviderViewModel] IsSelected changed to {value} for provider: {Name}");
+                OnPropertyChanged();
+            }
+        }
+    }
 
     [ObservableProperty]
     private string _supportedFileTypesDisplay = string.Empty;

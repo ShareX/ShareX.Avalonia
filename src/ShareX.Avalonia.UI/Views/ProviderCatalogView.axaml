@@ -42,7 +42,7 @@
                                 </Style>
                             </Border.Styles>
                             
-                            <RadioButton IsChecked="{Binding IsSelected}" 
+                            <RadioButton IsChecked="{Binding IsSelected, Mode=TwoWay}" 
                                          GroupName="ProviderSelection">
                                 <RadioButton.Template>
                                     <ControlTemplate>
