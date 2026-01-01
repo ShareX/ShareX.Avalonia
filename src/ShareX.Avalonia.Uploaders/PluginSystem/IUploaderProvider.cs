@@ -93,4 +93,10 @@ public interface IUploaderProvider
     /// Returns default serialized settings JSON for the given category
     /// </summary>
     string GetDefaultSettings(UploaderCategory category);
+
+    /// <summary>
+    /// Event raised when the provider's configuration has changed.
+    /// The host subscribes to this event to trigger saving UploadersConfig.
+    /// </summary>
+    event EventHandler? ConfigChanged;
 }

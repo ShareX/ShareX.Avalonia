@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using ShareX.Ava.Core;
 
 namespace ShareX.Ava.UI.Views
 {
@@ -17,6 +18,12 @@ namespace ShareX.Ava.UI.Views
                 {
                     await vm.Initialize();
                 }
+            };
+            
+            // Save uploaders config when navigating away from this view
+            Unloaded += (s, e) =>
+            {
+                SettingManager.SaveUploadersConfigAsync();
             };
         }
 

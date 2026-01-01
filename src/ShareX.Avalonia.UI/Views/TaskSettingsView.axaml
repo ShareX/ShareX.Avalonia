@@ -71,22 +71,22 @@
                                 <StackPanel Spacing="10">
                                     <Grid ColumnDefinitions="Auto, 10, *">
                                         <TextBlock Grid.Column="0" Text="Name pattern:" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Column="2" Text="{Binding NameFormatPattern}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding NameFormatPattern, Mode=TwoWay}"/>
                                     </Grid>
                                     <Grid ColumnDefinitions="Auto, 10, *">
                                         <TextBlock Grid.Column="0" Text="Active window name pattern:" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Column="2" Text="{Binding NameFormatPatternActiveWindow}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding NameFormatPatternActiveWindow, Mode=TwoWay}"/>
                                     </Grid>
                                     <CheckBox IsChecked="{Binding FileUploadUseNamePattern}" Content="Use name pattern for file uploaders"/>
                                     <CheckBox IsChecked="{Binding FileUploadReplaceProblematicCharacters}" Content="Replace potentially problematic characters"/>
                                     <CheckBox IsChecked="{Binding URLRegexReplace}" Content="Perform regex replace on URL"/>
                                     <Grid ColumnDefinitions="Auto, 10, *" IsVisible="{Binding URLRegexReplace}">
                                         <TextBlock Grid.Column="0" Text="Regex pattern:" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Column="2" Text="{Binding URLRegexReplacePattern}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding URLRegexReplacePattern, Mode=TwoWay}"/>
                                     </Grid>
                                     <Grid ColumnDefinitions="Auto, 10, *" IsVisible="{Binding URLRegexReplace}">
                                         <TextBlock Grid.Column="0" Text="Replacement:" VerticalAlignment="Center"/>
-                                        <TextBox Grid.Column="2" Text="{Binding URLRegexReplaceReplacement}"/>
+                                        <TextBox Grid.Column="2" Text="{Binding URLRegexReplaceReplacement, Mode=TwoWay}"/>
                                     </Grid>
                                 </StackPanel>
                             </Border>

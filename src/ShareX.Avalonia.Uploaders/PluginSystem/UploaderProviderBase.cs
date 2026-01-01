@@ -85,4 +85,17 @@ public abstract class UploaderProviderBase : IUploaderProvider
         var defaultConfig = Activator.CreateInstance(ConfigModelType);
         return JsonConvert.SerializeObject(defaultConfig, Formatting.Indented);
     }
+
+    /// <summary>
+    /// Event raised when the provider's configuration has changed
+    /// </summary>
+    public event EventHandler? ConfigChanged;
+
+    /// <summary>
+    /// Raises the ConfigChanged event. Derived classes should call this when their config is modified.
+    /// </summary>
+    public virtual void OnConfigChanged()
+    {
+        ConfigChanged?.Invoke(this, EventArgs.Empty);
+    }
 }
