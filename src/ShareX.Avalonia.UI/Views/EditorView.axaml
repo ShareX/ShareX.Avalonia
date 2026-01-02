@@ -6,6 +6,7 @@
              xmlns:views="using:ShareX.Ava.UI.Views"
              xmlns:models="using:ShareX.Ava.Annotations.Models"
              xmlns:converters="using:ShareX.Ava.UI.Converters"
+             xmlns:controls="using:ShareX.Ava.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="ShareX.Ava.UI.Views.EditorView"
              x:DataType="vm:MainViewModel"
@@ -293,34 +294,10 @@
                                                HorizontalAlignment="Stretch"
                                                VerticalAlignment="Stretch"/>
 
-                                        <!-- Annotation Layer (Saved content) -->
-                                        <Canvas Name="AnnotationCanvas"
-                                                Background="Transparent"
-                                                IsVisible="{Binding HasPreviewImage}"
+                                        <!-- Annotation Layer (CP01 Architecture) -->
+                                        <controls:AnnotationCanvas Name="AnnotationCanvas"
                                                 HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Stretch"
-                                                Cursor="Cross"
-                                                PointerPressed="OnCanvasPointerPressed"
-                                                PointerMoved="OnCanvasPointerMoved"
-                                                PointerReleased="OnCanvasPointerReleased">
-                                        </Canvas>
-
-                                        <!-- Overlay Layer (Transient UI: Selection handles, Crop) -->
-                                            <Canvas Name="OverlayCanvas"
-                                                IsHitTestVisible="True"
-                                                HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Stretch"
-                                                PointerPressed="OnCanvasPointerPressed"
-                                                PointerMoved="OnCanvasPointerMoved"
-                                                PointerReleased="OnCanvasPointerReleased">
-                                            <Rectangle Name="CropOverlay" 
-                                                       IsVisible="False"
-                                                       Stroke="White"
-                                                       StrokeThickness="2"
-                                                       StrokeDashArray="4,2"
-                                                       Fill="#80000000" />
-                                            <!-- Selection Handles will be added here dynamically -->
-                                        </Canvas>
+                                                VerticalAlignment="Stretch"/>
                                     </Grid>
                                     </Border>
                                 </LayoutTransformControl>
