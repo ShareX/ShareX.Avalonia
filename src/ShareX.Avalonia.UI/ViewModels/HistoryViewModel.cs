@@ -1,5 +1,8 @@
+using System;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
+using Avalonia.Data.Converters;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Core.Tasks;
@@ -9,6 +12,10 @@ namespace ShareX.Ava.UI.ViewModels
 {
     public partial class HistoryViewModel : ViewModelBase
     {
+        // Converter for view toggle button text
+        public static IValueConverter ViewToggleConverter { get; } = new FuncValueConverter<bool, string>(
+            isGrid => isGrid ? "📋 List View" : "🔲 Grid View");
+
         [ObservableProperty]
         private ObservableCollection<HistoryItem> _historyItems;
 
@@ -24,7 +31,7 @@ namespace ShareX.Ava.UI.ViewModels
             // Create history manager with default path
             var historyPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "ShareX", "History.xml");
+                "ShareX.Ava", "History.xml");
             
             _historyManager = new HistoryManagerXML(historyPath);
             
@@ -54,6 +61,27 @@ namespace ShareX.Ava.UI.ViewModels
         private void RefreshHistory()
         {
             LoadHistory();
+        }
+
+        [RelayCommand]
+        private async Task EditImage(HistoryItem? item)
+        {
+            if (item == null || string.IsNullOrEmpty(item.FilePath)) return;
+            if (!System.IO.File.Exists(item.FilePath)) return;
+
+            try
+            {
+                // Load the image from file
+                using var fs = new FileStream(item.FilePath, FileMode.Open, FileAccess.Read);
+                var image = System.Drawing.Image.FromStream(fs);
+                
+                // Open in Editor using the platform service
+                await ShareX.Ava.Platform.Abstractions.PlatformServices.UI.ShowEditorAsync(image);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to open image in editor: {ex.Message}");
+            }
         }
     }
 }
