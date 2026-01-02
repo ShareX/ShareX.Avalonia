@@ -13,20 +13,20 @@
 
     <Grid RowDefinitions="Auto,*">
         <!-- Toolbar -->
-        <Border Grid.Row="0" Background="#252535" Padding="12,8">
+        <Border Grid.Row="0" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button Content="🔄 Refresh" Command="{Binding RefreshHistoryCommand}" 
-                        Background="#374151" Foreground="White" Padding="12,8" CornerRadius="8"/>
+                        Padding="12,8" CornerRadius="8"/>
                 <Button Content="{Binding IsGridView, Converter={x:Static vm:HistoryViewModel.ViewToggleConverter}}" 
                         Command="{Binding ToggleViewCommand}"
-                        Background="#374151" Foreground="White" Padding="12,8" CornerRadius="8"/>
+                        Padding="12,8" CornerRadius="8"/>
                 <TextBlock Text="{Binding HistoryItems.Count, StringFormat='📁 {0} items'}" 
-                           VerticalAlignment="Center" Foreground="#9CA3AF" Margin="10,0,0,0"/>
+                           VerticalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="10,0,0,0"/>
             </StackPanel>
         </Border>
 
         <!-- History Grid/List -->
-        <ScrollViewer Grid.Row="1" Background="#1a1a2e">
+        <ScrollViewer Grid.Row="1">
             <ItemsControl ItemsSource="{Binding HistoryItems}" Margin="12">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>

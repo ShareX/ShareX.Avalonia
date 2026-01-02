@@ -18,7 +18,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
         <!-- Row 0: Capture Toolbar -->
-        <Border Grid.Row="0" Background="#252535" Padding="16,12">
+        <Border Grid.Row="0" Padding="16,12">
             <DockPanel>
                 <!-- Capture Buttons (Left) -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
@@ -64,7 +64,6 @@
 
         <!-- Row 1: Annotation Toolbar (only visible when screenshot exists) -->
         <Border Grid.Row="1" 
-                Background="#2A2A3E" 
                 Padding="12,8"
                 IsVisible="{Binding HasPreviewImage}">
             <StackPanel Orientation="Vertical" Spacing="10">
@@ -331,7 +330,7 @@
             </Grid>
 
             <!-- Right Sidebar (Settings Panel) -->
-            <Border Grid.Column="1" Background="#252535" Padding="20">
+            <Border Grid.Column="1" Padding="20">
                 <ScrollViewer>
                     <StackPanel Spacing="25">
                         <TextBlock Text="Settings" 
@@ -418,7 +417,6 @@
 
         <!-- Row 3: Export Toolbar (only visible when screenshot exists) -->
         <Border Grid.Row="3" 
-                Background="#252535" 
                 Padding="12,10"
                 IsVisible="{Binding HasPreviewImage}">
             <DockPanel>
@@ -506,7 +504,7 @@
         </Border>
 
         <!-- Row 4: Status Bar (always visible) -->
-        <Border Grid.Row="4" Background="#1E1E2E" Padding="16,8">
+        <Border Grid.Row="4" Padding="16,8">
             <DockPanel>
                 <!-- Right: Version Info (Strictly Bottom Right) -->
                 <TextBlock DockPanel.Dock="Right" 

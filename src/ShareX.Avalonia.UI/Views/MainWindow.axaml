@@ -5,14 +5,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:views="using:ShareX.Ava.UI.Views"
-        mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+        xmlns:common="clr-namespace:ShareX.Ava.Common;assembly=ShareX.Avalonia.Common"
+        mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="650"
         x:Class="ShareX.Ava.UI.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="ShareX Ava"
-        Width="1200" Height="800"
-        Background="#1E1E2E"
-        ExtendClientAreaToDecorationsHint="True"
-        ExtendClientAreaTitleBarHeightHint="40"
+        Title="{x:Static common:ShareXResources.ProductName}"
+        Icon="/Assets/sharex.ico"
+        WindowState="Normal"
+        WindowStartupLocation="CenterScreen"
+
         Opened="OnWindowOpened">
 
     <Window.DataTemplates>
@@ -27,17 +28,7 @@
 
     <Grid RowDefinitions="Auto,*">
         
-        <!-- Header Row with Logo (Native Window Buttons are overlayed by OS) -->
-        <!-- Header Row with Logo (Native Window Buttons are overlayed by OS) -->
-        <Grid Grid.Row="0" Height="40" Background="#1E1E2E" ColumnDefinitions="Auto,*" IsHitTestVisible="False">
-            <TextBlock Grid.Column="0" 
-                       Text="ShareX Ava" 
-                       FontSize="16" 
-                       FontWeight="Bold" 
-                       Foreground="White"
-                       VerticalAlignment="Center"
-                       Margin="20,0,0,0"/> 
-        </Grid>
+        <!-- Header Row reserved for future use or native integration -->
 
         <!-- Main Navigation Shell -->
         <ui:NavigationView Grid.Row="1" 

@@ -5,6 +5,8 @@ using System.IO;
 using Avalonia.Data.Converters;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using ShareX.Ava.Core;
+using ShareX.Ava.Common;
 using ShareX.Ava.Core.Tasks;
 using ShareX.Ava.History;
 
@@ -28,11 +30,11 @@ namespace ShareX.Ava.UI.ViewModels
         {
             HistoryItems = new ObservableCollection<HistoryItem>();
             
-            // Create history manager with default path
-            var historyPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "ShareX.Ava", "History.xml");
+            // Create history manager with centralized path and debug logging
+            var historyPath = Path.Combine(SettingManager.SettingsFolder, ShareXResources.HistoryFileName);
             
+            System.Diagnostics.Debug.WriteLine($"Trace: HistoryViewModel - Initializing with path: {historyPath}");
+
             _historyManager = new HistoryManagerXML(historyPath);
             
             LoadHistory();
@@ -41,14 +43,18 @@ namespace ShareX.Ava.UI.ViewModels
         [RelayCommand]
         private void LoadHistory()
         {
+            System.Diagnostics.Debug.WriteLine("Trace: HistoryViewModel - Loading history items...");
+            
             // Load from HistoryManager
             var items = _historyManager.GetHistoryItems();
-            
+            System.Diagnostics.Debug.WriteLine($"Trace: HistoryViewModel - Items loaded from manager: {items.Count}");
+
             HistoryItems.Clear();
             foreach (var item in items)
             {
                 HistoryItems.Add(item);
             }
+            System.Diagnostics.Debug.WriteLine($"Trace: HistoryViewModel - Items added to ObservableCollection: {HistoryItems.Count}");
         }
 
         [RelayCommand]
