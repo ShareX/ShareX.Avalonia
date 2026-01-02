@@ -21,7 +21,6 @@
         <!-- Overlay Layer (Handles, Crop) -->
         <Canvas Name="OverlayCanvas"
                 IsHitTestVisible="True"
-                Background="Transparent"
                 HorizontalAlignment="Stretch"
                 VerticalAlignment="Stretch"
                 PointerPressed="OnCanvasPointerPressed"

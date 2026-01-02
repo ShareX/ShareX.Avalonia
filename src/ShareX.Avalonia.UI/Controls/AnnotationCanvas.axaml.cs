@@ -99,7 +99,7 @@ namespace ShareX.Ava.UI.Controls
             if (canvas == null) return;
 
              // Ignore middle mouse (panning is handled by parent ScrollViewer)
-            var props = e.GetCurrentPoint(sender as Visual).Properties;
+            var props = e.GetCurrentPoint(canvas).Properties;
             if (props.IsMiddleButtonPressed) return;
 
             var point = GetCanvasPosition(e, canvas);
@@ -146,12 +146,11 @@ namespace ShareX.Ava.UI.Controls
                       e.Pointer.Capture(canvas);
                       return;
                  }
-                 else
-                 {
-                      // Clicked elsewhere, deselect
-                      _selectedShape = null;
-                      UpdateSelectionHandles();
-                 }
+                 
+                 // Clicked elsewhere, deselect and continue with new shape creation
+                 _selectedShape = null;
+                 UpdateSelectionHandles();
+                 // Don't return - fall through to allow creating new shape
             }
 
             if (vm.ActiveTool == EditorTool.Select)
