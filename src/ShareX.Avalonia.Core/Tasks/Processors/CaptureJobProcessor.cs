@@ -35,6 +35,7 @@ using ShareX.Ava.Core.Tasks;
 using ShareX.Ava.Common.Helpers;
 using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.Uploaders;
+using ShareX.Ava.Uploaders.PluginSystem;
 
 namespace ShareX.Ava.Core.Tasks.Processors
 {
@@ -48,6 +49,9 @@ namespace ShareX.Ava.Core.Tasks.Processors
             if (info.Metadata?.Image == null) return;
 
             var settings = info.TaskSettings;
+            DebugHelper.WriteLine(
+                $"AfterCaptureJob={settings.AfterCaptureJob}, " +
+                $"UploadImageToHost={settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.UploadImageToHost)}");
 
             if (settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.SaveImageToFile))
             {
@@ -76,6 +80,10 @@ namespace ShareX.Ava.Core.Tasks.Processors
             if (settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.UploadImageToHost))
             {
                 await UploadImageAsync(info);
+            }
+            else
+            {
+                DebugHelper.WriteLine("UploadImageToHost flag not set; skipping upload.");
             }
             
             // TODO: Add other tasks
@@ -123,6 +131,7 @@ namespace ShareX.Ava.Core.Tasks.Processors
             }
 
             DebugHelper.WriteLine($"Uploading image: {info.FilePath}");
+            DebugHelper.WriteLine($"Upload destination: {info.TaskSettings.ImageDestination}");
 
             try
             {
@@ -130,6 +139,15 @@ namespace ShareX.Ava.Core.Tasks.Processors
                 if (!UploaderFactory.ImageUploaderServices.TryGetValue(destination, out var uploaderService))
                 {
                     DebugHelper.WriteLine($"No uploader found for destination: {destination}");
+                    DebugHelper.WriteLine($"Available legacy image uploaders: {string.Join(", ", UploaderFactory.ImageUploaderServices.Keys)}");
+                    var pluginResult = TryUploadWithPluginSystem(info);
+                    if (pluginResult == null)
+                    {
+                        DebugHelper.WriteLine("Plugin upload did not return a result.");
+                        return;
+                    }
+
+                    HandleUploadResult(info, pluginResult);
                     return;
                 }
 
@@ -152,17 +170,7 @@ namespace ShareX.Ava.Core.Tasks.Processors
                     _ => null
                 };
 
-                if (result != null && !result.IsError && !string.IsNullOrEmpty(result.URL))
-                {
-                    info.Metadata!.UploadURL = result.URL;
-                    DebugHelper.WriteLine($"Upload successful: {result.URL}");
-                    DebugHelper.WriteLine("Upload complete.");
-                }
-                else
-                {
-                    string? errorText = result?.Errors?.Errors?.FirstOrDefault()?.Text ?? result?.Errors?.ToString();
-                    DebugHelper.WriteLine($"Upload failed: {errorText ?? "Unknown upload error."}");
-                }
+                HandleUploadResult(info, result);
             }
             catch (Exception ex)
             {
@@ -176,6 +184,85 @@ namespace ShareX.Ava.Core.Tasks.Processors
         {
             using FileStream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
             return uploader.Upload(stream, Path.GetFileName(filePath));
+        }
+
+        private static void HandleUploadResult(TaskInfo info, UploadResult? result)
+        {
+            if (result != null && !result.IsError && !string.IsNullOrEmpty(result.URL))
+            {
+                info.Metadata!.UploadURL = result.URL;
+                info.Result = result;
+                info.DataType = EDataType.Image;
+                DebugHelper.WriteLine($"Upload successful: {result.URL}");
+                DebugHelper.WriteLine("Upload complete.");
+                return;
+            }
+
+            string? errorText = result?.Errors?.Errors?.FirstOrDefault()?.Text ?? result?.Errors?.ToString();
+            DebugHelper.WriteLine($"Upload failed: {errorText ?? "Unknown upload error."}");
+        }
+
+        private static UploadResult? TryUploadWithPluginSystem(TaskInfo info)
+        {
+            EnsurePluginsLoaded();
+
+            var instanceManager = InstanceManager.Instance;
+            var defaultInstance = instanceManager.GetDefaultInstance(UploaderCategory.Image);
+            if (defaultInstance == null)
+            {
+                DebugHelper.WriteLine("No default image uploader instance configured.");
+                return null;
+            }
+
+            DebugHelper.WriteLine($"Plugin instance selected: {defaultInstance.DisplayName} ({defaultInstance.ProviderId})");
+
+            var provider = ProviderCatalog.GetProvider(defaultInstance.ProviderId);
+            if (provider == null)
+            {
+                DebugHelper.WriteLine($"Provider not found in catalog: {defaultInstance.ProviderId}");
+                return null;
+            }
+
+            DebugHelper.WriteLine($"Provider loaded: {provider.Name} ({provider.ProviderId})");
+
+            Uploader uploader;
+            try
+            {
+                uploader = provider.CreateInstance(defaultInstance.SettingsJson);
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Failed to create uploader instance");
+                return null;
+            }
+
+            return uploader switch
+            {
+                FileUploader fileUploader => fileUploader.UploadFile(info.FilePath),
+                GenericUploader genericUploader => UploadWithGenericUploader(genericUploader, info.FilePath),
+                _ => null
+            };
+        }
+
+        private static void EnsurePluginsLoaded()
+        {
+            if (ProviderCatalog.ArePluginsLoaded())
+            {
+                return;
+            }
+
+            try
+            {
+                ProviderCatalog.InitializeBuiltInProviders();
+                string pluginsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+                DebugHelper.WriteLine($"Loading plugins from: {pluginsPath}");
+                ProviderCatalog.LoadPlugins(pluginsPath);
+                DebugHelper.WriteLine($"Plugin providers available: {ProviderCatalog.GetAllProviders().Count}");
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Failed to load plugins");
+            }
         }
     }
 }
