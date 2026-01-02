@@ -31,7 +31,7 @@ namespace ShareX.Ava.UI.ViewModels
             // Create history manager with default path
             var historyPath = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                "ShareX", "History.xml");
+                "ShareX.Ava", "History.xml");
             
             _historyManager = new HistoryManagerXML(historyPath);
             

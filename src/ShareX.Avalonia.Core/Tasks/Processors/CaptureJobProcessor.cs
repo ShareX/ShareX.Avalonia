@@ -71,7 +71,7 @@ namespace ShareX.Ava.Core.Tasks.Processors
                  {
                      var historyPath = Path.Combine(
                          Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                         "ShareX", "History.xml");
+                         "ShareX.Ava", "History.xml");
                      
                      var historyManager = new HistoryManagerXML(historyPath);
                      var historyItem = new HistoryItem
