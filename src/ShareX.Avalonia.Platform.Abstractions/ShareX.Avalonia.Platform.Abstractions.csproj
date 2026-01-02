@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.2.1" />
+    <PackageReference Include="Avalonia" Version="11.3.10" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
   </ItemGroup>
 </Project>
