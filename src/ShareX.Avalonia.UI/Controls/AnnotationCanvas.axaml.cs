@@ -242,8 +242,13 @@ namespace ShareX.Ava.UI.Controls
                  {
                      if (canvas != null && !canvas.Children.Contains(_currentShape))
                      {
-                         // Don't set Canvas.Left/Top for Line/Arrow - they use absolute coordinates
-                         if (vm.ActiveTool != EditorTool.Arrow && vm.ActiveTool != EditorTool.Line)
+                         // Don't set Canvas.Left/Top for shapes that use absolute coordinates:
+                         // Line, Arrow, Pen (Polyline), SmartEraser (Polyline), Spotlight
+                         if (vm.ActiveTool != EditorTool.Arrow && 
+                             vm.ActiveTool != EditorTool.Line &&
+                             vm.ActiveTool != EditorTool.Pen &&
+                             vm.ActiveTool != EditorTool.SmartEraser &&
+                             vm.ActiveTool != EditorTool.Spotlight)
                          {
                              Canvas.SetLeft(_currentShape, _startPoint.X);
                              Canvas.SetTop(_currentShape, _startPoint.Y);
