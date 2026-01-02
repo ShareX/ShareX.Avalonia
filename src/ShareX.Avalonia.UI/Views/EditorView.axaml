@@ -1,4 +1,4 @@
-<UserControl xmlns="https://github.com/avaloniaui"
+﻿<UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -6,7 +6,6 @@
              xmlns:views="using:ShareX.Ava.UI.Views"
              xmlns:models="using:ShareX.Ava.Annotations.Models"
              xmlns:converters="using:ShareX.Ava.UI.Converters"
-             xmlns:controls="using:ShareX.Ava.UI.Controls"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
              x:Class="ShareX.Ava.UI.Views.EditorView"
              x:DataType="vm:MainViewModel"
@@ -294,10 +293,34 @@
                                                HorizontalAlignment="Stretch"
                                                VerticalAlignment="Stretch"/>
 
-                                        <!-- Annotation Layer (CP01 Architecture) -->
-                                        <controls:AnnotationCanvas Name="AnnotationCanvas"
+                                        <!-- Annotation Layer (Saved content) -->
+                                        <Canvas Name="AnnotationCanvas"
+                                                Background="Transparent"
+                                                IsVisible="{Binding HasPreviewImage}"
                                                 HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Stretch"/>
+                                                VerticalAlignment="Stretch"
+                                                Cursor="Cross"
+                                                PointerPressed="OnCanvasPointerPressed"
+                                                PointerMoved="OnCanvasPointerMoved"
+                                                PointerReleased="OnCanvasPointerReleased">
+                                        </Canvas>
+
+                                        <!-- Overlay Layer (Transient UI: Selection handles, Crop) -->
+                                            <Canvas Name="OverlayCanvas"
+                                                IsHitTestVisible="True"
+                                                HorizontalAlignment="Stretch"
+                                                VerticalAlignment="Stretch"
+                                                PointerPressed="OnCanvasPointerPressed"
+                                                PointerMoved="OnCanvasPointerMoved"
+                                                PointerReleased="OnCanvasPointerReleased">
+                                            <Rectangle Name="CropOverlay" 
+                                                       IsVisible="False"
+                                                       Stroke="White"
+                                                       StrokeThickness="2"
+                                                       StrokeDashArray="4,2"
+                                                       Fill="#80000000" />
+                                            <!-- Selection Handles will be added here dynamically -->
+                                        </Canvas>
                                     </Grid>
                                     </Border>
                                 </LayoutTransformControl>
@@ -431,7 +454,7 @@
                 <StackPanel Orientation="Horizontal" Spacing="8">
                     <Button Command="{Binding CopyCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="📋" FontSize="14"/>
+                            <TextBlock Text="≡ƒôï" FontSize="14"/>
                             <TextBlock Text="Copy" FontSize="12"/>
                         </StackPanel>
                         <Button.Styles>
@@ -448,7 +471,7 @@
                     
                     <Button Command="{Binding QuickSaveCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="⬇" FontSize="14"/>
+                            <TextBlock Text="Γ¼ç" FontSize="14"/>
                             <TextBlock Text="Quick Save" FontSize="12"/>
                         </StackPanel>
                         <Button.Styles>
@@ -465,7 +488,7 @@
                     
                     <Button Command="{Binding SaveAsCommand}">
                         <StackPanel Orientation="Horizontal" Spacing="6">
-                            <TextBlock Text="💾" FontSize="14"/>
+                            <TextBlock Text="≡ƒÆ╛" FontSize="14"/>
                             <TextBlock Text="Save As..." FontSize="12"/>
                         </StackPanel>
                         <Button.Styles>
