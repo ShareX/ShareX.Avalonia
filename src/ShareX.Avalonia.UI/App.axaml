@@ -26,7 +26,8 @@
     </Application.DataTemplates>
   
     <Application.Styles>
-        <StyleInclude Source="avares://ShareX.Avalonia.UI/Themes/Dark/DarkTheme.axaml" />
+        <!-- TODO: Re-enable dark theme when ready -->
+        <!-- <StyleInclude Source="avares://ShareX.Avalonia.UI/Themes/Dark/DarkTheme.axaml" /> -->
         <sty:FluentAvaloniaTheme />
     </Application.Styles>
 </Application>

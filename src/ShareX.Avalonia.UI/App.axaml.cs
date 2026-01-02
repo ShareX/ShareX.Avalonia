@@ -75,9 +75,35 @@ public partial class App : Application
         }
     }
 
+    private void OnTaskCompleted(object? sender, EventArgs e)
+    {
+        // When a task completes, update the preview image if it exists
+        if (sender is Core.Tasks.WorkerTask task &&
+            task.Info?.Metadata?.Image != null &&
+            ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+            desktop.MainWindow?.DataContext is MainViewModel viewModel)
+        {
+            viewModel.UpdatePreview(task.Info.Metadata.Image);
+            DebugHelper.WriteLine($"Updated preview from task completion: {task.Info.Metadata.Image.Width}x{task.Info.Metadata.Image.Height}");
+        }
+    }
+
     private async void HotkeyManager_HotkeyTriggered(object? sender, Core.Hotkeys.HotkeySettings settings)
     {
         DebugHelper.WriteLine($"Hotkey triggered: {settings}");
+        
+        // Navigate to Editor first
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && 
+            desktop.MainWindow is MainWindow mainWindow)
+        {
+            mainWindow.NavigateToEditor();
+        }
+        
+        // Subscribe to TaskManager task completion to capture the result
+        Core.Managers.TaskManager.Instance.TaskCompleted += (s, task) =>
+        {
+            OnTaskCompleted(task, EventArgs.Empty);
+        };
         
         // Execute the job associated with the hotkey
         await Core.Helpers.TaskHelpers.ExecuteJob(settings.Job, settings.TaskSettings);
