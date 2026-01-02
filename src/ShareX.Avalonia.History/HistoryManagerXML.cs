@@ -45,7 +45,6 @@ namespace ShareX.Ava.History
         internal override List<HistoryItem> Load(string filePath)
         {
             List<HistoryItem> historyItemList = new List<HistoryItem>();
-            DebugHelper.WriteLine($"Trace: HistoryManagerXML - Loading from path: {filePath}");
 
             if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath))
             {

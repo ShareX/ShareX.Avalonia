@@ -27,6 +27,78 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private int _selectedTheme;
 
+        // History Settings
+        public bool HistorySaveTasks
+        {
+            get => SettingManager.Settings.HistorySaveTasks;
+            set
+            {
+                SettingManager.Settings.HistorySaveTasks = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool HistoryCheckURL
+        {
+            get => SettingManager.Settings.HistoryCheckURL;
+            set
+            {
+                SettingManager.Settings.HistoryCheckURL = value;
+                OnPropertyChanged();
+            }
+        }
+
+        // Recent Tasks Settings
+        public bool RecentTasksSave
+        {
+            get => SettingManager.Settings.RecentTasksSave;
+            set
+            {
+                SettingManager.Settings.RecentTasksSave = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int RecentTasksMaxCount
+        {
+            get => SettingManager.Settings.RecentTasksMaxCount;
+            set
+            {
+                SettingManager.Settings.RecentTasksMaxCount = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RecentTasksShowInMainWindow
+        {
+            get => SettingManager.Settings.RecentTasksShowInMainWindow;
+            set
+            {
+                SettingManager.Settings.RecentTasksShowInMainWindow = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RecentTasksShowInTrayMenu
+        {
+            get => SettingManager.Settings.RecentTasksShowInTrayMenu;
+            set
+            {
+                SettingManager.Settings.RecentTasksShowInTrayMenu = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool RecentTasksTrayMenuMostRecentFirst
+        {
+            get => SettingManager.Settings.RecentTasksTrayMenuMostRecentFirst;
+            set
+            {
+                SettingManager.Settings.RecentTasksTrayMenuMostRecentFirst = value;
+                OnPropertyChanged();
+            }
+        }
+
         // Task Settings - General
         [ObservableProperty]
         private bool _playSoundAfterCapture;

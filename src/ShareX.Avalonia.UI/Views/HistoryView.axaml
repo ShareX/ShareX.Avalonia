@@ -1,17 +1,47 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:ShareX.Ava.UI.ViewModels"
+             xmlns:history="using:ShareX.Ava.History"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="ShareX.Ava.UI.Views.HistoryView"
-             x:DataType="vm:HistoryViewModel">
+             x:DataType="vm:HistoryViewModel"
+             x:Name="Root"
+             Cursor="Arrow">
     
     <Design.DataContext>
         <vm:HistoryViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto,*">
+    <UserControl.Resources>
+        <!-- Shared MenuFlyout Resource -->
+        <MenuFlyout x:Key="HistoryItemMenuFlyout">
+            <MenuItem Header="✏️ Open in Editor..." 
+                      Command="{Binding $parent[UserControl].DataContext.EditImageCommand}"
+                      CommandParameter="{Binding}"/>
+            <MenuItem Header="📄 Open File" 
+                      Command="{Binding $parent[UserControl].DataContext.OpenFileCommand}"
+                      CommandParameter="{Binding}"/>
+            <MenuItem Header="📂 Show in File Explorer..." 
+                      Command="{Binding $parent[UserControl].DataContext.OpenFolderCommand}"
+                      CommandParameter="{Binding}"/>
+            <Separator/>
+            <MenuItem Header="📋 Copy File Path" 
+                      Command="{Binding $parent[UserControl].DataContext.CopyFilePathCommand}"
+                      CommandParameter="{Binding}"/>
+            <MenuItem Header="🔗 Copy URL" 
+                      Command="{Binding $parent[UserControl].DataContext.CopyURLCommand}"
+                      CommandParameter="{Binding}"
+                      IsVisible="{Binding URL, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <Separator/>
+            <MenuItem Header="🗑️ Delete from History" 
+                      Command="{Binding $parent[UserControl].DataContext.DeleteItemCommand}"
+                      CommandParameter="{Binding}"/>
+        </MenuFlyout>
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*">
         <!-- Toolbar -->
         <Border Grid.Row="0" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="10">
@@ -24,9 +54,19 @@
                            VerticalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="10,0,0,0"/>
             </StackPanel>
         </Border>
+        
+        <!-- List View Header (only visible in list mode) -->
+        <Border Grid.Row="1" Padding="12,4" Background="#1a1a2e" IsVisible="{Binding !IsGridView}">
+            <Grid ColumnDefinitions="50,*,150,200">
+                <TextBlock Grid.Column="0" Text="" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold"/>
+                <TextBlock Grid.Column="1" Text="Filename" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold" Margin="8,0"/>
+                <TextBlock Grid.Column="2" Text="Type / Host" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold"/>
+                <TextBlock Grid.Column="3" Text="Date &amp; Time" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold"/>
+            </Grid>
+        </Border>
 
-        <!-- History Grid/List -->
-        <ScrollViewer Grid.Row="1">
+        <!-- Grid View -->
+        <ScrollViewer Grid.Row="2" IsVisible="{Binding IsGridView}">
             <ItemsControl ItemsSource="{Binding HistoryItems}" Margin="12">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -34,27 +74,17 @@
                     </ItemsPanelTemplate>
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="history:HistoryItem">
                         <Border Margin="6" Background="#252535" CornerRadius="8" 
-                                Width="180" Padding="8"
-                                PointerPressed="OnItemPointerPressed">
-                            <Border.ContextMenu>
-                                <ContextMenu>
-                                    <MenuItem Header="✏️ Open in Editor" 
-                                              Command="{Binding $parent[UserControl].((vm:HistoryViewModel)DataContext).EditImageCommand}"
-                                              CommandParameter="{Binding}"/>
-                                    <Separator/>
-                                    <MenuItem Header="📂 Open File Location"/>
-                                    <MenuItem Header="📋 Copy File Path"/>
-                                    <MenuItem Header="🔗 Copy URL" IsVisible="{Binding URL, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
-                                    <Separator/>
-                                    <MenuItem Header="🗑️ Delete"/>
-                                </ContextMenu>
-                            </Border.ContextMenu>
+                                Width="180" Padding="8" Cursor="Hand"
+                                Tag="{Binding #Root.DataContext}"
+                                PointerPressed="OnItemPointerPressed"
+                                ContextFlyout="{StaticResource HistoryItemMenuFlyout}">
                             <StackPanel Spacing="8">
                                 <!-- Thumbnail -->
                                 <Border Height="120" Background="#1a1a2e" CornerRadius="6" ClipToBounds="True">
-                                    <Image Source="{Binding FilePath}" Stretch="UniformToFill"
+                                    <Image Source="{Binding FilePath, Converter={x:Static vm:HistoryViewModel.ThumbnailConverter}}" 
+                                           Stretch="UniformToFill"
                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                 </Border>
                                 <!-- Info -->
@@ -63,6 +93,46 @@
                                 <TextBlock Text="{Binding DateTime, StringFormat='yyyy-MM-dd HH:mm'}" 
                                            FontSize="11" Foreground="#6B7280"/>
                             </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+        
+        <!-- List View -->
+        <ScrollViewer Grid.Row="2" IsVisible="{Binding !IsGridView}">
+            <ItemsControl ItemsSource="{Binding HistoryItems}" Margin="12,4">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="history:HistoryItem">
+                        <Border Margin="2" Background="#252535" CornerRadius="4" Padding="8" Cursor="Hand"
+                                Tag="{Binding #Root.DataContext}"
+                                PointerPressed="OnItemPointerPressed"
+                                ContextFlyout="{StaticResource HistoryItemMenuFlyout}">
+                            <Grid ColumnDefinitions="50,*,150,200">
+                                <!-- Thumbnail -->
+                                <Border Grid.Column="0" Width="40" Height="40" Background="#1a1a2e" CornerRadius="4" ClipToBounds="True">
+                                    <Image Source="{Binding FilePath, Converter={x:Static vm:HistoryViewModel.ThumbnailConverter}}" 
+                                           Stretch="UniformToFill"/>
+                                </Border>
+                                <!-- Filename -->
+                                <TextBlock Grid.Column="1" Text="{Binding FileName}" 
+                                           Foreground="White" VerticalAlignment="Center" Margin="8,0"
+                                           TextTrimming="CharacterEllipsis" ToolTip.Tip="{Binding FilePath}"/>
+                                <!-- Type/Host -->
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center" Spacing="8">
+                                    <TextBlock Text="{Binding Type}" Foreground="#9CA3AF" FontSize="12"/>
+                                    <TextBlock Text="{Binding Host}" Foreground="#6B7280" FontSize="12"
+                                               IsVisible="{Binding Host, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+                                </StackPanel>
+                                <!-- DateTime -->
+                                <TextBlock Grid.Column="3" Text="{Binding DateTime, StringFormat='yyyy-MM-dd HH:mm:ss'}" 
+                                           Foreground="#6B7280" VerticalAlignment="Center" FontSize="12"/>
+                            </Grid>
                         </Border>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
