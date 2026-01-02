@@ -90,7 +90,47 @@
 
             <!-- History Tab -->
             <TabItem Header="History">
-                <TextBlock Text="History settings placeholder" Margin="20" Foreground="Gray"/>
+                <ScrollViewer>
+                    <StackPanel Margin="20" Spacing="20">
+                        <!-- History Settings -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="History" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <CheckBox IsChecked="{Binding HistorySaveTasks}" Content="Save captured/uploaded items to history"/>
+                                    <CheckBox IsChecked="{Binding HistoryCheckURL}" Content="Only save items with URL"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- Recent Tasks Settings -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Recent Tasks" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <CheckBox IsChecked="{Binding RecentTasksSave}" Content="Save recent tasks"/>
+                                    
+                                    <Grid ColumnDefinitions="Auto,Auto,*" RowDefinitions="Auto">
+                                        <TextBlock Grid.Column="0" Text="Maximum recent tasks:" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Column="1" 
+                                                       Value="{Binding RecentTasksMaxCount}" 
+                                                       Minimum="1" Maximum="100" 
+                                                       Width="100" Margin="10,0,0,0"/>
+                                    </Grid>
+                                    
+                                    <Separator Margin="0,5"/>
+                                    <TextBlock Text="Display Options" FontWeight="SemiBold" FontSize="12"/>
+                                    
+                                    <CheckBox IsChecked="{Binding RecentTasksShowInMainWindow}" Content="Show recent tasks in main window"/>
+                                    <CheckBox IsChecked="{Binding RecentTasksShowInTrayMenu}" Content="Show recent tasks in tray menu"/>
+                                    <CheckBox IsChecked="{Binding RecentTasksTrayMenuMostRecentFirst}" 
+                                              Content="Show most recent first in tray menu" 
+                                              IsEnabled="{Binding RecentTasksShowInTrayMenu}"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
 
              <!-- Proxy Tab -->

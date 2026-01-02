@@ -142,7 +142,7 @@ public class ApplicationConfig : SettingsBase<ApplicationConfig>
     #region Settings - History
 
     public bool HistorySaveTasks = true;
-    public bool HistoryCheckURL = false;
+    public bool HistoryCheckURL = true;
 
     public RecentTask[]? RecentTasks = null;
     public bool RecentTasksSave = false;

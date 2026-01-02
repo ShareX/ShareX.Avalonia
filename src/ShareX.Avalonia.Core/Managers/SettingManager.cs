@@ -365,6 +365,16 @@ namespace ShareX.Ava.Core
             }
         }
 
+        /// <summary>
+        /// Returns the history file path in the current settings folder and logs it.
+        /// </summary>
+        public static string GetHistoryFilePath()
+        {
+            var path = Path.Combine(SettingsFolder, ShareXResources.HistoryFileName);
+            DebugHelper.WriteLine($"History file path: {path} (exists={File.Exists(path)})");
+            return path;
+        }
+
         #endregion
     }
 }
