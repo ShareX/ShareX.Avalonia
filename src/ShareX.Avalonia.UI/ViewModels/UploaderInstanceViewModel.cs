@@ -85,15 +85,27 @@ public partial class UploaderInstanceViewModel : ViewModelBase
 
     private void InitializeConfigViewModel()
     {
+        Common.DebugHelper.WriteLine($"[UploaderInstanceVM] InitializeConfigViewModel for ProviderId: {ProviderId}");
+        
         var provider = ProviderCatalog.GetProvider(ProviderId);
         if (provider != null)
         {
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] Provider found: {provider.Name}");
+            
             ConfigViewModel = provider.CreateConfigViewModel();
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] ConfigViewModel created: {ConfigViewModel?.GetType().Name ?? "null"}");
+            
             ConfigView = provider.CreateConfigView();
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] ConfigView created: {ConfigView?.GetType().Name ?? "null"}");
+        }
+        else
+        {
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] WARNING: Provider not found for ProviderId: {ProviderId}");
         }
 
         if (ConfigViewModel != null)
         {
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] Loading settings from JSON for {ProviderId}");
             ConfigViewModel.LoadFromJson(SettingsJson);
             
             if (ConfigViewModel is ObservableObject obs)
@@ -108,8 +120,17 @@ public partial class UploaderInstanceViewModel : ViewModelBase
 
             if (ConfigView is Avalonia.Controls.Control control)
             {
+                Common.DebugHelper.WriteLine($"[UploaderInstanceVM] Setting DataContext on ConfigView for {ProviderId}");
                 control.DataContext = ConfigViewModel;
             }
+            else
+            {
+                Common.DebugHelper.WriteLine($"[UploaderInstanceVM] WARNING: ConfigView is not an Avalonia Control");
+            }
+        }
+        else
+        {
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] WARNING: ConfigViewModel is null for {ProviderId}");
         }
     }
 
