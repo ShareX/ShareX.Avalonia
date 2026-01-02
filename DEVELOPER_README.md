@@ -85,6 +85,79 @@ The annotation system is built on a polymorphic model architecture with UI integ
 *   **Parameter Binding**: Dynamic UI generation for effect parameters
 *   **Integration**: `EffectsPanelView` provides UI, `MainViewModel` handles application logic
 
+### Uploader Plugin System
+
+The uploader system uses a plugin architecture where each uploader (Imgur, Amazon S3, etc.) is a separate plugin with its own configuration UI.
+
+#### ⚠️ Important: Plugin Configuration Loading
+
+**Issue**: Plugin configuration UIs may not load their settings from `UploadersConfig` on initialization, causing saved settings to appear blank when reopening the settings view.
+
+**Root Cause**: Plugins are dynamically loaded and their views are created fresh each time. If the plugin's ViewModel doesn't explicitly load configuration in its constructor or `OnNavigatedTo`, settings won't populate.
+
+**Solution Pattern**:
+
+```csharp
+// In Plugin ViewModel (e.g., ImgurViewModel.cs)
+public class ImgurViewModel : ViewModelBase
+{
+    public ImgurViewModel()
+    {
+        // ✅ CRITICAL: Load config on construction
+        LoadConfiguration();
+    }
+    
+    private void LoadConfiguration()
+    {
+        var config = SettingManager.UploadersConfig;
+        
+        // Load plugin-specific settings
+        ClientId = config.ImgurClientID ?? "";
+        ClientSecret = config.ImgurClientSecret ?? "";
+        RefreshToken = config.ImgurRefreshToken ?? "";
+        // ... load other settings
+    }
+    
+    // When settings change, notify host to save
+    partial void OnClientIdChanged(string value)
+    {
+        SettingManager.UploadersConfig.ImgurClientID = value;
+        RequestConfigSave?.Invoke(); // Trigger save event
+    }
+}
+```
+
+**Event-Driven Save Pattern**:
+
+Plugins should notify the host application when configuration changes:
+
+```csharp
+// In Plugin ViewModel
+public event Action? RequestConfigSave;
+
+// In Host (DestinationSettingsViewModel.cs)
+private void OnPluginViewChanged(object? sender, EventArgs e)
+{
+    if (SelectedPlugin?.ViewModel is ViewModelBase vm)
+    {
+        // Subscribe to save requests
+        if (vm is IConfigurablePlugin configurable)
+        {
+            configurable.RequestConfigSave += () => 
+            {
+                SettingManager.SaveUploadersConfig();
+            };
+        }
+    }
+}
+```
+
+**Best Practices**:
+- **Always load config in constructor**: Don't rely on external initialization
+- **Save on property change**: Use `OnPropertyChanged` partial methods to trigger saves
+- **Implement safety net**: Save config when view is unloaded (`OnNavigatedFrom` or `Unloaded` event)
+- **Test persistence**: Restart app and verify settings are retained
+
 ### Region Capture
 Located in `Views/RegionCapture/`:
 *   `RegionCaptureWindow`: Spans **all monitors** (Virtual Screen) with crosshair cursor
