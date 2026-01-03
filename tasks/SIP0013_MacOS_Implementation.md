@@ -94,6 +94,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 - [x] Instructions for granting permissions (Screen Recording) in `README.md`.
 - [ ] Packaging validated for `osx-arm64` (`dotnet publish`) with correct entitlements.
     - Verify Accessibility + Screen Recording prompts on first run.
+    - Use checklist: `docs/macos_publish_checklist.md`.
 
 ## Pending Validation
 - Exercise macOS hotkeys on-device with Accessibility granted (verify trigger events and failure logging).

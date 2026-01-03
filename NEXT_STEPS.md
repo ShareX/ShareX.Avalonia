@@ -59,7 +59,7 @@ We have successfully implemented the Reimagined UI, Multi-monitor Region Capture
     - [ ] App Icon and Assets
     - [ ] System Tray Icon (Platform specific)
     - [ ] CI/CD Pipeline setup
-    - [ ] macOS `osx-arm64` publish validation (entitlements, Screen Recording prompt)
+    - [ ] macOS `osx-arm64` publish validation (entitlements, Screen Recording prompt) — see `docs/macos_publish_checklist.md`
 
 ---
 
