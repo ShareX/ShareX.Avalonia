@@ -43,6 +43,8 @@ namespace ShareX.Ava.UI.Views
         private Point _startPoint;
         private Control? _currentShape;
         private bool _isDrawing;
+        private bool _isPointerZooming;
+        private double _lastZoom = 1.0;
 
         private const double MinZoom = 0.25;
         private const double MaxZoom = 4.0;
@@ -218,10 +220,16 @@ namespace ShareX.Ava.UI.Views
             {
                 var pointerPosition = e.GetPosition(scrollViewer);
                 var offsetBefore = scrollViewer.Offset;
-                var logicalPoint = new Vector(
+                if (scrollViewer.Extent.Width <= scrollViewer.Viewport.Width)
+                    offsetBefore = offsetBefore.WithX(0);
+                if (scrollViewer.Extent.Height <= scrollViewer.Viewport.Height)
+                    offsetBefore = offsetBefore.WithY(0);
+                 var logicalPoint = new Vector(
                     (offsetBefore.X + pointerPosition.X) / oldZoom,
                     (offsetBefore.Y + pointerPosition.Y) / oldZoom);
 
+                _isPointerZooming = true;
+                _lastZoom = oldZoom;
                 vm.Zoom = newZoom;
 
                 Dispatcher.UIThread.Post(() =>
@@ -234,6 +242,12 @@ namespace ShareX.Ava.UI.Views
                     var maxX = Math.Max(0, scrollViewer.Extent.Width - scrollViewer.Viewport.Width);
                     var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
 
+                    // If content is smaller than the viewport, keep it centered by zeroing offsets
+                    if (scrollViewer.Extent.Width <= scrollViewer.Viewport.Width)
+                        targetOffset = targetOffset.WithX(0);
+                    if (scrollViewer.Extent.Height <= scrollViewer.Viewport.Height)
+                        targetOffset = targetOffset.WithY(0);
+
                     scrollViewer.Offset = new Vector(
                         Math.Clamp(targetOffset.X, 0, maxX),
                         Math.Clamp(targetOffset.Y, 0, maxY));
@@ -241,10 +255,64 @@ namespace ShareX.Ava.UI.Views
             }
             else
             {
+                _lastZoom = oldZoom;
                 vm.Zoom = newZoom;
             }
 
+            _isPointerZooming = false;
+            _lastZoom = vm.Zoom;
             e.Handled = true;
+        }
+
+        private void AdjustZoomToAnchor(double oldZoom, double newZoom, Point anchor)
+        {
+            var scrollViewer = this.FindControl<ScrollViewer>("CanvasScrollViewer");
+            if (scrollViewer == null || oldZoom <= 0) return;
+
+            var offsetBefore = scrollViewer.Offset;
+            if (scrollViewer.Extent.Width <= scrollViewer.Viewport.Width)
+                offsetBefore = offsetBefore.WithX(0);
+            if (scrollViewer.Extent.Height <= scrollViewer.Viewport.Height)
+                offsetBefore = offsetBefore.WithY(0);
+             var logicalPoint = new Vector(
+                 (offsetBefore.X + anchor.X) / oldZoom,
+                 (offsetBefore.Y + anchor.Y) / oldZoom);
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                var targetOffset = new Vector(
+                    logicalPoint.X * newZoom - anchor.X,
+                    logicalPoint.Y * newZoom - anchor.Y);
+
+                var maxX = Math.Max(0, scrollViewer.Extent.Width - scrollViewer.Viewport.Width);
+                var maxY = Math.Max(0, scrollViewer.Extent.Height - scrollViewer.Viewport.Height);
+
+                if (scrollViewer.Extent.Width <= scrollViewer.Viewport.Width)
+                    targetOffset = targetOffset.WithX(0);
+                if (scrollViewer.Extent.Height <= scrollViewer.Viewport.Height)
+                    targetOffset = targetOffset.WithY(0);
+
+                scrollViewer.Offset = new Vector(
+                    Math.Clamp(targetOffset.X, 0, maxX),
+                    Math.Clamp(targetOffset.Y, 0, maxY));
+            }, DispatcherPriority.Render);
+        }
+
+        private void CenterCanvasOnZoomChange()
+        {
+            var scrollViewer = this.FindControl<ScrollViewer>("CanvasScrollViewer");
+            if (scrollViewer == null) return;
+
+            Dispatcher.UIThread.Post(() =>
+            {
+                var extent = scrollViewer.Extent;
+                var viewport = scrollViewer.Viewport;
+                var targetOffset = new Vector(
+                    Math.Max(0, (extent.Width - viewport.Width) / 2),
+                    Math.Max(0, (extent.Height - viewport.Height) / 2));
+
+                scrollViewer.Offset = targetOffset;
+            }, DispatcherPriority.Render);
         }
 
         private void OnScrollViewerPointerPressed(object? sender, PointerPressedEventArgs e)
@@ -532,6 +600,7 @@ namespace ShareX.Ava.UI.Views
                 vm.ShowErrorDialog += ShowErrorDialog;
                 vm.PropertyChanged -= OnViewModelPropertyChanged;
                 vm.PropertyChanged += OnViewModelPropertyChanged;
+                _lastZoom = vm.Zoom;
             }
         }
 
@@ -566,6 +635,20 @@ namespace ShareX.Ava.UI.Views
             else if (e.PropertyName == nameof(MainViewModel.ActiveTool))
             {
                 ClearSelection();
+            }
+            else if (e.PropertyName == nameof(MainViewModel.Zoom) && !_isPointerZooming)
+            {
+                var scrollViewer = this.FindControl<ScrollViewer>("CanvasScrollViewer");
+                if (scrollViewer != null)
+                {
+                    var anchor = new Point(scrollViewer.Viewport.Width / 2, scrollViewer.Viewport.Height / 2);
+                    AdjustZoomToAnchor(_lastZoom, vm.Zoom, anchor);
+                }
+                _lastZoom = vm.Zoom;
+            }
+            else if (e.PropertyName == nameof(MainViewModel.Zoom))
+            {
+                _lastZoom = vm.Zoom;
             }
         }
 
