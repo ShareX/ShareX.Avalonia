@@ -46,6 +46,9 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private string _exportState = "";
 
+        [ObservableProperty]
+        private bool _showCaptureToolbar = true;
+
         // Events to signal View to perform canvas operations
         public event EventHandler? UndoRequested;
         public event EventHandler? RedoRequested;

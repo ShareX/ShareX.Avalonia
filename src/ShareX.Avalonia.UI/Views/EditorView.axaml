@@ -18,7 +18,7 @@
 
     <Grid RowDefinitions="Auto,Auto,*,Auto,Auto">
         <!-- Row 0: Capture Toolbar -->
-        <Border Grid.Row="0" Padding="16,12">
+        <Border Grid.Row="0" Padding="16,12" IsVisible="{Binding ShowCaptureToolbar}">
             <DockPanel>
                 <!-- Capture Buttons (Left) -->
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="8">
