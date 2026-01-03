@@ -71,6 +71,15 @@ namespace ShareX.Ava.UI.Views
         // Track if we're in the middle of creating an effect shape
         private bool _isCreatingEffect;
 
+        private void ClearSelection()
+        {
+            _selectedShape = null;
+            _isDraggingHandle = false;
+            _draggedHandle = null;
+            _isDraggingShape = false;
+            UpdateSelectionHandles();
+        }
+
         private Point GetCanvasPosition(PointerEventArgs e, Canvas canvas)
         {
             return e.GetPosition(canvas);
@@ -553,6 +562,10 @@ namespace ShareX.Ava.UI.Views
                 // Invalidate cached bitmap when preview image changes
                 _cachedSkBitmap?.Dispose();
                 _cachedSkBitmap = null;
+            }
+            else if (e.PropertyName == nameof(MainViewModel.ActiveTool))
+            {
+                ClearSelection();
             }
         }
 
