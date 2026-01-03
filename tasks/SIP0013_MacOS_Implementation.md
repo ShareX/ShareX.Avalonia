@@ -93,6 +93,7 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 - [ ] Clipboard upload (text/image) working.
 - [x] Instructions for granting permissions (Screen Recording) in `README.md`.
 - [ ] Packaging validated for `osx-arm64` (`dotnet publish`) with correct entitlements.
+    - Verify Accessibility + Screen Recording prompts on first run.
 
 ## Pending Validation
 - Exercise macOS hotkeys on-device with Accessibility granted (verify trigger events and failure logging).

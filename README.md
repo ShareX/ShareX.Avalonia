@@ -54,6 +54,12 @@ Screen capture on macOS requires Screen Recording permission:
 2. Enable ShareX.Avalonia for screen capture access.
 3. Restart the app after granting permission.
 
+### macOS Permissions (Global Hotkeys)
+Global hotkeys use SharpHook and need Accessibility permission:
+1. Open **System Settings** > **Privacy & Security** > **Accessibility**.
+2. Enable ShareX.Avalonia (or the published app bundle) for accessibility access.
+3. Restart the app and retest hotkeys.
+
 ## ðŸ› ï¸ Developer Information
 
 See [DEVELOPER_README.md](DEVELOPER_README.md) for architecture details and contribution guidelines.

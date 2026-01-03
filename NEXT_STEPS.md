@@ -54,11 +54,12 @@ We have successfully implemented the Reimagined UI, Multi-monitor Region Capture
     - [ ] Copy/Paste in native apps (Paint, Word, etc.)
 - [ ] **Cross-Platform**:
     - [ ] Linux compatibility testing
-    - [ ] macOS compatibility testing
+    - [ ] macOS compatibility testing (hotkeys, clipboard, screen/window services)
 - [ ] **Distribution**:
     - [ ] App Icon and Assets
     - [ ] System Tray Icon (Platform specific)
     - [ ] CI/CD Pipeline setup
+    - [ ] macOS `osx-arm64` publish validation (entitlements, Screen Recording prompt)
 
 ---
 
