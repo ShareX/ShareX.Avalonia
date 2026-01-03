@@ -8,7 +8,7 @@
         x:Class="ShareX.Ava.UI.Views.EditorWindow"
         x:DataType="vm:MainViewModel"
         Title="ShareX Editor"
-        Icon="/Assets/sharex.ico"
+        Icon="/Assets/Logo.ico"
         WindowStartupLocation="CenterScreen">
     
     <views:EditorView Name="EditorViewControl"/>

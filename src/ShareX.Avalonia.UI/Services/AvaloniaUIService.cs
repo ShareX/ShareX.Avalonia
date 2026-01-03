@@ -49,6 +49,7 @@ namespace ShareX.Ava.UI.Services
                 
                 // Create independent ViewModel for this editor instance
                 var editorViewModel = new MainViewModel();
+                editorViewModel.ShowCaptureToolbar = false;
                 
                 // Set DataContext BEFORE initializing preview so bindings update correctly
                 editorWindow.DataContext = editorViewModel;

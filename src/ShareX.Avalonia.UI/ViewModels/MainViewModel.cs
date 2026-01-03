@@ -46,6 +46,9 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private string _exportState = "";
 
+        [ObservableProperty]
+        private bool _showCaptureToolbar = true;
+
         // Events to signal View to perform canvas operations
         public event EventHandler? UndoRequested;
         public event EventHandler? RedoRequested;
@@ -649,6 +652,11 @@ namespace ShareX.Ava.UI.ViewModels
             // HasPreviewImage = true; // Handled by OnPreviewImageChanged
             ImageDimensions = $"{image.Width} x {image.Height}";
             StatusText = $"Image: {image.Width} × {image.Height}";
+
+            // Reset view state for the new image
+            Zoom = 1.0;
+            ClearAnnotationsRequested?.Invoke(this, EventArgs.Empty);
+            ResetNumberCounter();
         }
 
         public void CropImage(int x, int y, int width, int height)

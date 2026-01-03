@@ -7,6 +7,7 @@
         x:Class="ShareX.Ava.UI.Views.AfterCaptureWindow"
         x:DataType="vm:AfterCaptureViewModel"
         Title="After Capture Tasks"
+        Icon="/Assets/Logo.ico"
         Width="900"
         Height="600"
         WindowStartupLocation="CenterOwner">

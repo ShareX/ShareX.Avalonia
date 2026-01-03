@@ -2,12 +2,92 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="ShareX.Ava.UI.Views.WorkflowsView">
+             xmlns:vm="using:ShareX.Ava.UI.ViewModels"
+             xmlns:views="using:ShareX.Ava.UI.Views"
+             xmlns:controls="using:ShareX.Ava.UI.Views.Controls"
+             xmlns:ui="using:FluentAvalonia.UI.Controls"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="ShareX.Ava.UI.Views.WorkflowsView"
+             x:DataType="vm:WorkflowsViewModel">
+
     <Grid>
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="20">
-            <TextBlock Text="Workflows" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
-            <TextBlock Text="Manage your capture tasks and workflows here." Foreground="Gray" HorizontalAlignment="Center"/>
-        </StackPanel>
+        <!-- Main Content -->
+        <Grid RowDefinitions="Auto, *">
+            
+            <!-- Toolbar -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="20">
+                <TextBlock Text="Workflows" FontSize="24" FontWeight="SemiBold" VerticalAlignment="Center" Margin="0,0,20,0"/>
+                
+                <Button Command="{Binding AddWorkflowCommand}" ToolTip.Tip="Add New Workflow">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <ui:SymbolIcon Symbol="Add"/>
+                        <TextBlock Text="Add New"/>
+                    </StackPanel>
+                </Button>
+                
+                <ui:CommandBarSeparator />
+                
+                <Button Command="{Binding RemoveWorkflowCommand}" 
+                        IsEnabled="{Binding SelectedWorkflow, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        ToolTip.Tip="Remove Selected">
+                    <ui:SymbolIcon Symbol="Delete"/>
+                </Button>
+                 
+                <Button Command="{Binding DuplicateCommand}" 
+                        IsEnabled="{Binding SelectedWorkflow, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        ToolTip.Tip="Duplicate">
+                    <ui:SymbolIcon Symbol="Copy"/>
+                </Button>
+                
+                <Button Command="{Binding MoveUpCommand}" 
+                        IsEnabled="{Binding SelectedWorkflow, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        ToolTip.Tip="Move Up">
+                    <ui:SymbolIcon Symbol="ChevronUp"/>
+                </Button>
+                 
+                <Button Command="{Binding MoveDownCommand}" 
+                        IsEnabled="{Binding SelectedWorkflow, Converter={x:Static ObjectConverters.IsNotNull}}"
+                        ToolTip.Tip="Move Down">
+                    <ui:SymbolIcon Symbol="ChevronDown"/>
+                </Button>
+
+                <ui:CommandBarSeparator />
+
+                <Button Command="{Binding ResetCommand}" ToolTip.Tip="Reset to Defaults">
+                    <ui:SymbolIcon Symbol="Refresh"/>
+                </Button>
+            </StackPanel>
+
+            <!-- List -->
+            <ListBox Grid.Row="1" ItemsSource="{Binding Workflows}" SelectedItem="{Binding SelectedWorkflow}" Margin="20,0,20,20">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <controls:HotkeySelectionControl Margin="0,5"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Grid>
+
+        <!-- Wizard Overlay -->
+        <Border Background="{DynamicResource SolidBackgroundFillColorBase}" IsVisible="{Binding IsWizardOpen}" 
+                BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1"
+                Margin="40" CornerRadius="12" BoxShadow="0 0 20 0 #40000000"
+                Grid.RowSpan="2">
+            <Grid RowDefinitions="*, Auto">
+                
+                <!-- Wizard View -->
+                <views:WorkflowWizardView Grid.Row="0" DataContext="{Binding WizardViewModel}"/>
+                
+                <!-- Bottom Action Bar -->
+                <Border Grid.Row="1" Background="{DynamicResource CardBackgroundFillColorSecondaryBrush}" 
+                        BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="0,1,0,0"
+                        CornerRadius="0,0,12,12" Padding="20">
+                    <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Right">
+                        <Button Content="Cancel" Command="{Binding CloseWizardCommand}"/>
+                        <Button Content="Create Workflow" Command="{Binding CompleteWizardCommand}" Classes="accent"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
     </Grid>
 </UserControl>

@@ -52,6 +52,9 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private bool _isGridView = true;
 
+        [ObservableProperty]
+        private bool _isLoading = false;
+
         private readonly HistoryManager _historyManager;
 
         public HistoryViewModel()
@@ -64,20 +67,39 @@ namespace ShareX.Ava.UI.ViewModels
 
             _historyManager = new HistoryManagerXML(historyPath);
             
-            LoadHistory();
+            // Don't load history in constructor - do it asynchronously after view is displayed
+            LoadHistoryAsync();
         }
 
         [RelayCommand]
-        private void LoadHistory()
+        private async Task LoadHistoryAsync()
         {
-            var historyPath = SettingManager.GetHistoryFilePath();
-            DebugHelper.WriteLine($"History.xml location: {historyPath} (exists={File.Exists(historyPath)})");
+            if (IsLoading) return;
             
-            var items = _historyManager.GetHistoryItems();
-            HistoryItems.Clear();
-            foreach (var item in items)
+            IsLoading = true;
+            try
             {
-                HistoryItems.Add(item);
+                var historyPath = SettingManager.GetHistoryFilePath();
+                DebugHelper.WriteLine($"History.xml location: {historyPath} (exists={File.Exists(historyPath)})");
+                
+                // Load history on background thread to avoid blocking UI
+                var items = await _historyManager.GetHistoryItemsAsync();
+                
+                HistoryItems.Clear();
+                foreach (var item in items)
+                {
+                    HistoryItems.Add(item);
+                }
+                
+                DebugHelper.WriteLine($"History loaded: {HistoryItems.Count} items");
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Failed to load history");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 
@@ -88,9 +110,9 @@ namespace ShareX.Ava.UI.ViewModels
         }
 
         [RelayCommand]
-        private void RefreshHistory()
+        private async Task RefreshHistory()
         {
-            LoadHistory();
+            await LoadHistoryAsync();
         }
 
         [RelayCommand]
