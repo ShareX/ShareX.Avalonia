@@ -19,8 +19,6 @@ public partial class WorkflowsViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(RemoveWorkflowCommand))]
     [NotifyCanExecuteChangedFor(nameof(EditWorkflowCommand))]
     [NotifyCanExecuteChangedFor(nameof(DuplicateCommand))]
-    [NotifyCanExecuteChangedFor(nameof(MoveUpCommand))]
-    [NotifyCanExecuteChangedFor(nameof(MoveDownCommand))]
     private HotkeyItemViewModel? _selectedWorkflow;
 
     [ObservableProperty]
@@ -182,35 +180,7 @@ public partial class WorkflowsViewModel : ViewModelBase
         }
     }
 
-    [RelayCommand(CanExecute = nameof(CanEditWorkflow))]
-    private void MoveUp()
-    {
-         if (_manager == null || SelectedWorkflow == null) return;
-         int index = _manager.Hotkeys.IndexOf(SelectedWorkflow.Model);
-         if (index > 0)
-         {
-             _manager.Hotkeys.RemoveAt(index);
-             _manager.Hotkeys.Insert(index - 1, SelectedWorkflow.Model);
-             LoadWorkflows();
-             SaveHotkeys();
-             SelectedWorkflow = Workflows[index - 1]; // Reselect
-         }
-    }
 
-    [RelayCommand(CanExecute = nameof(CanEditWorkflow))]
-    private void MoveDown()
-    {
-         if (_manager == null || SelectedWorkflow == null) return;
-         int index = _manager.Hotkeys.IndexOf(SelectedWorkflow.Model);
-         if (index < _manager.Hotkeys.Count - 1)
-         {
-             _manager.Hotkeys.RemoveAt(index);
-             _manager.Hotkeys.Insert(index + 1, SelectedWorkflow.Model);
-             LoadWorkflows();
-             SaveHotkeys();
-             SelectedWorkflow = Workflows[index + 1];
-         }
-    }
     
     [RelayCommand]
     private void Reset()

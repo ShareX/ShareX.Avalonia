@@ -44,10 +44,10 @@
                     
                     <ListBox Grid.Row="1" ItemsSource="{Binding AvailableDestinations}" SelectedItem="{Binding SelectedDestination}">
                         <ListBox.DataTemplates>
-                            <DataTemplate DataType="vm:DestinationItem">
+                            <DataTemplate DataType="vm:UploaderInstanceViewModel">
                                 <StackPanel Spacing="2">
-                                    <TextBlock Text="{Binding Name}"/>
-                                    <TextBlock Text="{Binding Group}" FontSize="10" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
+                                    <TextBlock Text="{Binding DisplayName}"/>
+                                    <TextBlock Text="{Binding Category}" FontSize="10" Foreground="{DynamicResource TextFillColorTertiaryBrush}"/>
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.DataTemplates>

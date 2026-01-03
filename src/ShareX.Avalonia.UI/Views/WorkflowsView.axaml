@@ -39,23 +39,9 @@
                     <ui:SymbolIcon Symbol="Copy"/>
                 </Button>
                 
-                <Button Command="{Binding MoveUpCommand}" 
-                        IsEnabled="{Binding SelectedWorkflow, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        ToolTip.Tip="Move Up">
-                    <ui:SymbolIcon Symbol="ChevronUp"/>
-                </Button>
-                 
-                <Button Command="{Binding MoveDownCommand}" 
-                        IsEnabled="{Binding SelectedWorkflow, Converter={x:Static ObjectConverters.IsNotNull}}"
-                        ToolTip.Tip="Move Down">
-                    <ui:SymbolIcon Symbol="ChevronDown"/>
-                </Button>
-
                 <ui:CommandBarSeparator />
 
-                <Button Command="{Binding ResetCommand}" ToolTip.Tip="Reset to Defaults">
-                    <ui:SymbolIcon Symbol="Refresh"/>
-                </Button>
+                <Button Command="{Binding ResetCommand}" ToolTip.Tip="Reset to Defaults" Content="Reset" />
             </StackPanel>
 
             <!-- List -->

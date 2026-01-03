@@ -10,28 +10,13 @@ using ShareX.Ava.Core.Hotkeys;
 using ShareX.Ava.Common;
 using ShareX.Ava.Uploaders;
 using ShareX.UploadersLib;
+using ShareX.Ava.Uploaders.PluginSystem;
 
 namespace ShareX.Ava.UI.ViewModels;
 
-public enum WizardDestinationType
-{
-    Standard,
-    CustomUploader,
-    FTP,
-    FileDestination,
-    None
-}
 
-public class DestinationItem
-{
-    public string Name { get; set; }
-    public WizardDestinationType Type { get; set; }
-    public object Value { get; set; } // Enum value or Index
-    public int CustomIndex { get; set; } = -1;
-    public string Group { get; set; }
 
-    public override string ToString() => Name;
-}
+
 
 public partial class WorkflowWizardViewModel : ObservableObject
 {
@@ -44,11 +29,18 @@ public partial class WorkflowWizardViewModel : ObservableObject
     private HotkeyItemViewModel? _selectedJob;
 
     // Step 2: Destination
-    public ObservableCollection<DestinationItem> AvailableDestinations { get; } = new();
+    // Use UploaderInstanceViewModel directly for the list
+    public ObservableCollection<UploaderInstanceViewModel> AvailableDestinations { get; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ReviewDestinationName))]
-    private DestinationItem? _selectedDestination;
+    private UploaderInstanceViewModel? _selectedDestination;
+
+    // Categories for loading instances (mirrors DestinationSettingsViewModel)
+    private CategoryViewModel _imageCategory;
+    private CategoryViewModel _textCategory;
+    private CategoryViewModel _fileCategory;
+    private CategoryViewModel _urlCategory;
 
     // Step 3: Tasks
     [ObservableProperty] public bool taskSaveToFile;
@@ -62,10 +54,11 @@ public partial class WorkflowWizardViewModel : ObservableObject
     
     // Summary properties
     public string ReviewJobName => SelectedJob?.Description ?? "None";
-    public string ReviewDestinationName => SelectedDestination?.Name ?? "None";
+    public string ReviewDestinationName => SelectedDestination?.DisplayName ?? "None";
 
     public WorkflowWizardViewModel()
     {
+        InitializeCategories();
         LoadJobCategories();
         // Default selection
         SelectedJob = JobCategories.FirstOrDefault()?.Jobs.FirstOrDefault();
@@ -74,6 +67,23 @@ public partial class WorkflowWizardViewModel : ObservableObject
         // Default tasks
         TaskSaveToFile = true;
         TaskCopyImage = true;
+    }
+
+    private void InitializeCategories()
+    {
+        // Re-use logic from DestinationSettingsViewModel
+        _imageCategory = new CategoryViewModel("Image Uploaders", UploaderCategory.Image);
+        _imageCategory.LoadInstances();
+
+        _textCategory = new CategoryViewModel("Text Uploaders", UploaderCategory.Text);
+        _textCategory.LoadInstances();
+
+        _fileCategory = new CategoryViewModel("File Uploaders", UploaderCategory.File);
+        _fileCategory.LoadInstances();
+        
+        // URL Shorteners not typically a primary destination for workflows in this context, but good to have
+        _urlCategory = new CategoryViewModel("URL Shorteners", UploaderCategory.UrlShortener);
+        _urlCategory.LoadInstances();
     }
 
     private void LoadJobCategories()
@@ -207,146 +217,45 @@ public partial class WorkflowWizardViewModel : ObservableObject
                 break;
         }
 
-        // Add "None" / "Local Only"
-        AvailableDestinations.Add(new DestinationItem 
-        { 
-            Name = "Local Storage (No Upload)", 
-            Type = WizardDestinationType.None, 
-            Group = "General" 
-        });
-
+        // Add "None" / "Local Only" - Create a dummy instance for this
+        // Or handle null selection as None. Let's create a dummy logic.
+        // Actually, UploaderInstance can be "None" if we create a special one?
+        // Or we just add a special ViewModel.
+        // To keep it simple, let's just allow Null selection or explicit "Local Storage".
+        // Let's assume the user picks *something* if TaskUpload is checked.
+        // But for the list, we need UploaderInstanceViewModels.
+        // Let's stick to valid instances only in the list for now, and maybe a "None" option if needed.
+        // However, "TaskUpload" checkbox controls if it's used. 
+        // So the list should just be "If you upload, where does it go?".
+        
         if (showImageUploaders)
         {
-            // Standard Image Uploaders
-            foreach (ImageDestination dest in Enum.GetValues(typeof(ImageDestination)))
-            {
-                if (dest == ImageDestination.CustomImageUploader) continue;
-                if (dest == ImageDestination.FileUploader) continue;
-                
-                AvailableDestinations.Add(new DestinationItem
-                {
-                    Name = EnumExtensions.GetDescription(dest),
-                    Type = WizardDestinationType.Standard,
-                    Value = dest,
-                    Group = "Image Uploaders"
-                });
-            }
-
-            // Custom Image Uploaders
-            var customUploaders = SettingManager.UploadersConfig.CustomUploadersList;
-            for (int i = 0; i < customUploaders.Count; i++)
-            {
-                var custom = customUploaders[i];
-                if (custom.DestinationType.HasFlag(CustomUploaderDestinationType.ImageUploader))
-                {
-                     AvailableDestinations.Add(new DestinationItem
-                    {
-                        Name = custom.Name,
-                        Type = WizardDestinationType.CustomUploader,
-                        CustomIndex = i,
-                        Group = "Custom Image Uploaders"
-                    });
-                }
-            }
+            foreach (var instance in _imageCategory.Instances)
+                AvailableDestinations.Add(instance);
         }
         
         if (showTextUploaders)
         {
-             // Standard Text Uploaders
-            foreach (TextDestination dest in Enum.GetValues(typeof(TextDestination)))
-            {
-                 if (dest == TextDestination.CustomTextUploader) continue;
-                 if (dest == TextDestination.FileUploader) continue;
-
-                AvailableDestinations.Add(new DestinationItem
-                {
-                    Name = EnumExtensions.GetDescription(dest),
-                    Type = WizardDestinationType.Standard,
-                    Value = dest,
-                    Group = "Text Uploaders"
-                });
-            }
-            
-            // Custom Text Uploaders
-            var customUploaders = SettingManager.UploadersConfig.CustomUploadersList;
-            for (int i = 0; i < customUploaders.Count; i++)
-            {
-                var custom = customUploaders[i];
-                if (custom.DestinationType.HasFlag(CustomUploaderDestinationType.TextUploader))
-                {
-                     AvailableDestinations.Add(new DestinationItem
-                    {
-                        Name = custom.Name,
-                        Type = WizardDestinationType.CustomUploader,
-                        CustomIndex = i,
-                        Group = "Custom Text Uploaders"
-                    });
-                }
-            }
+            foreach (var instance in _textCategory.Instances)
+                AvailableDestinations.Add(instance);
         }
 
         if (showFileUploaders)
         {
-            // Standard File Uploaders
-            foreach (FileDestination dest in Enum.GetValues(typeof(FileDestination)))
-            {
-                if (dest == FileDestination.CustomFileUploader) continue;
-                if (dest == FileDestination.SharedFolder) continue; // Handled separately
-                if (dest == FileDestination.Email) continue; // Handled separately
-                
-                AvailableDestinations.Add(new DestinationItem
-                {
-                    Name = EnumExtensions.GetDescription(dest),
-                    Type = WizardDestinationType.Standard,
-                    Value = dest,
-                    Group = "File Uploaders"
-                });
-            }
-            
-            // Custom File Uploaders
-            var customUploaders = SettingManager.UploadersConfig.CustomUploadersList;
-            for (int i = 0; i < customUploaders.Count; i++)
-            {
-                var custom = customUploaders[i];
-                if (custom.DestinationType.HasFlag(CustomUploaderDestinationType.FileUploader))
-                {
-                     AvailableDestinations.Add(new DestinationItem
-                    {
-                        Name = custom.Name,
-                        Type = WizardDestinationType.CustomUploader,
-                        CustomIndex = i,
-                        Group = "Custom File Uploaders"
-                    });
-                }
-            }
-        }
-
-        // FTP accounts (Available for all upload types generally)
-        if (showImageUploaders || showFileUploaders)
-        {
-            var ftps = SettingManager.UploadersConfig.FTPAccountList;
-            for (int i = 0; i < ftps.Count; i++)
-            {
-                AvailableDestinations.Add(new DestinationItem
-                {
-                    Name = $"FTP: {ftps[i].Name}",
-                    Type = WizardDestinationType.FTP,
-                    CustomIndex = i,
-                    Group = "FTP"
-                });
-            }
+            foreach (var instance in _fileCategory.Instances)
+                AvailableDestinations.Add(instance);
         }
         
         // Select first valid destination (prefer Imgur for images, first for others)
         if (showImageUploaders)
         {
-            SelectedDestination = AvailableDestinations.FirstOrDefault(d => d.Group == "Image Uploaders" && d.Name.Contains("Imgur")) 
-                                  ?? AvailableDestinations.FirstOrDefault(d => d.Group == "Image Uploaders")
+            SelectedDestination = AvailableDestinations.FirstOrDefault(d => d.Category == UploaderCategory.Image && d.DisplayName.Contains("Imgur")) 
+                                  ?? AvailableDestinations.FirstOrDefault(d => d.Category == UploaderCategory.Image)
                                   ?? AvailableDestinations.FirstOrDefault();
         }
         else
         {
-            SelectedDestination = AvailableDestinations.Skip(1).FirstOrDefault() ?? AvailableDestinations.FirstOrDefault();
+            SelectedDestination = AvailableDestinations.FirstOrDefault();
         }
     }
 
@@ -356,50 +265,65 @@ public partial class WorkflowWizardViewModel : ObservableObject
         settings.TaskSettings.Description = WorkflowName;
         settings.Job = SelectedJob?.Model.Job ?? HotkeyType.None;
         
-        // Apply Destination Logic
-        if (SelectedDestination != null && SelectedDestination.Type != WizardDestinationType.None)
+        // Apply Destination Logic from Selected UploaderInstance
+        if (SelectedDestination != null)
         {
-             if (SelectedDestination.Type == WizardDestinationType.Standard)
-             {
-                 if (SelectedDestination.Value is ImageDestination imgDest)
-                 {
-                     settings.TaskSettings.ImageDestination = imgDest;
-                 }
-                 else if (SelectedDestination.Value is TextDestination txtDest)
-                 {
-                     settings.TaskSettings.TextDestination = txtDest;
-                 }
-                 else if (SelectedDestination.Value is FileDestination fileDest)
-                 {
-                     settings.TaskSettings.FileDestination = fileDest;
-                 }
-             }
-             else if (SelectedDestination.Type == WizardDestinationType.CustomUploader)
-             {
-                 settings.TaskSettings.OverrideCustomUploader = true;
-                 settings.TaskSettings.CustomUploaderIndex = SelectedDestination.CustomIndex;
-                 
-                 // Determine which destination type based on group
-                 if (SelectedDestination.Group.Contains("Image"))
-                 {
-                     settings.TaskSettings.ImageDestination = ImageDestination.CustomImageUploader;
-                 }
-                 else if (SelectedDestination.Group.Contains("Text"))
-                 {
-                     settings.TaskSettings.TextDestination = TextDestination.CustomTextUploader;
-                 }
-                 else if (SelectedDestination.Group.Contains("File"))
-                 {
-                     settings.TaskSettings.FileDestination = FileDestination.CustomFileUploader;
-                 }
-             }
-             else if (SelectedDestination.Type == WizardDestinationType.FTP)
-             {
-                 settings.TaskSettings.OverrideFTP = true;
-                 settings.TaskSettings.FTPIndex = SelectedDestination.CustomIndex;
-                 settings.TaskSettings.ImageDestination = ImageDestination.FileUploader;
-                 settings.TaskSettings.FileDestination = FileDestination.FTP;
-             }
+            var instance = SelectedDestination.Instance;
+            
+            // Map the UploaderInstance back to HotkeySettings/TaskSettings properties
+            // 1. Is it a built-in provider (Enum based)?
+            // 2. Is it a Custom Uploader?
+            // 3. Is it an FTP Account?
+            // 4. Is it a Plugin? (Wait, TaskSettings implies plugins also use CustomUploader logic or just IDs?)
+            // Actually, TaskSettings in Core currently relies on Enums (ImageDestination, TextDestination, FileDestination).
+            // It assumes specific Enums for built-in providers.
+            // Custom Uploaders work via OverrideCustomUploader + Index.
+            // FTP works via OverrideFTP + Index.
+            // Plugins? If the new system uses ProviderId, how does TaskSettings store it?
+            // Looking at TaskSettings.cs, there is NO generic "ProviderId" or configuration string.
+            // This means the current Core HotkeySettings is NOT fully compatible with the new Plugin system 
+            // UNLESS the Plugin system maps back to "CustomFileUploader" or existing Enums.
+            
+            // However, the DestinationSettingsViewModel loads "Instances". 
+            // Included "Built-in" ones are wrapped as UploaderInstance too.
+            // So we need to reverse-map from UploaderInstance.ProviderId to the legacy Enum if possible.
+            
+            // Let's look at how UploaderInstance is constructed for built-ins.
+            // If it's an Enum-based provider, the ProviderId matches the Enum/Name.
+            
+            // Plan:
+            // 1. Check if it's a Custom Uploader (ProviderId starts with "CustomUploader" or we check the list)
+            // 2. Check if it's FTP.
+            // 3. Check if it matches an Enum value.
+            
+            // Find in Custom Uploaders List
+            var customUploaders = SettingManager.UploadersConfig.CustomUploadersList;
+            int customIndex = customUploaders.FindIndex(c => c.Name == instance.DisplayName); 
+            // Wait, UploaderInstance.InstanceId is unique. ProviderId is the type.
+            // If the user created a specific Custom Uploader instance, it corresponds to an entry in CustomUploadersList.
+            
+            // Wait, CustomUploadersList IS the list of definitions.
+            // Ideally UploaderInstance holds enough info.
+            
+            // Re-reading logic:
+            // If UploaderInstance is a wrapper, we need to know WHICH wrapper it is.
+            // But we don't have easy access to the exact backing store index here without search.
+            
+            // Let's try matching via Helper method or inspection.
+            
+            if (TryMapToCustomUploader(instance, settings))
+            {
+               // Mapped
+            }
+            else if (TryMapToFTP(instance, settings))
+            {
+               // Mapped
+            }
+            else
+            {
+                // Must be standard Enum
+               MapToStandardEnum(instance, settings);
+            }
         }
 
         // Apply Tasks
@@ -420,6 +344,80 @@ public partial class WorkflowWizardViewModel : ObservableObject
         settings.TaskSettings.UseDefaultDestinations = false;
 
         return settings;
+    }
+
+    private bool TryMapToCustomUploader(UploaderInstance instance, HotkeySettings settings)
+    {
+        var list = SettingManager.UploadersConfig.CustomUploadersList;
+        // Match by InstanceID (Guid) if we can link it?
+        // UploaderInstance has InstanceId. 
+        // Existing "CustomUploaderItem" doesn't necessarily have a Guid that matches UploaderInstance unless migrated.
+        // But UploaderInstanceWrapper (if used) would wrap it.
+        
+        // Let's search by Name + some signature or ID.
+        for(int i=0; i<list.Count; i++)
+        {
+             // If the uploader instance allows us to identify it.
+             // ProviderId for custom uploader is usually "CustomImageUploader", "CustomTextUploader", "CustomFileUploader".
+             if (instance.ProviderId == "CustomImageUploader" || 
+                 instance.ProviderId == "CustomTextUploader" || 
+                 instance.ProviderId == "CustomFileUploader")
+             {
+                 // Check if names match - weak link but standard for legacy
+                 if (list[i].Name == instance.DisplayName)
+                 {
+                     settings.TaskSettings.OverrideCustomUploader = true;
+                     settings.TaskSettings.CustomUploaderIndex = i;
+                     
+                     if (instance.ProviderId.Contains("Image")) settings.TaskSettings.ImageDestination = ImageDestination.CustomImageUploader;
+                     if (instance.ProviderId.Contains("Text")) settings.TaskSettings.TextDestination = TextDestination.CustomTextUploader;
+                     if (instance.ProviderId.Contains("File")) settings.TaskSettings.FileDestination = FileDestination.CustomFileUploader;
+                     
+                     return true;
+                 }
+             }
+        }
+        return false;
+    }
+
+    private bool TryMapToFTP(UploaderInstance instance, HotkeySettings settings)
+    {
+         if (instance.ProviderId == "FTP" || instance.DisplayName.StartsWith("FTP: "))
+         {
+            var list = SettingManager.UploadersConfig.FTPAccountList;
+            for(int i=0; i<list.Count; i++)
+            {
+                if (instance.DisplayName.EndsWith(list[i].Name)) // Name format "FTP: {Name}"
+                {
+                    settings.TaskSettings.OverrideFTP = true;
+                    settings.TaskSettings.FTPIndex = i;
+                    settings.TaskSettings.FileDestination = FileDestination.FTP;
+                    settings.TaskSettings.ImageDestination = ImageDestination.FileUploader; // FTP counts as FileUploader usually for images
+                    return true;
+                }
+            }
+         }
+         return false;
+    }
+
+    private void MapToStandardEnum(UploaderInstance instance, HotkeySettings settings)
+    {
+        // ProviderId usually matches Enum name, e.g. "Imgur", "Dropbox"
+        
+        if (Enum.TryParse<ImageDestination>(instance.ProviderId, out var imgDest))
+        {
+            settings.TaskSettings.ImageDestination = imgDest;
+        }
+        
+        if (Enum.TryParse<TextDestination>(instance.ProviderId, out var txtDest))
+        {
+            settings.TaskSettings.TextDestination = txtDest;
+        }
+        
+        if (Enum.TryParse<FileDestination>(instance.ProviderId, out var fileDest))
+        {
+            settings.TaskSettings.FileDestination = fileDest;
+        }
     }
 }
 
