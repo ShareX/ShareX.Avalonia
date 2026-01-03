@@ -92,6 +92,12 @@ if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 - [x] Global Hotkeys implemented on macOS (SharpHook; validation pending).
 - [ ] Clipboard upload (text/image) working.
 - [x] Instructions for granting permissions (Screen Recording) in `README.md`.
+- [ ] Packaging validated for `osx-arm64` (`dotnet publish`) with correct entitlements.
+
+## Pending Validation
+- Exercise macOS hotkeys on-device with Accessibility granted (verify trigger events and failure logging).
+- Publish `osx-arm64` and confirm `.app` bundle launches, shows Screen Recording prompt on first capture.
+- Smoke test clipboard (text/image/files) and window/screen info services on macOS hardware.
 
 ## Estimated Effort
 **High** - 5-7 days for full feature parity (MVP: 2-3 days).
