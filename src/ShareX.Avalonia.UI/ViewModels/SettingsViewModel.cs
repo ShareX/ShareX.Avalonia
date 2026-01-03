@@ -1,3 +1,28 @@
+﻿#region License Information (GPL v3)
+
+/*
+    ShareX.Avalonia - The Avalonia UI implementation of ShareX
+    Copyright (c) 2007-2025 ShareX Team
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
+*/
+
+#endregion License Information (GPL v3)
+
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -97,6 +122,20 @@ namespace ShareX.Ava.UI.ViewModels
                 SettingManager.Settings.RecentTasksTrayMenuMostRecentFirst = value;
                 OnPropertyChanged();
             }
+        }
+
+        // Integration Settings
+        [ObservableProperty]
+        private bool _isPluginExtensionRegistered;
+
+        [ObservableProperty]
+        private bool _supportsFileAssociations;
+
+        partial void OnIsPluginExtensionRegisteredChanged(bool value)
+        {
+            if (_isLoading) return; // Don't trigger during initial load
+            
+            ShareX.Ava.Core.Integration.IntegrationHelper.SetPluginExtensionRegistration(value);
         }
 
         // Task Settings - General
@@ -213,6 +252,46 @@ namespace ShareX.Ava.UI.ViewModels
             }
         }
 
+        // Task Settings - After Upload
+        public bool CopyURLToClipboard
+        {
+            get => SettingManager.Settings.DefaultTaskSettings.AfterUploadJob.HasFlag(AfterUploadTasks.CopyURLToClipboard);
+            set
+            {
+                if (value)
+                    SettingManager.Settings.DefaultTaskSettings.AfterUploadJob |= AfterUploadTasks.CopyURLToClipboard;
+                else
+                    SettingManager.Settings.DefaultTaskSettings.AfterUploadJob &= ~AfterUploadTasks.CopyURLToClipboard;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool UseURLShortener
+        {
+            get => SettingManager.Settings.DefaultTaskSettings.AfterUploadJob.HasFlag(AfterUploadTasks.UseURLShortener);
+            set
+            {
+                if (value)
+                    SettingManager.Settings.DefaultTaskSettings.AfterUploadJob |= AfterUploadTasks.UseURLShortener;
+                else
+                    SettingManager.Settings.DefaultTaskSettings.AfterUploadJob &= ~AfterUploadTasks.UseURLShortener;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShareURL
+        {
+            get => SettingManager.Settings.DefaultTaskSettings.AfterUploadJob.HasFlag(AfterUploadTasks.ShareURL);
+            set
+            {
+                if (value)
+                    SettingManager.Settings.DefaultTaskSettings.AfterUploadJob |= AfterUploadTasks.ShareURL;
+                else
+                    SettingManager.Settings.DefaultTaskSettings.AfterUploadJob &= ~AfterUploadTasks.ShareURL;
+                OnPropertyChanged();
+            }
+        }
+
         public SettingsViewModel()
         {
             HotkeySettings = new HotkeySettingsViewModel();
@@ -252,6 +331,10 @@ namespace ShareX.Ava.UI.ViewModels
             URLRegexReplace = taskSettings.UploadSettings.URLRegexReplace;
             URLRegexReplacePattern = taskSettings.UploadSettings.URLRegexReplacePattern;
             URLRegexReplaceReplacement = taskSettings.UploadSettings.URLRegexReplaceReplacement;
+            
+            // Integration Settings
+            SupportsFileAssociations = OperatingSystem.IsWindows();
+            IsPluginExtensionRegistered = ShareX.Ava.Core.Integration.IntegrationHelper.IsPluginExtensionRegistered();
         }
 
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
