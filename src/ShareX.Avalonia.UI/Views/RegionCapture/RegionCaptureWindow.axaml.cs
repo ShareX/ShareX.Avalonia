@@ -1,3 +1,28 @@
+#region License Information (GPL v3)
+
+/*
+    ShareX.Ava - The Avalonia UI implementation of ShareX
+    Copyright (c) 2007-2025 ShareX Team
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
+*/
+
+#endregion License Information (GPL v3)
+
 using System;
 using System.Threading.Tasks;
 using Avalonia;
@@ -7,9 +32,11 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using ShareX.Ava.Platform.Abstractions;
+using DrawingRectangle = System.Drawing.Rectangle;
+using PathShape = Avalonia.Controls.Shapes.Path;
 using Point = Avalonia.Point;
-using Rectangle = Avalonia.Controls.Shapes.Rectangle;
-using Path = Avalonia.Controls.Shapes.Path;
+using RectangleShape = Avalonia.Controls.Shapes.Rectangle;
 
 namespace ShareX.Ava.UI.Views.RegionCapture
 {
@@ -17,43 +44,37 @@ namespace ShareX.Ava.UI.Views.RegionCapture
     {
         private Point _startPoint;
         private bool _isSelecting;
-        
-        // Result task completion source to return value to caller
-        private readonly System.Threading.Tasks.TaskCompletionSource<System.Drawing.Rectangle> _tcs;
+        private double _renderScale = 1.0;
+        private double _logicalSurfaceWidth;
+        private double _logicalSurfaceHeight;
+        private DrawingRectangle _virtualScreenBounds = DrawingRectangle.Empty;
 
-        // Darkening overlay settings (configurable from RegionCaptureOptions)
-        private const byte DarkenOpacity = 128; // 0-255, where 128 is 50% opacity (can be calculated from BackgroundDimStrength)
+        private readonly TaskCompletionSource<DrawingRectangle> _tcs;
         
         public RegionCaptureWindow()
         {
             InitializeComponent();
-            _tcs = new System.Threading.Tasks.TaskCompletionSource<System.Drawing.Rectangle>();
+            _tcs = new TaskCompletionSource<DrawingRectangle>();
             
-            // Close on Escape key
-            this.KeyDown += (s, e) =>
+            KeyDown += (_, e) =>
             {
                 if (e.Key == Key.Escape)
                 {
-                    _tcs.TrySetResult(System.Drawing.Rectangle.Empty);
+                    _tcs.TrySetResult(DrawingRectangle.Empty);
                     Close();
                 }
             };
         }
 
-        public System.Threading.Tasks.Task<System.Drawing.Rectangle> GetResultAsync()
-        {
-            return _tcs.Task;
-        }
+        public Task<DrawingRectangle> GetResultAsync() => _tcs.Task;
 
         public async Task SetBackgroundScreenshot()
         {
-            // Capture full screen before showing the window
-            if (ShareX.Ava.Platform.Abstractions.PlatformServices.IsInitialized)
+            if (PlatformServices.IsInitialized)
             {
-                var screenshot = await ShareX.Ava.Platform.Abstractions.PlatformServices.ScreenCapture.CaptureFullScreenAsync();
+                var screenshot = await PlatformServices.ScreenCapture.CaptureFullScreenAsync();
                 if (screenshot != null)
                 {
-                    // Convert System.Drawing.Image to Avalonia Bitmap
                     using var memoryStream = new System.IO.MemoryStream();
                     screenshot.Save(memoryStream, System.Drawing.Imaging.ImageFormat.Png);
                     memoryStream.Position = 0;
@@ -75,52 +96,18 @@ namespace ShareX.Ava.UI.Views.RegionCapture
         {
             base.OnOpened(e);
             
-            // Multi-monitor support: Span all screens
-            if (Screens.ScreenCount > 0)
-            {
-                var minX = 0;
-                var minY = 0;
-                var maxX = 0;
-                var maxY = 0;
-                
-                bool first = true;
-                foreach (var screen in Screens.All)
-                {
-                    if (first)
-                    {
-                        minX = screen.Bounds.X;
-                        minY = screen.Bounds.Y;
-                        maxX = screen.Bounds.Right;
-                        maxY = screen.Bounds.Bottom;
-                        first = false;
-                    }
-                    else
-                    {
-                        minX = Math.Min(minX, screen.Bounds.X);
-                        minY = Math.Min(minY, screen.Bounds.Y);
-                        maxX = Math.Max(maxX, screen.Bounds.Right);
-                        maxY = Math.Max(maxY, screen.Bounds.Bottom);
-                    }
-                }
-                
-                var totalWidth = maxX - minX;
-                var totalHeight = maxY - minY;
+            CanResize = false;
 
-                Position = new PixelPoint(minX, minY);
-                Width = totalWidth / RenderScaling;
-                Height = totalHeight / RenderScaling;
-                
-                // Size the background image and darkening overlay to match
-                var backgroundImage = this.FindControl<Image>("BackgroundImage");
-                if (backgroundImage != null)
-                {
-                    backgroundImage.Width = Width;
-                    backgroundImage.Height = Height;
-                }
+            _virtualScreenBounds = ResolveVirtualScreenBounds();
+            _renderScale = GetRenderScale();
 
-                // Initialize the darkening overlay to cover the entire screen
-                InitializeFullScreenDarkening();
-            }
+            ApplySurfaceSizing();
+
+            ShareX.Ava.Common.DebugHelper.WriteLine($"RegionCapture: Virtual screen: X={_virtualScreenBounds.X}, Y={_virtualScreenBounds.Y}, W={_virtualScreenBounds.Width}, H={_virtualScreenBounds.Height}");
+            ShareX.Ava.Common.DebugHelper.WriteLine($"RegionCapture: Window logical size: {Width}x{Height}");
+            ShareX.Ava.Common.DebugHelper.WriteLine($"RegionCapture: RenderScaling: {_renderScale}");
+
+            InitializeFullScreenDarkening();
         }
 
         private void InitializeComponent()
@@ -128,56 +115,123 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             AvaloniaXamlLoader.Load(this);
         }
 
+        private double GetRenderScale() => VisualRoot?.RenderScaling ?? RenderScaling;
+
+        private DrawingRectangle ResolveVirtualScreenBounds()
+        {
+            if (PlatformServices.IsInitialized)
+            {
+                return PlatformServices.Screen.GetVirtualScreenBounds();
+            }
+
+            if (Screens.ScreenCount > 0)
+            {
+                var minX = int.MaxValue;
+                var minY = int.MaxValue;
+                var maxX = int.MinValue;
+                var maxY = int.MinValue;
+
+                foreach (var screen in Screens.All)
+                {
+                    minX = Math.Min(minX, screen.Bounds.X);
+                    minY = Math.Min(minY, screen.Bounds.Y);
+                    maxX = Math.Max(maxX, screen.Bounds.Right);
+                    maxY = Math.Max(maxY, screen.Bounds.Bottom);
+                }
+
+                return new DrawingRectangle(minX, minY, maxX - minX, maxY - minY);
+            }
+
+            return DrawingRectangle.Empty;
+        }
+
+        private void ApplySurfaceSizing()
+        {
+            if (_virtualScreenBounds.Width <= 0 || _virtualScreenBounds.Height <= 0)
+            {
+                var fallbackWidth = 1920;
+                var fallbackHeight = 1080;
+
+                if (Screens.ScreenCount > 0)
+                {
+                    var primary = Screens.Primary ?? Screens.All[0];
+                    fallbackWidth = primary.Bounds.Width;
+                    fallbackHeight = primary.Bounds.Height;
+                }
+
+                _virtualScreenBounds = new DrawingRectangle(0, 0, fallbackWidth, fallbackHeight);
+            }
+
+            Position = new PixelPoint(_virtualScreenBounds.X, _virtualScreenBounds.Y);
+
+            _logicalSurfaceWidth = _virtualScreenBounds.Width / _renderScale;
+            _logicalSurfaceHeight = _virtualScreenBounds.Height / _renderScale;
+
+            Width = _logicalSurfaceWidth;
+            Height = _logicalSurfaceHeight;
+
+            var canvas = this.FindControl<Canvas>("SelectionCanvas");
+            var backgroundImage = this.FindControl<Image>("BackgroundImage");
+
+            if (canvas != null)
+            {
+                canvas.Width = _logicalSurfaceWidth;
+                canvas.Height = _logicalSurfaceHeight;
+            }
+
+            if (backgroundImage != null)
+            {
+                backgroundImage.Width = _logicalSurfaceWidth;
+                backgroundImage.Height = _logicalSurfaceHeight;
+            }
+        }
+
         private void InitializeFullScreenDarkening()
         {
-            var overlay = this.FindControl<Path>("DarkeningOverlay");
+            var overlay = this.FindControl<PathShape>("DarkeningOverlay");
             if (overlay == null) return;
 
-            // Create a simple rectangle covering the entire screen (no cutout yet)
             var darkeningGeometry = new PathGeometry();
             var fullScreenFigure = new PathFigure 
             { 
                 StartPoint = new Point(0, 0), 
                 IsClosed = true 
             };
-            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(Width, 0) });
-            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(Width, Height) });
-            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(0, Height) });
+            
+            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(_logicalSurfaceWidth, 0) });
+            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(_logicalSurfaceWidth, _logicalSurfaceHeight) });
+            fullScreenFigure.Segments.Add(new LineSegment { Point = new Point(0, _logicalSurfaceHeight) });
             darkeningGeometry.Figures.Add(fullScreenFigure);
 
             overlay.Data = darkeningGeometry;
             overlay.IsVisible = true;
         }
 
-        private void UpdateDarkeningOverlay(double selX, double selY, double selWidth, double selHeight)
+        private void UpdateDarkeningOverlay(double logicalSelX, double logicalSelY, double logicalSelWidth, double logicalSelHeight)
         {
-            var overlay = this.FindControl<Path>("DarkeningOverlay");
+            var overlay = this.FindControl<PathShape>("DarkeningOverlay");
             if (overlay == null) return;
 
-            // Create geometry with EvenOdd fill rule to create a "cutout" effect
-            // This darkens the entire screen except the selection rectangle
             var darkeningGeometry = new PathGeometry { FillRule = FillRule.EvenOdd };
 
-            // Outer rectangle: entire screen
             var outerFigure = new PathFigure 
             { 
                 StartPoint = new Point(0, 0), 
                 IsClosed = true 
             };
-            outerFigure.Segments.Add(new LineSegment { Point = new Point(Width, 0) });
-            outerFigure.Segments.Add(new LineSegment { Point = new Point(Width, Height) });
-            outerFigure.Segments.Add(new LineSegment { Point = new Point(0, Height) });
+            outerFigure.Segments.Add(new LineSegment { Point = new Point(_logicalSurfaceWidth, 0) });
+            outerFigure.Segments.Add(new LineSegment { Point = new Point(_logicalSurfaceWidth, _logicalSurfaceHeight) });
+            outerFigure.Segments.Add(new LineSegment { Point = new Point(0, _logicalSurfaceHeight) });
             darkeningGeometry.Figures.Add(outerFigure);
 
-            // Inner rectangle: selection area (this creates the "hole")
             var innerFigure = new PathFigure 
             { 
-                StartPoint = new Point(selX, selY), 
+                StartPoint = new Point(logicalSelX, logicalSelY), 
                 IsClosed = true 
             };
-            innerFigure.Segments.Add(new LineSegment { Point = new Point(selX + selWidth, selY) });
-            innerFigure.Segments.Add(new LineSegment { Point = new Point(selX + selWidth, selY + selHeight) });
-            innerFigure.Segments.Add(new LineSegment { Point = new Point(selX, selY + selHeight) });
+            innerFigure.Segments.Add(new LineSegment { Point = new Point(logicalSelX + logicalSelWidth, logicalSelY) });
+            innerFigure.Segments.Add(new LineSegment { Point = new Point(logicalSelX + logicalSelWidth, logicalSelY + logicalSelHeight) });
+            innerFigure.Segments.Add(new LineSegment { Point = new Point(logicalSelX, logicalSelY + logicalSelHeight) });
             darkeningGeometry.Figures.Add(innerFigure);
 
             overlay.Data = darkeningGeometry;
@@ -185,63 +239,48 @@ namespace ShareX.Ava.UI.Views.RegionCapture
 
         private void CancelSelection()
         {
-            // Hide selection borders and info text
-            var border = this.FindControl<Rectangle>("SelectionBorder");
+            var border = this.FindControl<RectangleShape>("SelectionBorder");
             if (border != null)
-            {
                 border.IsVisible = false;
-            }
 
-            var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
+            var borderInner = this.FindControl<RectangleShape>("SelectionBorderInner");
             if (borderInner != null)
-            {
                 borderInner.IsVisible = false;
-            }
 
             var infoText = this.FindControl<TextBlock>("InfoText");
             if (infoText != null)
-            {
                 infoText.IsVisible = false;
-            }
 
-            // Reset to full screen dimming
             InitializeFullScreenDarkening();
-
-            // Reset selection state
             _isSelecting = false;
         }
 
         private void OnPointerPressed(object sender, PointerPressedEventArgs e)
         {
-            var point = e.GetCurrentPoint(this);
+            var point = e.GetPosition(this);
             
-            // Handle right-click
-            if (point.Properties.IsRightButtonPressed)
+            if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed)
             {
                 if (_isSelecting)
                 {
-                    // Cancel current selection
                     CancelSelection();
                     e.Handled = true;
                 }
                 else
                 {
-                    // No active selection - close the window
-                    _tcs.TrySetResult(System.Drawing.Rectangle.Empty);
+                    _tcs.TrySetResult(DrawingRectangle.Empty);
                     Close();
                     e.Handled = true;
                 }
                 return;
             }
             
-            // Handle left-click to start selection
-            if (point.Properties.IsLeftButtonPressed)
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
             {
-                _startPoint = point.Position;
+                _startPoint = ClampToSurface(point);
                 _isSelecting = true;
                 
-                // Show both border rectangles
-                var border = this.FindControl<Rectangle>("SelectionBorder");
+                var border = this.FindControl<RectangleShape>("SelectionBorder");
                 if (border != null)
                 {
                     border.IsVisible = true;
@@ -251,7 +290,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                     border.Height = 0;
                 }
 
-                var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
+                var borderInner = this.FindControl<RectangleShape>("SelectionBorderInner");
                 if (borderInner != null)
                 {
                     borderInner.IsVisible = true;
@@ -261,16 +300,13 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                     borderInner.Height = 0;
                 }
 
-                // Update darkening overlay with zero-size selection (keeps full screen dimmed)
                 UpdateDarkeningOverlay(_startPoint.X, _startPoint.Y, 0, 0);
             }
         }
 
         private void OnPointerMoved(object sender, PointerEventArgs e)
         {
-            // Check for right-click during drag to cancel selection
-            var point = e.GetCurrentPoint(this);
-            if (point.Properties.IsRightButtonPressed && _isSelecting)
+            if (e.GetCurrentPoint(this).Properties.IsRightButtonPressed && _isSelecting)
             {
                 CancelSelection();
                 e.Handled = true;
@@ -279,26 +315,23 @@ namespace ShareX.Ava.UI.Views.RegionCapture
 
             if (!_isSelecting) return;
 
-            var currentPoint = point.Position;
-            var border = this.FindControl<Rectangle>("SelectionBorder");
-            var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
+            var currentPoint = ClampToSurface(e.GetPosition(this));
+            var border = this.FindControl<RectangleShape>("SelectionBorder");
+            var borderInner = this.FindControl<RectangleShape>("SelectionBorderInner");
             var infoText = this.FindControl<TextBlock>("InfoText");
 
             if (border != null)
             {
-                // Calculate rect
                 var x = Math.Min(_startPoint.X, currentPoint.X);
                 var y = Math.Min(_startPoint.Y, currentPoint.Y);
                 var width = Math.Abs(_startPoint.X - currentPoint.X);
                 var height = Math.Abs(_startPoint.Y - currentPoint.Y);
 
-                // Update outer border (white solid)
                 Canvas.SetLeft(border, x);
                 Canvas.SetTop(border, y);
                 border.Width = width;
                 border.Height = height;
 
-                // Update inner border (black dashed - static marching ants pattern)
                 if (borderInner != null)
                 {
                     Canvas.SetLeft(borderInner, x);
@@ -307,28 +340,23 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                     borderInner.Height = height;
                 }
 
-                // Update darkening overlay to cut out the selection area
                 UpdateDarkeningOverlay(x, y, width, height);
                 
                 if (infoText != null)
                 {
                     infoText.IsVisible = true;
-                    // Format: "X: 1 Y: 1 W: 1 H: 1"
-                    infoText.Text = $"X: {x:F0} Y: {y:F0} W: {width:F0} H: {height:F0}";
+
+                    var physicalRect = LogicalRectToPhysical(x, y, width, height);
+                    infoText.Text = $"X: {physicalRect.X} Y: {physicalRect.Y} W: {physicalRect.Width} H: {physicalRect.Height}";
                     
-                    // Position label above the selection with more clearance
                     Canvas.SetLeft(infoText, x);
                     
-                    // Calculate vertical position - place above selection with padding
-                    var labelHeight = 30; // Approximate height of label with padding
-                    var topPadding = 5; // Additional padding from selection top
-                    var labelY = y - labelHeight - topPadding;
+                    double labelHeight = 30;
+                    double topPadding = 5;
+                    double labelY = y - labelHeight - topPadding;
                     
-                    // If label would go off top of screen, place it below the top edge
                     if (labelY < 5)
-                    {
                         labelY = 5;
-                    }
                     
                     Canvas.SetTop(infoText, labelY);
                 }
@@ -340,38 +368,37 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             if (_isSelecting)
             {
                 _isSelecting = false;
-                var currentPoint = e.GetCurrentPoint(this).Position;
+                var currentPoint = ClampToSurface(e.GetPosition(this));
                 
-                // Calculate final rect in logical pixels relative to Window
                 var x = Math.Min(_startPoint.X, currentPoint.X);
                 var y = Math.Min(_startPoint.Y, currentPoint.Y);
                 var width = Math.Abs(_startPoint.X - currentPoint.X);
                 var height = Math.Abs(_startPoint.Y - currentPoint.Y);
 
-                // Get render scaling (DPI)
-                var scaling = this.RenderScaling;
+                var resultRect = LogicalRectToPhysical(x, y, width, height);
 
-                // Convert to physical pixels (Size)
-                var physWidth = (int)(width * scaling);
-                var physHeight = (int)(height * scaling);
-                
-                // Calculate physical position relative to screen (Absolute)
-                // Window Position (phys) + Selection Position (phys approx)
-                var winX = Position.X;
-                var winY = Position.Y;
-                var physX = winX + (int)(x * scaling);
-                var physY = winY + (int)(y * scaling);
-
-                // Ensure non-zero size
-                if (physWidth <= 0) physWidth = 1;
-                if (physHeight <= 0) physHeight = 1;
-
-                // Create result rectangle
-                var resultRect = new System.Drawing.Rectangle(physX, physY, physWidth, physHeight);
+                ShareX.Ava.Common.DebugHelper.WriteLine($"RegionCapture: Selection result: ({resultRect.X}, {resultRect.Y}, {resultRect.Width}x{resultRect.Height})");
                 
                 _tcs.TrySetResult(resultRect);
                 Close();
             }
+        }
+
+        private Point ClampToSurface(Point logicalPoint)
+        {
+            var clampedX = Math.Clamp(logicalPoint.X, 0, _logicalSurfaceWidth);
+            var clampedY = Math.Clamp(logicalPoint.Y, 0, _logicalSurfaceHeight);
+            return new Point(clampedX, clampedY);
+        }
+
+        private DrawingRectangle LogicalRectToPhysical(double logicalX, double logicalY, double logicalWidth, double logicalHeight)
+        {
+            int px = _virtualScreenBounds.X + (int)Math.Round(logicalX * _renderScale);
+            int py = _virtualScreenBounds.Y + (int)Math.Round(logicalY * _renderScale);
+            int pw = Math.Max(1, (int)Math.Round(logicalWidth * _renderScale));
+            int ph = Math.Max(1, (int)Math.Round(logicalHeight * _renderScale));
+
+            return new DrawingRectangle(px, py, pw, ph);
         }
     }
 }

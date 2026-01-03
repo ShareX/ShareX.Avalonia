@@ -6,16 +6,17 @@
         x:Class="ShareX.Ava.UI.Views.RegionCapture.RegionCaptureWindow"
         Title="RegionCaptureWindow"
         TransparencyLevelHint="Transparent"
-        Background="{x:Null}"
+        Background="Transparent"
         SystemDecorations="None"
         Topmost="True"
         ShowInTaskbar="False"
+        Focusable="True"
         Cursor="Cross"
         PointerPressed="OnPointerPressed"
         PointerMoved="OnPointerMoved"
         PointerReleased="OnPointerReleased">
     
-    <Canvas Name="SelectionCanvas">
+    <Canvas Name="SelectionCanvas" Background="Transparent" ClipToBounds="True" Margin="0">
         <!-- Background screenshot -->
         <Image Name="BackgroundImage" 
                Stretch="Fill"
