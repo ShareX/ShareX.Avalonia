@@ -255,34 +255,36 @@
         <Grid Grid.Row="2" ColumnDefinitions="*,288">
             
             <!-- Central Preview Canvas -->
-             <Grid Grid.Column="0" Margin="20">
-                 <Border Background="{Binding CanvasBackground}"
-                         Padding="{Binding CanvasPadding}">
-                     <!-- Outer Border: Shadow effect -->
-                     <Border BoxShadow="{Binding CanvasShadow}"
-                            CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}">
-                         <!-- Inner Border: Corner Radius with clipping -->
-                         <Border Background="#FFFFFF"
-                                 CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                 ClipToBounds="True">
-                            <ScrollViewer Name="CanvasScrollViewer"
-                                          Background="Transparent"
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto"
-                                          PointerPressed="OnScrollViewerPointerPressed"
-                                          PointerMoved="OnScrollViewerPointerMoved"
-                                          PointerReleased="OnScrollViewerPointerReleased">
-                                <LayoutTransformControl>
-                                    <LayoutTransformControl.LayoutTransform>
-                                        <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
-                                    </LayoutTransformControl.LayoutTransform>
-
-                                    <!-- Container sized to match actual image dimensions -->
+            <Grid Grid.Column="0" Margin="20">
+                <ScrollViewer Name="CanvasScrollViewer"
+                              Background="Transparent"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              PointerPressed="OnScrollViewerPointerPressed"
+                              PointerMoved="OnScrollViewerPointerMoved"
+                              PointerReleased="OnScrollViewerPointerReleased">
+                    <LayoutTransformControl>
+                        <LayoutTransformControl.LayoutTransform>
+                            <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
+                        </LayoutTransformControl.LayoutTransform>
+                        <Border x:Name="PreviewFrame"
+                                IsVisible="{Binding HasPreviewImage}"
+                                 HorizontalAlignment="Center"
+                                 VerticalAlignment="Center"
+                                 Background="{Binding CanvasBackground}"
+                                 Padding="{Binding CanvasPadding}">
+                            <!-- Outer Border: Shadow effect -->
+                            <Border BoxShadow="{Binding CanvasShadow}"
+                                   CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}">
+                                <!-- Inner Border: Corner Radius with clipping -->
+                                <Border Background="#FFFFFF"
+                                        CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                        ClipToBounds="True">
                                     <Border CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                             ClipToBounds="True"
-                                             Background="Transparent">
-                                        <Grid Name="CanvasContainer" 
-                                              Width="{Binding ImageWidth}" 
+                                            ClipToBounds="True"
+                                            Background="Transparent">
+                                        <Grid Name="CanvasContainer"
+                                              Width="{Binding ImageWidth}"
                                               Height="{Binding ImageHeight}">
                                         
                                         <!-- Image Layer -->
@@ -322,17 +324,19 @@
                                         </Canvas>
                                     </Grid>
                                     </Border>
-                                </LayoutTransformControl>
-                            </ScrollViewer>
+                                </Border>
+                            </Border>
                         </Border>
-                    </Border>
-                </Border>
+                    </LayoutTransformControl>
+                </ScrollViewer>
             </Grid>
 
             <!-- Right Sidebar (Settings Panel) -->
             <Border Grid.Column="1" Padding="20">
-                <ScrollViewer>
-                    <StackPanel Spacing="25">
+                <ScrollViewer Padding="0,0,40,0"
+                              HorizontalScrollBarVisibility="Disabled"
+                              VerticalScrollBarVisibility="Auto">
+                     <StackPanel Spacing="25">
                         <TextBlock Text="Settings" 
                                    FontSize="18" 
                                    FontWeight="Bold" 
@@ -342,7 +346,7 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Text="Padding" Foreground="#9CA3AF"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PreviewPadding, StringFormat='{}{0}px'}" Foreground="White"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PreviewPadding, StringFormat='{}{0:F0}px'}" Foreground="White"/>
                             </Grid>
                             <Slider Minimum="0" 
                                     Maximum="200" 
@@ -354,7 +358,7 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Text="Corner Radius" Foreground="#9CA3AF"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PreviewCornerRadius, StringFormat='{}{0}px'}" Foreground="White"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PreviewCornerRadius, StringFormat='{}{0:F0}px'}" Foreground="White"/>
                             </Grid>
                             <Slider Minimum="0" 
                                     Maximum="50" 
@@ -366,7 +370,7 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Text="Shadow Blur" Foreground="#9CA3AF"/>
-                                <TextBlock Grid.Column="1" Text="{Binding ShadowBlur, StringFormat='{}{0}px'}" Foreground="White"/>
+                                <TextBlock Grid.Column="1" Text="{Binding ShadowBlur, StringFormat='{}{0:F0}px'}" Foreground="White"/>
                             </Grid>
                             <Slider Minimum="0" 
                                     Maximum="100" 
