@@ -345,7 +345,7 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Text="Padding" Foreground="#9CA3AF"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PreviewPadding, StringFormat='{}{0}px'}" Foreground="White"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PreviewPadding, StringFormat='{}{0:F0}px'}" Foreground="White"/>
                             </Grid>
                             <Slider Minimum="0" 
                                     Maximum="200" 
@@ -357,7 +357,7 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Text="Corner Radius" Foreground="#9CA3AF"/>
-                                <TextBlock Grid.Column="1" Text="{Binding PreviewCornerRadius, StringFormat='{}{0}px'}" Foreground="White"/>
+                                <TextBlock Grid.Column="1" Text="{Binding PreviewCornerRadius, StringFormat='{}{0:F0}px'}" Foreground="White"/>
                             </Grid>
                             <Slider Minimum="0" 
                                     Maximum="50" 
@@ -369,7 +369,7 @@
                         <StackPanel Spacing="8">
                             <Grid ColumnDefinitions="*,Auto">
                                 <TextBlock Grid.Column="0" Text="Shadow Blur" Foreground="#9CA3AF"/>
-                                <TextBlock Grid.Column="1" Text="{Binding ShadowBlur, StringFormat='{}{0}px'}" Foreground="White"/>
+                                <TextBlock Grid.Column="1" Text="{Binding ShadowBlur, StringFormat='{}{0:F0}px'}" Foreground="White"/>
                             </Grid>
                             <Slider Minimum="0" 
                                     Maximum="100" 
