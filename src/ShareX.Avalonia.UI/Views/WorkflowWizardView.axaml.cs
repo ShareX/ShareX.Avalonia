@@ -1,15 +1,13 @@
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using ShareX.Ava.UI.ViewModels;
 
 namespace ShareX.Ava.UI.Views;
 
-public partial class WorkflowsView : UserControl
+public partial class WorkflowWizardView : UserControl
 {
-    public WorkflowsView()
+    public WorkflowWizardView()
     {
         InitializeComponent();
-        DataContext = new WorkflowsViewModel();
     }
 
     private void InitializeComponent()
