@@ -255,24 +255,24 @@
         <Grid Grid.Row="2" ColumnDefinitions="*,288">
             
             <!-- Central Preview Canvas -->
-             <Grid Grid.Column="0" Margin="20">
-                 <Border x:Name="PreviewFrame"
-                         Background="{Binding CanvasBackground}"
-                         Padding="{Binding CanvasPadding}">
-                     <!-- Outer Border: Shadow effect -->
-                     <Border BoxShadow="{Binding CanvasShadow}"
-                            CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}">
-                         <!-- Inner Border: Corner Radius with clipping -->
-                         <Border Background="#FFFFFF"
-                                 CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                 ClipToBounds="True">
-                            <ScrollViewer Name="CanvasScrollViewer"
-                                          Background="Transparent"
-                                          HorizontalScrollBarVisibility="Auto"
-                                          VerticalScrollBarVisibility="Auto"
-                                          PointerPressed="OnScrollViewerPointerPressed"
-                                          PointerMoved="OnScrollViewerPointerMoved"
-                                          PointerReleased="OnScrollViewerPointerReleased">
+            <Grid Grid.Column="0" Margin="20">
+                <ScrollViewer Name="CanvasScrollViewer"
+                              Background="Transparent"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              PointerPressed="OnScrollViewerPointerPressed"
+                              PointerMoved="OnScrollViewerPointerMoved"
+                              PointerReleased="OnScrollViewerPointerReleased">
+                    <Border x:Name="PreviewFrame"
+                            Background="{Binding CanvasBackground}"
+                            Padding="{Binding CanvasPadding}">
+                        <!-- Outer Border: Shadow effect -->
+                        <Border BoxShadow="{Binding CanvasShadow}"
+                               CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}">
+                            <!-- Inner Border: Corner Radius with clipping -->
+                            <Border Background="#FFFFFF"
+                                    CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                    ClipToBounds="True">
                                 <LayoutTransformControl>
                                     <LayoutTransformControl.LayoutTransform>
                                         <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
@@ -280,10 +280,10 @@
 
                                     <!-- Container sized to match actual image dimensions -->
                                     <Border CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
-                                             ClipToBounds="True"
-                                             Background="Transparent">
-                                        <Grid Name="CanvasContainer" 
-                                              Width="{Binding ImageWidth}" 
+                                            ClipToBounds="True"
+                                            Background="Transparent">
+                                        <Grid Name="CanvasContainer"
+                                              Width="{Binding ImageWidth}"
                                               Height="{Binding ImageHeight}">
                                         
                                         <!-- Image Layer -->
@@ -324,10 +324,10 @@
                                     </Grid>
                                     </Border>
                                 </LayoutTransformControl>
-                            </ScrollViewer>
+                            </Border>
                         </Border>
                     </Border>
-                </Border>
+                </ScrollViewer>
             </Grid>
 
             <!-- Right Sidebar (Settings Panel) -->
