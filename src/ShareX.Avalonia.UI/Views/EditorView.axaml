@@ -256,7 +256,8 @@
             
             <!-- Central Preview Canvas -->
              <Grid Grid.Column="0" Margin="20">
-                 <Border Background="{Binding CanvasBackground}"
+                 <Border x:Name="PreviewFrame"
+                         Background="{Binding CanvasBackground}"
                          Padding="{Binding CanvasPadding}">
                      <!-- Outer Border: Shadow effect -->
                      <Border BoxShadow="{Binding CanvasShadow}"

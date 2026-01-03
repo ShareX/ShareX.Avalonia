@@ -571,23 +571,42 @@ namespace ShareX.Ava.UI.Views
 
         public async System.Threading.Tasks.Task<global::Avalonia.Media.Imaging.Bitmap?> GetSnapshot()
         {
+            var preview = this.FindControl<Border>("PreviewFrame");
             var container = this.FindControl<Grid>("CanvasContainer");
-            if (container == null || container.Width <= 0 || container.Height <= 0) return null;
+            var overlay = this.FindControl<Canvas>("OverlayCanvas");
 
-            // Wait for layout update if needed?
-            // Render the container to a bitmap
-            // Since the container is sized to the Image (e.g. 1920x1080), extracting it should yield full res
+            // Prefer the full preview frame (background + padding + shadow); fall back to the image container.
+            var target = (Control?)preview ?? container;
+            if (target == null) return null;
+
+            var bounds = target.Bounds;
+            if (bounds.Width <= 0 || bounds.Height <= 0) return null;
+
+            var scaling = (VisualRoot as TopLevel)?.RenderScaling ?? 1.0;
+            var pixelWidth = (int)Math.Max(1, Math.Round(bounds.Width * scaling));
+            var pixelHeight = (int)Math.Max(1, Math.Round(bounds.Height * scaling));
+
+            // Hide overlay (selection handles, crop outline) so it does not appear in the exported image.
+            var overlayWasVisible = overlay?.IsVisible ?? false;
+            if (overlay != null) overlay.IsVisible = false;
 
             try
             {
-                var rtb = new global::Avalonia.Media.Imaging.RenderTargetBitmap(new PixelSize((int)container.Width, (int)container.Height), new Vector(96, 96));
-                rtb.Render(container);
+                var rtb = new global::Avalonia.Media.Imaging.RenderTargetBitmap(
+                    new PixelSize(pixelWidth, pixelHeight),
+                    new Vector(96 * scaling, 96 * scaling));
+
+                rtb.Render(target);
                 return rtb;
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine("Snapshot failed: " + ex.Message);
                 return null;
+            }
+            finally
+            {
+                if (overlay != null) overlay.IsVisible = overlayWasVisible;
             }
         }
 
@@ -1305,8 +1324,8 @@ namespace ShareX.Ava.UI.Views
                     vm.NumberCounter++;
 
                     canvas.Children.Add(numberGrid);
-                    // Number is positioned and added to canvas, but keep _isDrawing true
-                    // so it goes through OnCanvasPointerReleased for auto-selection
+                    // Number is positioned and added to canvas, so don't add it again
+                    // Keep _isDrawing true so it goes through OnCanvasPointerReleased for auto-selection
                     break;
             }
 
