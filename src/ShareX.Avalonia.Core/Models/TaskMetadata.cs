@@ -25,7 +25,7 @@
 
 using ShareX.Ava.Common;
 using System;
-using System.Drawing;
+using SkiaSharp;
 
 namespace ShareX.Ava.Core;
 
@@ -36,7 +36,7 @@ public class TaskMetadata : IDisposable
 {
     private const int WindowInfoMaxLength = 255;
 
-    public Bitmap? Image { get; set; }
+    public SKBitmap? Image { get; set; }
 
     public string? UploadURL { get; set; }
 
@@ -60,7 +60,7 @@ public class TaskMetadata : IDisposable
     {
     }
 
-    public TaskMetadata(Bitmap image)
+    public TaskMetadata(SKBitmap image)
     {
         Image = image;
     }

@@ -13,6 +13,7 @@ using ShareX.Ava.Core;
 using ShareX.Ava.Common;
 using ShareX.Ava.Core.Tasks;
 using ShareX.Ava.History;
+using SkiaSharp;
 
 namespace ShareX.Ava.UI.ViewModels
 {
@@ -123,12 +124,13 @@ namespace ShareX.Ava.UI.ViewModels
 
             try
             {
-                // Load the image from file
+                // Load the image from file directly as SKBitmap
                 using var fs = new FileStream(item.FilePath, FileMode.Open, FileAccess.Read);
-                var image = System.Drawing.Image.FromStream(fs);
-                
+                var skBitmap = SKBitmap.Decode(fs);
+                if (skBitmap == null) return;
+
                 // Open in Editor using the platform service
-                await ShareX.Ava.Platform.Abstractions.PlatformServices.UI.ShowEditorAsync(image);
+                await ShareX.Ava.Platform.Abstractions.PlatformServices.UI.ShowEditorAsync(skBitmap);
             }
             catch (Exception ex)
             {

@@ -24,7 +24,6 @@
 #endregion License Information (GPL v3)
 
 using System;
-using System.Drawing;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -32,18 +31,16 @@ using Avalonia.Threading;
 using ShareX.Ava.Core;
 using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.UI.ViewModels;
+using SkiaSharp;
 
 namespace ShareX.Ava.UI.Services
 {
     public class AvaloniaUIService : IUIService
     {
-        public async Task ShowEditorAsync(System.Drawing.Image image)
+        public async Task ShowEditorAsync(SKBitmap image)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                // Create a clone of the image for independent editing
-                var imageClone = (System.Drawing.Image)image.Clone();
-
                 // Create independent Editor Window
                 var editorWindow = new Views.EditorWindow();
                 
@@ -55,7 +52,7 @@ namespace ShareX.Ava.UI.Services
                 editorWindow.DataContext = editorViewModel;
                 
                 // Initialize the preview image
-                editorViewModel.UpdatePreview(imageClone);
+                editorViewModel.UpdatePreview(image);
 
                 // Show the window
                 editorWindow.Show();
@@ -63,7 +60,7 @@ namespace ShareX.Ava.UI.Services
         }
 
         public async Task<(AfterCaptureTasks Capture, AfterUploadTasks Upload, bool Cancel)> ShowAfterCaptureWindowAsync(
-            System.Drawing.Image image,
+            SKBitmap image,
             AfterCaptureTasks afterCapture,
             AfterUploadTasks afterUpload)
         {

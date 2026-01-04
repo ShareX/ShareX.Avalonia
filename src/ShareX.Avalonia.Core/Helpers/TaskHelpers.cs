@@ -42,7 +42,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Generate a file name for a captured image
     /// </summary>
-    public static string GetFileName(TaskSettings taskSettings, string extension, Bitmap? bmp = null)
+    public static string GetFileName(TaskSettings taskSettings, string extension, SkiaSharp.SKBitmap? bmp = null)
     {
         var metadata = bmp != null ? new TaskMetadata(bmp) : new TaskMetadata();
         return GetFileName(taskSettings, extension, metadata);
@@ -218,7 +218,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Save image to stream with specified format
     /// </summary>
-    public static MemoryStream? SaveImageAsStream(Bitmap bmp, EImageFormat imageFormat, TaskSettings taskSettings)
+    public static MemoryStream? SaveImageAsStream(SkiaSharp.SKBitmap bmp, EImageFormat imageFormat, TaskSettings taskSettings)
     {
         return SaveImageAsStream(bmp, imageFormat, 
             taskSettings.ImageSettings.ImagePNGBitDepth,
@@ -229,7 +229,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Save image to stream
     /// </summary>
-    public static MemoryStream? SaveImageAsStream(Bitmap bmp, EImageFormat imageFormat,
+    public static MemoryStream? SaveImageAsStream(SkiaSharp.SKBitmap bmp, EImageFormat imageFormat,
         PNGBitDepth pngBitDepth = PNGBitDepth.Default,
         int jpegQuality = 90,
         GIFQuality gifQuality = GIFQuality.Default)
@@ -240,40 +240,17 @@ public static partial class TaskHelpers
 
         try
         {
-            switch (imageFormat)
+            using var image = SkiaSharp.SKImage.FromBitmap(bmp);
+            using var data = imageFormat switch
             {
-                case EImageFormat.PNG:
-                    bmp.Save(ms, ImageFormat.Png);
-                    break;
+                EImageFormat.JPEG => image.Encode(SkiaSharp.SKEncodedImageFormat.Jpeg, jpegQuality),
+                EImageFormat.GIF => image.Encode(SkiaSharp.SKEncodedImageFormat.Gif, 100),
+                EImageFormat.BMP => image.Encode(SkiaSharp.SKEncodedImageFormat.Bmp, 100),
+                EImageFormat.TIFF => image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100), // SkiaSharp doesn't support TIFF encoding
+                _ => image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100)
+            };
 
-                case EImageFormat.JPEG:
-                    // Use JPEG encoder with quality
-                    var jpegEncoder = GetEncoder(ImageFormat.Jpeg);
-                    if (jpegEncoder != null)
-                    {
-                        var encoderParams = new EncoderParameters(1);
-                        encoderParams.Param[0] = new EncoderParameter(Encoder.Quality, jpegQuality);
-                        bmp.Save(ms, jpegEncoder, encoderParams);
-                    }
-                    else
-                    {
-                        bmp.Save(ms, ImageFormat.Jpeg);
-                    }
-                    break;
-
-                case EImageFormat.GIF:
-                    bmp.Save(ms, ImageFormat.Gif);
-                    break;
-
-                case EImageFormat.BMP:
-                    bmp.Save(ms, ImageFormat.Bmp);
-                    break;
-
-                case EImageFormat.TIFF:
-                    bmp.Save(ms, ImageFormat.Tiff);
-                    break;
-            }
-
+            data.SaveTo(ms);
             ms.Position = 0;
             return ms;
         }
@@ -287,7 +264,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Save image to file
     /// </summary>
-    public static string? SaveImageAsFile(Bitmap bmp, TaskSettings taskSettings, bool overwriteFile = false)
+    public static string? SaveImageAsFile(SkiaSharp.SKBitmap bmp, TaskSettings taskSettings, bool overwriteFile = false)
     {
         string screenshotsFolder = GetScreenshotsFolder(taskSettings);
         FileHelpers.CreateDirectory(screenshotsFolder);
@@ -302,14 +279,14 @@ public static partial class TaskHelpers
             if (string.IsNullOrEmpty(filePath)) return null;
         }
 
-        bmp.Save(filePath, GetImageFormat(taskSettings.ImageSettings.ImageFormat));
+        ImageHelpers.SaveBitmap(bmp, filePath);
         return filePath;
     }
 
     /// <summary>
     /// Create thumbnail from image
     /// </summary>
-    public static Bitmap? CreateThumbnail(Bitmap bmp, int width, int height)
+    public static SkiaSharp.SKBitmap? CreateThumbnail(SkiaSharp.SKBitmap bmp, int width, int height)
     {
         if (bmp == null) return null;
 
@@ -329,7 +306,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Check if file should be auto-converted to JPEG
     /// </summary>
-    public static bool ShouldUseJpeg(Bitmap bmp, TaskSettings taskSettings)
+    public static bool ShouldUseJpeg(SkiaSharp.SKBitmap bmp, TaskSettings taskSettings)
     {
         if (!taskSettings.ImageSettings.ImageAutoUseJPEG) return false;
 
@@ -337,32 +314,6 @@ public static partial class TaskHelpers
         long threshold = (long)taskSettings.ImageSettings.ImageAutoUseJPEGSize * 1024;
 
         return imageSize > threshold;
-    }
-
-    private static ImageFormat GetImageFormat(EImageFormat format)
-    {
-        return format switch
-        {
-            EImageFormat.PNG => ImageFormat.Png,
-            EImageFormat.JPEG => ImageFormat.Jpeg,
-            EImageFormat.GIF => ImageFormat.Gif,
-            EImageFormat.BMP => ImageFormat.Bmp,
-            EImageFormat.TIFF => ImageFormat.Tiff,
-            _ => ImageFormat.Png
-        };
-    }
-
-    private static ImageCodecInfo? GetEncoder(ImageFormat format)
-    {
-        ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
-        foreach (ImageCodecInfo codec in codecs)
-        {
-            if (codec.FormatID == format.Guid)
-            {
-                return codec;
-            }
-        }
-        return null;
     }
 
     #endregion

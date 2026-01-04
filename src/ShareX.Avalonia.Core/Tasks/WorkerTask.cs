@@ -2,11 +2,10 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using ShareX.Ava.Core;
-
 using ShareX.Ava.Common;
-
 using ShareX.Ava.Core.Tasks.Processors;
 using ShareX.Ava.Platform.Abstractions;
+using SkiaSharp;
 
 namespace ShareX.Ava.Core.Tasks
 {
@@ -75,7 +74,7 @@ namespace ShareX.Ava.Core.Tasks
             // Perform Capture Phase based on Job Type
             if (PlatformServices.IsInitialized)
             {
-                System.Drawing.Image? image = null;
+                SKBitmap? image = null;
                 
                 switch (Info.TaskSettings.Job)
                 {
@@ -95,16 +94,10 @@ namespace ShareX.Ava.Core.Tasks
                         break;
                 }
                 
-                if (image is System.Drawing.Bitmap bitmap)
+                if (image != null)
                 {
-                    Info.Metadata.Image = bitmap;
-                    DebugHelper.WriteLine($"Captured image: {bitmap.Width}x{bitmap.Height}");
-                }
-                else if (image != null)
-                {
-                    // Convert to Bitmap if it's a different Image type
-                    Info.Metadata.Image = new System.Drawing.Bitmap(image);
-                    DebugHelper.WriteLine($"Converted image to Bitmap: {image.Width}x{image.Height}");
+                    Info.Metadata.Image = image;
+                    DebugHelper.WriteLine($"Captured image: {image.Width}x{image.Height}");
                 }
                 else
                 {
