@@ -7,7 +7,7 @@ A cross-platform port of the popular **ShareX** screen capture and file sharing 
 
 ## âœ¨ Key Features
 - **Cross-Platform**: Runs on Windows, Linux, and macOS (targeting).
-- **Modern UI**: Reimagined interface inspired by modern design principles (SnapX and WinShot inspiration).
+- **Modern UI**: Reimagined interface inspired by modern design principles.
 - **Powerful Capture**:
     - **Region Capture**: supports multi-monitor setups with crosshair cursor.
     - **Fullscreen** & **Window** capture modes.
@@ -15,6 +15,7 @@ A cross-platform port of the popular **ShareX** screen capture and file sharing 
     - Screenshot service via native `screencapture`
     - Global hotkeys powered by SharpHook (requires Accessibility permission)
 - **Advanced Annotation Tools**:
+    - **17 Annotation Types**: Rectangle, Ellipse, Line, Arrow, Text, Number/Step, Blur, Pixelate, Magnify, Highlight, Freehand, SpeechBalloon, Image/Sticker, Spotlight, SmartEraser, Crop, plus base types
     - **Basic Shapes**: Rectangle, Ellipse, Line, Arrow, Text, Number/Step
     - **Effect Shapes**: Blur, Pixelate, Magnify, Highlight with real-time preview
     - **Freehand Tools**: Pen, Highlighter, Smart Eraser
@@ -23,8 +24,8 @@ A cross-platform port of the popular **ShareX** screen capture and file sharing 
     - **Full Undo/Redo** support
     - **Keyboard Shortcuts**: V(Select), R(Rectangle), E(Ellipse), A(Arrow), L(Line), P(Pen), H(Highlighter), T(Text), B(Balloon), N(Number), C(Crop), M(Magnify), S(Spotlight), F(Effects)
 - **Image Effects**:
-    - **50+ Effects**: Auto-discovered from ImageEffects library
-    - **Categories**: Filters, Adjustments, Manipulations
+    - **40+ Effects**: Auto-discovered from ImageEffects library (13 Adjustments, 17 Filters, 10 Manipulations, 6 Drawings)
+    - **Categories**: Filters, Adjustments, Manipulations, Drawings
     - **Real-time Preview**: Apply effects with instant feedback
     - **Parameter Control**: Adjustable effect parameters via dynamic UI
 - **Serialization**: Save and load annotations with full type support

@@ -4,7 +4,7 @@
 
 **Progress: ~97% of Core Editor Features Complete**
 
-We have successfully implemented the Reimagined UI, Multi-monitor Region Capture, comprehensive Annotation System with 16+ tools, and Image Effects integration.
+We have successfully implemented the Reimagined UI, Multi-monitor Region Capture, comprehensive Annotation System with 17 annotation types, and Image Effects integration with 40+ effects.
 
 ### ✅ Recently Completed
 - **Plugin Architecture (Phase 3 - 100%)**:

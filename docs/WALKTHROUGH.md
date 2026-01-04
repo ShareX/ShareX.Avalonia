@@ -8,8 +8,8 @@
 
 ### Core Features (100% Complete)
 - âœ… **Multi-Monitor Region Capture** with crosshair cursor
-- âœ… **16+ Annotation Tools** with full keyboard shortcuts
-- âœ… **50+ Image Effects** with category-based browsing
+- âœ… **17 Annotation Types** with full keyboard shortcuts (Rectangle, Ellipse, Arrow, Line, Text, Number, Blur, Pixelate, Magnify, Highlight, Freehand, SpeechBalloon, Image, Spotlight, SmartEraser, Crop, BaseEffectAnnotation)
+- âœ… **40+ Image Effects** with category-based browsing (13 Adjustments, 17 Filters, 10 Manipulations, 6 Drawings)
 - âœ… **Serialization System** for all annotation types
 - âœ… **Modern UI** with dark theme and gradient buttons
 - âœ… **Plugin Architecture** with dynamic loading

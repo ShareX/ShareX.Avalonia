@@ -51,9 +51,9 @@ namespace ShareX.Ava.Common
         [TypeConverter(typeof(MyColorConverter))]
         public Color MenuCheckBackgroundColor { get; set; }
 
-        public Font MenuFont { get; set; } = new Font("Segoe UI", 9.75f);
+        public Font? MenuFont { get; set; } = CreateDefaultFont();
 
-        public Font ContextMenuFont { get; set; } = new Font("Segoe UI", 9.75f);
+        public Font? ContextMenuFont { get; set; } = CreateDefaultFont();
 
         public int ContextMenuOpacity { get; set; } = 100;
 
@@ -71,6 +71,16 @@ namespace ShareX.Ava.Common
 
         private ShareXTheme()
         {
+        }
+
+        private static Font? CreateDefaultFont()
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                return null;
+            }
+
+            return new Font("Segoe UI", 9.75f);
         }
 
         public static ShareXTheme DarkTheme => new ShareXTheme()

@@ -72,7 +72,7 @@ When using `ContextFlyout` or `ContextMenu` inside a `DataTemplate`, bindings to
 ### Annotation System
 The annotation system is built on a polymorphic model architecture with UI integration via `EditorView`:
 *   **Models**: Located in `ShareX.Avalonia.Annotations/Models/`, inheriting from base `Annotation` class
-*   **Types**: 16 annotation types including Rectangle, Ellipse, Arrow, Line, Text, Number, Blur, Pixelate, Magnify, Highlight, Freehand, SpeechBalloon, Image, Spotlight, SmartEraser, Crop
+*   **Types**: 17 annotation types including Rectangle, Ellipse, Arrow, Line, Text, Number, Blur, Pixelate, Magnify, Highlight, Freehand, SpeechBalloon, Image, Spotlight, SmartEraser, Crop, plus BaseEffectAnnotation
 *   **Drawing**: Handled in `EditorView.axaml.cs` for performance and direct pointer manipulation
 *   **State**: `MainViewModel` manages tool state (`ActiveTool`, `SelectedColor`, `StrokeWidth`, etc.)
 *   **Undo/Redo**: Implemented using `Stack<Control>` to manage visual elements on canvas
@@ -81,7 +81,8 @@ The annotation system is built on a polymorphic model architecture with UI integ
 
 ### Image Effects System
 *   **Auto-Discovery**: Effects are discovered via reflection from `ShareX.Avalonia.ImageEffects` assembly
-*   **Categories**: Filters, Adjustments, Manipulations
+*   **Effect Count**: 40+ effects (13 Adjustments, 17 Filters, 10 Manipulations, 6 Drawings)
+*   **Categories**: Filters, Adjustments, Manipulations, Drawings
 *   **Parameter Binding**: Dynamic UI generation for effect parameters
 *   **Integration**: `EffectsPanelView` provides UI, `MainViewModel` handles application logic
 
@@ -98,10 +99,10 @@ The uploader system uses a plugin architecture where each uploader (Imgur, Amazo
 **Solution Pattern**:
 
 ```csharp
-// In Plugin ViewModel (e.g., ImgurViewModel.cs)
-public class ImgurViewModel : ViewModelBase
+// In Plugin ViewModel (e.g., ImgurConfigViewModel.cs)
+public class ImgurConfigViewModel : ObservableObject, IUploaderConfigViewModel
 {
-    public ImgurViewModel()
+    public ImgurConfigViewModel()
     {
         // ✅ CRITICAL: Load config on construction
         LoadConfiguration();
