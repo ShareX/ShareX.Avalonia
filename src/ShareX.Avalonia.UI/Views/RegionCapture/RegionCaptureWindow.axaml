@@ -13,13 +13,13 @@
         Cursor="Cross"
         PointerPressed="OnPointerPressed"
         PointerMoved="OnPointerMoved"
-        PointerReleased="OnPointerReleased">
+        PointerReleased="OnPointerReleased"
+        CanResize="False"
+        WindowStartupLocation="Manual">
     
     <Canvas Name="SelectionCanvas">
-        <!-- Background screenshot -->
-        <Image Name="BackgroundImage" 
-               Stretch="Fill"
-               RenderOptions.BitmapInterpolationMode="HighQuality" />
+        <!-- Background screenshots container -->
+        <Canvas Name="BackgroundContainer" />
         
         <!-- Darkening overlay with cutout for selection - visible by default -->
         <Path Name="DarkeningOverlay"
