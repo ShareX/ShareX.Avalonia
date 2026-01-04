@@ -14,6 +14,7 @@
         <converters:SelectedColorToBorderConverter x:Key="SelectedColorToBorder"/>
         <converters:SelectedWidthToBackgroundConverter x:Key="SelectedWidthToBackground"/>
         <converters:BoolToActiveBackgroundConverter x:Key="BoolToActiveBackgroundConverter"/>
+        <converters:EqualsConverter x:Key="EqualsConverter"/>
     </Application.Resources>
 
     <Application.DataTemplates>

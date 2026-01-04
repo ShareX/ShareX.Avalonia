@@ -43,6 +43,8 @@ namespace ShareX.Ava.UI.ViewModels
             public required IBrush Brush { get; init; }
         }
 
+        private const string OutputRatioAuto = "Auto";
+
         [ObservableProperty]
         private string _exportState = "";
 
@@ -170,10 +172,22 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private int _numberCounter = 1;
 
+        [ObservableProperty]
+        private string _selectedOutputRatio = OutputRatioAuto;
+
+        [ObservableProperty]
+        private double? _targetOutputAspectRatio;
+
         [RelayCommand]
         private void ResetNumberCounter()
         {
             NumberCounter = 1;
+        }
+
+        [RelayCommand]
+        private void SetOutputRatio(string ratioKey)
+        {
+            SelectedOutputRatio = string.IsNullOrWhiteSpace(ratioKey) ? OutputRatioAuto : ratioKey;
         }
 
         // Modal Overlay Properties
@@ -229,6 +243,15 @@ namespace ShareX.Ava.UI.ViewModels
             _appVersion = version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v1.0.0";
 
             UpdateCanvasProperties();
+        }
+
+        partial void OnSelectedOutputRatioChanged(string value)
+        {
+            _targetOutputAspectRatio = ParseAspectRatio(value);
+            UpdateCanvasProperties();
+            StatusText = _targetOutputAspectRatio.HasValue
+                ? $"Output ratio set to {value}"
+                : "Output ratio auto";
         }
 
         partial void OnPreviewPaddingChanged(double value)
@@ -392,7 +415,7 @@ namespace ShareX.Ava.UI.ViewModels
 
         private void UpdateCanvasProperties()
         {
-            CanvasPadding = new Thickness(PreviewPadding);
+            CanvasPadding = CalculateOutputPadding(PreviewPadding, _targetOutputAspectRatio);
             CanvasShadow = new BoxShadows(new BoxShadow
             {
                 Blur = ShadowBlur,
@@ -402,6 +425,62 @@ namespace ShareX.Ava.UI.ViewModels
             });
             CanvasCornerRadius = Math.Max(0, PreviewCornerRadius);
             OnPropertyChanged(nameof(SmartPaddingColor));
+        }
+
+        private Thickness CalculateOutputPadding(double basePadding, double? targetAspectRatio)
+        {
+            if (_previewImage == null || _previewImage.Size.Width <= 0 || _previewImage.Size.Height <= 0 || !targetAspectRatio.HasValue)
+            {
+                return new Thickness(basePadding);
+            }
+
+            double imageWidth = _previewImage.Size.Width;
+            double imageHeight = _previewImage.Size.Height;
+
+            double totalWidth = imageWidth + (basePadding * 2);
+            double totalHeight = imageHeight + (basePadding * 2);
+            double currentAspect = totalWidth / totalHeight;
+            double target = targetAspectRatio.Value;
+
+            double extraX = 0;
+            double extraY = 0;
+
+            const double epsilon = 0.0001;
+            if (currentAspect > target + epsilon)
+            {
+                // Too wide, add vertical padding
+                double requiredHeight = totalWidth / target;
+                double addHeight = Math.Max(0, requiredHeight - totalHeight);
+                extraY = addHeight / 2;
+            }
+            else if (currentAspect + epsilon < target)
+            {
+                // Too tall, add horizontal padding
+                double requiredWidth = totalHeight * target;
+                double addWidth = Math.Max(0, requiredWidth - totalWidth);
+                extraX = addWidth / 2;
+            }
+
+            return new Thickness(basePadding + extraX, basePadding + extraY, basePadding + extraX, basePadding + extraY);
+        }
+
+        private static double? ParseAspectRatio(string ratio)
+        {
+            if (string.IsNullOrWhiteSpace(ratio) || string.Equals(ratio, OutputRatioAuto, StringComparison.OrdinalIgnoreCase))
+            {
+                return null;
+            }
+
+            var parts = ratio.Split(':');
+            if (parts.Length == 2 &&
+                double.TryParse(parts[0], out var w) &&
+                double.TryParse(parts[1], out var h) &&
+                w > 0 && h > 0)
+            {
+                return w / h;
+            }
+
+            return null;
         }
 
         private static ObservableCollection<GradientPreset> BuildGradientPresets()

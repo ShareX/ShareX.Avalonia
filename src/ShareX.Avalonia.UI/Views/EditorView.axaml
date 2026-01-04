@@ -351,17 +351,44 @@
                         <StackPanel Spacing="8">
                             <TextBlock Text="Output Ratio" Foreground="#9CA3AF"/>
                             <UniformGrid Columns="3" Rows="3">
-                                <Button Content="Auto" Margin="2" Background="#8B5CF6" Foreground="White" CornerRadius="8"/>
-                                <Button Content="1:1" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="4:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="3:2" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="16:9" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="5:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="9:16" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="3:4" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                                <Button Content="2:3" Margin="2" Background="#374151" Foreground="White" CornerRadius="8"/>
-                            </UniformGrid>
-                        </StackPanel>
+                                <Button Content="Auto" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="Auto"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=Auto}"
+                                        Padding="8"/>
+                                <Button Content="1:1" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="1:1"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=1:1}"
+                                        Padding="8"/>
+                                <Button Content="4:3" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="4:3"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=4:3}"
+                                        Padding="8"/>
+                                <Button Content="3:2" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="3:2"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=3:2}"
+                                        Padding="8"/>
+                                <Button Content="16:9" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="16:9"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=16:9}"
+                                        Padding="8"/>
+                                <Button Content="5:3" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="5:3"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=5:3}"
+                                        Padding="8"/>
+                                <Button Content="9:16" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="9:16"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=9:16}"
+                                        Padding="8"/>
+                                <Button Content="3:4" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="3:4"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=3:4}"
+                                        Padding="8"/>
+                                <Button Content="2:3" Margin="2" Classes="DarkButton"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="2:3"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=2:3}"
+                                        Padding="8"/>
+                                 </UniformGrid>
+                             </StackPanel>
 
                         <!-- Background -->
                         <StackPanel Spacing="8">
