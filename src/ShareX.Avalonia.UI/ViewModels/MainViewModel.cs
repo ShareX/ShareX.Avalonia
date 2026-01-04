@@ -308,10 +308,7 @@ namespace ShareX.Ava.UI.ViewModels
             try
             {
                 // Start from the original image backup
-                using var ms = new System.IO.MemoryStream();
-                _originalSourceImage.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                ms.Position = 0;
-                using var skBitmap = SkiaSharp.SKBitmap.Decode(ms);
+                var skBitmap = _originalSourceImage;
                 
                 if (skBitmap == null) return;
 
@@ -366,25 +363,11 @@ namespace ShareX.Ava.UI.ViewModels
                 }
 
                 // Perform the crop on the original image
-                var rect = new System.Drawing.Rectangle(cropX, cropY, cropWidth, cropHeight);
-                var imageRect = new System.Drawing.Rectangle(0, 0, _originalSourceImage.Width, _originalSourceImage.Height);
-                rect.Intersect(imageRect);
-
-                if (rect.Width <= 0 || rect.Height <= 0) return;
-
-                var cropped = new System.Drawing.Bitmap(rect.Width, rect.Height);
-                using (var g = System.Drawing.Graphics.FromImage(cropped))
-                {
-                    g.DrawImage(_originalSourceImage, new System.Drawing.Rectangle(0, 0, cropped.Width, cropped.Height),
-                        rect, System.Drawing.GraphicsUnit.Pixel);
-                }
+                var cropped = ShareX.Ava.Common.ImageHelpers.Crop(_originalSourceImage, cropX, cropY, cropWidth, cropHeight);
 
                 // Update preview with cropped image
                 _currentSourceImage = cropped;
-                using var croppedMs = new System.IO.MemoryStream();
-                cropped.Save(croppedMs, System.Drawing.Imaging.ImageFormat.Png);
-                croppedMs.Position = 0;
-                PreviewImage = new Bitmap(croppedMs);
+                PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(cropped);
                 ImageDimensions = $"{cropped.Width} x {cropped.Height}";
                 StatusText = $"Smart Padding: Cropped to {cropWidth}x{cropHeight}";
             }
@@ -744,7 +727,7 @@ namespace ShareX.Ava.UI.ViewModels
                 }
                 else if (_currentSourceImage != null)
                 {
-                    _currentSourceImage.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                    ShareX.Ava.Common.ImageHelpers.SaveBitmap(_currentSourceImage, path);
                 }
 
                 StatusText = $"Saved to {filename}";
@@ -815,7 +798,7 @@ namespace ShareX.Ava.UI.ViewModels
             // Clone default settings to use user's config (paths, patterns, etc.)
             var defaultSettings = SettingManager.Settings.DefaultTaskSettings;
             var json = Newtonsoft.Json.JsonConvert.SerializeObject(defaultSettings);
-            var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskSettings>(json)!; // Bang for non-null
+            var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskSettings>(json)!;
 
             settings.Job = jobType;
             settings.AfterCaptureJob = afterCapture;
@@ -831,20 +814,16 @@ namespace ShareX.Ava.UI.ViewModels
             }
         }
 
-        private System.Drawing.Image? _currentSourceImage;
-        private System.Drawing.Image? _originalSourceImage; // Backup for smart padding restore
+        private SkiaSharp.SKBitmap? _currentSourceImage;
+        private SkiaSharp.SKBitmap? _originalSourceImage; // Backup for smart padding restore
 
-        public void UpdatePreview(System.Drawing.Image image)
+        public void UpdatePreview(SkiaSharp.SKBitmap image)
         {
             // Store source image for operations like Crop
             _currentSourceImage = image;
 
-            // Convert System.Drawing.Image to Avalonia Bitmap
-            using var ms = new System.IO.MemoryStream();
-            image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-            ms.Position = 0;
-            PreviewImage = new Bitmap(ms);
-            // HasPreviewImage = true; // Handled by OnPreviewImageChanged
+            // Convert SKBitmap to Avalonia Bitmap
+            PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(image);
             ImageDimensions = $"{image.Width} x {image.Height}";
             StatusText = $"Image: {image.Width} × {image.Height}";
 
@@ -856,37 +835,8 @@ namespace ShareX.Ava.UI.ViewModels
             // Backup original image when first loaded (not during smart padding operations)
             if (!_isApplyingSmartPadding && _originalSourceImage == null)
             {
-                _originalSourceImage = (System.Drawing.Image)image.Clone();
+                _originalSourceImage = image.Copy();
             }
-        }
-
-        public void UpdatePreview(SkiaSharp.SKBitmap image)
-        {
-            if (image == null) return;
-
-            // 1. Update PreviewImage (Avalonia Bitmap)
-            // We can use our helper or memory stream
-            using (var imageSnapshot = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100))
-            {
-                using var ms = imageSnapshot.AsStream();
-                PreviewImage = new Bitmap(ms);
-            }
-
-            // 2. Update _currentSourceImage (System.Drawing.Image) for legacy tools (Crop)
-            // We need to convert SKBitmap -> System.Drawing.Image
-            using (var imageSnapshot = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100))
-            {
-                using var ms = imageSnapshot.AsStream();
-                _currentSourceImage = System.Drawing.Image.FromStream(ms);
-            }
-
-            ImageDimensions = $"{image.Width} x {image.Height}";
-            StatusText = $"Image: {image.Width} × {image.Height}";
-
-            // Reset view state
-            Zoom = 1.0;
-            ClearAnnotationsRequested?.Invoke(this, EventArgs.Empty);
-            ResetNumberCounter();
         }
 
         public void CropImage(int x, int y, int width, int height)
@@ -895,23 +845,15 @@ namespace ShareX.Ava.UI.ViewModels
             if (width <= 0 || height <= 0) return;
 
             // Ensure bounds
-            var rect = new System.Drawing.Rectangle(x, y, width, height);
-            var imageRect = new System.Drawing.Rectangle(0, 0, _currentSourceImage.Width, _currentSourceImage.Height);
+            var rect = new SkiaSharp.SKRectI(x, y, x + width, y + height);
+            var imageRect = new SkiaSharp.SKRectI(0, 0, _currentSourceImage.Width, _currentSourceImage.Height);
             rect.Intersect(imageRect);
 
             if (rect.Width <= 0 || rect.Height <= 0) return;
 
-            var cropped = new System.Drawing.Bitmap(rect.Width, rect.Height);
-            using (var g = System.Drawing.Graphics.FromImage(cropped))
-            {
-                g.DrawImage(_currentSourceImage, new System.Drawing.Rectangle(0, 0, cropped.Width, cropped.Height),
-                    rect, System.Drawing.GraphicsUnit.Pixel);
-            }
-
+            var cropped = ShareX.Ava.Common.ImageHelpers.Crop(_currentSourceImage, rect.Left, rect.Top, rect.Width, rect.Height);
             UpdatePreview(cropped);
-            // Note: Old _currentSourceImage is effectively replaced. 
-            // We should dispose the old one if we owned it? 
-            // In this flow, we rely on GC or proper management, but for now this works.
         }
     }
 }
+

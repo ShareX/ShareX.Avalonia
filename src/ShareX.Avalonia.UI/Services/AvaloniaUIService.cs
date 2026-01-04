@@ -24,7 +24,6 @@
 #endregion License Information (GPL v3)
 
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -33,7 +32,6 @@ using ShareX.Ava.Core;
 using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.UI.ViewModels;
 using SkiaSharp;
-// REMOVED: System.Drawing (direct usage replaced by conversion)
 
 namespace ShareX.Ava.UI.Services
 {
@@ -43,15 +41,6 @@ namespace ShareX.Ava.UI.Services
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                // Convert SKBitmap to System.Drawing.Image for current ViewModels
-                // TODO: Refactor ViewModels to use SkiaSharp natively
-                var sysImage = ToSystemDrawingImage(image);
-
-                // Create a clone of the image for independent editing
-                // Note: ToSystemDrawingImage creates a new Bitmap, so it mimics clone behavior essentially
-                // But ViewModels assume they own it.
-                var imageClone = (System.Drawing.Image)sysImage.Clone();
-
                 // Create independent Editor Window
                 var editorWindow = new Views.EditorWindow();
                 
@@ -63,7 +52,7 @@ namespace ShareX.Ava.UI.Services
                 editorWindow.DataContext = editorViewModel;
                 
                 // Initialize the preview image
-                editorViewModel.UpdatePreview(imageClone);
+                editorViewModel.UpdatePreview(image);
 
                 // Show the window
                 editorWindow.Show();
@@ -77,10 +66,7 @@ namespace ShareX.Ava.UI.Services
         {
             return await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                // Convert SKBitmap to System.Drawing.Image
-                var sysImage = ToSystemDrawingImage(image);
-
-                var viewModel = new AfterCaptureViewModel(sysImage, afterCapture, afterUpload);
+                var viewModel = new AfterCaptureViewModel(image, afterCapture, afterUpload);
                 var window = new Views.AfterCaptureWindow
                 {
                     DataContext = viewModel
@@ -108,20 +94,6 @@ namespace ShareX.Ava.UI.Services
 
                 return (viewModel.AfterCaptureTasks, viewModel.AfterUploadTasks, viewModel.Cancelled);
             });
-        }
-
-        private System.Drawing.Image ToSystemDrawingImage(SKBitmap skBitmap)
-        {
-            using (var ms = new MemoryStream())
-            {
-                using (var image = SKImage.FromBitmap(skBitmap))
-                using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-                {
-                    data.SaveTo(ms);
-                }
-                ms.Position = 0;
-                return new System.Drawing.Bitmap(ms);
-            }
         }
     }
 }

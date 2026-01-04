@@ -47,11 +47,11 @@ public partial class AfterCaptureViewModel : ViewModelBase
 
     public event Action? RequestClose;
 
-    public AfterCaptureViewModel(System.Drawing.Image image, AfterCaptureTasks afterCapture, AfterUploadTasks afterUpload)
+    public AfterCaptureViewModel(SkiaSharp.SKBitmap image, AfterCaptureTasks afterCapture, AfterUploadTasks afterUpload)
     {
         if (image == null) throw new ArgumentNullException(nameof(image));
 
-        PreviewImage = ConvertToAvaloniaBitmap(image);
+        PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(image);
         AfterCaptureTasks = afterCapture & ~AfterCaptureTasks.ShowAfterCaptureWindow;
         AfterUploadTasks = afterUpload;
     }
@@ -163,13 +163,5 @@ public partial class AfterCaptureViewModel : ViewModelBase
     private void SetAfterUploadFlag(AfterUploadTasks flag, bool enabled)
     {
         AfterUploadTasks = enabled ? AfterUploadTasks | flag : AfterUploadTasks & ~flag;
-    }
-
-    private static Bitmap ConvertToAvaloniaBitmap(System.Drawing.Image image)
-    {
-        using var ms = new MemoryStream();
-        image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-        ms.Position = 0;
-        return new Bitmap(ms);
     }
 }

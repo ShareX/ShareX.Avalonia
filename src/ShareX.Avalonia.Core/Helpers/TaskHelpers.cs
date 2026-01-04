@@ -25,9 +25,9 @@
 
 using ShareX.Ava.Common;
 using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
-using SkiaSharp;
-// REMOVED: System.Drawing, System.Drawing.Imaging
 
 namespace ShareX.Ava.Core;
 
@@ -42,31 +42,16 @@ public static partial class TaskHelpers
     /// <summary>
     /// Generate a file name for a captured image
     /// </summary>
-    public static string GetFileName(TaskSettings taskSettings, string extension, SKBitmap? bmp = null)
+    public static string GetFileName(TaskSettings taskSettings, string extension, SkiaSharp.SKBitmap? bmp = null)
     {
-        // TODO: Update TaskMetadata to use SKBitmap or be generic
-        // Assuming TaskMetadata currently takes Bitmap, we might need to adjust or pass null/properties manually?
-        // Let's create TaskMetadata if bmp is SKBitmap.
-        // If TaskMetadata is not yet refactored, we might strictly need to refactor it too.
-        // Assuming TaskMetadata is simple and we can patch it or it already supports generic properties.
-        // For now, let's assume we can construct it or just access width/height.
-        
-        var metadata = new TaskMetadata();
-        if (bmp != null) 
-        {
-            // metadata.Image = bmp; // If Image property is Bitmap, this fails. 
-            // We'll set properties directly if possible or update TaskMetadata later.
-            // Looking at TaskMetadata usage below, it seems to access .Image.Width/Height.
-            // We should check TaskMetadata definition.
-        }
-
-        return GetFileName(taskSettings, extension, metadata, bmp);
+        var metadata = bmp != null ? new TaskMetadata(bmp) : new TaskMetadata();
+        return GetFileName(taskSettings, extension, metadata);
     }
 
     /// <summary>
     /// Generate a file name with metadata
     /// </summary>
-    public static string GetFileName(TaskSettings taskSettings, string extension, TaskMetadata? metadata, SKBitmap? bmp = null)
+    public static string GetFileName(TaskSettings taskSettings, string extension, TaskMetadata? metadata)
     {
         var settings = SettingManager.Settings;
         string pattern;
@@ -91,16 +76,10 @@ public static partial class TaskHelpers
             ProcessName = metadata?.ProcessName ?? ""
         };
 
-        if (bmp != null)
+        if (metadata?.Image != null)
         {
-            nameParser.ImageWidth = bmp.Width;
-            nameParser.ImageHeight = bmp.Height;
-        }
-        // Fallback to metadata image if available and bmp is null (legacy)
-        else if (metadata?.Image is SKBitmap skBmp)
-        {
-             nameParser.ImageWidth = skBmp.Width;
-             nameParser.ImageHeight = skBmp.Height;
+            nameParser.ImageWidth = metadata.Image.Width;
+            nameParser.ImageHeight = metadata.Image.Height;
         }
 
         // Use custom timezone if configured
@@ -129,7 +108,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Get the screenshots folder path based on settings and metadata
     /// </summary>
-    public static string GetScreenshotsFolder(TaskSettings? taskSettings = null, TaskMetadata? metadata = null, SKBitmap? bmp = null)
+    public static string GetScreenshotsFolder(TaskSettings? taskSettings = null, TaskMetadata? metadata = null)
     {
         var settings = SettingManager.Settings;
         string screenshotsFolder;
@@ -138,12 +117,12 @@ public static partial class TaskHelpers
 
         if (metadata != null)
         {
-            if (bmp != null)
+            if (metadata.Image != null)
             {
-                nameParser.ImageWidth = bmp.Width;
-                nameParser.ImageHeight = bmp.Height;
+                nameParser.ImageWidth = metadata.Image.Width;
+                nameParser.ImageHeight = metadata.Image.Height;
             }
-             
+
             nameParser.WindowText = metadata.WindowTitle ?? "";
             nameParser.ProcessName = metadata.ProcessName ?? "";
         }
@@ -239,7 +218,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Save image to stream with specified format
     /// </summary>
-    public static MemoryStream? SaveImageAsStream(SKBitmap bmp, EImageFormat imageFormat, TaskSettings taskSettings)
+    public static MemoryStream? SaveImageAsStream(SkiaSharp.SKBitmap bmp, EImageFormat imageFormat, TaskSettings taskSettings)
     {
         return SaveImageAsStream(bmp, imageFormat, 
             taskSettings.ImageSettings.ImagePNGBitDepth,
@@ -250,7 +229,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Save image to stream
     /// </summary>
-    public static MemoryStream? SaveImageAsStream(SKBitmap bmp, EImageFormat imageFormat,
+    public static MemoryStream? SaveImageAsStream(SkiaSharp.SKBitmap bmp, EImageFormat imageFormat,
         PNGBitDepth pngBitDepth = PNGBitDepth.Default,
         int jpegQuality = 90,
         GIFQuality gifQuality = GIFQuality.Default)
@@ -261,50 +240,17 @@ public static partial class TaskHelpers
 
         try
         {
-            switch (imageFormat)
+            using var image = SkiaSharp.SKImage.FromBitmap(bmp);
+            using var data = imageFormat switch
             {
-                case EImageFormat.PNG:
-                    ImageHelpers.SaveBitmap(bmp, "temp.png", 100); // Hack: SaveBitmap logic handles stream? No it saves to file.
-                    // We need a helper to save to stream.
-                    // ImageHelpers.SaveBitmap logic: SKImage.FromBitmap(bmp).Encode(format, quality).SaveTo(stream);
-                    using (var image = SKImage.FromBitmap(bmp))
-                    using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-                    {
-                        data.SaveTo(ms);
-                    }
-                    break;
+                EImageFormat.JPEG => image.Encode(SkiaSharp.SKEncodedImageFormat.Jpeg, jpegQuality),
+                EImageFormat.GIF => image.Encode(SkiaSharp.SKEncodedImageFormat.Gif, 100),
+                EImageFormat.BMP => image.Encode(SkiaSharp.SKEncodedImageFormat.Bmp, 100),
+                EImageFormat.TIFF => image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100), // SkiaSharp doesn't support TIFF encoding
+                _ => image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100)
+            };
 
-                case EImageFormat.JPEG:
-                    using (var image = SKImage.FromBitmap(bmp))
-                    using (var data = image.Encode(SKEncodedImageFormat.Jpeg, jpegQuality))
-                    {
-                        data.SaveTo(ms);
-                    }
-                    break;
-
-                case EImageFormat.GIF:
-                     ImageHelpers.SaveGIF(bmp, ms, gifQuality);
-                     break;
-
-                case EImageFormat.BMP:
-                    using (var image = SKImage.FromBitmap(bmp))
-                    using (var data = image.Encode(SKEncodedImageFormat.Bmp, 100))
-                    {
-                        data.SaveTo(ms);
-                    }
-                    break;
-
-                case EImageFormat.TIFF:
-                    // Skia lacks TIFF, fallback to PNG or BMP? Or custom if needed.
-                    // For now PNG fallback as in ImageHelpers
-                    using (var image = SKImage.FromBitmap(bmp))
-                    using (var data = image.Encode(SKEncodedImageFormat.Png, 100))
-                    {
-                        data.SaveTo(ms);
-                    }
-                    break;
-            }
-
+            data.SaveTo(ms);
             ms.Position = 0;
             return ms;
         }
@@ -318,9 +264,9 @@ public static partial class TaskHelpers
     /// <summary>
     /// Save image to file
     /// </summary>
-    public static string? SaveImageAsFile(SKBitmap bmp, TaskSettings taskSettings, bool overwriteFile = false)
+    public static string? SaveImageAsFile(SkiaSharp.SKBitmap bmp, TaskSettings taskSettings, bool overwriteFile = false)
     {
-        string screenshotsFolder = GetScreenshotsFolder(taskSettings, null, bmp); // Pass bmp for dims
+        string screenshotsFolder = GetScreenshotsFolder(taskSettings);
         FileHelpers.CreateDirectory(screenshotsFolder);
 
         string extension = EnumExtensions.GetDescription(taskSettings.ImageSettings.ImageFormat);
@@ -333,36 +279,14 @@ public static partial class TaskHelpers
             if (string.IsNullOrEmpty(filePath)) return null;
         }
 
-        // Logic to save file
-        // Re-use logic from SaveImageAsStream or ImageHelpers?
-        // ImageHelpers.SaveBitmap supports path.
-        
-        // But we need to support formats.
-        switch (taskSettings.ImageSettings.ImageFormat)
-        {
-             case EImageFormat.GIF:
-                using (var fs = File.OpenWrite(filePath))
-                {
-                    TaskHelpers.SaveImageAsStream(bmp, EImageFormat.GIF, taskSettings)?.CopyTo(fs);
-                }
-                break;
-             case EImageFormat.JPEG:
-                // Use ImageHelpers for convenience if it exposes quality?
-                // ImageHelpers.SaveBitmap takes quality.
-                ImageHelpers.SaveBitmap(bmp, filePath, taskSettings.ImageSettings.ImageJPEGQuality);
-                break;
-             default:
-                ImageHelpers.SaveBitmap(bmp, filePath);
-                break;
-        }
-        
+        ImageHelpers.SaveBitmap(bmp, filePath);
         return filePath;
     }
 
     /// <summary>
     /// Create thumbnail from image
     /// </summary>
-    public static SKBitmap? CreateThumbnail(SKBitmap bmp, int width, int height)
+    public static SkiaSharp.SKBitmap? CreateThumbnail(SkiaSharp.SKBitmap bmp, int width, int height)
     {
         if (bmp == null) return null;
 
@@ -382,7 +306,7 @@ public static partial class TaskHelpers
     /// <summary>
     /// Check if file should be auto-converted to JPEG
     /// </summary>
-    public static bool ShouldUseJpeg(SKBitmap bmp, TaskSettings taskSettings)
+    public static bool ShouldUseJpeg(SkiaSharp.SKBitmap bmp, TaskSettings taskSettings)
     {
         if (!taskSettings.ImageSettings.ImageAutoUseJPEG) return false;
 
@@ -391,10 +315,7 @@ public static partial class TaskHelpers
 
         return imageSize > threshold;
     }
-    
-    // Check if we need simple struct for TaskMetadata if it was removed or if we need to fix it.
-    // Assuming TaskMetadata is in another file.
-    
+
     #endregion
 
     #region Upload Checks

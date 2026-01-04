@@ -26,21 +26,35 @@
 using ShareX.Ava.Common;
 using System;
 using SkiaSharp;
-// REMOVED: System.Drawing reference removed from using except for legacy if needed, but we migrate Image property
 
 namespace ShareX.Ava.Core;
 
 /// <summary>
 /// Metadata about a capture task including window info and captured image
 /// </summary>
-public class TaskMetadata
+public class TaskMetadata : IDisposable
 {
+    private const int WindowInfoMaxLength = 255;
+
     public SKBitmap? Image { get; set; }
+
     public string? UploadURL { get; set; }
-    public string? WindowTitle { get; set; }
-    public string? ProcessName { get; set; }
-    public string? BrowserTitle { get; set; }
-    public string? BrowserURL { get; set; }
+
+    private string? windowTitle;
+
+    public string? WindowTitle
+    {
+        get => windowTitle;
+        set => windowTitle = value?.Truncate(WindowInfoMaxLength);
+    }
+
+    private string? processName;
+
+    public string? ProcessName
+    {
+        get => processName;
+        set => processName = value?.Truncate(WindowInfoMaxLength);
+    }
 
     public TaskMetadata()
     {

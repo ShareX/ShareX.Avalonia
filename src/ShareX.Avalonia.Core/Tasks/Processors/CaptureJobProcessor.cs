@@ -37,7 +37,6 @@ using ShareX.Ava.Uploaders;
 using ShareX.Ava.Uploaders.PluginSystem;
 using ShareX.Ava.History;
 using SkiaSharp;
-// REMOVED: System.Drawing
 
 namespace ShareX.Ava.Core.Tasks.Processors
 {
@@ -96,8 +95,6 @@ namespace ShareX.Ava.Core.Tasks.Processors
             {
                  if (info.Metadata.Image != null)
                  {
-                     // Open in Editor using UI Service
-                     // This decouples Core from UI dependencies
                      await PlatformServices.UI.ShowEditorAsync(info.Metadata.Image);
                  }
             }
@@ -120,10 +117,10 @@ namespace ShareX.Ava.Core.Tasks.Processors
         {
              if (info.Metadata?.Image == null) return;
              
-             SKBitmap bmp = info.Metadata.Image;
+             SkiaSharp.SKBitmap bmp = info.Metadata.Image;
 
              // TaskHelpers contains the logic for folder resolution, naming, and file exists handling.
-             // It runs synchronously (System.Drawing limitation), so wrap in Task.Run if needed, 
+             // It runs synchronously (SkiaSharp limitation), so wrap in Task.Run if needed, 
              // though here we are already on background thread from WorkerTask.
              
              string? filePath = TaskHelpers.SaveImageAsFile(bmp, info.TaskSettings);
