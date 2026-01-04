@@ -28,3 +28,5 @@ build.log
 build*.txt
 *_build*.txt
 *.log
+# Local packaging output
+dist/
