@@ -63,7 +63,7 @@ For Wayland native support, we will eventually need to implement DBus communicat
 
 ### Phase 1: Project Setup (MVP)
 
-1.  **Create Project**: `ShareX.Avalonia.Platform.Linux` (.NET 8.0 Class Library).
+1.  **Create Project**: `ShareX.Avalonia.Platform.Linux` (.NET 10.0 Class Library).
 2.  **Dependencies**:
     -   `ShareX.Avalonia.Platform.Abstractions`
     -   `Avalonia.X11` (likely needed for XID retrieval) or usage of `System.Runtime.InteropServices` for P/Invoke `libX11`.
