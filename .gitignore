@@ -26,4 +26,5 @@ debug/
 # Local build logs
 build.log
 build*.txt
+*_build*.txt
 *.log
