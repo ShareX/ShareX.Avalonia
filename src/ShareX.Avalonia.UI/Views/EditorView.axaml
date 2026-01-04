@@ -279,8 +279,9 @@
                                 <!-- Smart Padding Border: Uses top-left pixel color -->
                                 <Border Background="{Binding SmartPaddingColor}"
                                         Padding="{Binding SmartPaddingThickness}"
-                                        CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}">
-                                    <!-- Inner Border: Corner Radius with clipping -->
+                                        CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                        ClipToBounds="True">
+                                    <!-- Inner Border: White background with rounded corners for clipping -->
                                     <Border Background="#FFFFFF"
                                             CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
                                             ClipToBounds="True">
