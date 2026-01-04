@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Drawing;
 using ShareX.Ava.Common;
+using ShareX.Ava.Platform.Abstractions;
+using System.Drawing;
 
 // using System.Drawing.Design; // Not available in .NET Core / Avalonia Common usually?
 // using System.Windows.Forms.Design;
@@ -51,9 +52,9 @@ namespace ShareX.Ava.Common
         [TypeConverter(typeof(MyColorConverter))]
         public Color MenuCheckBackgroundColor { get; set; }
 
-        public Font? MenuFont { get; set; } = CreateDefaultFont();
+        public FontSpec MenuFont { get; set; } = GetDefaultMenuFont();
 
-        public Font? ContextMenuFont { get; set; } = CreateDefaultFont();
+        public FontSpec ContextMenuFont { get; set; } = GetDefaultContextMenuFont();
 
         public int ContextMenuOpacity { get; set; } = 100;
 
@@ -73,14 +74,24 @@ namespace ShareX.Ava.Common
         {
         }
 
-        private static Font? CreateDefaultFont()
+        private static FontSpec GetDefaultMenuFont()
         {
-            if (!OperatingSystem.IsWindows())
+            if (PlatformServices.IsInitialized)
             {
-                return null;
+                return PlatformServices.Fonts.GetDefaultMenuFont();
             }
 
-            return new Font("Segoe UI", 9.75f);
+            return FontSpec.Default;
+        }
+
+        private static FontSpec GetDefaultContextMenuFont()
+        {
+            if (PlatformServices.IsInitialized)
+            {
+                return PlatformServices.Fonts.GetDefaultContextMenuFont();
+            }
+
+            return FontSpec.Default;
         }
 
         public static ShareXTheme DarkTheme => new ShareXTheme()

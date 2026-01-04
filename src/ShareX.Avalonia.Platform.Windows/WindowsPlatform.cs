@@ -52,7 +52,8 @@ namespace ShareX.Ava.Platform.Windows
                 windowService: new WindowsWindowService(),
                 screenCaptureService: screenCaptureService,
                 hotkeyService: new WindowsHotkeyService(),
-                inputService: new WindowsInputService()
+                inputService: new WindowsInputService(),
+                fontService: new WindowsFontService()
             );
         }
     }

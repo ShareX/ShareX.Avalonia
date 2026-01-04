@@ -24,37 +24,19 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Platform.MacOS.Services;
 
 namespace ShareX.Ava.Platform.MacOS
 {
-    /// <summary>
-    /// Initializes macOS platform services
-    /// </summary>
-    public static class MacOSPlatform
+    public sealed class MacOSFontService : IFontService
     {
-        /// <summary>
-        /// Initializes all macOS platform services
-        /// </summary>
-        public static void Initialize(IScreenCaptureService? screenCaptureService = null)
+        public FontSpec GetDefaultMenuFont()
         {
-            var screenService = new MacOSScreenService();
+            return new FontSpec("Helvetica Neue", 12f);
+        }
 
-            if (screenCaptureService == null)
-            {
-                screenCaptureService = new MacOSScreenshotService();
-            }
-
-            PlatformServices.Initialize(
-                platformInfo: new MacOSPlatformInfo(),
-                screenService: screenService,
-                clipboardService: new MacOSClipboardService(),
-                windowService: new MacOSWindowService(),
-                screenCaptureService: screenCaptureService,
-                hotkeyService: new MacOSHotkeyService(),
-                inputService: new MacOSInputService(),
-                fontService: new MacOSFontService()
-            );
+        public FontSpec GetDefaultContextMenuFont()
+        {
+            return new FontSpec("Helvetica Neue", 12f);
         }
     }
 }
