@@ -901,6 +901,13 @@ namespace ShareX.Ava.UI.ViewModels
             // Store source image for operations like Crop
             _currentSourceImage = image;
 
+            // Update original backup first so smart padding uses the new image during PreviewImage change
+            if (!_isApplyingSmartPadding)
+            {
+                _originalSourceImage?.Dispose();
+                _originalSourceImage = image.Copy();
+            }
+
             // Convert SKBitmap to Avalonia Bitmap
             PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(image);
             ImageDimensions = $"{image.Width} x {image.Height}";
@@ -910,12 +917,6 @@ namespace ShareX.Ava.UI.ViewModels
             Zoom = 1.0;
             ClearAnnotationsRequested?.Invoke(this, EventArgs.Empty);
             ResetNumberCounter();
-            
-            // Backup original image when first loaded (not during smart padding operations)
-            if (!_isApplyingSmartPadding && _originalSourceImage == null)
-            {
-                _originalSourceImage = image.Copy();
-            }
         }
 
         public void CropImage(int x, int y, int width, int height)
