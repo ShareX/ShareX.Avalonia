@@ -109,14 +109,32 @@ namespace ShareX.Ava.Platform.MacOS
 
         public bool ShowWindow(IntPtr handle, int cmdShow)
         {
-            LogNotImplemented(nameof(ShowWindow));
-            return false;
+            string? script = cmdShow switch
+            {
+                6 => "tell application \\\"System Events\\\" to set miniaturized of front window of (first process whose frontmost is true) to true",
+                9 => "tell application \\\"System Events\\\" to set miniaturized of front window of (first process whose frontmost is true) to false",
+                3 => "tell application \\\"System Events\\\" to set zoomed of front window of (first process whose frontmost is true) to true",
+                _ => null
+            };
+
+            if (script == null)
+            {
+                return false;
+            }
+
+            return RunOsaScriptWithOutput(script) != null;
         }
 
         public bool SetWindowPos(IntPtr handle, IntPtr handleInsertAfter, int x, int y, int width, int height, uint flags)
         {
-            LogNotImplemented(nameof(SetWindowPos));
-            return false;
+            var script =
+                "tell application \\\"System Events\\\"\\n" +
+                "set frontApp to first application process whose frontmost is true\\n" +
+                $"set position of front window of frontApp to {{{x}, {y}}}\\n" +
+                $"set size of front window of frontApp to {{{width}, {height}}}\\n" +
+                "end tell";
+
+            return RunOsaScriptWithOutput(script) != null;
         }
 
         public ShareX.Ava.Platform.Abstractions.WindowInfo[] GetAllWindows()
