@@ -4,6 +4,7 @@
         x:Class="ShareX.Ava.UI.Views.PluginInstallerDialog"
         x:DataType="vm:PluginInstallerViewModel"
         Title="Install Plugin"
+        Icon="/Assets/Logo.ico"
         Width="500" Height="400"
         CanResize="False"
         WindowStartupLocation="CenterOwner">

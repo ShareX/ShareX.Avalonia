@@ -23,14 +23,19 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Common
+using System.Drawing;
+
+namespace ShareX.Ava.Platform.Abstractions
 {
-    public static class ShareXResources
+    /// <summary>
+    /// Platform-agnostic input service for mouse and keyboard operations
+    /// </summary>
+    public interface IInputService
     {
-        public const string ProductName = "ShareX Ava";
-        public const string Version = "v0.2.0";
-        public const string ProductNameWithVersion = ProductName + " " + Version;
-        public const string HistoryFileName = "History.xml";
-        public static string UserAgent => "ShareX.Ava";
+        /// <summary>
+        /// Gets the current global mouse cursor position in physical screen coordinates
+        /// </summary>
+        /// <returns>The mouse position in physical pixels, or Point.Empty if unavailable</returns>
+        Point GetCursorPosition();
     }
 }

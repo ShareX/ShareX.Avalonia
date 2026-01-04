@@ -23,14 +23,35 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Common
+using System.Drawing;
+using System.Runtime.InteropServices;
+using ShareX.Ava.Platform.Abstractions;
+
+namespace ShareX.Ava.Platform.Windows
 {
-    public static class ShareXResources
+    /// <summary>
+    /// Windows-specific implementation of IInputService using Win32 API
+    /// </summary>
+    public class WindowsInputService : IInputService
     {
-        public const string ProductName = "ShareX Ava";
-        public const string Version = "v0.2.0";
-        public const string ProductNameWithVersion = ProductName + " " + Version;
-        public const string HistoryFileName = "History.xml";
-        public static string UserAgent => "ShareX.Ava";
+        [StructLayout(LayoutKind.Sequential)]
+        private struct POINT
+        {
+            public int X;
+            public int Y;
+        }
+
+        [DllImport("user32.dll")]
+        private static extern bool GetCursorPos(out POINT lpPoint);
+
+        /// <inheritdoc/>
+        public Point GetCursorPosition()
+        {
+            if (GetCursorPos(out POINT p))
+            {
+                return new Point(p.X, p.Y);
+            }
+            return Point.Empty;
+        }
     }
 }

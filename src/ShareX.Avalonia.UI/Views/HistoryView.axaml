@@ -46,17 +46,25 @@
         <Border Grid.Row="0" Padding="12,8">
             <StackPanel Orientation="Horizontal" Spacing="10">
                 <Button Content="🔄 Refresh" Command="{Binding RefreshHistoryCommand}" 
-                        Padding="12,8" CornerRadius="8"/>
+                        Padding="12,8" CornerRadius="8" IsEnabled="{Binding !IsLoading}"/>
                 <Button Content="{Binding IsGridView, Converter={x:Static vm:HistoryViewModel.ViewToggleConverter}}" 
                         Command="{Binding ToggleViewCommand}"
-                        Padding="12,8" CornerRadius="8"/>
+                        Padding="12,8" CornerRadius="8" IsEnabled="{Binding !IsLoading}"/>
                 <TextBlock Text="{Binding HistoryItems.Count, StringFormat='📁 {0} items'}" 
                            VerticalAlignment="Center" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" Margin="10,0,0,0"/>
             </StackPanel>
         </Border>
         
+        <!-- Loading Indicator -->
+        <Border Grid.Row="1" Padding="20" Background="#1a1a2e" IsVisible="{Binding IsLoading}">
+            <StackPanel Spacing="16" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="Loading history..." FontSize="16" Foreground="White" HorizontalAlignment="Center"/>
+                <ProgressBar IsIndeterminate="True" Width="200" Height="4" CornerRadius="2"/>
+            </StackPanel>
+        </Border>
+        
         <!-- List View Header (only visible in list mode) -->
-        <Border Grid.Row="1" Padding="12,4" Background="#1a1a2e" IsVisible="{Binding !IsGridView}">
+        <Border Grid.Row="1" Padding="12,4" Background="#1a1a2e" IsVisible="{Binding !IsGridView}" IsEnabled="{Binding !IsLoading}">
             <Grid ColumnDefinitions="50,*,150,200">
                 <TextBlock Grid.Column="0" Text="" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold"/>
                 <TextBlock Grid.Column="1" Text="Filename" Foreground="#9CA3AF" FontSize="11" FontWeight="SemiBold" Margin="8,0"/>
@@ -66,7 +74,7 @@
         </Border>
 
         <!-- Grid View -->
-        <ScrollViewer Grid.Row="2" IsVisible="{Binding IsGridView}">
+        <ScrollViewer Grid.Row="2" IsVisible="{Binding IsGridView}" IsEnabled="{Binding !IsLoading}">
             <ItemsControl ItemsSource="{Binding HistoryItems}" Margin="12">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -100,7 +108,7 @@
         </ScrollViewer>
         
         <!-- List View -->
-        <ScrollViewer Grid.Row="2" IsVisible="{Binding !IsGridView}">
+        <ScrollViewer Grid.Row="2" IsVisible="{Binding !IsGridView}" IsEnabled="{Binding !IsLoading}">
             <ItemsControl ItemsSource="{Binding HistoryItems}" Margin="12,4">
                 <ItemsControl.ItemsPanel>
                     <ItemsPanelTemplate>
