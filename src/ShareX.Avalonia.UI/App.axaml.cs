@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 using ShareX.Ava.Common;
 using ShareX.Ava.UI.Views;
-using ShareX.Ava.UI.ViewModels;
+using ShareX.Editor.ViewModels;
 using ShareX.Ava.Uploaders.PluginSystem;
 
 namespace ShareX.Ava.UI;
@@ -22,7 +22,7 @@ public partial class App : Application
         {
             desktop.MainWindow = new Views.MainWindow
             {
-                DataContext = new ViewModels.MainViewModel(),
+                DataContext = new MainViewModel(),
             };
             
             InitializeHotkeys();

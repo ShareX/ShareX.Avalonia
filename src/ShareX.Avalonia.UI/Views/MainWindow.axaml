@@ -6,9 +6,10 @@
         xmlns:ui="using:FluentAvalonia.UI.Controls"
         xmlns:views="using:ShareX.Ava.UI.Views"
         xmlns:common="clr-namespace:ShareX.Ava.Common;assembly=ShareX.Avalonia.Common"
+        xmlns:editvm="clr-namespace:ShareX.Editor.ViewModels;assembly=ShareX.Editor"
         mc:Ignorable="d" d:DesignWidth="1100" d:DesignHeight="650"
         x:Class="ShareX.Ava.UI.Views.MainWindow"
-        x:DataType="vm:MainViewModel"
+        x:DataType="editvm:MainViewModel"
         Title="{x:Static common:ShareXResources.ProductNameWithVersion}"
         Icon="/Assets/Logo.ico"
         WindowState="Normal"
@@ -23,7 +24,7 @@
     </Window.DataTemplates>
 
     <Design.DataContext>
-        <vm:MainViewModel/>
+        <editvm:MainViewModel/>
     </Design.DataContext>
 
     <Grid RowDefinitions="Auto,*">
