@@ -8,14 +8,19 @@ using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using ShareX.Ava.UI.ViewModels;
+using EditorViewControl = ShareX.Editor.Views.EditorView;
+using ShareX.Editor.ViewModels;
 using ShareX.Editor.Annotations;
 using FluentAvalonia.UI.Controls;
+using System.ComponentModel;
 
 namespace ShareX.Ava.UI.Views
 {
     public partial class MainWindow : Window
     {
-        private EditorView? _editorView;
+        private EditorViewControl? _editorView;
+        private readonly EditorViewModel _editorViewModel = new();
+        private INotifyPropertyChanged? _dataContextNotifier;
         
         public MainWindow()
         {
@@ -72,7 +77,13 @@ namespace ShareX.Ava.UI.Views
                         NavigateToEditor();
                         break;
                     case "Editor":
-                        if (_editorView == null) _editorView = new EditorView();
+                        if (_editorView == null)
+                        {
+                            _editorView = new EditorViewControl
+                            {
+                                DataContext = _editorViewModel
+                            };
+                        }
                         contentFrame.Content = _editorView;
                         break;
                     case "History":
@@ -103,13 +114,12 @@ namespace ShareX.Ava.UI.Views
 
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
-            if (DataContext is not MainViewModel vm) return;
+            var editorVm = _editorView?.DataContext as EditorViewModel;
+            if (editorVm == null) return;
             
-            // Skip if typing in a text input
             if (e.Source is TextBox) return;
 
-            // Forward Crop action to EditorView if active
-            if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Enter && vm.ActiveTool == EditorTool.Crop)
+            if (e.KeyModifiers == KeyModifiers.None && e.Key == Key.Enter && editorVm.ActiveTool == EditorTool.Crop)
             {
                 if (_editorView != null && _editorView.IsVisible)
                 {
@@ -119,84 +129,82 @@ namespace ShareX.Ava.UI.Views
                 }
             }
 
-            // Handle Ctrl key combinations
             if (e.KeyModifiers.HasFlag(KeyModifiers.Control))
             {
                 switch (e.Key)
                 {
                     case Key.Z:
                         if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                            vm.RedoCommand.Execute(null);
+                            editorVm.RedoCommand.Execute(null);
                         else
-                            vm.UndoCommand.Execute(null);
+                            editorVm.UndoCommand.Execute(null);
                         e.Handled = true;
                         return;
                     case Key.Y:
-                        vm.RedoCommand.Execute(null);
+                        editorVm.RedoCommand.Execute(null);
                         e.Handled = true;
                         return;
                     case Key.C:
-                        vm.CopyCommand.Execute(null);
+                        editorVm.CopyCommand.Execute(null);
                         e.Handled = true;
                         return;
                     case Key.S:
                         if (e.KeyModifiers.HasFlag(KeyModifiers.Shift))
-                            vm.SaveAsCommand.Execute(null);
+                            editorVm.SaveAsCommand.Execute(null);
                         else
-                            vm.QuickSaveCommand.Execute(null);
+                            editorVm.QuickSaveCommand.Execute(null);
                         e.Handled = true;
                         return;
                 }
             }
 
-            // Tool selection shortcuts (single keys without modifiers)
             if (e.KeyModifiers == KeyModifiers.None)
             {
                 switch (e.Key)
                 {
                     case Key.V:
-                        vm.SelectToolCommand.Execute(EditorTool.Select);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Select);
                         e.Handled = true;
                         break;
                     case Key.R:
-                        vm.SelectToolCommand.Execute(EditorTool.Rectangle);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Rectangle);
                         e.Handled = true;
                         break;
                     case Key.E:
-                        vm.SelectToolCommand.Execute(EditorTool.Ellipse);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Ellipse);
                         e.Handled = true;
                         break;
                     case Key.A:
-                        vm.SelectToolCommand.Execute(EditorTool.Arrow);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Arrow);
                         e.Handled = true;
                         break;
                     case Key.L:
-                        vm.SelectToolCommand.Execute(EditorTool.Line);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Line);
                         e.Handled = true;
                         break;
                     case Key.T:
-                        vm.SelectToolCommand.Execute(EditorTool.Text);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Text);
                         e.Handled = true;
                         break;
                     case Key.N:
-                        vm.SelectToolCommand.Execute(EditorTool.Number);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Number);
                         e.Handled = true;
                         break;
                     case Key.S:
-                        vm.SelectToolCommand.Execute(EditorTool.Spotlight);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Spotlight);
                         e.Handled = true;
                         break;
                     case Key.C:
-                        vm.SelectToolCommand.Execute(EditorTool.Crop);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Crop);
                         e.Handled = true;
                         break;
                     case Key.Delete:
                     case Key.Back:
-                        vm.DeleteSelectedCommand.Execute(null);
+                        editorVm.DeleteSelectedCommand.Execute(null);
                         e.Handled = true;
                         break;
                     case Key.Escape:
-                        vm.SelectToolCommand.Execute(EditorTool.Select);
+                        editorVm.SelectToolCommand.Execute(EditorTool.Select);
                         e.Handled = true;
                         break;
                 }
@@ -217,7 +225,38 @@ namespace ShareX.Ava.UI.Views
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
-            // Setup listeners if needed
+            if (_dataContextNotifier != null)
+            {
+                _dataContextNotifier.PropertyChanged -= OnMainViewModelPropertyChanged;
+            }
+
+            _dataContextNotifier = DataContext as INotifyPropertyChanged;
+            if (_dataContextNotifier != null)
+            {
+                _dataContextNotifier.PropertyChanged += OnMainViewModelPropertyChanged;
+            }
+        }
+
+        private void OnMainViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (sender is not MainViewModel vm) return;
+
+            if (e.PropertyName == nameof(MainViewModel.PreviewImage))
+            {
+                _editorViewModel.PreviewImage = vm.PreviewImage;
+            }
+            else if (e.PropertyName == nameof(MainViewModel.ActiveTool))
+            {
+                _editorViewModel.ActiveTool = vm.ActiveTool;
+            }
+            else if (e.PropertyName == nameof(MainViewModel.SelectedColor))
+            {
+                _editorViewModel.SelectedColor = vm.SelectedColor;
+            }
+            else if (e.PropertyName == nameof(MainViewModel.StrokeWidth))
+            {
+                _editorViewModel.StrokeWidth = vm.StrokeWidth;
+            }
         }
             public void NavigateToEditor()
         {
