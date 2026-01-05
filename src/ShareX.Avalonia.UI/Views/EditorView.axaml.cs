@@ -327,7 +327,7 @@ public partial class EditorView : UserControl
 
     #endregion
 
-    private void OnEffectsPanelApplyRequested(object? sender, EventArgs e)
+    private void OnEffectsPanelApplyRequested(object? sender, RoutedEventArgs e)
     {
         // Effects panel apply - reload image to EditorCanvas
         if (DataContext is MainViewModel vm)
