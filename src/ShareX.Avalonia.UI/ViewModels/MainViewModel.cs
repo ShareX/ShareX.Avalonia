@@ -79,6 +79,7 @@ namespace ShareX.Ava.UI.ViewModels
                 ImageWidth = value.Size.Width;
                 ImageHeight = value.Size.Height;
                 HasPreviewImage = true;
+                Editor.PreviewImage = value;
                 OnPropertyChanged(nameof(SmartPaddingColor));
                 
                 // Apply smart padding crop if enabled (but not if we're already applying it)
@@ -230,6 +231,8 @@ namespace ShareX.Ava.UI.ViewModels
 
 
         public static MainViewModel Current { get; private set; }
+
+        public ShareX.Editor.ViewModels.EditorViewModel Editor { get; } = new();
 
         public MainViewModel()
         {
@@ -390,7 +393,7 @@ namespace ShareX.Ava.UI.ViewModels
 
                 // Update preview with cropped image
                 _currentSourceImage = cropped;
-                PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(cropped);
+                PreviewImage = ShareX.Editor.Helpers.BitmapConversionHelpers.ToAvaloniaBitmap(cropped);
                 ImageDimensions = $"{cropped.Width} x {cropped.Height}";
                 StatusText = $"Smart Padding: Cropped to {cropWidth}x{cropHeight}";
             }
@@ -694,13 +697,13 @@ namespace ShareX.Ava.UI.ViewModels
                 StatusText = $"Applying {EffectsPanel.SelectedEffect.Name}...";
 
                 // Convert Avalonia Bitmap to SKBitmap
-                using var skBitmap = Helpers.BitmapConversionHelpers.ToSKBitmap(PreviewImage);
+                using var skBitmap = ShareX.Editor.Helpers.BitmapConversionHelpers.ToSKBitmap(PreviewImage);
 
                 // Apply effect
                 using var resultBitmap = EffectsPanel.SelectedEffect.Apply(skBitmap);
 
                 // Convert back to Avalonia Bitmap
-                PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(resultBitmap);
+                PreviewImage = ShareX.Editor.Helpers.BitmapConversionHelpers.ToAvaloniaBitmap(resultBitmap);
 
                 StatusText = $"Applied {EffectsPanel.SelectedEffect.Name}";
             }
@@ -909,7 +912,7 @@ namespace ShareX.Ava.UI.ViewModels
             }
 
             // Convert SKBitmap to Avalonia Bitmap
-            PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(image);
+            PreviewImage = ShareX.Editor.Helpers.BitmapConversionHelpers.ToAvaloniaBitmap(image);
             ImageDimensions = $"{image.Width} x {image.Height}";
             StatusText = $"Image: {image.Width} × {image.Height}";
 

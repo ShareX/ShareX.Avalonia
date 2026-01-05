@@ -51,7 +51,7 @@ public partial class AfterCaptureViewModel : ViewModelBase
     {
         if (image == null) throw new ArgumentNullException(nameof(image));
 
-        PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(image);
+        PreviewImage = ShareX.Editor.Helpers.BitmapConversionHelpers.ToAvaloniaBitmap(image);
         AfterCaptureTasks = afterCapture & ~AfterCaptureTasks.ShowAfterCaptureWindow;
         AfterUploadTasks = afterUpload;
     }

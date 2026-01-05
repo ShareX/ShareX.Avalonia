@@ -11,6 +11,8 @@ using ShareX.Ava.UI.ViewModels;
 using ShareX.Editor.Annotations;
 using FluentAvalonia.UI.Controls;
 
+using ShareX.Editor.Views;
+
 namespace ShareX.Ava.UI.Views
 {
     public partial class MainWindow : Window
@@ -72,7 +74,11 @@ namespace ShareX.Ava.UI.Views
                         NavigateToEditor();
                         break;
                     case "Editor":
-                        if (_editorView == null) _editorView = new EditorView();
+                        if (_editorView == null)
+                        {
+                            _editorView = new EditorView();
+                            _editorView.DataContext = vm.Editor;
+                        }
                         contentFrame.Content = _editorView;
                         break;
                     case "History":

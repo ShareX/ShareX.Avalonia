@@ -3,13 +3,14 @@
              xmlns:local="using:ShareX.Ava.UI"
              xmlns:vm="using:ShareX.Ava.UI.ViewModels"
              xmlns:views="using:ShareX.Ava.UI.Views"
-             xmlns:converters="using:ShareX.Ava.UI.Converters"
+             xmlns:converters="using:ShareX.Editor.Converters"
              xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="ShareX.Ava.UI.App"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Resources>
+        <!-- Converters from ShareX.Editor -->
         <converters:ActiveToolToBackgroundConverter x:Key="ActiveToolToBackground"/>
         <converters:SelectedColorToBorderConverter x:Key="SelectedColorToBorder"/>
         <converters:SelectedWidthToBackgroundConverter x:Key="SelectedWidthToBackground"/>

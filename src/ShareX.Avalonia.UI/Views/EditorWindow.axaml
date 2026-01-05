@@ -3,6 +3,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="using:ShareX.Ava.UI.Views"
+        xmlns:editorViews="using:ShareX.Editor.Views"
         xmlns:vm="using:ShareX.Ava.UI.ViewModels"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
         x:Class="ShareX.Ava.UI.Views.EditorWindow"
@@ -11,6 +12,6 @@
         Icon="/Assets/Logo.ico"
         WindowStartupLocation="CenterScreen">
     
-    <views:EditorView Name="EditorViewControl"/>
+    <editorViews:EditorView Name="EditorViewControl" DataContext="{Binding Editor}"/>
     
 </Window>
