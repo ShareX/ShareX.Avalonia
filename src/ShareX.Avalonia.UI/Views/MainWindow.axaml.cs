@@ -266,6 +266,18 @@ namespace ShareX.Ava.UI.Views
             settings.Job = jobType;
             settings.AfterCaptureJob = afterCapture;
 
+            // Subscribe to task completion to update Editor preview
+            void HandleTaskCompleted(object? s, WorkerTask task)
+            {
+                TaskManager.Instance.TaskCompleted -= HandleTaskCompleted;
+                
+                if (task.Info?.Metadata?.Image != null && DataContext is MainViewModel vm)
+                {
+                    vm.UpdatePreview(task.Info.Metadata.Image);
+                }
+            }
+
+            TaskManager.Instance.TaskCompleted += HandleTaskCompleted;
             await TaskManager.Instance.StartTask(settings);
         }
     }
