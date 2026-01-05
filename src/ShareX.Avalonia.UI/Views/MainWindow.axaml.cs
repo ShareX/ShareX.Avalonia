@@ -2,13 +2,19 @@ using Avalonia;
 using Avalonia.Controls;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using ShareX.Ava.Core;
+using ShareX.Ava.Core.Managers;
+using ShareX.Ava.Core.Tasks;
 using ShareX.Ava.UI.ViewModels;
-using ShareX.Ava.Annotations.Models;
+using ShareX.Editor.Annotations;
+using ShareX.Editor.ViewModels;
+using ShareX.Editor.Views;
 using FluentAvalonia.UI.Controls;
 
 namespace ShareX.Ava.UI.Views
@@ -38,7 +44,7 @@ namespace ShareX.Ava.UI.Views
         private void OnWindowOpened(object? sender, EventArgs e)
         {
             // Maximize window and center it on screen
-            this.WindowState = WindowState.Maximized;
+            this.WindowState = Avalonia.Controls.WindowState.Maximized;
         }
 
         private void InitializeComponent()
@@ -59,16 +65,16 @@ namespace ShareX.Ava.UI.Views
                 switch (tag)
                 {
                     case "Capture_Fullscreen":
-                        vm.CaptureFullscreenCommand.Execute(null);
+                        _ = ExecuteCaptureAsync(HotkeyType.PrintScreen);
                         // Navigate back to Editor to see the captured image
                         NavigateToEditor();
                         break;
                     case "Capture_Region":
-                        vm.CaptureRegionCommand.Execute(null);
+                        _ = ExecuteCaptureAsync(HotkeyType.RectangleRegion);
                         NavigateToEditor();
                         break;
                     case "Capture_Window":
-                        vm.CaptureWindowCommand.Execute(null);
+                        _ = ExecuteCaptureAsync(HotkeyType.ActiveWindow);
                         NavigateToEditor();
                         break;
                     case "Editor":
@@ -241,13 +247,38 @@ namespace ShareX.Ava.UI.Views
                 this.Show();
             }
             
-            if (this.WindowState == WindowState.Minimized)
+            if (this.WindowState == Avalonia.Controls.WindowState.Minimized)
             {
-                this.WindowState = WindowState.Maximized;
+                this.WindowState = Avalonia.Controls.WindowState.Maximized;
             }
             
             this.Activate();
             this.Focus();
+        }
+
+        private async Task ExecuteCaptureAsync(HotkeyType jobType, AfterCaptureTasks afterCapture = AfterCaptureTasks.SaveImageToFile)
+        {
+            // Clone default settings to use user's config (paths, patterns, etc.)
+            var defaultSettings = SettingManager.Settings.DefaultTaskSettings;
+            var json = Newtonsoft.Json.JsonConvert.SerializeObject(defaultSettings);
+            var settings = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskSettings>(json)!;
+
+            settings.Job = jobType;
+            settings.AfterCaptureJob = afterCapture;
+
+            // Subscribe to task completion to update Editor preview
+            void HandleTaskCompleted(object? s, WorkerTask task)
+            {
+                TaskManager.Instance.TaskCompleted -= HandleTaskCompleted;
+                
+                if (task.Info?.Metadata?.Image != null && DataContext is MainViewModel vm)
+                {
+                    vm.UpdatePreview(task.Info.Metadata.Image);
+                }
+            }
+
+            TaskManager.Instance.TaskCompleted += HandleTaskCompleted;
+            await TaskManager.Instance.StartTask(settings);
         }
     }
 }

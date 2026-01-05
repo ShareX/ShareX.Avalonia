@@ -30,6 +30,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using ShareX.Ava.Core;
 using ShareX.Ava.Platform.Abstractions;
+using ShareX.Editor.ViewModels;
 using ShareX.Ava.UI.ViewModels;
 using SkiaSharp;
 

@@ -27,6 +27,7 @@ using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Core;
+using ShareX.Editor.Helpers;
 using System;
 using System.IO;
 
@@ -51,7 +52,7 @@ public partial class AfterCaptureViewModel : ViewModelBase
     {
         if (image == null) throw new ArgumentNullException(nameof(image));
 
-        PreviewImage = Helpers.BitmapConversionHelpers.ToAvaloniBitmap(image);
+        PreviewImage = BitmapConversionHelpers.ToAvaloniBitmap(image);
         AfterCaptureTasks = afterCapture & ~AfterCaptureTasks.ShowAfterCaptureWindow;
         AfterUploadTasks = afterUpload;
     }

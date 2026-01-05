@@ -3,7 +3,7 @@
              xmlns:local="using:ShareX.Ava.UI"
              xmlns:vm="using:ShareX.Ava.UI.ViewModels"
              xmlns:views="using:ShareX.Ava.UI.Views"
-             xmlns:converters="using:ShareX.Ava.UI.Converters"
+             xmlns:converters="clr-namespace:ShareX.Editor.Converters;assembly=ShareX.Editor"
              xmlns:sty="using:FluentAvalonia.Styling"
              x:Class="ShareX.Ava.UI.App"
              RequestedThemeVariant="Default">

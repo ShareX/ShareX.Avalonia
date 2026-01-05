@@ -143,87 +143,30 @@ namespace ShareX.Ava.Platform.Windows
 
             try
             {
-                // Convert SKBitmap to DIB (Device Independent Bitmap) format for clipboard
+                // Convert SKBitmap to PNG, then to System.Drawing.Bitmap for clipboard
                 using (var ms = new MemoryStream())
                 {
-                    // Encode to BMP
+                    // Encode to PNG (more reliable than BMP for SkiaSharp)
                     using (var skImage = SKImage.FromBitmap(image))
-                    using (var data = skImage.Encode(SKEncodedImageFormat.Bmp, 100))
                     {
-                        data.SaveTo(ms);
+                        if (skImage == null)
+                            throw new InvalidOperationException("Failed to create SKImage from bitmap");
+                            
+                        using (var data = skImage.Encode(SKEncodedImageFormat.Png, 100))
+                        {
+                            if (data == null)
+                                throw new InvalidOperationException("Failed to encode image to PNG format");
+                                
+                            data.SaveTo(ms);
+                        }
                     }
                     
                     ms.Position = 0;
-
-                    // Read BMP header to skip it (clipboard wants DIB, not BMP)
-                    byte[] bmpData = ms.ToArray();
                     
-                    // BMP file header is 14 bytes, we need to skip it for DIB
-                    int dibOffset = 14;
-                    int dibSize = bmpData.Length - dibOffset;
-                    
-                    // Allocate global memory for clipboard
-                    IntPtr hGlobal = NativeMethods.GlobalAlloc(NativeMethods.GMEM_MOVEABLE, (UIntPtr)dibSize);
-                    if (hGlobal == IntPtr.Zero)
-                        throw new InvalidOperationException("Failed to allocate global memory for clipboard");
-
-                    try
+                    // Use System.Drawing to set clipboard (simpler and more reliable)
+                    using (var drawingBitmap = new Bitmap(ms))
                     {
-                        // Lock the memory and copy DIB data
-                        IntPtr pGlobal = NativeMethods.GlobalLock(hGlobal);
-                        if (pGlobal == IntPtr.Zero)
-                            throw new InvalidOperationException("Failed to lock global memory");
-
-                        try
-                        {
-                            System.Runtime.InteropServices.Marshal.Copy(bmpData, dibOffset, pGlobal, dibSize);
-                        }
-                        finally
-                        {
-                            NativeMethods.GlobalUnlock(hGlobal);
-                        }
-
-                        // Open clipboard with retry logic
-                        bool clipboardOpened = false;
-                        for (int i = 0; i < 5; i++)
-                        {
-                            if (NativeMethods.OpenClipboard(IntPtr.Zero))
-                            {
-                                clipboardOpened = true;
-                                break;
-                            }
-                            System.Threading.Thread.Sleep(100);
-                        }
-
-                        if (!clipboardOpened)
-                            throw new InvalidOperationException("Failed to open clipboard after 5 attempts");
-
-                        try
-                        {
-                            // Empty clipboard and set new data
-                            NativeMethods.EmptyClipboard();
-                            
-                            IntPtr result = NativeMethods.SetClipboardData(NativeMethods.CF_DIB, hGlobal);
-                            if (result == IntPtr.Zero)
-                            {
-                                throw new InvalidOperationException("Failed to set clipboard data");
-                            }
-                            
-                            // Success - clipboard now owns the memory, don't free it
-                            hGlobal = IntPtr.Zero;
-                        }
-                        finally
-                        {
-                            NativeMethods.CloseClipboard();
-                        }
-                    }
-                    finally
-                    {
-                        // Only free if we still own the memory (SetClipboardData failed)
-                        if (hGlobal != IntPtr.Zero)
-                        {
-                            NativeMethods.GlobalFree(hGlobal);
-                        }
+                        RunInStaThread(() => Clipboard.SetImage(drawingBitmap));
                     }
                 }
             }
