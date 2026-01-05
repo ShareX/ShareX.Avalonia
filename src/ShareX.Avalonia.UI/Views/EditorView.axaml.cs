@@ -117,7 +117,100 @@ public partial class EditorView : UserControl
         
         EditorCanvas.Editor.StatusTextChanged += text => vm.StatusText = text;
         
+        EditorCanvas.Editor.ImageChanged += () =>
+        {
+             if (EditorCanvas.Editor.SourceImage != null)
+             {
+                 vm.PreviewImage = EditorCanvas.Editor.SourceImage.ToAvaloniaBitmap();
+                 // Implicitly updates ImageWidth/Height via bindings if they depend on PreviewImage
+             }
+        };
+
+        EditorCanvas.Editor.EditAnnotationRequested += OnEditAnnotationRequested;
+        
         LoadImageToEditor(vm);
+    }
+
+    private void OnEditAnnotationRequested(Annotation annotation)
+    {
+        var overlay = this.FindControl<Canvas>("TextInputCanvas");
+        if (overlay == null) return;
+
+        // Remove existing text boxes to avoid duplicates
+        overlay.Children.Clear();
+
+        string initialText = "";
+        float fontSize = 12;
+        string color = "#FF000000";
+        SKPoint position = annotation.StartPoint;
+
+        if (annotation is TextAnnotation textAnn)
+        {
+            initialText = textAnn.Text;
+            fontSize = textAnn.FontSize;
+            color = textAnn.StrokeColor;
+            // Adjust position for padding? Rendering uses +4 padding
+        }
+        else if (annotation is SpeechBalloonAnnotation speechAnn)
+        {
+            initialText = speechAnn.Text;
+            fontSize = speechAnn.FontSize;
+            // Use black for speech balloon text usually, or stroke color
+            color = "#FF000000"; 
+            
+            // Position near center or start?
+            var bounds = annotation.GetBounds();
+            position = new SKPoint(bounds.Left + 20, bounds.Top + 20);
+        }
+
+        var textBox = new TextBox
+        {
+            Text = initialText,
+            FontSize = fontSize,
+            Foreground = new SolidColorBrush(Color.Parse(color)),
+            Background = new SolidColorBrush(Color.Parse("#80FFFFFF")), // Semi-transparent white background for visibility
+            BorderThickness = new Thickness(1),
+            BorderBrush = Brushes.Blue,
+            MinHeight = 30,
+            MinWidth = 50,
+            AcceptsReturn = true,
+            TextWrapping = TextWrapping.Wrap
+        };
+
+        // Position
+        Canvas.SetLeft(textBox, position.X);
+        Canvas.SetTop(textBox, position.Y);
+
+        textBox.TextChanged += (s, e) =>
+        {
+            if (annotation is TextAnnotation ta) ta.Text = textBox.Text ?? "";
+            else if (annotation is SpeechBalloonAnnotation sa) sa.Text = textBox.Text ?? "";
+            
+            EditorCanvas?.InvalidateVisual();
+        };
+
+        // Finalize on lost focus
+        textBox.LostFocus += (s, e) =>
+        {
+            overlay.Children.Remove(textBox);
+            EditorCanvas?.InvalidateVisual();
+        };
+        
+        // Finalize on double enter or Escape
+        textBox.KeyDown += (s, e) => {
+            if (e.Key == Key.Escape) {
+               overlay.Children.Remove(textBox);
+               EditorCanvas?.Focus();
+            }
+        };
+
+        overlay.Children.Add(textBox);
+        
+        // Focus
+        Dispatcher.UIThread.Post(() => {
+            textBox.Focus();
+            textBox.SelectAll();
+        });
     }
 
     private void LoadImageToEditor(MainViewModel vm)

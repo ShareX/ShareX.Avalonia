@@ -256,6 +256,11 @@
                                                 Cursor="Cross"
                                                 Zoom="{Binding Zoom}"/>
 
+                                        <!-- Text Input Overlay -->
+                                        <Canvas Name="TextInputCanvas"
+                                                Width="{Binding ImageWidth}" 
+                                                Height="{Binding ImageHeight}"/>
+
                                     </Grid>
                                     </Border>
                                 </Border>
