@@ -29,7 +29,7 @@ The Editor functionality has been successfully decoupled into a standalone `Shar
 
 ```
 ShareX.Avalonia/
-├── ShareX.Editor/
+├── ShareX.Editor/                     # Sibling repo
 │   └── src/ShareX.Editor/
 │       ├── ShareX.Editor.csproj       # net10.0-windows
 │       ├── Annotations/               # 20 files (moved from ShareX.Avalonia.Annotations)
@@ -104,7 +104,7 @@ Add the `ShareX.Editor` project reference to the ShareX WinForms project:
 
 ```bash
 cd ShareX
-dotnet add ShareX/ShareX.csproj reference ../ShareX.Avalonia/ShareX.Editor/src/ShareX.Editor/ShareX.Editor.csproj
+dotnet add ShareX/ShareX.csproj reference ../ShareX.Editor/src/ShareX.Editor/ShareX.Editor.csproj
 ```
 
 Or if publishing as NuGet package:

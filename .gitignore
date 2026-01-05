@@ -28,3 +28,4 @@ build.log
 build*.txt
 *_build*.txt
 *.log
+*.code-workspace
