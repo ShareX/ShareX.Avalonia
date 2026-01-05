@@ -27,6 +27,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.ComponentModel;
 using System.Text;
+using System.IO.Compression;
 
 namespace ShareX.Ava.Common
 {
@@ -148,27 +149,15 @@ namespace ShareX.Ava.Common
 
                         if (File.Exists(filePath))
                         {
-                            string? backupFilePath = null;
-
                             if (CreateBackup && !string.IsNullOrEmpty(BackupFolder))
                             {
-                                string fileName = Path.GetFileName(filePath);
-                                backupFilePath = Path.Combine(BackupFolder, fileName);
-                                if (!Directory.Exists(BackupFolder))
-                                {
-                                    Directory.CreateDirectory(BackupFolder);
-                                }
+                                CreateBackupZip(filePath);
                             }
 
                             // .NET Standard 2.0 / .NET Core doesn't verify File.Replace across checks, but standard File.Replace is available in newer .NET
                             // We'll use a manual move approach if needed or File.Replace
                             try 
                             {
-                                if (backupFilePath != null)
-                                {
-                                    // File.Replace doesn't always work as expected cross-platform for simple backup, manual copy/move is safer
-                                    File.Copy(filePath, backupFilePath, true);
-                                }
                                 File.Move(tempFilePath, filePath, true);
                             }
                             catch (Exception)
@@ -204,6 +193,54 @@ namespace ShareX.Ava.Common
             }
 
             return isSuccess;
+        }
+
+        private void CreateBackupZip(string filePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(BackupFolder) || !File.Exists(filePath))
+                {
+                    return;
+                }
+
+                // Create yyyy-MM subfolder
+                string monthFolder = Path.Combine(BackupFolder, DateTime.Now.ToString("yyyy-MM"));
+                if (!Directory.Exists(monthFolder))
+                {
+                    Directory.CreateDirectory(monthFolder);
+                }
+
+                // Create zip file with date stamp: yyyy-MM-dd format
+                string zipFileName = $"backup-{DateTime.Now:yyyy-MM-dd}.zip";
+                string zipFilePath = Path.Combine(monthFolder, zipFileName);
+
+                // If a backup for today already exists, delete it (we're updating with latest)
+                if (File.Exists(zipFilePath))
+                {
+                    File.Delete(zipFilePath);
+                }
+
+                // Create zip file containing the JSON file
+                using (var archive = ZipFile.Open(zipFilePath, ZipArchiveMode.Create))
+                {
+                    string fileName = Path.GetFileName(filePath);
+                    using (var fileStream = File.OpenRead(filePath))
+                    {
+                        var entry = archive.CreateEntry(fileName);
+                        using (var entryStream = entry.Open())
+                        {
+                            fileStream.CopyTo(entryStream);
+                        }
+                    }
+                }
+
+                System.Diagnostics.Debug.WriteLine($"Backup created: {zipFilePath}");
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to create backup: {e}");
+            }
         }
 
         private void SaveToStream(Stream stream, bool supportDPAPIEncryption = false, bool leaveOpen = false)
