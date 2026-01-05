@@ -36,6 +36,7 @@ using Avalonia.VisualTree;
 using SkiaSharp;
 using ShareX.Editor.Annotations;
 using ShareX.Ava.UI.ViewModels;
+using ShareX.Ava.UI.Helpers;
 using System.ComponentModel;
 
 namespace ShareX.Ava.UI.Views
@@ -1164,7 +1165,7 @@ namespace ShareX.Ava.UI.Views
                             };
 
                             var annotation = new ImageAnnotation();
-                            annotation.SetImage(bitmap);
+                            annotation.SetImage(bitmap.ToSKBitmap()!);
                             imageControl.Tag = annotation;
 
                             // Center on click point
@@ -1280,7 +1281,7 @@ namespace ShareX.Ava.UI.Views
                     var spotlightAnnotation = new SpotlightAnnotation();
                     
                     // Set canvas size for the darkening overlay
-                    spotlightAnnotation.CanvasSize = new Size(canvas.Bounds.Width, canvas.Bounds.Height);
+                    spotlightAnnotation.CanvasSize = new Size(canvas.Bounds.Width, canvas.Bounds.Height).ToSKSize();
                     
                     var spotlightControl = new ShareX.Ava.UI.Controls.SpotlightControl
                     {
@@ -1374,7 +1375,7 @@ namespace ShareX.Ava.UI.Views
                         freehand = new FreehandAnnotation();
                     }
 
-                    freehand.Points.Add(_startPoint);
+                    freehand.Points.Add(_startPoint.ToSKPoint());
                     polyline.Tag = freehand;
 
                     _currentShape = polyline;
@@ -1618,7 +1619,7 @@ namespace ShareX.Ava.UI.Views
 
                 if (polyline.Tag is FreehandAnnotation freehand)
                 {
-                    freehand.Points.Add(currentPoint);
+                    freehand.Points.Add(currentPoint.ToSKPoint());
                 }
             }
             else if (_currentShape is global::Avalonia.Controls.Shapes.Path arrowPath && DataContext is MainViewModel vm)
@@ -1659,14 +1660,14 @@ namespace ShareX.Ava.UI.Views
                 else if (_currentShape is ShareX.Ava.UI.Controls.SpotlightControl spotlightControl && spotlightControl.Annotation is SpotlightAnnotation spotlight)
                 {
                     // Update spotlight annotation bounds
-                    spotlight.StartPoint = _startPoint;
-                    spotlight.EndPoint = currentPoint;
+                    spotlight.StartPoint = _startPoint.ToSKPoint();
+                    spotlight.EndPoint = currentPoint.ToSKPoint();
                     
                     // Update canvas size for the entire image (needed for darkening overlay)
                     var parentCanvas = this.FindControl<Canvas>("AnnotationCanvas");
                     if (parentCanvas != null)
                     {
-                        spotlight.CanvasSize = new Size(parentCanvas.Bounds.Width, parentCanvas.Bounds.Height);
+                        spotlight.CanvasSize = new Size(parentCanvas.Bounds.Width, parentCanvas.Bounds.Height).ToSKSize();
                     }
                     
                     spotlightControl.InvalidateVisual();
@@ -1712,8 +1713,8 @@ namespace ShareX.Ava.UI.Views
 
                 if (width <= 0 || height <= 0) return;
 
-                annotation.StartPoint = new Point(left, top);
-                annotation.EndPoint = new Point(left + width, top + height);
+                annotation.StartPoint = new SkiaSharp.SKPoint((float)left, (float)top);
+                annotation.EndPoint = new SkiaSharp.SKPoint((float)(left + width), (float)(top + height));
 
                 // Cache SKBitmap conversion to avoid repeated conversions
                 if (_cachedSkBitmap == null)
@@ -1725,11 +1726,15 @@ namespace ShareX.Ava.UI.Views
 
                 if (annotation.EffectBitmap != null && shape is Shape shapeControl)
                 {
-                    shapeControl.Fill = new ImageBrush(annotation.EffectBitmap)
+                    var avaloniaBitmap = annotation.EffectBitmap.ToAvaloniaBitmap();
+                    if (avaloniaBitmap != null)
                     {
-                        Stretch = Stretch.None,
-                        SourceRect = new RelativeRect(0, 0, width, height, RelativeUnit.Absolute)
-                    };
+                        shapeControl.Fill = new ImageBrush(avaloniaBitmap)
+                        {
+                            Stretch = Stretch.None,
+                            SourceRect = new RelativeRect(0, 0, width, height, RelativeUnit.Absolute)
+                        };
+                    }
                 }
             }
             catch (Exception ex)

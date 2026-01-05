@@ -31,7 +31,8 @@ using ShareX.Editor.Annotations;
 namespace ShareX.Ava.UI.Controls;
 
 /// <summary>
-/// Custom control for rendering spotlight annotations with proper darkening effect
+/// Custom control for rendering spotlight annotations with proper darkening effect.
+/// This is an Avalonia adapter that translates SKCanvas rendering to Avalonia DrawingContext.
 /// </summary>
 public class SpotlightControl : Control
 {
@@ -63,9 +64,39 @@ public class SpotlightControl : Control
         base.Render(context);
 
         var annotation = Annotation;
-        if (annotation != null)
-        {
-            annotation.Render(context);
-        }
+        if (annotation == null) return;
+        
+        // Avalonia adapter: Translate SkiaSharp rendering to Avalonia DrawingContext
+        // The annotation now uses SKCanvas, so we need to replicate its logic here for Avalonia
+        
+        var canvasSize = annotation.CanvasSize;
+        if (canvasSize.Width <= 0 || canvasSize.Height <= 0) return;
+
+        var spotlightRect = annotation.GetBounds();
+
+        // Create dark overlay using path with EvenOdd fill rule
+        var pathGeometry = new PathGeometry { FillRule = FillRule.EvenOdd };
+        
+        // Outer figure: full canvas
+        var outerFigure = new PathFigure { StartPoint = new Point(0, 0), IsClosed = true };
+        outerFigure.Segments.Add(new LineSegment { Point = new Point(canvasSize.Width, 0) });
+        outerFigure.Segments.Add(new LineSegment { Point = new Point(canvasSize.Width, canvasSize.Height) });
+        outerFigure.Segments.Add(new LineSegment { Point = new Point(0, canvasSize.Height) });
+        pathGeometry.Figures.Add(outerFigure);
+        
+        // Inner figure: spotlight rectangle (hole)
+        var innerFigure = new PathFigure 
+        { 
+            StartPoint = new Point(spotlightRect.Left, spotlightRect.Top), 
+            IsClosed = true 
+        };
+        innerFigure.Segments.Add(new LineSegment { Point = new Point(spotlightRect.Right, spotlightRect.Top) });
+        innerFigure.Segments.Add(new LineSegment { Point = new Point(spotlightRect.Right, spotlightRect.Bottom) });
+        innerFigure.Segments.Add(new LineSegment { Point = new Point(spotlightRect.Left, spotlightRect.Bottom) });
+        pathGeometry.Figures.Add(innerFigure);
+        
+        // Draw the overlay (darkens everything except the rectangle)
+        var overlayBrush = new SolidColorBrush(Color.FromArgb(annotation.DarkenOpacity, 0, 0, 0));
+        context.DrawGeometry(overlayBrush, null, pathGeometry);
     }
 }
