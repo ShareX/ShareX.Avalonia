@@ -1,7 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Common;
+using ShareX.Ava.Core;
 using System;
+using System.Diagnostics;
 using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -54,6 +56,29 @@ namespace ShareX.Ava.UI.ViewModels
         private void Upload()
         {
              // Placeholder for upload functionality
+        }
+
+        [RelayCommand]
+        private void OpenSettingsFolder()
+        {
+            try
+            {
+                string settingsFolder = SettingManager.SettingsFolder;
+                
+                if (System.IO.Directory.Exists(settingsFolder))
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = settingsFolder,
+                        UseShellExecute = true
+                    };
+                    Process.Start(psi);
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteLine($"Error opening settings folder: {ex.Message}");
+            }
         }
     }
 }
