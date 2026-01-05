@@ -138,21 +138,29 @@ namespace ShareX.Ava.Platform.Windows
 
         public void SetImage(SKBitmap image)
         {
-            if (image == null)
+            if (image == null || image.Width == 0 || image.Height == 0)
                 return;
 
             try
             {
+                using var skImage = SKImage.FromBitmap(image);
+                if (skImage == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Failed to create SKImage from bitmap for clipboard.");
+                    return;
+                }
+
+                using var data = skImage.Encode(SKEncodedImageFormat.Bmp, 100);
+                if (data == null)
+                {
+                    System.Diagnostics.Debug.WriteLine("Failed to encode bitmap for clipboard.");
+                    return;
+                }
+
                 // Convert SKBitmap to DIB (Device Independent Bitmap) format for clipboard
                 using (var ms = new MemoryStream())
                 {
-                    // Encode to BMP
-                    using (var skImage = SKImage.FromBitmap(image))
-                    using (var data = skImage.Encode(SKEncodedImageFormat.Bmp, 100))
-                    {
-                        data.SaveTo(ms);
-                    }
-                    
+                    data.SaveTo(ms);
                     ms.Position = 0;
 
                     // Read BMP header to skip it (clipboard wants DIB, not BMP)
