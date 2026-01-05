@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="using:ShareX.Ava.UI.ViewModels"
              xmlns:views="using:ShareX.Ava.UI.Views"
+             xmlns:controls="using:ShareX.Ava.UI.Controls"
              xmlns:models="using:ShareX.Editor.Annotations"
              xmlns:converters="using:ShareX.Ava.UI.Converters"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
@@ -247,34 +248,14 @@
                                                Stretch="Uniform"
                                                HorizontalAlignment="Stretch"
                                                VerticalAlignment="Stretch"/>
-
-                                        <!-- Annotation Layer (Saved content) -->
-                                        <Canvas Name="AnnotationCanvas"
-                                                Background="Transparent"
+                                        <!-- Annotation Layer using EditorCore -->
+                                        <controls:EditorCanvas x:Name="EditorCanvas"
                                                 IsVisible="{Binding HasPreviewImage}"
                                                 HorizontalAlignment="Stretch"
                                                 VerticalAlignment="Stretch"
                                                 Cursor="Cross"
-                                                PointerPressed="OnCanvasPointerPressed"
-                                                PointerMoved="OnCanvasPointerMoved"
-                                                PointerReleased="OnCanvasPointerReleased">
-                                        </Canvas>
+                                                Zoom="{Binding Zoom}"/>
 
-                                        <!-- Overlay Layer (Transient UI: Selection handles, Crop) -->
-                                        <Canvas Name="OverlayCanvas"
-                                                IsHitTestVisible="True"
-                                                HorizontalAlignment="Stretch"
-                                                VerticalAlignment="Stretch"
-                                                PointerPressed="OnCanvasPointerPressed"
-                                                PointerMoved="OnCanvasPointerMoved"
-                                                PointerReleased="OnCanvasPointerReleased">
-                                            <Rectangle Name="CropOverlay" 
-                                                       IsVisible="False"
-                                                       Stroke="White"
-                                                       StrokeThickness="2"
-                                                       StrokeDashArray="4,2"
-                                                       Fill="#80000000" />
-                                        </Canvas>
                                     </Grid>
                                     </Border>
                                 </Border>
