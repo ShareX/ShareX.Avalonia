@@ -157,14 +157,9 @@ public partial class WorkflowsViewModel : ViewModelBase
                     SelectedWorkflow.Model.HotkeyInfo.Key, 
                     SelectedWorkflow.Model.HotkeyInfo.Modifiers));
             
-            // Copy TaskSettings too - shallow for now
-            clone.TaskSettings = SelectedWorkflow.Model.TaskSettings; // Wait, this shares reference! BAD.
-            // We need a proper clone. For now, let's just copy the Job. 
-            // Better: use JSON clone? Or just create fresh.
-            // HotkeySettings constructor copies Job. 
-            // Let's rely on basic hotkey duplication for now.
-            // Actually, we want to copy the destination settings too.
-            // Since Copy logic wasn't fully deep in HotkeySettingsViewModel either, I will stick to basic Clone.
+            // Deep copy TaskSettings using JSON
+            string json = Newtonsoft.Json.JsonConvert.SerializeObject(SelectedWorkflow.Model.TaskSettings);
+            clone.TaskSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskSettings>(json);
             
             _manager.Hotkeys.Add(clone);
             LoadWorkflows();

@@ -14,8 +14,8 @@
 
     <Grid RowDefinitions="*" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <TabControl Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="300">
-            <!-- General Tab -->
-            <TabItem Header="General">
+            <!-- Notifications Tab -->
+            <TabItem Header="Notifications">
                 <ScrollViewer>
                     <StackPanel Margin="20" Spacing="20">
                         <StackPanel Spacing="10">
@@ -30,6 +30,7 @@
                     </StackPanel>
                 </ScrollViewer>
             </TabItem>
+
 
             <!-- Capture Tab -->
             <TabItem Header="Capture">
@@ -49,6 +50,30 @@
                                     <CheckBox IsChecked="{Binding CaptureTransparent}" Content="Capture transparency"/>
                                     <CheckBox IsChecked="{Binding CaptureShadow}" Content="Capture window shadow" IsEnabled="{Binding CaptureTransparent}" Margin="20,0,0,0"/>
                                     <CheckBox IsChecked="{Binding CaptureClientArea}" Content="Capture client area (remove window chrome)"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <!-- After Capture Tasks Section -->
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="After capture" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <TextBlock Text="Choose actions to perform automatically after capturing" 
+                                               FontSize="12" 
+                                               Foreground="Gray" 
+                                               Margin="0,0,0,4"/>
+                                    <CheckBox IsChecked="{Binding SaveImageToFile}" 
+                                              Content="Save image to file"/>
+                                    <CheckBox IsChecked="{Binding CopyImageToClipboard}" 
+                                              Content="Copy image to clipboard"/>
+                                    <CheckBox IsChecked="{Binding UploadImageToHost}" 
+                                              Content="Upload image to host"
+                                              FontWeight="SemiBold"/>
+                                    <CheckBox IsChecked="{Binding AnnotateImage}" 
+                                              Content="Annotate image"/>
+                                    <CheckBox IsChecked="{Binding ShowAfterCaptureWindow}" 
+                                              Content="Show after capture window"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -145,29 +170,7 @@
                             </Border>
                         </StackPanel>
 
-                        <!-- After Capture Tasks Section -->
-                        <StackPanel Spacing="10">
-                            <TextBlock Text="After capture" FontWeight="SemiBold"/>
-                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
-                                <StackPanel Spacing="10">
-                                    <TextBlock Text="Choose actions to perform automatically after capturing" 
-                                               FontSize="12" 
-                                               Foreground="Gray" 
-                                               Margin="0,0,0,4"/>
-                                    <CheckBox IsChecked="{Binding SaveImageToFile}" 
-                                              Content="Save image to file"/>
-                                    <CheckBox IsChecked="{Binding CopyImageToClipboard}" 
-                                              Content="Copy image to clipboard"/>
-                                    <CheckBox IsChecked="{Binding UploadImageToHost}" 
-                                              Content="Upload image to host"
-                                              FontWeight="SemiBold"/>
-                                    <CheckBox IsChecked="{Binding AnnotateImage}" 
-                                              Content="Annotate image"/>
-                                    <CheckBox IsChecked="{Binding ShowAfterCaptureWindow}" 
-                                              Content="Show after capture window"/>
-                                </StackPanel>
-                            </Border>
-                        </StackPanel>
+
 
                         <!-- After Upload Tasks Section -->
                         <StackPanel Spacing="10">

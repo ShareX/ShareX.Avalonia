@@ -49,7 +49,12 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         get 
         {
             var baseTitle = Model.HotkeyInfo.Id == 0 ? "Add Workflow" : "Edit Workflow";
-            return string.IsNullOrEmpty(Description) ? baseTitle : $"{baseTitle} - {Description}";
+            var desc = Description;
+            if (string.IsNullOrEmpty(desc))
+            {
+                desc = EnumExtensions.GetDescription(Model.Job);
+            }
+            return $"{baseTitle} - {desc}";
         }
     }
 
