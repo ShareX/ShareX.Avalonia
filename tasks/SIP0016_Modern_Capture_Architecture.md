@@ -25,7 +25,10 @@ The implementation will be executed in three distinct stages, prioritizing the W
     *   "Yellow Border" privacy indicator support (optional/configurable).
 
 ### Stage 2: Linux - XDG Portals & Wayland Support
-**Objective**: Implement a secure and compliant capture provider for Linux, specifically targeting Wayland compositors where X11 calls are restricted.
+**Objective**: Replace the current `StubScreenCaptureService` in `ShareX.Avalonia.Platform.Linux` with a functional implementation using XDG Desktop Portals.
+
+> [!NOTE]
+> The `ShareX.Avalonia.Platform.Linux` project already exists with a `StubScreenCaptureService` that returns `null` for all capture methods. This stage will implement a real `LinuxScreenCaptureService`.
 
 **Technical Requirements**:
 *   **DBus Communication**: Implement a DBus client to communicate with session services.
@@ -49,9 +52,9 @@ The implementation will be executed in three distinct stages, prioritizing the W
     *   Reduce CPU usage compared to spawning detached processes.
 
 ## Architectural Changes
-*   Define a robust `ICaptureProvider` interface in `ShareX.Avalonia.Platform.Abstractions`.
-*   Each stage will implement a concrete provider:
-    *   `WindowsSecureCaptureProvider`
-    *   `LinuxWaylandCaptureProvider`
-    *   `MacOSNativeCaptureProvider`
+*   The `IScreenCaptureService` interface already exists in `ShareX.Avalonia.Platform.Abstractions`.
+*   Each stage will implement/replace a concrete service:
+    *   **Stage 1**: `WindowsModernCaptureService` (NEW - replaces GDI+ based `WindowsScreenCaptureService`)
+    *   **Stage 2**: `LinuxScreenCaptureService` (NEW - replaces `StubScreenCaptureService` in existing `Platform.Linux` project)
+    *   **Stage 3**: `MacOSNativeCaptureService` (MODIFY - enhance existing `MacOSScreenshotService`)
 *   The system will auto-detect the OS and version to select the best available provider, falling back to legacy methods (GDI+/CLI) only when modern APIs are unavailable (e.g., older OS versions).
