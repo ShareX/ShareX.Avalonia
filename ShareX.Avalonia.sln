@@ -49,6 +49,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E8CB8917-EEB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.Editor", "..\ShareX.Editor\src\ShareX.Editor\ShareX.Editor.csproj", "{9E99E9F2-FE0C-485D-9EF4-C54206AB4DCA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.Avalonia.Platform.Linux", "src\ShareX.Avalonia.Platform.Linux\ShareX.Avalonia.Platform.Linux.csproj", "{326B5A95-16A2-4E7A-A320-8E253D5970E3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -287,6 +289,18 @@ Global
 		{9E99E9F2-FE0C-485D-9EF4-C54206AB4DCA}.Release|x64.Build.0 = Release|Any CPU
 		{9E99E9F2-FE0C-485D-9EF4-C54206AB4DCA}.Release|x86.ActiveCfg = Release|Any CPU
 		{9E99E9F2-FE0C-485D-9EF4-C54206AB4DCA}.Release|x86.Build.0 = Release|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Debug|x64.Build.0 = Debug|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Debug|x86.Build.0 = Debug|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Release|x64.ActiveCfg = Release|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Release|x64.Build.0 = Release|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Release|x86.ActiveCfg = Release|Any CPU
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -313,5 +327,6 @@ Global
 		{E948629F-A1FC-42D2-A9BF-E5A55689BAA6} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{E8CB8917-EEBC-BC23-7F1D-9730F69BE860} = {9CDEF635-2B92-7BC4-7BA3-E0B4A4C557C7}
 		{9E99E9F2-FE0C-485D-9EF4-C54206AB4DCA} = {E8CB8917-EEBC-BC23-7F1D-9730F69BE860}
+		{326B5A95-16A2-4E7A-A320-8E253D5970E3} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal
