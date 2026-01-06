@@ -212,19 +212,7 @@ public class HotkeyManager : IDisposable
     /// </summary>
     public static List<HotkeySettings> GetDefaultHotkeyList()
     {
-        return new List<HotkeySettings>
-        {
-            new HotkeySettings(HotkeyType.RectangleRegion,
-                new HotkeyInfo(Key.PrintScreen, KeyModifiers.Control)),
-            new HotkeySettings(HotkeyType.PrintScreen,
-                new HotkeyInfo(Key.PrintScreen)),
-            new HotkeySettings(HotkeyType.ActiveWindow,
-                new HotkeyInfo(Key.PrintScreen, KeyModifiers.Alt)),
-            new HotkeySettings(HotkeyType.ScreenRecorder,
-                new HotkeyInfo(Key.PrintScreen, KeyModifiers.Shift)),
-            new HotkeySettings(HotkeyType.ScreenRecorderGIF,
-                new HotkeyInfo(Key.PrintScreen, KeyModifiers.Control | KeyModifiers.Shift)),
-        };
+        return WorkflowsConfig.GetDefaultHotkeyList();
     }
 
     public void Dispose()

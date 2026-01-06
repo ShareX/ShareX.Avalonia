@@ -134,6 +134,11 @@ public partial class WorkflowEditorViewModel : ViewModelBase
 
     private void UpdateDestinations()
     {
+        if (_imageCategory == null || _textCategory == null || _fileCategory == null || _urlCategory == null)
+        {
+            InitializeCategories();
+        }
+
         AvailableDestinations.Clear();
 
         string category = GetHotkeyCategory(SelectedJob);

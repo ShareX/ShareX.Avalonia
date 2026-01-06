@@ -54,6 +54,7 @@ public class WorkflowsConfig : SettingsBase<WorkflowsConfig>
         {
             new HotkeySettings(HotkeyType.PrintScreen, new HotkeyInfo(Key.PrintScreen)),
             new HotkeySettings(HotkeyType.ActiveWindow, new HotkeyInfo(Key.PrintScreen, KeyModifiers.Alt)),
+            new HotkeySettings(HotkeyType.CustomWindow, new HotkeyInfo()),
             new HotkeySettings(HotkeyType.RectangleRegion, new HotkeyInfo(Key.PrintScreen, KeyModifiers.Control)),
             new HotkeySettings(HotkeyType.ScreenRecorder, new HotkeyInfo(Key.PrintScreen, KeyModifiers.Shift)),
             new HotkeySettings(HotkeyType.ScreenRecorderGIF, new HotkeyInfo(Key.PrintScreen, KeyModifiers.Control | KeyModifiers.Shift)),

@@ -4,7 +4,7 @@
     <TargetFramework Condition="'$(OS)' != 'Windows_NT'">net10.0</TargetFramework>
     <OutputType Condition="'$(OS)' == 'Windows_NT'">WinExe</OutputType>
     <OutputType Condition="'$(OS)' != 'Windows_NT'">Exe</OutputType>
-    <AssemblyName>ShareX Ava</AssemblyName>
+    <AssemblyName>XerahS</AssemblyName>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>..\ShareX.Avalonia.UI\Assets\Logo.ico</ApplicationIcon>
