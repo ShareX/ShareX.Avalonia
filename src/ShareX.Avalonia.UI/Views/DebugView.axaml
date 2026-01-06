@@ -15,6 +15,7 @@
         <!-- Toolbar -->
         <Border Grid.Row="0" Padding="10" Background="{DynamicResource SolidBackgroundFillColorBaseBrush}">
             <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Command="{Binding OpenLogsFolderCommand}" Content="Open Logs Folder" />
                 <Button Command="{Binding OpenSettingsFolderCommand}" Content="Open Settings Folder" />
                 <Button Command="{Binding CopyCommand}" Content="Copy" />
                 <Button Command="{Binding ClearCommand}" Content="Clear" />

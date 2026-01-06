@@ -59,6 +59,33 @@ namespace ShareX.Ava.UI.ViewModels
         }
 
         [RelayCommand]
+        private void OpenLogsFolder()
+        {
+            try
+            {
+                string logsFolder = System.IO.Path.Combine(SettingManager.PersonalFolder, "Logs");
+                
+                if (System.IO.Directory.Exists(logsFolder))
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = logsFolder,
+                        UseShellExecute = true
+                    };
+                    Process.Start(psi);
+                }
+                else
+                {
+                    DebugHelper.WriteLine($"Logs folder does not exist: {logsFolder}");
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteLine($"Error opening logs folder: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
         private void OpenSettingsFolder()
         {
             try
