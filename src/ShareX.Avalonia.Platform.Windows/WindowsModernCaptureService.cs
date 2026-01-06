@@ -190,15 +190,25 @@ namespace ShareX.Ava.Platform.Windows
                         canvas.DrawBitmap(outputBitmap, destX, destY);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Skip this output on error
+                    ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Failed to capture output. {ex}");
                 }
                 finally
                 {
                     output.Dispose();
-                    adapter.Dispose();
                 }
+            }
+
+            // Dispose adapters (unique only)
+            var uniqueAdapters = new System.Collections.Generic.HashSet<IDXGIAdapter1>();
+            foreach (var item in outputs)
+            {
+                 uniqueAdapters.Add(item.Adapter);
+            }
+            foreach (var adapter in uniqueAdapters)
+            {
+                adapter.Dispose();
             }
 
             return combinedBitmap;
