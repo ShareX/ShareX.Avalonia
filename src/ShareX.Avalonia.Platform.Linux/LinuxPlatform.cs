@@ -1,7 +1,9 @@
 using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.Common;
 using System;
-using System.Drawing;
 using System.Collections.Generic;
+using SysPoint = System.Drawing.Point;
+using Rectangle = System.Drawing.Rectangle;
 
 namespace ShareX.Ava.Platform.Linux
 {
@@ -9,16 +11,25 @@ namespace ShareX.Ava.Platform.Linux
     {
         public static void Initialize(IScreenCaptureService? screenCaptureService = null)
         {
-             PlatformServices.Initialize(
+            // Use LinuxScreenCaptureService if none provided
+            if (screenCaptureService == null)
+            {
+                screenCaptureService = new LinuxScreenCaptureService();
+                DebugHelper.WriteLine(LinuxScreenCaptureService.IsWayland 
+                    ? "Linux: Running on Wayland. Using LinuxScreenCaptureService with XDG Portal support."
+                    : "Linux: Running on X11. Using LinuxScreenCaptureService with CLI fallbacks.");
+            }
+
+            PlatformServices.Initialize(
                 platformInfo: new LinuxPlatformInfo(),
                 screenService: new StubScreenService(),
                 clipboardService: new StubClipboardService(),
                 windowService: new LinuxWindowService(),
-                screenCaptureService: screenCaptureService ?? new StubScreenCaptureService(),
+                screenCaptureService: screenCaptureService,
                 hotkeyService: new StubHotkeyService(),
                 inputService: new StubInputService(),
                 fontService: new StubFontService()
-             );
+            );
         }
     }
 
@@ -31,7 +42,7 @@ namespace ShareX.Ava.Platform.Linux
         public Rectangle GetPrimaryScreenBounds() => Rectangle.Empty;
         public Rectangle GetPrimaryScreenWorkingArea() => Rectangle.Empty;
         public ScreenInfo[] GetAllScreens() => Array.Empty<ScreenInfo>();
-        public ScreenInfo GetScreenFromPoint(Point point) => new ScreenInfo();
+        public ScreenInfo GetScreenFromPoint(SysPoint point) => new ScreenInfo();
         public ScreenInfo GetScreenFromRectangle(Rectangle rectangle) => new ScreenInfo();
     }
 
@@ -75,7 +86,7 @@ namespace ShareX.Ava.Platform.Linux
 
     internal class StubInputService : IInputService
     {
-        public Point GetCursorPosition() => Point.Empty;
+        public SysPoint GetCursorPosition() => SysPoint.Empty;
     }
 
     internal class StubFontService : IFontService
