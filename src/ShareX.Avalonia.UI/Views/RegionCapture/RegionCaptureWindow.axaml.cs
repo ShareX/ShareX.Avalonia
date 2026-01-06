@@ -92,7 +92,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             // Initialize debug logging
             var debugFolder = System.IO.Path.Combine(
                 ShareX.Ava.Core.SettingManager.PersonalFolder,
-                "Debug");
+                "Debug", "RegionCapture");
             System.IO.Directory.CreateDirectory(debugFolder);
             
             var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss-fff");

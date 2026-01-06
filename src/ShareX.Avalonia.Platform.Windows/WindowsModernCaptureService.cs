@@ -24,6 +24,8 @@
 #endregion License Information (GPL v3)
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using System.Threading.Tasks;
@@ -151,11 +153,11 @@ namespace ShareX.Ava.Platform.Windows
             using var factory = DXGI.CreateDXGIFactory1<IDXGIFactory1>();
             if (factory == null) return null;
 
-            // Enumerate adapters and outputs to get total virtual screen bounds
+            // Enumerate adapters and outputs
             var outputs = EnumerateOutputs(factory);
             if (outputs.Count == 0) return null;
 
-            // Calculate virtual screen bounds
+            // Calculate captured virtual screen bounds
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
 
@@ -177,137 +179,156 @@ namespace ShareX.Ava.Platform.Windows
             using var canvas = new SKCanvas(combinedBitmap);
             canvas.Clear(SKColors.Black);
 
-            // Capture each output
-            foreach (var (output, adapter, bounds) in outputs)
+            // Group outputs by adapter to share ID3D11Device
+            var outputsByAdapter = outputs.GroupBy(x => x.Adapter).ToList();
+            
+            // Track resources for batch processing
+            var activeDuplications = new List<(IDXGIOutputDuplication Duplication, ID3D11Device Device, ID3D11Texture2D Staging, System.Drawing.Rectangle Bounds)>();
+            var devicesToDispose = new List<ID3D11Device>();
+
+            try
             {
-                try
+                // 1. Initialize all duplications (Create Devices & Duplications)
+                foreach(var group in outputsByAdapter)
                 {
-                    using var outputBitmap = CaptureOutputDxgi(output, adapter, bounds.Width, bounds.Height);
-                    if (outputBitmap != null)
+                    var adapter = group.Key;
+                    
+                    // Create one device per adapter
+                    if (D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, DeviceCreationFlags.BgraSupport, 
+                        new[] { FeatureLevel.Level_11_1, FeatureLevel.Level_11_0 }, out var device).Failure || device == null)
                     {
-                        int destX = bounds.Left - minX;
-                        int destY = bounds.Top - minY;
-                        canvas.DrawBitmap(outputBitmap, destX, destY);
+                        continue;
+                    }
+                    devicesToDispose.Add(device);
+
+                    using var deviceContext = device.ImmediateContext;
+
+                    foreach(var (output, _, bounds) in group)
+                    {
+                        try
+                        {
+                            // Duplicate output
+                            var duplication = output.DuplicateOutput(device);
+
+                            // Create staging texture for CPU access
+                            var textureDesc = new Texture2DDescription
+                            {
+                                Width = (uint)bounds.Width,
+                                Height = (uint)bounds.Height,
+                                MipLevels = 1,
+                                ArraySize = 1,
+                                Format = Format.B8G8R8A8_UNorm,
+                                SampleDescription = new SampleDescription(1, 0),
+                                Usage = ResourceUsage.Staging,
+                                BindFlags = BindFlags.None,
+                                CPUAccessFlags = CpuAccessFlags.Read,
+                                MiscFlags = ResourceOptionFlags.None
+                            };
+                            var staging = device.CreateTexture2D(textureDesc);
+
+                            activeDuplications.Add((duplication, device, staging, bounds));
+                        }
+                        catch (Exception ex)
+                        {
+                            // Output might be disconnected or in use
+                             ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Setup failed for output. {ex}");
+                        }
+                        finally
+                        {
+                            output.Dispose(); // Dispose IDXGIOutput1 immediately after use
+                        }
                     }
                 }
-                catch (Exception ex)
-                {
-                    ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Failed to capture output. {ex}");
-                }
-                finally
-                {
-                    output.Dispose();
-                }
-            }
 
-            // Dispose adapters (unique only)
-            var uniqueAdapters = new System.Collections.Generic.HashSet<IDXGIAdapter1>();
-            foreach (var item in outputs)
-            {
-                 uniqueAdapters.Add(item.Adapter);
+                // 2. Wait for next frame (important for first capture initialization)
+                // Doing this ONCE creates a small delay that allows all duplications to accumulate a frame
+                if (activeDuplications.Count > 0)
+                {
+                    System.Threading.Thread.Sleep(50); // Reduced from 100ms per screen to 50ms global
+                }
+
+                // 3. Acquire & Process Frames
+                foreach(var (duplication, device, staging, bounds) in activeDuplications)
+                {
+                    try
+                    {
+                        // Acquire frame
+                        var acquireResult = duplication.AcquireNextFrame(250, out var frameInfo, out var desktopResource);
+                        
+                        if (acquireResult.Success && desktopResource != null)
+                        {
+                            using(desktopResource)
+                            {
+                                using var desktopTex = desktopResource.QueryInterface<ID3D11Texture2D>();
+                                device.ImmediateContext.CopyResource(staging, desktopTex);
+                            }
+                            duplication.ReleaseFrame();
+
+                            // Map staging texture
+                            var dataBox = device.ImmediateContext.Map(staging, 0, MapMode.Read);
+                            try
+                            {
+                                // Draw to combined bitmap
+                                DrawMappedTextureToCanvas(dataBox, bounds.Width, bounds.Height, bounds.Left - minX, bounds.Top - minY, canvas);
+                            }
+                            finally
+                            {
+                                device.ImmediateContext.Unmap(staging, 0);
+                            }
+                        }
+                        else
+                        {
+                             ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: AcquireFrame failed or timed out.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                         ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Frame capture failed. {ex}");
+                    }
+                    finally
+                    {
+                        duplication.Dispose();
+                        staging.Dispose();
+                    }
+                }
             }
-            foreach (var adapter in uniqueAdapters)
+            finally
             {
-                adapter.Dispose();
+                foreach(var d in devicesToDispose) d.Dispose();
+                
+                // Dispose unique adapters
+                foreach(var group in outputsByAdapter)
+                {
+                    group.Key.Dispose();
+                }
             }
 
             return combinedBitmap;
         }
 
-        /// <summary>
-        /// Captures a single display output using DXGI
-        /// </summary>
-        private SKBitmap? CaptureOutputDxgi(IDXGIOutput1 output, IDXGIAdapter1 adapter, int width, int height)
+        private void DrawMappedTextureToCanvas(MappedSubresource dataBox, int width, int height, int destX, int destY, SKCanvas canvas)
         {
-            // Create D3D11 device for this adapter
-            var result = D3D11.D3D11CreateDevice(
-                adapter,
-                DriverType.Unknown,
-                DeviceCreationFlags.BgraSupport,
-                new[] { FeatureLevel.Level_11_1, FeatureLevel.Level_11_0 },
-                out var device
-            );
+            // Create a temporary SKBitmap wrapping the data
+            // Note: We cannot wrap directly because SKBitmap doesn't support strided data easily without copy or specialized installPixels
+            // For simplicity and safety (handling pitch), we copy row by row to a temp bitmap
+            
+            using var tempBitmap = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
+            var destPixels = tempBitmap.GetPixels();
+            int srcPitch = (int)dataBox.RowPitch;
+            int destPitch = width * 4;
 
-            if (result.Failure || device == null)
-                return null;
-
-            using (device)
+            unsafe
             {
-                // Create staging texture for CPU read
-                var textureDesc = new Texture2DDescription
+                for (int y = 0; y < height; y++)
                 {
-                    Width = (uint)width,
-                    Height = (uint)height,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    Format = Format.B8G8R8A8_UNorm,
-                    SampleDescription = new SampleDescription(1, 0),
-                    Usage = ResourceUsage.Staging,
-                    BindFlags = BindFlags.None,
-                    CPUAccessFlags = CpuAccessFlags.Read,
-                    MiscFlags = ResourceOptionFlags.None
-                };
-
-                using var stagingTexture = device.CreateTexture2D(textureDesc);
-
-                // Create output duplication
-                using var duplication = output.DuplicateOutput(device);
-
-                // Wait a bit for a frame (important for first capture)
-                System.Threading.Thread.Sleep(100);
-
-                // Acquire frame
-                var acquireResult = duplication.AcquireNextFrame(500, out var frameInfo, out var desktopResource);
-                if (acquireResult.Failure || desktopResource == null)
-                    return null;
-
-                using (desktopResource)
-                {
-                    using var desktopTexture = desktopResource.QueryInterface<ID3D11Texture2D>();
+                    IntPtr srcRow = IntPtr.Add(dataBox.DataPointer, y * srcPitch);
+                    IntPtr destRow = IntPtr.Add(destPixels, y * destPitch);
                     
-                    // Copy to staging texture
-                    device.ImmediateContext.CopyResource(stagingTexture, desktopTexture);
-                }
-
-                // Release frame
-                duplication.ReleaseFrame();
-
-                // Map the staging texture for CPU read
-                var dataBox = device.ImmediateContext.Map(stagingTexture, 0, MapMode.Read);
-
-                try
-                {
-                    // Create SKBitmap from the data
-                    var bitmap = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
-                    var destPixels = bitmap.GetPixels();
-
-                    // Copy row by row (handle row pitch differences)
-                    int srcPitch = (int)dataBox.RowPitch;
-                    int destPitch = width * 4; // BGRA = 4 bytes per pixel
-
-                    for (int y = 0; y < height; y++)
-                    {
-                        IntPtr srcRow = IntPtr.Add(dataBox.DataPointer, y * srcPitch);
-                        IntPtr destRow = IntPtr.Add(destPixels, y * destPitch);
-                        
-                        unsafe
-                        {
-                            Buffer.MemoryCopy(
-                                (void*)srcRow,
-                                (void*)destRow,
-                                destPitch,
-                                destPitch
-                            );
-                        }
-                    }
-
-                    return bitmap;
-                }
-                finally
-                {
-                    device.ImmediateContext.Unmap(stagingTexture, 0);
+                    Buffer.MemoryCopy((void*)srcRow, (void*)destRow, destPitch, destPitch);
                 }
             }
+            
+            canvas.DrawBitmap(tempBitmap, destX, destY);
         }
 
         /// <summary>
