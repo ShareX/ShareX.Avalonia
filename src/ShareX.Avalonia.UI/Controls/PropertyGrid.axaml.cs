@@ -24,6 +24,8 @@ namespace ShareX.Ava.UI.Controls
             set => SetValue(SelectedObjectProperty, value);
         }
 
+        public event EventHandler? PropertyValueChanged;
+
         public PropertyGrid()
         {
             InitializeComponent();
@@ -110,6 +112,7 @@ namespace ShareX.Ava.UI.Controls
             {
                 var checkBox = new CheckBox();
                 checkBox.Bind(CheckBox.IsCheckedProperty, binding);
+                checkBox.IsCheckedChanged += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return checkBox;
             }
             if (type.IsEnum)
@@ -118,14 +121,15 @@ namespace ShareX.Ava.UI.Controls
                 comboBox.HorizontalAlignment = HorizontalAlignment.Stretch;
                 comboBox.ItemsSource = Enum.GetValues(type);
                 comboBox.Bind(ComboBox.SelectedItemProperty, binding);
+                comboBox.SelectionChanged += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return comboBox;
             }
             if (type == typeof(int) || type == typeof(long) || type == typeof(short))
             {
                 var nud = new NumericUpDown();
                 nud.Increment = 1;
-                // Try to find ranges?
                 nud.Bind(NumericUpDown.ValueProperty, binding);
+                nud.ValueChanged += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return nud;
             }
             if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
@@ -134,12 +138,14 @@ namespace ShareX.Ava.UI.Controls
                 nud.Increment = 0.1m;
                 nud.FormatString = "0.00";
                 nud.Bind(NumericUpDown.ValueProperty, binding);
+                nud.ValueChanged += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return nud;
             }
             if (type == typeof(string))
             {
                 var textBox = new TextBox();
                 textBox.Bind(TextBox.TextProperty, binding);
+                textBox.LostFocus += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return textBox;
             }
             if (type == typeof(System.Drawing.Color))
@@ -147,6 +153,7 @@ namespace ShareX.Ava.UI.Controls
                 var textBox = new TextBox();
                 binding.Converter = new ColorStringConverter();
                 textBox.Bind(TextBox.TextProperty, binding);
+                textBox.LostFocus += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return textBox; 
             }
             if (type == typeof(SKColor))
@@ -154,6 +161,7 @@ namespace ShareX.Ava.UI.Controls
                 var textBox = new TextBox();
                 binding.Converter = new SKColorStringConverter();
                 textBox.Bind(TextBox.TextProperty, binding);
+                textBox.LostFocus += (s, e) => PropertyValueChanged?.Invoke(this, EventArgs.Empty);
                 return textBox;
             }
 

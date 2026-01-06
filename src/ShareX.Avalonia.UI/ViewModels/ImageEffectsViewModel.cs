@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Core;
 using ShareX.Editor;
@@ -11,12 +13,15 @@ using ShareX.Editor.ImageEffects.Adjustments;
 using ShareX.Editor.ImageEffects.Drawings;
 using ShareX.Editor.ImageEffects.Manipulations;
 using ShareX.Editor.Extensions;
+using SkiaSharp;
 
 namespace ShareX.Ava.UI.ViewModels
 {
     public partial class ImageEffectsViewModel : ViewModelBase
     {
         private TaskSettingsImage settings;
+        private SKBitmap? sourcePreviewBitmap;
+        private const int PreviewSize = 256;
 
         public ObservableCollection<ImageEffectPreset> Presets { get; private set; }
 
@@ -29,6 +34,7 @@ namespace ShareX.Ava.UI.ViewModels
                 if (SetProperty(ref selectedPreset, value))
                 {
                     UpdateEffectsList();
+                    UpdatePreview();
                 }
             }
         }
@@ -43,6 +49,13 @@ namespace ShareX.Ava.UI.ViewModels
         }
 
         public List<EffectCategory> AvailableEffects { get; private set; }
+
+        private Bitmap? previewBitmap;
+        public Bitmap? PreviewBitmap
+        {
+            get => previewBitmap;
+            private set => SetProperty(ref previewBitmap, value);
+        }
 
         public ImageEffectsViewModel(TaskSettingsImage settings)
         {
@@ -60,6 +73,8 @@ namespace ShareX.Ava.UI.ViewModels
             }
 
             InitializeAvailableEffects();
+            GeneratePreviewImage();
+            UpdatePreview();
         }
 
         private void InitializeAvailableEffects()
@@ -71,6 +86,87 @@ namespace ShareX.Ava.UI.ViewModels
                 new EffectCategory("Adjustments", typeof(Alpha), typeof(BlackWhite), typeof(Brightness), typeof(MatrixColor), typeof(Colorize), typeof(Contrast), typeof(Gamma), typeof(Grayscale), typeof(Hue), typeof(Inverse), typeof(Polaroid), typeof(Saturation), typeof(Sepia)),
                 new EffectCategory("Filters", typeof(Blur), typeof(ColorDepth), typeof(MatrixConvolution), typeof(EdgeDetect), typeof(Emboss), typeof(GaussianBlur), typeof(Glow), typeof(MeanRemoval), typeof(Outline), typeof(Pixelate), typeof(Reflection), typeof(RGBSplit), typeof(Shadow), typeof(Sharpen), typeof(Slice), typeof(Smooth), typeof(TornEdge), typeof(WaveEdge))
             };
+        }
+
+        private void GeneratePreviewImage()
+        {
+            sourcePreviewBitmap?.Dispose();
+            
+            // Try to load Logo2.png from assets
+            try
+            {
+                var uri = new Uri("avares://ShareX.Avalonia.UI/Assets/Logo2.png");
+                using var stream = Avalonia.Platform.AssetLoader.Open(uri);
+                sourcePreviewBitmap = SKBitmap.Decode(stream);
+            }
+            catch
+            {
+                // Fallback to a simple generated image if logo fails to load
+                sourcePreviewBitmap = new SKBitmap(PreviewSize, PreviewSize);
+                using var canvas = new SKCanvas(sourcePreviewBitmap);
+                
+                using var gradientPaint = new SKPaint();
+                var colors = new SKColor[] { new SKColor(70, 130, 180), new SKColor(135, 206, 235) };
+                gradientPaint.Shader = SKShader.CreateLinearGradient(
+                    new SKPoint(0, 0),
+                    new SKPoint(PreviewSize, PreviewSize),
+                    colors,
+                    null,
+                    SKShaderTileMode.Clamp);
+                canvas.DrawRect(0, 0, PreviewSize, PreviewSize, gradientPaint);
+                
+                using var textPaint = new SKPaint
+                {
+                    Color = SKColors.White,
+                    TextSize = 24,
+                    IsAntialias = true,
+                    TextAlign = SKTextAlign.Center
+                };
+                canvas.DrawText("Preview", PreviewSize / 2, PreviewSize / 2, textPaint);
+            }
+        }
+
+        public void UpdatePreview()
+        {
+            if (sourcePreviewBitmap == null) return;
+
+            SKBitmap result = sourcePreviewBitmap.Copy();
+
+            try
+            {
+                if (SelectedPreset != null)
+                {
+                    foreach (var effect in SelectedPreset.Effects)
+                    {
+                        if (effect.Enabled)
+                        {
+                            var processed = effect.Apply(result);
+                            if (processed != result)
+                            {
+                                result.Dispose();
+                                result = processed;
+                            }
+                        }
+                    }
+                }
+
+                // Convert SKBitmap to Avalonia Bitmap
+                using var data = result.Encode(SKEncodedImageFormat.Png, 100);
+                using var stream = new MemoryStream();
+                data.SaveTo(stream);
+                stream.Position = 0;
+                PreviewBitmap = new Bitmap(stream);
+            }
+            finally
+            {
+                result.Dispose();
+            }
+        }
+
+        [RelayCommand]
+        public void RefreshPreview()
+        {
+            UpdatePreview();
         }
 
         private void UpdateEffectsList()
@@ -116,6 +212,7 @@ namespace ShareX.Ava.UI.ViewModels
                 SelectedPreset.Effects.Add(effect);
                 Effects.Add(effect);
                 SelectedEffect = effect;
+                UpdatePreview();
             }
         }
 
@@ -128,6 +225,7 @@ namespace ShareX.Ava.UI.ViewModels
                 SelectedPreset.Effects.Remove(effect);
                 Effects.Remove(effect);
                 SelectedEffect = Effects.FirstOrDefault();
+                UpdatePreview();
             }
         }
         
@@ -158,3 +256,4 @@ namespace ShareX.Ava.UI.ViewModels
         }
     }
 }
+
