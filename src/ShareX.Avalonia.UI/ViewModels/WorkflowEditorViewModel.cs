@@ -44,7 +44,28 @@ public partial class WorkflowEditorViewModel : ViewModelBase
     private CategoryViewModel _fileCategory;
     private CategoryViewModel _urlCategory;
 
-    public string WindowTitle => Model.HotkeyInfo.Id == 0 ? "Add Workflow" : "Edit Workflow";
+    public string WindowTitle 
+    {
+        get 
+        {
+            var baseTitle = Model.HotkeyInfo.Id == 0 ? "Add Workflow" : "Edit Workflow";
+            return string.IsNullOrEmpty(Description) ? baseTitle : $"{baseTitle} - {Description}";
+        }
+    }
+
+    public string Description
+    {
+        get => Model.TaskSettings.Description;
+        set
+        {
+            if (Model.TaskSettings.Description != value)
+            {
+                Model.TaskSettings.Description = value;
+                OnPropertyChanged(nameof(Description));
+                OnPropertyChanged(nameof(WindowTitle));
+            }
+        }
+    }
 
     // Categories
     public ObservableCollection<JobCategoryViewModel> JobCategories { get; } = new();

@@ -23,7 +23,7 @@
                     <StackPanel Margin="20" Spacing="20">
                         <StackPanel Spacing="5">
                             <TextBlock Text="Description:" FontWeight="SemiBold"/>
-                            <TextBox Text="{Binding Model.Description}" Watermark="Optional description"/>
+                            <TextBox Text="{Binding Description}" Watermark="Optional description"/>
                         </StackPanel>
 
                         <StackPanel Spacing="5">
