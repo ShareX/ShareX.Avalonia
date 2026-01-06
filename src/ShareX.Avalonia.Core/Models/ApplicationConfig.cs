@@ -168,6 +168,8 @@ public class ApplicationConfig : SettingsBase<ApplicationConfig>
     [Category("Application"), DefaultValue(false), Description("Calculate and show file sizes in binary units (KiB, MiB etc.)")]
     public bool BinaryUnits { get; set; }
 
+
+
     [Category("Application"), DefaultValue(false), Description("Show most recent task first in main window.")]
     public bool ShowMostRecentTaskFirst { get; set; }
 

@@ -170,7 +170,18 @@
 
              <!-- Advanced Tab -->
              <TabItem Header="Advanced">
-                <TextBlock Text="Advanced settings placeholder" Margin="20" Foreground="Gray"/>
+                <ScrollViewer>
+                    <StackPanel Margin="20" Spacing="20">
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Capture Engine" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <CheckBox IsChecked="{Binding UseModernCapture}" Content="Use Modern Screen Capture (Direct3D11)"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
             </TabItem>
         </TabControl>
         

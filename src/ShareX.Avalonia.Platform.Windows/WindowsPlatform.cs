@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.Common;
 
 namespace ShareX.Ava.Platform.Windows
 {
@@ -39,10 +40,19 @@ namespace ShareX.Ava.Platform.Windows
         {
             var screenService = new WindowsScreenService();
             
-            // If no service provided, use default Windows GDI+ implementation
+            // If no service provided, use modern DXGI capture if supported, otherwise GDI+
             if (screenCaptureService == null)
             {
-                screenCaptureService = new WindowsScreenCaptureService(screenService);
+                if (WindowsModernCaptureService.IsSupported)
+                {
+                    DebugHelper.WriteLine("Modern DXGI screen capture is supported. Using WindowsModernCaptureService.");
+                    screenCaptureService = new WindowsModernCaptureService(screenService);
+                }
+                else
+                {
+                    DebugHelper.WriteLine("Modern DXGI screen capture is NOT supported (requires Windows 8+). Using legacy GDI+ WindowsScreenCaptureService.");
+                    screenCaptureService = new WindowsScreenCaptureService(screenService);
+                }
             }
             
             PlatformServices.Initialize(

@@ -30,3 +30,6 @@ build*.txt
 *.log
 *.code-workspace
 errors.md
+
+# Local packaging output
+dist/
