@@ -52,6 +52,9 @@ namespace ShareX.Ava.UI.ViewModels
         [ObservableProperty]
         private int _selectedTheme;
 
+        [ObservableProperty]
+        private bool _useModernCapture;
+
         // History Settings
         public bool HistorySaveTasks
         {
@@ -310,6 +313,7 @@ namespace ShareX.Ava.UI.ViewModels
             ShowTray = settings.ShowTray;
             SilentRun = settings.SilentRun;
             SelectedTheme = settings.SelectedTheme;
+            UseModernCapture = settings.UseModernCapture;
 
             // Task Settings - General
             var taskSettings = settings.DefaultTaskSettings;
@@ -359,6 +363,7 @@ namespace ShareX.Ava.UI.ViewModels
             settings.ShowTray = ShowTray;
             settings.SilentRun = SilentRun;
             settings.SelectedTheme = SelectedTheme;
+            settings.UseModernCapture = UseModernCapture;
             
             // Save Task Settings
             var taskSettings = settings.DefaultTaskSettings;

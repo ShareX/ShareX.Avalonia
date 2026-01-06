@@ -70,7 +70,7 @@ namespace ShareX.Ava.Platform.Windows
 
         public async Task<SKBitmap?> CaptureRectAsync(SKRect rect)
         {
-            if (!IsSupported)
+            if (!IsSupported || !ShareX.Ava.Core.SettingManager.Settings.UseModernCapture)
             {
                 return await _fallbackService.CaptureRectAsync(rect);
             }
@@ -114,7 +114,7 @@ namespace ShareX.Ava.Platform.Windows
 
         public async Task<SKBitmap?> CaptureFullScreenAsync()
         {
-            if (!IsSupported)
+            if (!IsSupported || !ShareX.Ava.Core.SettingManager.Settings.UseModernCapture)
             {
                 return await _fallbackService.CaptureFullScreenAsync();
             }
