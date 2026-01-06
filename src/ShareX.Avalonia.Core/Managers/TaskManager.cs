@@ -24,9 +24,9 @@ namespace ShareX.Ava.Core.Managers
         // Event fired when a task completes with an image
         public event EventHandler<WorkerTask>? TaskCompleted;
 
-        public async Task StartTask(TaskSettings taskSettings)
+        public async Task StartTask(TaskSettings taskSettings, SkiaSharp.SKBitmap? inputImage = null)
         {
-            var task = WorkerTask.Create(taskSettings);
+            var task = WorkerTask.Create(taskSettings, inputImage);
             _tasks.Add(task);
 
             task.StatusChanged += (s, e) => DebugHelper.WriteLine($"Task Status: {task.Status}");

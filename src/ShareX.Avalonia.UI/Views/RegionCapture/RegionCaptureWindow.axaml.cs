@@ -76,6 +76,12 @@ namespace ShareX.Ava.UI.Views.RegionCapture
         
         private readonly Stopwatch _openStopwatch = Stopwatch.StartNew();
 
+        // Window detection
+        private ShareX.Ava.Platform.Abstractions.WindowInfo[]? _windows;
+        private ShareX.Ava.Platform.Abstractions.WindowInfo? _hoveredWindow;
+        private bool _dragStarted;
+        private const int DragThreshold = 5;
+
 #if DEBUG
         // Debug logging
         private System.IO.StreamWriter? _debugLog;
@@ -211,6 +217,26 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 _usePerScreenScalingForLayout = screenService?.UsePerScreenScalingForRegionCaptureLayout ?? false;
                 _useWindowPositionForFallback = screenService?.UseWindowPositionForRegionCaptureFallback ?? false;
                 _useLogicalCoordinatesForCapture = screenService?.UseLogicalCoordinatesForRegionCapture ?? false;
+
+                // Get our own handle to exclude from detection
+                _myHandle = this.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
+
+                // Initialize window list for detection
+                if (ShareX.Ava.Platform.Abstractions.PlatformServices.Window != null)
+                {
+                    try
+                    {
+                        // Fetch windows (Z-ordered) and filter visible ones
+                        _windows = ShareX.Ava.Platform.Abstractions.PlatformServices.Window.GetAllWindows()
+                            .Where(w => w.IsVisible && !IsMyWindow(w))
+                            .ToArray();
+                        DebugLog("WINDOW", $"Fetched {_windows.Length} visible windows for detection");
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugLog("ERROR", $"Failed to fetch windows: {ex.Message}");
+                    }
+                }
             }
 
             DebugLog("WINDOW", $"Region capture policy: PerScreenScaling={_usePerScreenScalingForLayout}, UseWindowPositionFallback={_useWindowPositionForFallback}, UseLogicalCoords={_useLogicalCoordinatesForCapture}");
@@ -401,6 +427,10 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                     // Do NOT initialize darkening
                 }
             }
+            
+            // Initial pointer move check to highlight window under cursor immediately
+            var mousePos = GetGlobalMousePosition();
+            UpdateWindowSelection(mousePos);
         }
         
         private void UpdateWindowSize(int minX, int minY)
@@ -574,6 +604,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
 
             // Reset selection state
             _isSelecting = false;
+            _hoveredWindow = null;
         }
 
         private SKPointI ConvertLogicalToPhysical(Point logicalPos)
@@ -623,6 +654,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             {
                 // Store logical coordinates for visual rendering (from Avalonia - already correct)
                 _startPointLogical = point.Position;
+                _dragStarted = false;
 
                 // Store screen coordinates for final screenshot region
                 _startPointPhysical = _useLogicalCoordinatesForCapture
@@ -636,34 +668,14 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                     _startPointPhysical = ConvertLogicalToScreen(_startPointLogical);
                     DebugLog("MOUSE", $"PointerPressed: Physical position is (0,0); using fallback from logical -> {_startPointPhysical}");
                 }
-                
-                // Use Avalonia's logical coordinates directly for rendering
-                var relativeX = _startPointLogical.X;
-                var relativeY = _startPointLogical.Y;
-                
-                // Show both border rectangles
-                var border = this.FindControl<Rectangle>("SelectionBorder");
-                if (border != null)
-                {
-                    border.IsVisible = true;
-                    Canvas.SetLeft(border, relativeX);
-                    Canvas.SetTop(border, relativeY);
-                    border.Width = 0;
-                    border.Height = 0;
-                }
 
-                var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
-                if (borderInner != null)
+                // If we are hovering a window, we don't clear visuals yet.
+                // We only clear/update visuals if drag exceeds threshold.
+                // But if we weren't hovering, we should init selection border (0size).
+                if (_hoveredWindow == null)
                 {
-                    borderInner.IsVisible = true;
-                    Canvas.SetLeft(borderInner, relativeX);
-                    Canvas.SetTop(borderInner, relativeY);
-                    borderInner.Width = 0;
-                    borderInner.Height = 0;
+                    UpdateSelectionVisuals(_startPointLogical, _startPointLogical, _startPointPhysical, _startPointPhysical);
                 }
-
-                // Update darkening overlay with zero-size selection (keeps full screen dimmed)
-                UpdateDarkeningOverlay(relativeX, relativeY, 0, 0);
             }
         }
 
@@ -677,84 +689,37 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 e.Handled = true;
                 return;
             }
-
-            if (!_isSelecting) return;
-
-            // Use Avalonia's logical coordinates for visual rendering (already correct)
-            var currentPointLogical = point.Position;
             
-            var border = this.FindControl<Rectangle>("SelectionBorder");
-            var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
-            var infoText = this.FindControl<TextBlock>("InfoText");
+            var currentPointLogical = point.Position;
+            var currentPointPhysical = _useLogicalCoordinatesForCapture
+                ? ConvertLogicalToScreen(currentPointLogical)
+                : GetGlobalMousePosition();
 
-            if (border != null)
+            // Handle selection dragging
+            if (_isSelecting)
             {
-                // Calculate rect in logical coordinates for visual rendering
-                var x = Math.Min(_startPointLogical.X, currentPointLogical.X);
-                var y = Math.Min(_startPointLogical.Y, currentPointLogical.Y);
-                var width = Math.Abs(_startPointLogical.X - currentPointLogical.X);
-                var height = Math.Abs(_startPointLogical.Y - currentPointLogical.Y);
-
-                // Update outer border (white solid)
-                Canvas.SetLeft(border, x);
-                Canvas.SetTop(border, y);
-                border.Width = width;
-                border.Height = height;
-
-                // Update inner border (black dashed - static marching ants pattern)
-                if (borderInner != null)
+                // Check if drag threshold exceeded
+                if (!_dragStarted)
                 {
-                    Canvas.SetLeft(borderInner, x);
-                    Canvas.SetTop(borderInner, y);
-                    borderInner.Width = width;
-                    borderInner.Height = height;
-                }
-
-                // Update darkening overlay to cut out the selection area
-                UpdateDarkeningOverlay(x, y, width, height);
-                
-                // Get physical coordinates for info display
-                var currentPointPhysical = _useLogicalCoordinatesForCapture
-                    ? ConvertLogicalToScreen(currentPointLogical)
-                    : GetGlobalMousePosition();
-                var useFallbackForInfo = !_useLogicalCoordinatesForCapture && currentPointPhysical.X == 0 && currentPointPhysical.Y == 0;
-                if (useFallbackForInfo)
-                {
-                    currentPointPhysical = ConvertLogicalToScreen(currentPointLogical);
-                    if (!_loggedPointerMoveFallback)
+                    var dist = Math.Sqrt(Math.Pow(currentPointLogical.X - _startPointLogical.X, 2) + Math.Pow(currentPointLogical.Y - _startPointLogical.Y, 2));
+                    if (dist > DragThreshold)
                     {
-                        _loggedPointerMoveFallback = true;
-                        DebugLog("MOUSE", $"PointerMoved: Physical position is (0,0); using fallback from logical -> {currentPointPhysical}");
+                        _dragStarted = true;
+                        _hoveredWindow = null; // Drag overrides window selection
+                    }
+                    else
+                    {
+                        // Stick to window selection if we haven't dragged far enough
+                        return;
                     }
                 }
 
-                var physicalX = Math.Min(_startPointPhysical.X, currentPointPhysical.X);
-                var physicalY = Math.Min(_startPointPhysical.Y, currentPointPhysical.Y);
-                var physicalWidth = Math.Abs(_startPointPhysical.X - currentPointPhysical.X);
-                var physicalHeight = Math.Abs(_startPointPhysical.Y - currentPointPhysical.Y);
-                
-                if (infoText != null)
-                {
-                    infoText.IsVisible = true;
-                    // Format: Rectangle info in physical coordinates + Mouse pointer coordinates
-                    infoText.Text = $"X: {physicalX} Y: {physicalY} W: {physicalWidth} H: {physicalHeight} | Mouse: ({currentPointPhysical.X}, {currentPointPhysical.Y})";
-                    
-                    // Position label above the selection with more clearance
-                    Canvas.SetLeft(infoText, x);
-                    
-                    // Calculate vertical position - place above selection with padding
-                    var labelHeight = 30; // Approximate height of label with padding
-                    var topPadding = 5; // Additional padding from selection top
-                    var labelY = y - labelHeight - topPadding;
-                    
-                    // If label would go off top of screen, place it below the top edge
-                    if (labelY < 5)
-                    {
-                        labelY = 5;
-                    }
-                    
-                    Canvas.SetTop(infoText, labelY);
-                }
+                UpdateSelectionVisuals(_startPointLogical, currentPointLogical, _startPointPhysical, currentPointPhysical);
+            }
+            else
+            {
+                // Not selecting - check for window under cursor (Active Window detection)
+                UpdateWindowSelection(currentPointPhysical);
             }
         }
 
@@ -764,6 +729,16 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             {
                 _isSelecting = false;
                 
+                // If we didn't drag and we have a hovered window, use that window
+                if (!_dragStarted && _hoveredWindow != null)
+                {
+                     var rect = _hoveredWindow.Bounds;
+                     DebugLog("RESULT", $"Selected Window: {rect}");
+                     _tcs.TrySetResult(new SKRectI(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height));
+                     Close();
+                     return;
+                }
+
                 // Get final position in physical screen coordinates (from Win32 API)
                 var currentPointPhysical = _useLogicalCoordinatesForCapture
                     ? ConvertLogicalToScreen(e.GetCurrentPoint(this).Position)
@@ -802,6 +777,154 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 
                 _tcs.TrySetResult(resultRect);
                 Close();
+            }
+        }
+
+        private IntPtr _myHandle;
+
+        private bool IsMyWindow(ShareX.Ava.Platform.Abstractions.WindowInfo w)
+        {
+            if (_myHandle != IntPtr.Zero && w.Handle == _myHandle) return true;
+            
+            // Also exclude windows with empty title and small size (tooltips etc) if desired, 
+            // but for now just safely exclude self.
+            return false;
+        }
+
+        private void UpdateWindowSelection(SKPointI mousePos)
+        {
+            if (_windows == null) return;
+            
+            var window = _windows.FirstOrDefault(w => w.Bounds.Contains(mousePos.X, mousePos.Y));
+            
+            if (window != null && window != _hoveredWindow)
+            {
+                _hoveredWindow = window;
+                
+                // Convert window bounds (physical) to logical for rendering
+                double logicalX, logicalY, logicalW, logicalH;
+                
+                var currentScaling = RenderScaling;
+                
+                var relativeX = window.Bounds.X - _windowLeft;
+                var relativeY = window.Bounds.Y - _windowTop;
+                
+                logicalX = relativeX / currentScaling;
+                logicalY = relativeY / currentScaling;
+                logicalW = window.Bounds.Width / currentScaling;
+                logicalH = window.Bounds.Height / currentScaling;
+
+                // Update visuals to match window
+                var border = this.FindControl<Rectangle>("SelectionBorder");
+                var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
+                var infoText = this.FindControl<TextBlock>("InfoText");
+                var overlay = this.FindControl<Path>("DarkeningOverlay");
+
+                if (border != null)
+                {
+                    border.IsVisible = true;
+                    Canvas.SetLeft(border, logicalX);
+                    Canvas.SetTop(border, logicalY);
+                    border.Width = logicalW;
+                    border.Height = logicalH;
+                }
+
+                if (borderInner != null)
+                {
+                    borderInner.IsVisible = true;
+                    Canvas.SetLeft(borderInner, logicalX);
+                    Canvas.SetTop(borderInner, logicalY);
+                    borderInner.Width = logicalW;
+                    borderInner.Height = logicalH;
+                }
+                
+                UpdateDarkeningOverlay(logicalX, logicalY, logicalW, logicalH);
+                
+                if (infoText != null)
+                {
+                    infoText.IsVisible = true;
+                    // Format: Title | X: ...
+                    var title = !string.IsNullOrEmpty(window.Title) ? window.Title + "\n" : "";
+                    infoText.Text = $"{title}X: {window.Bounds.X} Y: {window.Bounds.Y} W: {window.Bounds.Width} H: {window.Bounds.Height}";
+                    
+                    Canvas.SetLeft(infoText, logicalX);
+                    
+                    var labelHeight = 45; // slightly larger for title
+                    var topPadding = 5;
+                    var labelY = logicalY - labelHeight - topPadding;
+                    if (labelY < 5) labelY = 5;
+                    
+                    Canvas.SetTop(infoText, labelY);
+                }
+            }
+            else if (window == null && _hoveredWindow != null)
+            {
+                // Lost window hover
+                _hoveredWindow = null;
+                CancelSelection(); // Clears visuals
+            }
+        }
+        
+        private void UpdateSelectionVisuals(Point logicalStart, Point logicalEnd, SKPointI physicalStart, SKPointI physicalEnd)
+        {
+             var border = this.FindControl<Rectangle>("SelectionBorder");
+            var borderInner = this.FindControl<Rectangle>("SelectionBorderInner");
+            var infoText = this.FindControl<TextBlock>("InfoText");
+
+            if (border != null)
+            {
+                // Calculate rect in logical coordinates for visual rendering
+                var x = Math.Min(logicalStart.X, logicalEnd.X);
+                var y = Math.Min(logicalStart.Y, logicalEnd.Y);
+                var width = Math.Abs(logicalStart.X - logicalEnd.X);
+                var height = Math.Abs(logicalStart.Y - logicalEnd.Y);
+
+                // Update outer border (white solid)
+                border.IsVisible = true;
+                Canvas.SetLeft(border, x);
+                Canvas.SetTop(border, y);
+                border.Width = width;
+                border.Height = height;
+
+                // Update inner border (black dashed - static marching ants pattern)
+                if (borderInner != null)
+                {
+                    borderInner.IsVisible = true;
+                    Canvas.SetLeft(borderInner, x);
+                    Canvas.SetTop(borderInner, y);
+                    borderInner.Width = width;
+                    borderInner.Height = height;
+                }
+
+                // Update darkening overlay to cut out the selection area
+                UpdateDarkeningOverlay(x, y, width, height);
+                
+                var physicalX = Math.Min(physicalStart.X, physicalEnd.X);
+                var physicalY = Math.Min(physicalStart.Y, physicalEnd.Y);
+                var physicalWidth = Math.Abs(physicalStart.X - physicalEnd.X);
+                var physicalHeight = Math.Abs(physicalStart.Y - physicalEnd.Y);
+                
+                if (infoText != null)
+                {
+                    infoText.IsVisible = true;
+                    infoText.Text = $"X: {physicalX} Y: {physicalY} W: {physicalWidth} H: {physicalHeight}";
+                    
+                    // Position label above the selection with more clearance
+                    Canvas.SetLeft(infoText, x);
+                    
+                    // Calculate vertical position - place above selection with padding
+                    var labelHeight = 30; // Approximate height of label with padding
+                    var topPadding = 5; // Additional padding from selection top
+                    var labelY = y - labelHeight - topPadding;
+                    
+                    // If label would go off top of screen, place it below the top edge
+                    if (labelY < 5)
+                    {
+                        labelY = 5;
+                    }
+                    
+                    Canvas.SetTop(infoText, labelY);
+                }
             }
         }
     }

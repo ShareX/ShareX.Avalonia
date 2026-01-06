@@ -47,16 +47,20 @@ namespace ShareX.Ava.Core.Tasks
         public event EventHandler StatusChanged;
         public event EventHandler TaskCompleted;
 
-        private WorkerTask(TaskSettings taskSettings)
+        private WorkerTask(TaskSettings taskSettings, SKBitmap? inputImage = null)
         {
             Status = TaskStatus.InQueue;
             Info = new TaskInfo(taskSettings);
+            if (inputImage != null)
+            {
+                Info.Metadata.Image = inputImage;
+            }
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
-        public static WorkerTask Create(TaskSettings taskSettings)
+        public static WorkerTask Create(TaskSettings taskSettings, SKBitmap? inputImage = null)
         {
-            return new WorkerTask(taskSettings);
+            return new WorkerTask(taskSettings, inputImage);
         }
 
         public async Task StartAsync()
@@ -99,7 +103,8 @@ namespace ShareX.Ava.Core.Tasks
             OnStatusChanged();
 
             // Perform Capture Phase based on Job Type
-            if (PlatformServices.IsInitialized)
+            // Only capture if we don't already have an image (e.g. passed from UI)
+            if (Info.Metadata.Image == null && PlatformServices.IsInitialized)
             {
                 SKBitmap? image = null;
                 var captureStopwatch = Stopwatch.StartNew();
@@ -145,7 +150,7 @@ namespace ShareX.Ava.Core.Tasks
                     DebugHelper.WriteLine($"Capture returned null for job type: {Info.TaskSettings.Job} (elapsed {captureStopwatch.ElapsedMilliseconds}ms)");
                 }
             }
-            else
+            else if (Info.Metadata.Image == null)
             {
                 DebugHelper.WriteLine("PlatformServices not initialized - cannot capture");
             }

@@ -95,26 +95,62 @@ namespace ShareX.Ava.Platform.Windows
 
         public Abstractions.WindowInfo[] GetAllWindows()
         {
-            // This is a simplified implementation - for full implementation,
-            // we would need to enumerate all top-level windows using EnumWindows
             var windows = new List<Abstractions.WindowInfo>();
 
-            // For now, just return the foreground window as an example
-            IntPtr foregroundWindow = GetForegroundWindow();
-            if (foregroundWindow != IntPtr.Zero)
+            // Use EnumWindows to enumerate all top-level windows
+            NativeMethods.EnumWindows((hWnd, lParam) =>
             {
+                // Skip invisible windows
+                if (!NativeMethods.IsWindowVisible(hWnd))
+                    return true;
+
+                // Skip cloaked windows (Windows 10/11 virtual desktops, UWP apps, etc.)
+                if (NativeMethods.IsWindowCloaked(hWnd))
+                    return true;
+
+                // Get window title
+                string title = NativeMethods.GetWindowTextString(hWnd);
+                
+                // Skip windows with no title
+                if (string.IsNullOrWhiteSpace(title))
+                    return true;
+
+                // Get class name for filtering
+                string className = NativeMethods.GetClassNameString(hWnd);
+
+                // Skip certain system windows
+                string[] ignoreClasses = { "Progman", "Button", "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "Windows.UI.Core.CoreWindow" };
+                foreach (var ignoreClass in ignoreClasses)
+                {
+                    if (className.Equals(ignoreClass, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+
+                // Skip child windows (no parent)
+                if (NativeMethods.GetParent(hWnd) != IntPtr.Zero)
+                    return true;
+
+                // Get window bounds
+                var bounds = GetWindowBounds(hWnd);
+                
+                // Skip windows with zero or very small size
+                if (bounds.Width <= 1 || bounds.Height <= 1)
+                    return true;
+
                 windows.Add(new Abstractions.WindowInfo
                 {
-                    Handle = foregroundWindow,
-                    Title = GetWindowText(foregroundWindow),
-                    ClassName = GetWindowClassName(foregroundWindow),
-                    Bounds = GetWindowBounds(foregroundWindow),
-                    ProcessId = GetWindowProcessId(foregroundWindow),
-                    IsVisible = IsWindowVisible(foregroundWindow),
-                    IsMaximized = IsWindowMaximized(foregroundWindow),
-                    IsMinimized = IsWindowMinimized(foregroundWindow)
+                    Handle = hWnd,
+                    Title = title,
+                    ClassName = className,
+                    Bounds = bounds,
+                    ProcessId = GetWindowProcessId(hWnd),
+                    IsVisible = true,
+                    IsMaximized = IsWindowMaximized(hWnd),
+                    IsMinimized = IsWindowMinimized(hWnd)
                 });
-            }
+
+                return true; // Continue enumeration
+            }, IntPtr.Zero);
 
             return windows.ToArray();
         }

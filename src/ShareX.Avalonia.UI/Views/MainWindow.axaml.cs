@@ -15,6 +15,7 @@ using ShareX.Ava.UI.ViewModels;
 using ShareX.Editor.Annotations;
 using ShareX.Editor.ViewModels;
 using ShareX.Editor.Views;
+using ShareX.Ava.Platform.Abstractions;
 using FluentAvalonia.UI.Controls;
 
 namespace ShareX.Ava.UI.Views
@@ -73,9 +74,58 @@ namespace ShareX.Ava.UI.Views
                         _ = ExecuteCaptureAsync(HotkeyType.RectangleRegion);
                         NavigateToEditor();
                         break;
-                    case "Capture_Window":
-                        _ = ExecuteCaptureAsync(HotkeyType.ActiveWindow);
-                        NavigateToEditor();
+                    case "Capture_SelectedWindow":
+                        // Show Window Selector Dialog
+                        if (DataContext is MainViewModel vm2)
+                        {
+                            vm2.IsModalOpen = true;
+                            var windowSelector = new WindowSelectorViewModel();
+                            
+                            var dialog = new WindowSelectorDialog
+                            {
+                                DataContext = windowSelector
+                            };
+                            
+                            vm2.ModalContent = dialog;
+                            
+                            windowSelector.OnCancelled = () =>
+                            {
+                                vm2.IsModalOpen = false;
+                                vm2.ModalContent = null;
+                            };
+                            
+                            windowSelector.OnWindowSelected = async (windowInfo) =>
+                            {
+                                vm2.IsModalOpen = false;
+                                vm2.ModalContent = null;
+                                
+                                if (PlatformServices.IsInitialized && PlatformServices.ScreenCapture != null)
+                                {
+                                    // 1. Bring window to front
+                                    PlatformServices.Window?.SetForegroundWindow(windowInfo.Handle);
+                                    
+                                    // 2. Wait for it to settle/animate
+                                    await Task.Delay(250);
+                                    
+                                    // 3. Capture rect
+                                    // TODO: If we need PrintWindow (exclusive window capture), we need a new API.
+                                    // For now, capture rect.
+                                    var bmp = await PlatformServices.ScreenCapture.CaptureRectAsync(new SkiaSharp.SKRect(
+                                        windowInfo.Bounds.Left, 
+                                        windowInfo.Bounds.Top, 
+                                        windowInfo.Bounds.Right, 
+                                        windowInfo.Bounds.Bottom));
+                                        
+                                    if (bmp != null)
+                                    {
+                                        // 4. Start workflow with this image
+                                        // We use ActiveWindow hotkey type to inherit those settings, but pass the image.
+                                        await ExecuteCaptureAsync(HotkeyType.ActiveWindow, image: bmp);
+                                        NavigateToEditor();
+                                    }
+                                }
+                            };
+                        }
                         break;
                     case "Editor":
                         if (_editorView == null) _editorView = new EditorView();
@@ -254,7 +304,7 @@ namespace ShareX.Ava.UI.Views
             this.Focus();
         }
 
-        private async Task ExecuteCaptureAsync(HotkeyType jobType, AfterCaptureTasks afterCapture = AfterCaptureTasks.SaveImageToFile)
+        private async Task ExecuteCaptureAsync(HotkeyType jobType, AfterCaptureTasks afterCapture = AfterCaptureTasks.SaveImageToFile, SkiaSharp.SKBitmap? image = null)
         {
             TaskSettings settings;
 
@@ -295,7 +345,7 @@ namespace ShareX.Ava.UI.Views
             }
 
             TaskManager.Instance.TaskCompleted += HandleTaskCompleted;
-            await TaskManager.Instance.StartTask(settings);
+            await TaskManager.Instance.StartTask(settings, image);
         }
     }
 }

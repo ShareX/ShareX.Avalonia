@@ -304,6 +304,41 @@ namespace ShareX.Ava.Common
             catch { return null; }
         }
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EnumWindows(EnumWindowsProc lpEnumFunc, IntPtr lParam);
+
+        /// <summary>
+        /// Delegate for EnumWindows callback
+        /// </summary>
+        /// <param name="hWnd">Window handle</param>
+        /// <param name="lParam">Application-defined value</param>
+        /// <returns>True to continue enumeration, false to stop</returns>
+        public delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
+
+        /// <summary>
+        /// Gets window text (title) as a string
+        /// </summary>
+        public static string GetWindowTextString(IntPtr hWnd)
+        {
+            int length = GetWindowTextLength(hWnd);
+            if (length == 0) return string.Empty;
+
+            StringBuilder sb = new StringBuilder(length + 1);
+            GetWindowText(hWnd, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Gets window class name as a string
+        /// </summary>
+        public static string GetClassNameString(IntPtr hWnd)
+        {
+            StringBuilder sb = new StringBuilder(256);
+            GetClassName(hWnd, sb, sb.Capacity);
+            return sb.ToString();
+        }
+
         public const int CURSOR_SHOWING = 0x00000001;
         public const int DI_NORMAL = 0x0003;
     }
