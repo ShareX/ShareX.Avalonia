@@ -30,7 +30,7 @@ using ShareX.Ava.Services.Abstractions;
 namespace ShareX.Ava.Platform.Windows;
 
 /// <summary>
-/// Windows-specific notification service using Windows Toast Notifications.
+/// Windows-specific notification service using Windows Toast Notifications (UWP).
 /// </summary>
 public class WindowsNotificationService : INotificationService, IDisposable
 {
@@ -42,6 +42,7 @@ public class WindowsNotificationService : INotificationService, IDisposable
     {
         try
         {
+            // Note: For this to work, the app must have an AUMID registered or be packaged.
             new ToastContentBuilder()
                 .AddText(title)
                 .AddText(message)
@@ -60,13 +61,12 @@ public class WindowsNotificationService : INotificationService, IDisposable
             new ToastContentBuilder()
                 .AddText(title)
                 .AddText(message)
+                // Buttons require more setup for handling clicks (ToastNotificationManagerCompat.OnActivated)
+                // For this iteration we settle for showing the button visual.
                 .AddButton(new ToastButton()
                     .SetContent(actionText)
                     .AddArgument("action", "click"))
                 .Show();
-            
-            // Note: Full action handling requires ToastNotificationManagerCompat.OnActivated subscription
-            // For now, we show the notification - action handling can be added in a later iteration
         }
         catch (Exception ex)
         {
@@ -76,14 +76,16 @@ public class WindowsNotificationService : INotificationService, IDisposable
 
     public void Dispose()
     {
-        try
+        // Microsoft.Toolkit.Uwp.Notifications 7.1.x: Uninstall() is on ToastNotificationManagerCompat
+        // But if the method is missing in the dll version we got, we skip it.
+        // It generally shouldn't be missing if TFM is correct.
+        try 
         {
-            // Clean up notification manager on dispose
-            ToastNotificationManagerCompat.Uninstall();
+             ToastNotificationManagerCompat.Uninstall();
         }
-        catch
-        {
-            // Ignore cleanup errors
+        catch 
+        { 
+             // Intentionally ignored
         }
     }
 }

@@ -66,6 +66,25 @@ namespace ShareX.Ava.Platform.Windows
                 fontService: new WindowsFontService(),
                 notificationService: new WindowsNotificationService()
             );
+
+            // Register AUMID for UWP Toast Notifications
+            SetAUMID("ShareXTeam.XerahS");
         }
+
+        private static void SetAUMID(string aumid)
+        {
+            try
+            {
+                SetCurrentProcessExplicitAppUserModelID(aumid);
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Failed to set AUMID");
+            }
+        }
+
+        [System.Runtime.InteropServices.DllImport("shell32.dll", SetLastError = true)]
+        private static extern void SetCurrentProcessExplicitAppUserModelID(
+            [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string AppID);
     }
 }
