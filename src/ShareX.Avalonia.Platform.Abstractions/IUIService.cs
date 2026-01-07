@@ -24,8 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Core;
-using System;
-using System.Threading.Tasks;
 using SkiaSharp;
 // REMOVED: System.Drawing
 

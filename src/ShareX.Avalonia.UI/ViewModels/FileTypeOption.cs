@@ -46,7 +46,7 @@ public partial class FileTypeOption : ObservableObject
 
     public string DisplayText => Extension.ToUpperInvariant();
 
-    public string? TooltipText => BlockedBy != null 
-        ? $"Already handled by: {BlockedBy}" 
+    public string? TooltipText => BlockedBy != null
+        ? $"Already handled by: {BlockedBy}"
         : null;
 }

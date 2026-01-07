@@ -26,11 +26,8 @@
 using Newtonsoft.Json;
 using ShareX.Ava.Common;
 using ShareX.Ava.Uploaders;
-using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Linq;
 
 namespace ShareX.Ava.Core;
 
@@ -260,7 +257,7 @@ public class TaskSettingsTools
     public string ScreenColorPickerFormat = "$hex";
     public string ScreenColorPickerFormatCtrl = "$r255, $g255, $b255";
     public string ScreenColorPickerInfoText = "RGB: $r255, $g255, $b255$nHex: $hex$nX: $x Y: $y";
-    
+
     public PinToScreenOptions PinToScreenOptions = new PinToScreenOptions();
     public IndexerSettings IndexerSettings = new IndexerSettings();
     public ImageBeautifierOptions ImageBeautifierOptions = new ImageBeautifierOptions();

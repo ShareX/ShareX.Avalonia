@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using ShareX.Ava.Common;
 using ShareX.Ava.Platform.Abstractions;
+using System.ComponentModel;
 using System.Drawing;
 
 // using System.Drawing.Design; // Not available in .NET Core / Avalonia Common usually?

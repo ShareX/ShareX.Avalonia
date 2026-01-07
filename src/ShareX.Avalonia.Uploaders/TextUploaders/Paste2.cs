@@ -23,8 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.Collections.Generic;
-
 namespace ShareX.Ava.Uploaders.TextUploaders
 {
     public class Paste2TextUploaderService : TextUploaderService

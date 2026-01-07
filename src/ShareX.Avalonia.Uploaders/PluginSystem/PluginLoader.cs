@@ -23,8 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using System.Reflection;
 using ShareX.Ava.Common;
+using System.Reflection;
 
 namespace ShareX.Ava.Uploaders.PluginSystem;
 
@@ -46,7 +46,7 @@ public class PluginLoader
 
             // Create isolated load context
             var loadContext = new PluginLoadContext(metadata.AssemblyPath, metadata.PluginDirectory);
-            
+
             // Load the plugin assembly
             var assembly = loadContext.LoadFromAssemblyPath(metadata.AssemblyPath);
 
@@ -133,7 +133,7 @@ public class PluginLoader
         {
             context.Unload();
             _loadedContexts.Remove(pluginId);
-            
+
             // Force GC to collect unloaded assemblies
             for (int i = 0; i < 3; i++)
             {

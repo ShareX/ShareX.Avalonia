@@ -1,6 +1,3 @@
-using System;
-using ShareX.Ava.Common.Native;
-
 namespace ShareX.Ava.Common
 {
     public static class DesktopIconManager

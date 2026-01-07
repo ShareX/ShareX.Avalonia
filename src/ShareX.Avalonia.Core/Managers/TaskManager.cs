@@ -1,11 +1,6 @@
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Tasks;
 using ShareX.Ava.Common;
+using ShareX.Ava.Core.Tasks;
+using System.Collections.Concurrent;
 
 namespace ShareX.Ava.Core.Managers
 {
@@ -35,7 +30,7 @@ namespace ShareX.Ava.Core.Managers
                 // Fire event so listeners (like App.axaml.cs) can update UI
                 TaskCompleted?.Invoke(this, task);
             };
-            
+
             await task.StartAsync();
         }
 

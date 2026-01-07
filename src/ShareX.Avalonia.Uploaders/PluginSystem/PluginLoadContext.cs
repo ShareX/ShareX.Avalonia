@@ -37,7 +37,7 @@ public class PluginLoadContext : AssemblyLoadContext
     private readonly AssemblyDependencyResolver _resolver;
     private readonly string _pluginDirectory;
 
-    public PluginLoadContext(string pluginPath, string pluginDirectory) 
+    public PluginLoadContext(string pluginPath, string pluginDirectory)
         : base(isCollectible: true) // Enable unloading
     {
         _resolver = new AssemblyDependencyResolver(pluginPath);
@@ -76,7 +76,7 @@ public class PluginLoadContext : AssemblyLoadContext
     private bool IsSharedDependency(AssemblyName assemblyName)
     {
         var name = assemblyName.Name;
-        
+
         // These should come from the host app, not plugin
         return name == "ShareX.Ava.Uploaders" ||
                name == "ShareX.Ava.Common" ||

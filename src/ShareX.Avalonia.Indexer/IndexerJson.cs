@@ -25,7 +25,6 @@
 
 using Newtonsoft.Json;
 using ShareX.Ava.Common;
-using System.IO;
 using System.Text;
 
 namespace ShareX.Ava.Indexer

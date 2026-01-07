@@ -23,12 +23,9 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 using ShareX.Ava.Platform.Abstractions;
 using SkiaSharp;
+using System.Diagnostics;
 using DebugHelper = ShareX.Ava.Common.DebugHelper;
 // REMOVED: System.Drawing usage
 

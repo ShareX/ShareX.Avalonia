@@ -1,11 +1,8 @@
-using System;
-using System.Collections.Generic;
+using Newtonsoft.Json;
+using ShareX.Editor.ImageEffects;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using Newtonsoft.Json;
-using ShareX.Ava.Common;
-using ShareX.Editor.ImageEffects;
 
 namespace ShareX.Ava.Core;
 
@@ -368,7 +365,7 @@ public class VideoConverterOptions
     public string InputFilePath { get; set; }
     public string OutputFolderPath { get; set; }
     public string OutputFileName { get; set; }
-    
+
     public ConverterVideoCodecs VideoCodec { get; set; } = ConverterVideoCodecs.x264;
     public int VideoQuality { get; set; } = 23;
     public bool VideoQualityUseBitrate { get; set; } = false;

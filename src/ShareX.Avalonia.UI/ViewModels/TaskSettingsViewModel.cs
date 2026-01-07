@@ -1,6 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using ShareX.Ava.Core;
-using System;
 
 namespace ShareX.Ava.UI.ViewModels
 {
@@ -140,7 +139,7 @@ namespace ShareX.Ava.UI.ViewModels
                 }
             }
         }
-        
+
         public bool CaptureAutoHideTaskbar
         {
             get => _settings.CaptureSettings.CaptureAutoHideTaskbar;
@@ -167,7 +166,7 @@ namespace ShareX.Ava.UI.ViewModels
                 }
             }
         }
-        
+
         #endregion
 
         #region Upload / File Naming

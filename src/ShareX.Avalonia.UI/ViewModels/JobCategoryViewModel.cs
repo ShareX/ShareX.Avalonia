@@ -1,10 +1,7 @@
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
 using Avalonia.Input;
-using CommunityToolkit.Mvvm.ComponentModel;
 using ShareX.Ava.Core;
 using ShareX.Ava.Core.Hotkeys;
+using System.Collections.ObjectModel;
 
 namespace ShareX.Ava.UI.ViewModels;
 

@@ -23,9 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.IO;
-using System.Threading.Tasks;
-
 namespace ShareX.Ava.Uploaders
 {
     /// <summary>

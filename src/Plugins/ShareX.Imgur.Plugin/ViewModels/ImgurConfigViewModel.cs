@@ -113,7 +113,7 @@ public partial class ImgurConfigViewModel : ObservableObject, IUploaderConfigVie
             {
                 _config = config;
                 _uploader = new ImgurUploader(_config);
-                
+
                 ClientId = _config.ClientId ?? "30d41ft9z9r8jtt";
                 AccountTypeIndex = (int)_config.AccountType;
                 AlbumId = _config.SelectedAlbum?.id ?? string.Empty;

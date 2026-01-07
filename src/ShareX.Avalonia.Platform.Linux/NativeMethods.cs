@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 
 namespace ShareX.Ava.Platform.Linux
@@ -42,7 +41,7 @@ namespace ShareX.Ava.Platform.Linux
 
         [DllImport(libX11)]
         internal static extern int XIconifyWindow(IntPtr display, IntPtr w, int screen_number);
-        
+
         // Window map state
         internal const int IsUnviewable = 0;
         internal const int IsViewable = 1;

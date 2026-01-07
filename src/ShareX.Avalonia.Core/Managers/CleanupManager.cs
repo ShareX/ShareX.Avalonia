@@ -1,6 +1,3 @@
-using System;
-using System.IO;
-using System.Linq;
 using ShareX.Ava.Common;
 
 namespace ShareX.Ava.Core.Managers
@@ -20,7 +17,7 @@ namespace ShareX.Ava.Core.Managers
             // For now, this is a placeholder to satisfy the porting requirement.
             DebugHelper.WriteLine("CleanupManager: Cleanup started (Placeholder).");
         }
-        
+
         public void CheckFreeSpace()
         {
             // Check free space implementation

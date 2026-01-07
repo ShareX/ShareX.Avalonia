@@ -1,9 +1,7 @@
-using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Core;
-
-using System.Threading.Tasks;
+using System.Collections.ObjectModel;
 
 namespace ShareX.Ava.UI.ViewModels;
 
@@ -70,13 +68,13 @@ public partial class HotkeySettingsViewModel : ViewModelBase
     private void Add()
     {
         if (_manager == null) return;
-        
+
         // Create new hotkey with default settings
         var newHotkey = new ShareX.Ava.Core.Hotkeys.WorkflowSettings();
-        
+
         // Add to list (user will configure inline via HotkeySelectionControl)
         _manager.Workflows.Add(newHotkey);
-        
+
         LoadHotkeys();
         SaveHotkeys();
     }
@@ -123,11 +121,11 @@ public partial class HotkeySettingsViewModel : ViewModelBase
         if (SelectedHotkey != null && _manager != null)
         {
             // Shallow copy for now, deep would be better
-            var clone = new ShareX.Ava.Core.Hotkeys.WorkflowSettings(SelectedHotkey.Model.Job, 
+            var clone = new ShareX.Ava.Core.Hotkeys.WorkflowSettings(SelectedHotkey.Model.Job,
                 new Platform.Abstractions.HotkeyInfo(
-                    SelectedHotkey.Model.HotkeyInfo.Key, 
+                    SelectedHotkey.Model.HotkeyInfo.Key,
                     SelectedHotkey.Model.HotkeyInfo.Modifiers));
-            
+
             // Just add to list, user needs to change key
             _manager.Workflows.Add(clone);
             LoadHotkeys();
@@ -139,33 +137,33 @@ public partial class HotkeySettingsViewModel : ViewModelBase
     private void MoveUp()
     {
         // Not strictly necessary for functionality unless order matters for priority
-         if (_manager == null || SelectedHotkey == null) return;
-         int index = _manager.Workflows.IndexOf(SelectedHotkey.Model);
-         if (index > 0)
-         {
-             _manager.Workflows.RemoveAt(index);
-             _manager.Workflows.Insert(index - 1, SelectedHotkey.Model);
-             LoadHotkeys();
-             SaveHotkeys();
-             SelectedHotkey = Hotkeys[index - 1];
-         }
+        if (_manager == null || SelectedHotkey == null) return;
+        int index = _manager.Workflows.IndexOf(SelectedHotkey.Model);
+        if (index > 0)
+        {
+            _manager.Workflows.RemoveAt(index);
+            _manager.Workflows.Insert(index - 1, SelectedHotkey.Model);
+            LoadHotkeys();
+            SaveHotkeys();
+            SelectedHotkey = Hotkeys[index - 1];
+        }
     }
 
     [RelayCommand(CanExecute = nameof(CanModifyHotkey))]
     private void MoveDown()
     {
-         if (_manager == null || SelectedHotkey == null) return;
-         int index = _manager.Workflows.IndexOf(SelectedHotkey.Model);
-         if (index < _manager.Workflows.Count - 1)
-         {
-             _manager.Workflows.RemoveAt(index);
-             _manager.Workflows.Insert(index + 1, SelectedHotkey.Model);
-             LoadHotkeys();
-             SaveHotkeys();
-             SelectedHotkey = Hotkeys[index + 1];
-         }
+        if (_manager == null || SelectedHotkey == null) return;
+        int index = _manager.Workflows.IndexOf(SelectedHotkey.Model);
+        if (index < _manager.Workflows.Count - 1)
+        {
+            _manager.Workflows.RemoveAt(index);
+            _manager.Workflows.Insert(index + 1, SelectedHotkey.Model);
+            LoadHotkeys();
+            SaveHotkeys();
+            SelectedHotkey = Hotkeys[index + 1];
+        }
     }
-    
+
     [RelayCommand]
     private void Reset()
     {

@@ -1,19 +1,14 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using System.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Core.Hotkeys;
-using ShareX.Ava.Core;
-using ShareX.Ava.Platform.Abstractions;
 using Avalonia.Input;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using ShareX.Ava.Common;
+using ShareX.Ava.Core;
+using ShareX.Ava.Core.Hotkeys;
+using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.Uploaders;
-using ShareX.UploadersLib;
 using ShareX.Ava.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
-using ShareX.Ava.Common;
+using System.ComponentModel;
 
 namespace ShareX.Ava.UI.ViewModels;
 
@@ -44,9 +39,9 @@ public partial class WorkflowEditorViewModel : ViewModelBase
     private CategoryViewModel _fileCategory;
     private CategoryViewModel _urlCategory;
 
-    public string WindowTitle 
+    public string WindowTitle
     {
-        get 
+        get
         {
             var baseTitle = Model.HotkeyInfo.Id == 0 ? "Add Workflow" : "Edit Workflow";
             var desc = Description;
@@ -85,7 +80,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
     {
         if (value != null)
         {
-             SelectedJob = value.Model.Job;
+            SelectedJob = value.Model.Job;
         }
     }
 
@@ -102,7 +97,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         // Initialize TaskSettings VM
         if (model.TaskSettings == null)
             model.TaskSettings = new TaskSettings();
-            
+
         TaskSettings = new TaskSettingsViewModel(model.TaskSettings);
 
         TaskSettings = new TaskSettingsViewModel(model.TaskSettings);
@@ -147,7 +142,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         AvailableDestinations.Clear();
 
         string category = GetHotkeyCategory(SelectedJob);
-        
+
         // Determine which destination types to show based on category
         bool showImageUploaders = false;
         bool showTextUploaders = false;
@@ -160,7 +155,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 showImageUploaders = true;
                 showFileUploaders = true;
                 break;
-                
+
             case EnumExtensions.HotkeyType_Category_Upload:
                 if (SelectedJob == HotkeyType.UploadText)
                 {
@@ -171,13 +166,13 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 {
                     showFileUploaders = true;
                 }
-                else 
+                else
                 {
                     showImageUploaders = true;
                     showFileUploaders = true;
                 }
                 break;
-                
+
             case EnumExtensions.HotkeyType_Category_Tools:
                 showImageUploaders = true;
                 showFileUploaders = true;
@@ -189,7 +184,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
             foreach (var instance in _imageCategory.Instances)
                 AvailableDestinations.Add(instance);
         }
-        
+
         if (showTextUploaders)
         {
             foreach (var instance in _textCategory.Instances)
@@ -201,10 +196,10 @@ public partial class WorkflowEditorViewModel : ViewModelBase
             foreach (var instance in _fileCategory.Instances)
                 AvailableDestinations.Add(instance);
         }
-        
+
         if (SelectedDestination == null)
         {
-             SelectedDestination = AvailableDestinations.FirstOrDefault();
+            SelectedDestination = AvailableDestinations.FirstOrDefault();
         }
     }
 
@@ -214,9 +209,9 @@ public partial class WorkflowEditorViewModel : ViewModelBase
     {
         // Logic to try and find the currently configured destination in the list
         // Simplified version of WorkflowWizardViewModel.LoadFromSettings
-        
-         UploaderInstanceViewModel? matched = null;
-         var settings = Model;
+
+        UploaderInstanceViewModel? matched = null;
+        var settings = Model;
 
         if (settings.TaskSettings.OverrideCustomUploader)
         {
@@ -241,8 +236,8 @@ public partial class WorkflowEditorViewModel : ViewModelBase
             var imgDest = settings.TaskSettings.ImageDestination;
             if (imgDest != ImageDestination.CustomImageUploader && imgDest != ImageDestination.FileUploader)
             {
-                 var candidate = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == imgDest.ToString());
-                 if (candidate != null) matched = candidate;
+                var candidate = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == imgDest.ToString());
+                if (candidate != null) matched = candidate;
             }
         }
 
@@ -255,7 +250,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         Model.HotkeyInfo.Key = SelectedKey;
         Model.HotkeyInfo.Modifiers = SelectedModifiers;
         Model.Job = SelectedJob;
-        
+
         // Ensure TaskSettings knows its job too
         if (Model.TaskSettings != null)
         {
@@ -270,13 +265,13 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         SelectedModifiers = KeyModifiers.None;
     }
 
-    public string KeyText 
+    public string KeyText
     {
         get
         {
             if (SelectedKey == Key.None && SelectedModifiers == KeyModifiers.None)
                 return "None";
-                
+
             var info = new HotkeyInfo { Key = SelectedKey, Modifiers = SelectedModifiers };
             return info.ToString();
         }
@@ -314,12 +309,12 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 break;
             }
         }
-        
+
         // If not found (e.g. None), maybe select first generic
         if (SelectedJobItem == null && JobCategories.Count > 0)
         {
-             SelectedJobCategory = JobCategories[0];
-             SelectedJobItem = SelectedJobCategory.Jobs.FirstOrDefault();
+            SelectedJobCategory = JobCategories[0];
+            SelectedJobItem = SelectedJobCategory.Jobs.FirstOrDefault();
         }
     }
 

@@ -23,11 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Core;
 using Avalonia.Input;
-
+using ShareX.Ava.Common;
 using HotkeyInfo = ShareX.Ava.Platform.Abstractions.HotkeyInfo;
 
 namespace ShareX.Ava.Core.Hotkeys;
@@ -50,8 +47,8 @@ public class WorkflowSettings
     /// Proxies to TaskSettings.Job.
     /// </summary>
     [Newtonsoft.Json.JsonIgnore]
-    public HotkeyType Job 
-    { 
+    public HotkeyType Job
+    {
         get => TaskSettings.Job;
         set => TaskSettings.Job = value;
     }

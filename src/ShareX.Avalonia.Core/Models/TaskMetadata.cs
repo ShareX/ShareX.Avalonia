@@ -24,7 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using System;
 using SkiaSharp;
 
 namespace ShareX.Ava.Core;

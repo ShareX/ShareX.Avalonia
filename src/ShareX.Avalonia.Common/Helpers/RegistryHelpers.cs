@@ -24,8 +24,6 @@
 #endregion License Information (GPL v3)
 
 using Microsoft.Win32;
-using System;
-using System.IO;
 
 namespace ShareX.Ava.Common
 {

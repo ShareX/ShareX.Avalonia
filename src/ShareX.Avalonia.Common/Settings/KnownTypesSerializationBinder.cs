@@ -24,9 +24,6 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json.Serialization;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ShareX.Ava.Common
 {

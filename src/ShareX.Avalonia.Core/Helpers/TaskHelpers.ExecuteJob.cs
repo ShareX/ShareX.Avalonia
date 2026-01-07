@@ -24,15 +24,9 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Hotkeys;
 using ShareX.Ava.Core.Managers;
-using System;
-using System.Threading.Tasks;
 
 using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Core.Tasks;
-using System.Drawing;
 
 namespace ShareX.Ava.Core.Helpers;
 
@@ -52,7 +46,7 @@ public static partial class TaskHelpers
         if (taskSettings == null)
         {
             taskSettings = new TaskSettings();
-            
+
             // Apply job-specific defaults if needed
             if (taskSettings.Job == HotkeyType.None)
             {
@@ -70,7 +64,7 @@ public static partial class TaskHelpers
             $"UploadImageToHost={taskSettings.AfterCaptureJob.HasFlag(AfterCaptureTasks.UploadImageToHost)}, " +
             $"ImageDestination={taskSettings.ImageDestination}");
 
-        try 
+        try
         {
             // Start the task via TaskManager
             // This ensures it appears in the UI and follows the standard lifecycle

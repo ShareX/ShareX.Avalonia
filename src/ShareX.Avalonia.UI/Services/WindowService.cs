@@ -1,6 +1,5 @@
-using System;
-using System.Drawing;
 using ShareX.Ava.Platform.Abstractions;
+using System.Drawing;
 
 namespace ShareX.Ava.UI.Services
 {

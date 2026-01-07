@@ -1,9 +1,5 @@
-using SkiaSharp;
-using System.Threading.Tasks;
 using ShareX.Ava.Platform.Abstractions;
-using Avalonia;
-using Avalonia.Input.Platform;
-using System.Linq;
+using SkiaSharp;
 
 namespace ShareX.Ava.UI.Services
 {

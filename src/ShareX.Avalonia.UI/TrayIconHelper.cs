@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Common;
 using ShareX.Ava.Core;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Windows.Input;
 
 namespace ShareX.Ava.UI;
 

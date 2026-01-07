@@ -23,8 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.Drawing;
-
 namespace ShareX.Ava.Common
 {
     public static class InputHelpers

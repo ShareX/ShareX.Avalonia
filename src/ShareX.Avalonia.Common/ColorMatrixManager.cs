@@ -25,7 +25,6 @@
 
 #nullable enable
 
-using System;
 using SkiaSharp;
 
 namespace ShareX.Ava.Common;

@@ -28,7 +28,6 @@ using ShareX.UploadersLib.FileUploaders;
 using ShareX.UploadersLib.ImageUploaders;
 using ShareX.UploadersLib.TextUploaders;
 using ShareX.UploadersLib.URLShorteners;
-using System.Collections.Generic;
 
 namespace ShareX.Ava.Uploaders
 {

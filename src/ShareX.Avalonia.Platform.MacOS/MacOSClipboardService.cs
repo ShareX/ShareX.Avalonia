@@ -23,13 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 using ShareX.Ava.Common;
 using ShareX.Ava.Platform.Abstractions;
 using SkiaSharp;
+using System.Diagnostics;
 // REMOVED: System.Drawing
 
 namespace ShareX.Ava.Platform.MacOS
@@ -173,7 +170,7 @@ namespace ShareX.Ava.Platform.MacOS
                         data.SaveTo(stream);
                     }
                 }
-                
+
                 var script = $"set the clipboard to (read (POSIX file \\\"{tempFile}\\\") as «class PNGf»)";
                 RunOsaScript(script);
             }

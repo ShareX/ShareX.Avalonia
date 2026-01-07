@@ -25,8 +25,6 @@
 
 using ShareX.Ava.Common;
 using ShareX.Ava.Uploaders;
-using System;
-using System.IO;
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -366,10 +364,10 @@ namespace ShareX.Ava.Core
             // Delete files? Or just re-instantiate? Original returns to defaults.
             if (File.Exists(ApplicationConfigFilePath)) File.Delete(ApplicationConfigFilePath);
             Settings = new ApplicationConfig();
-            
+
             if (File.Exists(UploadersConfigFilePath)) File.Delete(UploadersConfigFilePath);
             UploadersConfig = new UploadersConfig();
-            
+
             if (File.Exists(WorkflowsConfigFilePath)) File.Delete(WorkflowsConfigFilePath);
             WorkflowsConfig = new WorkflowsConfig();
         }

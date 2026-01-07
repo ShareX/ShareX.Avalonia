@@ -25,9 +25,7 @@
 
 using Newtonsoft.Json;
 using ShareX.Ava.Common;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
 
 namespace ShareX.Ava.Uploaders.FileUploaders
 {

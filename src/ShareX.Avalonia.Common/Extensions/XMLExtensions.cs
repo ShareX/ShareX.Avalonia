@@ -23,7 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 

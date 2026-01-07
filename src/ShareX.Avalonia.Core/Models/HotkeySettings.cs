@@ -26,9 +26,7 @@
 
 using Avalonia.Input;
 using ShareX.Ava.Common;
-using System.Collections.Generic;
 using ShareX.Ava.Core.Hotkeys;
-using ShareX.Ava.Platform.Abstractions;
 
 using HotkeyInfo = ShareX.Ava.Platform.Abstractions.HotkeyInfo;
 

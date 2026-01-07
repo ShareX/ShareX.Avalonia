@@ -23,9 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using System.Drawing;
-using System.Runtime.InteropServices;
 using ShareX.Ava.Platform.Abstractions;
+using System.Runtime.InteropServices;
 
 namespace ShareX.Ava.Platform.Windows
 {

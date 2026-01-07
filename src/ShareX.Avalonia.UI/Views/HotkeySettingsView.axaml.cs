@@ -7,12 +7,12 @@ namespace ShareX.Ava.UI.Views
     public partial class HotkeySettingsView : UserControl
     {
         private TextBox? _debugTextBox;
-        
+
         public HotkeySettingsView()
         {
             InitializeComponent();
             DataContext = new ViewModels.HotkeySettingsViewModel();
-            
+
             // Find debug TextBox and connect it to the HotkeySelectionControl's static debug log
             Loaded += (s, e) =>
             {
@@ -28,7 +28,7 @@ namespace ShareX.Ava.UI.Views
                             _debugTextBox.CaretIndex = _debugTextBox.Text?.Length ?? 0;
                         });
                     });
-                    
+
                     _debugTextBox.Text = "Debug log initialized. Try clicking a hotkey button...\n";
                 }
             };

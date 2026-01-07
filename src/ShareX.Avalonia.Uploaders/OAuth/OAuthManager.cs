@@ -24,11 +24,7 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using System;
-using System.Collections.Generic;
 using System.Collections.Specialized;
-using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;

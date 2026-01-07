@@ -24,8 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using System;
-using System.IO;
 
 namespace ShareX.Ava.Uploaders.ImageUploaders
 {

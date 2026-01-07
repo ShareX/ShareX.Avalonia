@@ -1,7 +1,3 @@
-using System;
-using System.IO;
-using System.Net.Http;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 
@@ -64,17 +60,17 @@ namespace ShareX.Ava.Common
                                 if (appNode != null)
                                 {
                                     XElement channelNode = appNode.Element(node);
-                                    
+
                                     // Fallback logic if needed? 
                                     // If ReleaseType is Beta, and Beta node missing, maybe fallback to Stable?
                                     // Original code had "Beta|Stable" string, suggesting GetNode parsed pipes. 
                                     // I will interpret that as "Try Beta, then Stable".
-                                    
+
                                     if (channelNode == null && ReleaseType == ReleaseChannelType.Beta)
                                     {
                                         channelNode = appNode.Element("Stable");
                                     }
-                                    
+
                                     if (channelNode != null)
                                     {
                                         XElement versionEl = channelNode.Element("Version");

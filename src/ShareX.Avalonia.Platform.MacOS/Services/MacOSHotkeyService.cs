@@ -25,11 +25,9 @@
 
 using Avalonia.Input;
 using Avalonia.Threading;
+using ShareX.Ava.Platform.Abstractions;
 using SharpHook;
 using SharpHook.Data;
-using ShareX.Ava.Platform.Abstractions;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using DebugHelper = ShareX.Ava.Common.DebugHelper;
 

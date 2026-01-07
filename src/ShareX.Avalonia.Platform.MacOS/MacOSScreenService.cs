@@ -23,14 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform;
 using ShareX.Ava.Platform.Abstractions;
+using System.Drawing;
 using DebugHelper = ShareX.Ava.Common.DebugHelper;
 
 namespace ShareX.Ava.Platform.MacOS

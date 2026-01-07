@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Ava.Core.Hotkeys;
-using ShareX.Ava.Core;
 using ShareX.Ava.Common;
+using ShareX.Ava.Core;
+using ShareX.Ava.Core.Hotkeys;
 
 namespace ShareX.Ava.UI.ViewModels;
 
@@ -18,8 +18,8 @@ public partial class WorkflowItemViewModel : ObservableObject
 
     public string Description
     {
-        get => !string.IsNullOrEmpty(_hotkeySettings.TaskSettings.Description) 
-               ? _hotkeySettings.TaskSettings.Description 
+        get => !string.IsNullOrEmpty(_hotkeySettings.TaskSettings.Description)
+               ? _hotkeySettings.TaskSettings.Description
                : EnumExtensions.GetDescription(_hotkeySettings.Job);
         set
         {
@@ -32,7 +32,7 @@ public partial class WorkflowItemViewModel : ObservableObject
     }
 
     public HotkeyType Job => _hotkeySettings.Job;
-    
+
     public string HotkeyText => _hotkeySettings.HotkeyInfo.ToString();
 
     public void Refresh()

@@ -23,11 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using SkiaSharp;
+using System.Drawing;
 using System.Drawing.Imaging;
 
 namespace ShareX.Ava.Common
@@ -68,11 +65,11 @@ namespace ShareX.Ava.Common
                 {
                     return images[filePath];
                 }
-                
+
                 // NativeMethods.GetFileIcon returns System.Drawing.Icon (Windows only)
                 // We keep this for now as NativeMethods wasn't fully refactored.
                 // Assuming Windows platform for this specific method call or it returns null on others.
-                
+
                 using (Icon? icon = NativeMethods.GetFileIcon(filePath, isSmallIcon))
                 {
                     if (icon != null && icon.Width > 0 && icon.Height > 0)

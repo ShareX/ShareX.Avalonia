@@ -23,9 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using ShareX.Ava.Services.Abstractions;
 using ShareX.Ava.Common;
+using ShareX.Ava.Services.Abstractions;
 
 namespace ShareX.Ava.Platform.Windows;
 

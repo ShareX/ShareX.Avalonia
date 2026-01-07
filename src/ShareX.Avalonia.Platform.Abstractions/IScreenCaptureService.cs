@@ -1,6 +1,4 @@
-using System.Threading.Tasks;
 using SkiaSharp;
-using ShareX.Ava.Platform.Abstractions;
 
 namespace ShareX.Ava.Platform.Abstractions
 {
@@ -16,12 +14,12 @@ namespace ShareX.Ava.Platform.Abstractions
         /// Captures a specific region of the screen
         /// </summary>
         Task<SKBitmap?> CaptureRectAsync(SKRect rect, CaptureOptions? options = null);
-        
+
         /// <summary>
         /// Captures the full screen
         /// </summary>
         Task<SKBitmap?> CaptureFullScreenAsync(CaptureOptions? options = null);
-        
+
         /// <summary>
         /// Captures the active window
         /// </summary>

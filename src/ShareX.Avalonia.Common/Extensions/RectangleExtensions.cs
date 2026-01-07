@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Drawing;
 using DrawingPoint = System.Drawing.Point;
 using DrawingPointF = System.Drawing.PointF;
 using DrawingRectangle = System.Drawing.Rectangle;

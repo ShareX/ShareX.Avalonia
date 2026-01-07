@@ -26,9 +26,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using ShareX.Ava.Common;
-using ShareX.Ava.Common.Helpers;
-using System.Collections.Generic;
-using System.IO;
 using System.Text;
 
 namespace ShareX.Ava.History

@@ -2,10 +2,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
+using ShareX.Ava.Common;
 using ShareX.Ava.History;
 using ShareX.Ava.UI.ViewModels;
-using ShareX.Ava.Common;
-using System.Diagnostics;
 
 namespace ShareX.Ava.UI.Views
 {
@@ -26,7 +25,7 @@ namespace ShareX.Ava.UI.Views
         {
             // Right-click is handled natively by Avalonia ContextMenu
             var point = e.GetCurrentPoint(sender as Visual);
-            
+
             if (!point.Properties.IsLeftButtonPressed)
                 return;
 

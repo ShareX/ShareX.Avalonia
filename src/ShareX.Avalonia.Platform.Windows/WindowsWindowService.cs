@@ -26,10 +26,6 @@
 using ShareX.Ava.Common;
 using ShareX.Ava.Common.Helpers;
 using ShareX.Ava.Platform.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Linq;
 
 namespace ShareX.Ava.Platform.Windows
 {
@@ -110,7 +106,7 @@ namespace ShareX.Ava.Platform.Windows
 
                 // Get window title
                 string title = NativeMethods.GetWindowTextString(hWnd);
-                
+
                 // Skip windows with no title
                 if (string.IsNullOrWhiteSpace(title))
                     return true;
@@ -132,7 +128,7 @@ namespace ShareX.Ava.Platform.Windows
 
                 // Get window bounds
                 var bounds = GetWindowBounds(hWnd);
-                
+
                 // Skip windows with zero or very small size
                 if (bounds.Width <= 1 || bounds.Height <= 1)
                     return true;

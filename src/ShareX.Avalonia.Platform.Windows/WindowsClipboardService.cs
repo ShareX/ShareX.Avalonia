@@ -24,13 +24,7 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Platform.Abstractions;
-using System;
-using System.Drawing;
-using System.IO;
 using SkiaSharp;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 
 namespace ShareX.Ava.Platform.Windows
 {
@@ -121,7 +115,7 @@ namespace ShareX.Ava.Platform.Windows
                 using (var image = Clipboard.GetImage())
                 {
                     if (image == null) return null;
-                    
+
                     using (var ms = new MemoryStream())
                     {
                         image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
@@ -151,18 +145,18 @@ namespace ShareX.Ava.Platform.Windows
                     {
                         if (skImage == null)
                             throw new InvalidOperationException("Failed to create SKImage from bitmap");
-                            
+
                         using (var data = skImage.Encode(SKEncodedImageFormat.Png, 100))
                         {
                             if (data == null)
                                 throw new InvalidOperationException("Failed to encode image to PNG format");
-                                
+
                             data.SaveTo(ms);
                         }
                     }
-                    
+
                     ms.Position = 0;
-                    
+
                     // Use System.Drawing to set clipboard (simpler and more reliable)
                     using (var drawingBitmap = new Bitmap(ms))
                     {

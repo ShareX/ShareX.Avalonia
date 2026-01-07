@@ -23,7 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.IO;
 using System.Text.RegularExpressions;
 
 namespace ShareX.Ava.Uploaders.FileUploaders

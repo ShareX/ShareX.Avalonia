@@ -1,8 +1,5 @@
 using Avalonia.Controls;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using ShareX.Ava.UI.ViewModels;
 
 namespace ShareX.Ava.UI.Views;
 

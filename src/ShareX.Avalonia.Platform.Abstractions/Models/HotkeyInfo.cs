@@ -24,7 +24,6 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Input;
-using System;
 
 namespace ShareX.Ava.Platform.Abstractions;
 

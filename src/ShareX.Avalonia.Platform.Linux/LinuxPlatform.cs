@@ -1,9 +1,7 @@
-using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.Common;
-using System;
-using System.Collections.Generic;
-using SysPoint = System.Drawing.Point;
+using ShareX.Ava.Platform.Abstractions;
 using Rectangle = System.Drawing.Rectangle;
+using SysPoint = System.Drawing.Point;
 
 namespace ShareX.Ava.Platform.Linux
 {
@@ -15,7 +13,7 @@ namespace ShareX.Ava.Platform.Linux
             if (screenCaptureService == null)
             {
                 screenCaptureService = new LinuxScreenCaptureService();
-                DebugHelper.WriteLine(LinuxScreenCaptureService.IsWayland 
+                DebugHelper.WriteLine(LinuxScreenCaptureService.IsWayland
                     ? "Linux: Running on Wayland. Using LinuxScreenCaptureService with XDG Portal support."
                     : "Linux: Running on X11. Using LinuxScreenCaptureService with CLI fallbacks.");
             }
@@ -51,21 +49,21 @@ namespace ShareX.Ava.Platform.Linux
 
     internal class StubClipboardService : IClipboardService
     {
-         public void SetText(string text) { }
-         public string? GetText() => string.Empty;
-         public void SetImage(SkiaSharp.SKBitmap image) { }
-         public SkiaSharp.SKBitmap? GetImage() => null;
-         public void SetFileDropList(string[] files) { }
-         public string[]? GetFileDropList() => Array.Empty<string>();
-         public void Clear() { }
-         public bool ContainsText() => false;
-         public bool ContainsImage() => false;
-         public bool ContainsFileDropList() => false;
-         public object? GetData(string format) => null;
-         public void SetData(string format, object data) { }
-         public bool ContainsData(string format) => false;
-         public System.Threading.Tasks.Task<string?> GetTextAsync() => System.Threading.Tasks.Task.FromResult<string?>(string.Empty);
-         public System.Threading.Tasks.Task SetTextAsync(string text) => System.Threading.Tasks.Task.CompletedTask;
+        public void SetText(string text) { }
+        public string? GetText() => string.Empty;
+        public void SetImage(SkiaSharp.SKBitmap image) { }
+        public SkiaSharp.SKBitmap? GetImage() => null;
+        public void SetFileDropList(string[] files) { }
+        public string[]? GetFileDropList() => Array.Empty<string>();
+        public void Clear() { }
+        public bool ContainsText() => false;
+        public bool ContainsImage() => false;
+        public bool ContainsFileDropList() => false;
+        public object? GetData(string format) => null;
+        public void SetData(string format, object data) { }
+        public bool ContainsData(string format) => false;
+        public System.Threading.Tasks.Task<string?> GetTextAsync() => System.Threading.Tasks.Task.FromResult<string?>(string.Empty);
+        public System.Threading.Tasks.Task SetTextAsync(string text) => System.Threading.Tasks.Task.CompletedTask;
     }
 
     internal class StubScreenCaptureService : IScreenCaptureService

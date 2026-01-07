@@ -23,8 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-
 namespace ShareX.Ava.Common
 {
     public static class NumberExtensions

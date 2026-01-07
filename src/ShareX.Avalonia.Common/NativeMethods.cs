@@ -23,7 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -120,7 +119,7 @@ namespace ShareX.Ava.Common
 
             return SetWindowLongPtr64(hWnd, nIndex, dwNewLong);
         }
-        
+
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern IntPtr SendMessageTimeout(IntPtr hWnd, uint Msg, IntPtr wParam, IntPtr lParam, SendMessageTimeoutFlags fuFlags, uint uTimeout, out IntPtr lpdwResult);
 
@@ -284,9 +283,10 @@ namespace ShareX.Ava.Common
         public static System.Drawing.Icon? GetFileIcon(string filePath, bool isSmallIcon)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                 return null;
+                return null;
 
-            try {
+            try
+            {
                 SHFILEINFO shfi = new SHFILEINFO();
                 uint flags = (uint)(SHGFI.Icon | (isSmallIcon ? SHGFI.SmallIcon : SHGFI.LargeIcon));
 
@@ -296,11 +296,11 @@ namespace ShareX.Ava.Common
 
                 using (var tempIcon = System.Drawing.Icon.FromHandle(shfi.hIcon))
                 {
-                     var icon = (System.Drawing.Icon)tempIcon.Clone();
-                     DestroyIcon(shfi.hIcon);
-                     return icon;
+                    var icon = (System.Drawing.Icon)tempIcon.Clone();
+                    DestroyIcon(shfi.hIcon);
+                    return icon;
                 }
-            } 
+            }
             catch { return null; }
         }
 

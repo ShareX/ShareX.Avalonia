@@ -1,5 +1,3 @@
-using System;
-
 namespace ShareX.Ava.Common
 {
     public delegate void ColorEventHandler(object sender, ColorEventArgs e);

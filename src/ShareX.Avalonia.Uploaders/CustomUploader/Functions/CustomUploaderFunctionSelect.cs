@@ -23,8 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.Linq;
-
 namespace ShareX.Ava.Uploaders
 {
     // Example: {select:domain1.com|domain2.com}

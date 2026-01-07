@@ -25,7 +25,6 @@
 
 using ShareX.Ava.Common;
 using ShareX.Ava.Uploaders;
-using ShareX.Ava.Uploaders.FileUploaders;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -79,14 +78,14 @@ public class AmazonS3Uploader : FileUploader
     public override UploadResult Upload(Stream stream, string fileName)
     {
         bool isPathStyleRequest = _config.UsePathStyleUrl || _config.BucketName.Contains(".");
-        
+
         string scheme = _config.Endpoint.StartsWith("http") ? "" : "https://";
         string endpoint = _config.Endpoint;
-        
-        string host = isPathStyleRequest 
-            ? endpoint 
+
+        string host = isPathStyleRequest
+            ? endpoint
             : $"{_config.BucketName}.{endpoint}";
-        
+
         string algorithm = "AWS4-HMAC-SHA256";
         string credentialDate = DateTime.UtcNow.ToString("yyyyMMdd", CultureInfo.InvariantCulture);
         string region = GetRegion();
@@ -104,10 +103,10 @@ public class AmazonS3Uploader : FileUploader
         {
             hashedPayload = "UNSIGNED-PAYLOAD";
         }
-        
+
         string uploadPath = GetUploadPath(fileName);
         string resultURL = GenerateURL(uploadPath);
-        
+
         OnEarlyURLCopyRequested(resultURL);
 
         var headers = new NameValueCollection
@@ -129,7 +128,7 @@ public class AmazonS3Uploader : FileUploader
         if (isPathStyleRequest) canonicalURI = URLHelpers.CombineURL(_config.BucketName, canonicalURI);
         canonicalURI = URLHelpers.AddSlash(canonicalURI, SlashType.Prefix);
         canonicalURI = URLHelpers.URLEncode(canonicalURI, true);
-        
+
         string canonicalQueryString = "";
         string canonicalHeaders = CreateCanonicalHeaders(headers);
         string signedHeaders = GetSignedHeaders(headers);
@@ -210,7 +209,7 @@ public class AmazonS3Uploader : FileUploader
     private string GetUploadPath(string fileName)
     {
         string path = NameParser.Parse(NameParserType.FilePath, _config.ObjectPrefix).Trim('/');
-        
+
         // Remove extension based on settings
         bool removeExt = false;
         if (_config.RemoveExtensionImage && IsImageFile(fileName)) removeExt = true;

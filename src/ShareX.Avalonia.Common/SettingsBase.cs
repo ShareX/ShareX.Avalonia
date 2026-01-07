@@ -26,8 +26,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using System.ComponentModel;
-using System.Text;
 using System.IO.Compression;
+using System.Text;
 
 namespace ShareX.Ava.Common
 {
@@ -156,7 +156,7 @@ namespace ShareX.Ava.Common
 
                             // .NET Standard 2.0 / .NET Core doesn't verify File.Replace across checks, but standard File.Replace is available in newer .NET
                             // We'll use a manual move approach if needed or File.Replace
-                            try 
+                            try
                             {
                                 File.Move(tempFilePath, filePath, true);
                             }
@@ -174,7 +174,7 @@ namespace ShareX.Ava.Common
                         {
                             File.Move(tempFilePath, filePath);
                         }
-                        
+
                         // TODO: Weekly backup logic
 
                         isSuccess = true;
@@ -275,7 +275,7 @@ namespace ShareX.Ava.Common
                     string fileName = Path.GetFileName(filePath);
                     string backupFilePath = Path.Combine(backupFolder, fileName);
                     fallbackFilePaths.Add(backupFilePath);
-                    
+
                     // Weekly backups retrieval logic...
                 }
             }

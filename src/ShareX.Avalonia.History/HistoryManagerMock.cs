@@ -24,10 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using ShareX.Ava.Common.Helpers;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ShareX.Ava.History
 {

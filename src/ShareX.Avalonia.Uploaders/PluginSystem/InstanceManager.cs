@@ -45,7 +45,7 @@ public class InstanceManager
         var configDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ShareX.Ava");
         Directory.CreateDirectory(configDir);
         _configFilePath = Path.Combine(configDir, "uploader-instances.json");
-        
+
         _configuration = LoadConfiguration();
     }
 
@@ -134,18 +134,18 @@ public class InstanceManager
             if (instance != null)
             {
                 _configuration.Instances.Remove(instance);
-                
+
                 // Remove from defaults if it was set
                 var defaultsToRemove = _configuration.DefaultInstances
                     .Where(kvp => kvp.Value == instanceId)
                     .Select(kvp => kvp.Key)
                     .ToList();
-                
+
                 foreach (var category in defaultsToRemove)
                 {
                     _configuration.DefaultInstances.Remove(category);
                 }
-                
+
                 SaveConfiguration();
             }
         }
@@ -178,7 +178,7 @@ public class InstanceManager
 
             _configuration.Instances.Add(duplicate);
             SaveConfiguration();
-            
+
             return duplicate;
         }
     }
@@ -265,7 +265,7 @@ public class InstanceManager
         lock (_lock)
         {
             var ext = fileExtension.TrimStart('.').ToLowerInvariant();
-            
+
             var otherInstances = _configuration.Instances
                 .Where(i => i.Category == category && i.InstanceId != excludeInstanceId);
 
@@ -308,7 +308,7 @@ public class InstanceManager
         lock (_lock)
         {
             var result = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            
+
             var otherInstances = _configuration.Instances
                 .Where(i => i.Category == category && i.InstanceId != excludeInstanceId);
 
@@ -391,7 +391,7 @@ public class InstanceManager
         {
             // If loading fails, return empty configuration
         }
-        
+
         return new InstanceConfiguration();
     }
 

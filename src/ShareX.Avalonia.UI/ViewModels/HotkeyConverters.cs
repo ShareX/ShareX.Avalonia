@@ -1,7 +1,6 @@
 using Avalonia.Data.Converters;
 using Avalonia.Media;
 using ShareX.Ava.Platform.Abstractions;
-using System;
 using System.Globalization;
 
 namespace ShareX.Ava.UI.ViewModels;

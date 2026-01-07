@@ -23,14 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Collections.Generic;
+using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
-using Newtonsoft.Json;
-using ShareX.Ava.Common;
 
 namespace ShareX.Ava.Common.Colors
 {

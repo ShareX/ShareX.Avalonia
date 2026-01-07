@@ -25,7 +25,6 @@
 
 using CG.Web.MegaApiClient;
 using ShareX.Ava.Common;
-using System;
 
 namespace ShareX.Ava.Uploaders
 {

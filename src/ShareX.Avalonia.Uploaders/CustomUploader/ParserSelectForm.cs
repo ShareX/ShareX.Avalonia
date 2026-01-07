@@ -23,9 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Linq;
-
 namespace ShareX.Ava.Uploaders
 {
     internal sealed class ParserSelectForm : IDisposable

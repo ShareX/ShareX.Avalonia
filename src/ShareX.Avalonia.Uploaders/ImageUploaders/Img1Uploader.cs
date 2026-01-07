@@ -23,8 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.IO;
-
 namespace ShareX.Ava.Uploaders.ImageUploaders
 {
     public sealed class Img1Uploader : ImageUploader

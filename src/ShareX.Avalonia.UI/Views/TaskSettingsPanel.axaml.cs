@@ -10,7 +10,7 @@ namespace ShareX.Ava.UI.Views
         public TaskSettingsPanel()
         {
             InitializeComponent();
-            
+
             // Wire up PropertyGrid property changes to preview updates
             var propertyGrid = this.FindControl<PropertyGrid>("EffectPropertyGrid");
             if (propertyGrid != null)

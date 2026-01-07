@@ -53,7 +53,7 @@ public abstract class UploaderPluginBase : IUploaderPlugin
     public virtual bool ValidateConfig(object config)
     {
         if (config == null) return false;
-        return config.GetType() == ConfigModelType || 
+        return config.GetType() == ConfigModelType ||
                ConfigModelType.IsAssignableFrom(config.GetType());
     }
 

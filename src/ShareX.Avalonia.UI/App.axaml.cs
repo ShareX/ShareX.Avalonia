@@ -2,13 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-
 using ShareX.Ava.Common;
 using ShareX.Ava.Core;
-using ShareX.Ava.UI.Views;
 using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.UI.Views;
 using ShareX.Editor.ViewModels;
-using ShareX.Ava.Uploaders.PluginSystem;
 
 namespace ShareX.Ava.UI;
 
@@ -28,12 +26,12 @@ public partial class App : Application
             {
                 DataContext = new MainViewModel(),
             };
-            
+
             InitializeHotkeys();
-            
+
             // Register UI Service
             Platform.Abstractions.PlatformServices.RegisterUIService(new Services.AvaloniaUIService());
-            
+
             // Wire up Editor clipboard to platform implementation
             ShareX.Editor.Services.EditorServices.Clipboard = new Services.EditorClipboardAdapter();
 
@@ -41,7 +39,7 @@ public partial class App : Application
             Core.Tasks.WorkerTask.ShowWindowSelectorCallback = async () =>
             {
                 var tcs = new TaskCompletionSource<Platform.Abstractions.WindowInfo?>();
-                
+
                 Avalonia.Threading.Dispatcher.UIThread.Post(() =>
                 {
                     try
@@ -83,7 +81,7 @@ public partial class App : Application
                         tcs.TrySetResult(null);
                     }
                 });
-                
+
                 return await tcs.Task;
             };
 
@@ -111,7 +109,7 @@ public partial class App : Application
                 {
                     var message = task.Info?.FileName ?? "Task completed";
                     var title = "ShareX";
-                    
+
                     if (task.Info?.Result?.IsError == true)
                     {
                         title = "Upload Failed";
@@ -124,7 +122,7 @@ public partial class App : Application
                     }
 
                     DebugHelper.WriteLine($"Workflow completed: {message}");
-                    
+
                     // Use platform notification service if available
                     try
                     {
@@ -160,13 +158,13 @@ public partial class App : Application
         {
             var hotkeyService = Platform.Abstractions.PlatformServices.Hotkey;
             WorkflowManager = new Core.Hotkeys.WorkflowManager(hotkeyService);
-            
+
             // Subscribe to hotkey triggers
             WorkflowManager.HotkeyTriggered += HotkeyManager_HotkeyTriggered;
 
             // Load hotkeys from configuration
             var hotkeys = Core.SettingManager.WorkflowsConfig.Hotkeys;
-            
+
             // If configuration is empty/null, fallback to defaults
             if (hotkeys == null || hotkeys.Count == 0)
             {
@@ -176,7 +174,7 @@ public partial class App : Application
             }
 
             WorkflowManager.UpdateHotkeys(hotkeys);
-            
+
             DebugHelper.WriteLine($"Initialized hotkey manager with {hotkeys.Count} hotkeys from configuration");
         }
         catch (Exception ex)
@@ -201,7 +199,7 @@ public partial class App : Application
     private async void HotkeyManager_HotkeyTriggered(object? sender, Core.Hotkeys.WorkflowSettings settings)
     {
         DebugHelper.WriteLine($"Hotkey triggered: {settings}");
-        
+
         bool isCaptureJob = settings.Job is Core.HotkeyType.PrintScreen
                                           or Core.HotkeyType.ActiveWindow
                                           or Core.HotkeyType.CustomWindow
@@ -215,7 +213,7 @@ public partial class App : Application
         {
             immediateMainWindow.NavigateToEditor();
         }
-        
+
         // Subscribe once to task completion so we can update preview (and show the window for capture jobs).
         void HandleTaskCompleted(object? s, Core.Tasks.WorkerTask task)
         {
@@ -230,12 +228,12 @@ public partial class App : Application
         }
 
         Core.Managers.TaskManager.Instance.TaskCompleted += HandleTaskCompleted;
-        
+
         if (settings != null)
         {
             if (settings.Job == Core.HotkeyType.CustomWindow)
             {
-               DebugHelper.WriteLine($"[DEBUG] Hotkey triggered for CustomWindow. Configured title: '{settings.TaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
+                DebugHelper.WriteLine($"[DEBUG] Hotkey triggered for CustomWindow. Configured title: '{settings.TaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
             }
             await Core.Helpers.TaskHelpers.ExecuteJob(settings.Job, settings.TaskSettings);
         }

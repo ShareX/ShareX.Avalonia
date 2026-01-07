@@ -23,9 +23,9 @@
 
 #endregion License Information (GPL v3)
 
+using ShareX.Ava.Common;
 using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.Platform.MacOS.Services;
-using ShareX.Ava.Common;
 
 namespace ShareX.Ava.Platform.MacOS
 {

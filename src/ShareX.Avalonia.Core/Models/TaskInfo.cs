@@ -25,10 +25,7 @@
 
 using ShareX.Ava.Common;
 using ShareX.Ava.Uploaders;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 
 namespace ShareX.Ava.Core;
 
@@ -49,7 +46,7 @@ public class TaskInfo
             return Job switch
             {
                 TaskJob.Job => TaskSettings.AfterCaptureJob.HasFlag(AfterCaptureTasks.UploadImageToHost),
-                TaskJob.DataUpload or TaskJob.FileUpload or TaskJob.TextUpload or 
+                TaskJob.DataUpload or TaskJob.FileUpload or TaskJob.TextUpload or
                 TaskJob.ShortenURL or TaskJob.ShareURL or TaskJob.DownloadUpload => true,
                 _ => false
             };
@@ -105,7 +102,7 @@ public class TaskInfo
                     EDataType.Text => EnumExtensions.GetDescription(TaskSettings.TextFileDestination),
                     _ => EnumExtensions.GetDescription(TaskSettings.FileDestination)
                 },
-                EDataType.URL => Job == TaskJob.ShareURL 
+                EDataType.URL => Job == TaskJob.ShareURL
                     ? EnumExtensions.GetDescription(TaskSettings.URLSharingServiceDestination)
                     : EnumExtensions.GetDescription(TaskSettings.URLShortenerDestination),
                 _ => null

@@ -23,14 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using System.Diagnostics;
-using System.Threading.Tasks;
 using Avalonia.Threading;
 using ShareX.Ava.Core;
 using ShareX.Ava.Core.Helpers;
 using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.UI.Views.RegionCapture;
 using SkiaSharp;
+using System.Diagnostics;
 
 namespace ShareX.Ava.UI.Services
 {
@@ -79,7 +78,7 @@ namespace ShareX.Ava.UI.Services
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
                 var window = new RegionCaptureWindow();
-                
+
                 // Window will handle background capture in OnOpened
                 window.Show();
                 selection = await window.GetResultAsync();
@@ -99,16 +98,16 @@ namespace ShareX.Ava.UI.Services
             // Delegate capture to platform implementation
             bool effectiveModern = options?.UseModernCapture ?? SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
             TroubleshootingHelper.Log("RegionCapture", "CONFIG", $"Capture Configuration: UseModernCapture={effectiveModern} (Explicit={options?.UseModernCapture.ToString() ?? "null"}), ShowCursor={options?.ShowCursor ?? SettingManager.Settings.DefaultTaskSettings.CaptureSettings.ShowCursor}");
-            
+
             TroubleshootingHelper.Log("RegionCapture", "CAPTURE", "Calling Platform.CaptureRectAsync...");
             var skRect = new SKRect(selection.Left, selection.Top, selection.Right, selection.Bottom);
-            
+
             var captureStopwatch = Stopwatch.StartNew();
             var result = await _platformImpl.CaptureRectAsync(skRect, options);
             captureStopwatch.Stop();
-            
+
             TroubleshootingHelper.Log("RegionCapture", "CAPTURE", $"Platform.CaptureRectAsync returned in {captureStopwatch.ElapsedMilliseconds}ms. Result={(result != null ? "Bitmap" : "Null")}");
-            
+
             regionStopwatch.Stop();
             TroubleshootingHelper.Log("RegionCapture", "TOTAL", $"Total region capture workflow time: {regionStopwatch.ElapsedMilliseconds}ms");
 

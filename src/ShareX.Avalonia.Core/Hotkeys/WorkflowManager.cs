@@ -23,13 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using Avalonia.Input;
 using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Core;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 
 namespace ShareX.Ava.Core.Hotkeys;
 

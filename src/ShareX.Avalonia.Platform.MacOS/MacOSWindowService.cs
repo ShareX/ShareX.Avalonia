@@ -23,12 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Collections.Generic;
+using ShareX.Ava.Platform.Abstractions;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using ShareX.Ava.Platform.Abstractions;
 using DebugHelper = ShareX.Ava.Common.DebugHelper;
 
 namespace ShareX.Ava.Platform.MacOS

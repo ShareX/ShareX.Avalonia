@@ -21,7 +21,7 @@ public partial class FileTypeItemViewModel : ObservableObject
 
     public string DisplayText => $".{Extension}";
 
-    public string ToolTip => IsBlocked 
-        ? $"Already handled by '{BlockedByInstance}'" 
+    public string ToolTip => IsBlocked
+        ? $"Already handled by '{BlockedByInstance}'"
         : $"Select to handle .{Extension} files with this instance";
 }

@@ -23,14 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.IO;
-using System.Threading.Tasks;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Common;
 using ShareX.Ava.Core;
 using ShareX.Ava.Uploaders.PluginSystem;
 

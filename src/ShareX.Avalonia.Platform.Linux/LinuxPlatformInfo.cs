@@ -24,7 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Platform.Abstractions;
-using System;
 using System.Runtime.InteropServices;
 
 namespace ShareX.Ava.Platform.Linux

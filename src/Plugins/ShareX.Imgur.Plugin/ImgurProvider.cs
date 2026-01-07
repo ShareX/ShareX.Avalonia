@@ -60,9 +60,9 @@ public class ImgurProvider : UploaderProviderBase
     {
         return new Dictionary<UploaderCategory, string[]>
         {
-            { 
-                UploaderCategory.Image, 
-                new[] { "png", "jpg", "jpeg", "gif", "apng", "bmp", "tiff", "webp", "mp4", "avi", "mov" } 
+            {
+                UploaderCategory.Image,
+                new[] { "png", "jpg", "jpeg", "gif", "apng", "bmp", "tiff", "webp", "mp4", "avi", "mov" }
             }
         };
     }

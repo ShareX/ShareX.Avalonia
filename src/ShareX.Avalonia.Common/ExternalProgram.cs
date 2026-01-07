@@ -23,10 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using System;
 using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 
 namespace ShareX.Ava.Common
 {

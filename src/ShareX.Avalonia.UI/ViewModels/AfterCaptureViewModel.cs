@@ -28,8 +28,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Core;
 using ShareX.Editor.Helpers;
-using System;
-using System.IO;
 
 namespace ShareX.Ava.UI.ViewModels;
 

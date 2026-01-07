@@ -23,12 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Runtime.Versioning;
-using System.Threading.Tasks;
 using ShareX.Ava.Platform.Abstractions;
 using SkiaSharp;
 using Vortice.Direct3D;
@@ -70,7 +64,7 @@ namespace ShareX.Ava.Platform.Windows
 
         public async Task<SKBitmap?> CaptureRectAsync(SKRect rect, CaptureOptions? options = null)
         {
-            bool useModern = options?.UseModernCapture ?? 
+            bool useModern = options?.UseModernCapture ??
                 ShareX.Ava.Core.SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
 
             if (!IsSupported || !useModern)
@@ -117,7 +111,7 @@ namespace ShareX.Ava.Platform.Windows
 
         public async Task<SKBitmap?> CaptureFullScreenAsync(CaptureOptions? options = null)
         {
-            bool useModern = options?.UseModernCapture ?? 
+            bool useModern = options?.UseModernCapture ??
                 ShareX.Ava.Core.SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
 
             if (!IsSupported || !useModern)
@@ -197,7 +191,7 @@ namespace ShareX.Ava.Platform.Windows
 
             // Group outputs by adapter to share ID3D11Device
             var outputsByAdapter = outputs.GroupBy(x => x.Adapter).ToList();
-            
+
             // Track resources for batch processing
             var activeDuplications = new List<(IDXGIOutputDuplication Duplication, ID3D11Device Device, ID3D11Texture2D Staging, System.Drawing.Rectangle Bounds)>();
             var devicesToDispose = new List<ID3D11Device>();
@@ -205,12 +199,12 @@ namespace ShareX.Ava.Platform.Windows
             try
             {
                 // 1. Initialize all duplications (Create Devices & Duplications)
-                foreach(var group in outputsByAdapter)
+                foreach (var group in outputsByAdapter)
                 {
                     var adapter = group.Key;
-                    
+
                     // Create one device per adapter
-                    if (D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, DeviceCreationFlags.BgraSupport, 
+                    if (D3D11.D3D11CreateDevice(adapter, DriverType.Unknown, DeviceCreationFlags.BgraSupport,
                         new[] { FeatureLevel.Level_11_1, FeatureLevel.Level_11_0 }, out var device).Failure || device == null)
                     {
                         continue;
@@ -219,7 +213,7 @@ namespace ShareX.Ava.Platform.Windows
 
                     // using var deviceContext = device.ImmediateContext; // REMOVED: Premature disposal causes NRE later
 
-                    foreach(var (output, _, bounds) in group)
+                    foreach (var (output, _, bounds) in group)
                     {
                         try
                         {
@@ -247,7 +241,7 @@ namespace ShareX.Ava.Platform.Windows
                         catch (Exception ex)
                         {
                             // Output might be disconnected or in use
-                             ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Setup failed for output. {ex}");
+                            ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Setup failed for output. {ex}");
                         }
                         finally
                         {
@@ -264,16 +258,16 @@ namespace ShareX.Ava.Platform.Windows
                 }
 
                 // 3. Acquire & Process Frames
-                foreach(var (duplication, device, staging, bounds) in activeDuplications)
+                foreach (var (duplication, device, staging, bounds) in activeDuplications)
                 {
                     try
                     {
                         // Acquire frame
                         var acquireResult = duplication.AcquireNextFrame(250, out var frameInfo, out var desktopResource);
-                        
+
                         if (acquireResult.Success && desktopResource != null)
                         {
-                            using(desktopResource)
+                            using (desktopResource)
                             {
                                 using var desktopTex = desktopResource.QueryInterface<ID3D11Texture2D>();
                                 device.ImmediateContext.CopyResource(staging, desktopTex);
@@ -294,12 +288,12 @@ namespace ShareX.Ava.Platform.Windows
                         }
                         else
                         {
-                             ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: AcquireFrame failed or timed out.");
+                            ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: AcquireFrame failed or timed out.");
                         }
                     }
                     catch (Exception ex)
                     {
-                         ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Frame capture failed. {ex}");
+                        ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Frame capture failed. {ex}");
                     }
                     finally
                     {
@@ -310,10 +304,10 @@ namespace ShareX.Ava.Platform.Windows
             }
             finally
             {
-                foreach(var d in devicesToDispose) d.Dispose();
-                
+                foreach (var d in devicesToDispose) d.Dispose();
+
                 // Dispose unique adapters
-                foreach(var group in outputsByAdapter)
+                foreach (var group in outputsByAdapter)
                 {
                     group.Key.Dispose();
                 }
@@ -327,7 +321,7 @@ namespace ShareX.Ava.Platform.Windows
             // Create a temporary SKBitmap wrapping the data
             // Note: We cannot wrap directly because SKBitmap doesn't support strided data easily without copy or specialized installPixels
             // For simplicity and safety (handling pitch), we copy row by row to a temp bitmap
-            
+
             using var tempBitmap = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
             var destPixels = tempBitmap.GetPixels();
             int srcPitch = (int)dataBox.RowPitch;
@@ -339,18 +333,18 @@ namespace ShareX.Ava.Platform.Windows
                 {
                     IntPtr srcRow = IntPtr.Add(dataBox.DataPointer, y * srcPitch);
                     IntPtr destRow = IntPtr.Add(destPixels, y * destPitch);
-                    
+
                     Buffer.MemoryCopy((void*)srcRow, (void*)destRow, destPitch, destPitch);
                 }
             }
-            
+
             canvas.DrawBitmap(tempBitmap, destX, destY);
         }
 
         /// <summary>
         /// Enumerates all DXGI outputs from all adapters
         /// </summary>
-        private System.Collections.Generic.List<(IDXGIOutput1 Output, IDXGIAdapter1 Adapter, System.Drawing.Rectangle Bounds)> 
+        private System.Collections.Generic.List<(IDXGIOutput1 Output, IDXGIAdapter1 Adapter, System.Drawing.Rectangle Bounds)>
             EnumerateOutputs(IDXGIFactory1 factory)
         {
             var outputs = new System.Collections.Generic.List<(IDXGIOutput1, IDXGIAdapter1, System.Drawing.Rectangle)>();

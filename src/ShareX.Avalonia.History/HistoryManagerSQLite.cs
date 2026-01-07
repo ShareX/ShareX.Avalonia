@@ -26,9 +26,6 @@
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
 using ShareX.Ava.Common;
-using ShareX.Ava.Common.Helpers;
-using System;
-using System.Collections.Generic;
 
 namespace ShareX.Ava.History
 {

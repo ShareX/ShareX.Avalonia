@@ -23,8 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.Common;
+using ShareX.Ava.Platform.Abstractions;
 
 namespace ShareX.Ava.Platform.Windows
 {
@@ -39,7 +39,7 @@ namespace ShareX.Ava.Platform.Windows
         public static void Initialize(IScreenCaptureService? screenCaptureService = null)
         {
             var screenService = new WindowsScreenService();
-            
+
             // If no service provided, use modern DXGI capture if supported, otherwise GDI+
             if (screenCaptureService == null)
             {
@@ -54,7 +54,7 @@ namespace ShareX.Ava.Platform.Windows
                     screenCaptureService = new WindowsScreenCaptureService(screenService);
                 }
             }
-            
+
             PlatformServices.Initialize(
                 platformInfo: new WindowsPlatformInfo(),
                 screenService: screenService,

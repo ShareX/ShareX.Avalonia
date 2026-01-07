@@ -23,15 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
 using ShareX.Ava.Core;
 using ShareX.Ava.Platform.Abstractions;
-using ShareX.Editor.ViewModels;
 using ShareX.Ava.UI.ViewModels;
+using ShareX.Editor.ViewModels;
 using SkiaSharp;
 
 namespace ShareX.Ava.UI.Services
@@ -44,14 +42,14 @@ namespace ShareX.Ava.UI.Services
             {
                 // Create independent Editor Window
                 var editorWindow = new Views.EditorWindow();
-                
+
                 // Create independent ViewModel for this editor instance
                 var editorViewModel = new MainViewModel();
                 editorViewModel.ShowCaptureToolbar = false;
-                
+
                 // Set DataContext BEFORE initializing preview so bindings update correctly
                 editorWindow.DataContext = editorViewModel;
-                
+
                 // Initialize the preview image
                 editorViewModel.UpdatePreview(image);
 

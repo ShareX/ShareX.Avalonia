@@ -23,10 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace ShareX.Ava.Common
 {
     public class TaskEx<T>

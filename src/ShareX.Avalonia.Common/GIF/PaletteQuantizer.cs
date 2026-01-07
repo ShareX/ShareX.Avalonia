@@ -23,10 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using System.Collections;
-using System.Collections.Generic;
 using SkiaSharp;
-using ShareX.Ava.Common.GIF;
+using System.Collections;
 
 namespace ShareX.Ava.Common.GIF
 {

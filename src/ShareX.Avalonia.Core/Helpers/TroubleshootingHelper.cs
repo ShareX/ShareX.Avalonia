@@ -23,9 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using System;
 using System.Diagnostics;
-using System.IO;
 
 namespace ShareX.Ava.Core.Helpers
 {

@@ -1,5 +1,3 @@
-using System;
-
 namespace ShareX.Ava.Common.Native
 {
     public class DWMManager : IDisposable

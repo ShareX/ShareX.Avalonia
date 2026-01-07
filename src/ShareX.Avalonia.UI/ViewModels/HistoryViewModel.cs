@@ -1,19 +1,14 @@
-using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using Avalonia;
 using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
-using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Core;
 using ShareX.Ava.Common;
-using ShareX.Ava.Core.Tasks;
+using ShareX.Ava.Core;
 using ShareX.Ava.History;
 using SkiaSharp;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 namespace ShareX.Ava.UI.ViewModels
 {
@@ -29,14 +24,14 @@ namespace ShareX.Ava.UI.ViewModels
             {
                 if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
                     return null;
-                
+
                 try
                 {
                     // Check if it's an image file
                     var ext = Path.GetExtension(filePath).ToLowerInvariant();
                     if (ext != ".png" && ext != ".jpg" && ext != ".jpeg" && ext != ".gif" && ext != ".bmp" && ext != ".webp")
                         return null;
-                    
+
                     // Load with decode size for memory efficiency (thumbnail size)
                     using var stream = File.OpenRead(filePath);
                     return Bitmap.DecodeToWidth(stream, 180); // Decode to thumbnail width
@@ -61,18 +56,18 @@ namespace ShareX.Ava.UI.ViewModels
         public HistoryViewModel()
         {
             HistoryItems = new ObservableCollection<HistoryItem>();
-            
+
             // Create history manager with centralized path
             var historyPath = SettingManager.GetHistoryFilePath();
             DebugHelper.WriteLine($"HistoryViewModel - History file path: {historyPath}");
 
             _historyManager = new HistoryManagerSQLite(historyPath);
-            
+
             // Configure backup settings similar to JSON files
             _historyManager.BackupFolder = SettingManager.HistoryBackupFolder;
             _historyManager.CreateBackup = true;
             _historyManager.CreateWeeklyBackup = true;
-            
+
             // Don't load history in constructor - do it asynchronously after view is displayed
             LoadHistoryAsync();
         }
@@ -81,22 +76,22 @@ namespace ShareX.Ava.UI.ViewModels
         private async Task LoadHistoryAsync()
         {
             if (IsLoading) return;
-            
+
             IsLoading = true;
             try
             {
                 var historyPath = SettingManager.GetHistoryFilePath();
                 DebugHelper.WriteLine($"History.xml location: {historyPath} (exists={File.Exists(historyPath)})");
-                
+
                 // Load history on background thread to avoid blocking UI
                 var items = await _historyManager.GetHistoryItemsAsync();
-                
+
                 HistoryItems.Clear();
                 foreach (var item in items)
                 {
                     HistoryItems.Add(item);
                 }
-                
+
                 DebugHelper.WriteLine($"History loaded: {HistoryItems.Count} items");
             }
             catch (Exception ex)
@@ -167,7 +162,7 @@ namespace ShareX.Ava.UI.ViewModels
         private void OpenFolder(HistoryItem? item)
         {
             if (item == null || string.IsNullOrEmpty(item.FilePath)) return;
-            
+
             FileHelpers.OpenFolderWithFile(item.FilePath);
         }
 
@@ -179,7 +174,7 @@ namespace ShareX.Ava.UI.ViewModels
             try
             {
                 // Get clipboard from the main window
-                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop 
+                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                     && desktop.MainWindow != null)
                 {
                     var clipboard = desktop.MainWindow.Clipboard;
@@ -203,7 +198,7 @@ namespace ShareX.Ava.UI.ViewModels
             try
             {
                 // Get clipboard from the main window
-                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop 
+                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
                     && desktop.MainWindow != null)
                 {
                     var clipboard = desktop.MainWindow.Clipboard;
@@ -227,10 +222,10 @@ namespace ShareX.Ava.UI.ViewModels
             // Show confirmation dialog
             var confirmDelete = await ShowDeleteConfirmationDialog(item.FileName);
             if (!confirmDelete) return;
-            
+
             // Remove from the observable collection (UI update)
             HistoryItems.Remove(item);
-            
+
             // Persist deletion to database
             _historyManager.Delete(item);
             DebugHelper.WriteLine($"Deleted history item: {item.FileName}");

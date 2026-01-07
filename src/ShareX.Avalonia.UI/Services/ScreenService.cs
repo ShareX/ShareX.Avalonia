@@ -23,8 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using System.Drawing;
 using ShareX.Ava.Platform.Abstractions;
+using System.Drawing;
 
 namespace ShareX.Ava.UI.Services
 {

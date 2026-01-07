@@ -23,13 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 using ShareX.Ava.Common;
 using ShareX.Ava.Platform.Abstractions;
 using SkiaSharp;
+using System.Diagnostics;
 
 namespace ShareX.Ava.Platform.Linux
 {
@@ -42,7 +39,7 @@ namespace ShareX.Ava.Platform.Linux
         /// <summary>
         /// Check if running on Wayland (where X11 APIs don't work)
         /// </summary>
-        public static bool IsWayland => 
+        public static bool IsWayland =>
             Environment.GetEnvironmentVariable("XDG_SESSION_TYPE")?.Equals("wayland", StringComparison.OrdinalIgnoreCase) == true;
 
         public async Task<SKBitmap?> CaptureRegionAsync(CaptureOptions? options = null)
@@ -167,11 +164,11 @@ namespace ShareX.Ava.Platform.Linux
         private async Task<SKBitmap?> CaptureWithToolAsync(string toolName, string argsPrefix)
         {
             var tempFile = Path.Combine(Path.GetTempPath(), $"sharex_screenshot_{Guid.NewGuid():N}.png");
-            
+
             try
             {
-                var arguments = string.IsNullOrEmpty(argsPrefix) 
-                    ? $"\"{tempFile}\"" 
+                var arguments = string.IsNullOrEmpty(argsPrefix)
+                    ? $"\"{tempFile}\""
                     : $"{argsPrefix} \"{tempFile}\"";
 
                 var startInfo = new ProcessStartInfo
@@ -194,14 +191,14 @@ namespace ShareX.Ava.Platform.Linux
                     try { process.Kill(); } catch { }
                     return null;
                 }
-                
+
                 if (process.ExitCode != 0 || !File.Exists(tempFile))
                 {
                     return null;
                 }
 
                 DebugHelper.WriteLine($"LinuxScreenCaptureService: Screenshot captured with {toolName}");
-                
+
                 using var stream = File.OpenRead(tempFile);
                 return SKBitmap.Decode(stream);
             }

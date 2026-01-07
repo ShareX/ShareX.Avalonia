@@ -1,34 +1,25 @@
-using Avalonia;
 using Avalonia.Controls;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Avalonia.Controls.Shapes;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Avalonia.Media;
+using FluentAvalonia.UI.Controls;
 using ShareX.Ava.Core;
 using ShareX.Ava.Core.Managers;
 using ShareX.Ava.Core.Tasks;
-using ShareX.Ava.UI.ViewModels;
 using ShareX.Editor.Annotations;
 using ShareX.Editor.ViewModels;
 using ShareX.Editor.Views;
-using ShareX.Ava.Platform.Abstractions;
-using FluentAvalonia.UI.Controls;
 
 namespace ShareX.Ava.UI.Views
 {
     public partial class MainWindow : Window
     {
         private EditorView? _editorView;
-        
+
         public MainWindow()
         {
             InitializeComponent();
             KeyDown += OnKeyDown;
-            
+
             // Initial Navigation
             var navView = this.FindControl<NavigationView>("NavView");
             if (navView != null)
@@ -46,7 +37,7 @@ namespace ShareX.Ava.UI.Views
         {
             // Maximize window and center it on screen
             this.WindowState = Avalonia.Controls.WindowState.Maximized;
-            
+
             // Update navigation items after settings are loaded
             var navView = this.FindControl<NavigationView>("NavView");
             if (navView != null)
@@ -59,17 +50,17 @@ namespace ShareX.Ava.UI.Views
         {
             AvaloniaXamlLoader.Load(this);
         }
-        
+
         private void OnNavSelectionChanged(object? sender, NavigationViewSelectionChangedEventArgs e)
         {
             var navView = sender as NavigationView;
             var contentFrame = this.FindControl<ContentControl>("ContentFrame");
             var selectedItem = navView?.SelectedItem as NavigationViewItem;
-            
+
             if (contentFrame != null && selectedItem != null && DataContext is MainViewModel vm)
             {
                 var tag = selectedItem.Tag?.ToString();
-                
+
                 switch (tag)
                 {
                     case "Capture_0":
@@ -118,7 +109,7 @@ namespace ShareX.Ava.UI.Views
         private void OnKeyDown(object? sender, KeyEventArgs e)
         {
             if (DataContext is not MainViewModel vm) return;
-            
+
             // Skip if typing in a text input
             if (e.Source is TextBox) return;
 
@@ -227,13 +218,13 @@ namespace ShareX.Ava.UI.Views
         }
 
 
-        
+
         protected override void OnDataContextChanged(EventArgs e)
         {
             base.OnDataContextChanged(e);
             // Setup listeners if needed
         }
-            public void NavigateToEditor()
+        public void NavigateToEditor()
         {
             var navView = this.FindControl<NavigationView>("NavView");
             if (navView != null)
@@ -248,20 +239,20 @@ namespace ShareX.Ava.UI.Views
                     }
                 }
             }
-            
+
             // Ensure window is visible and active
             if (!this.IsVisible)
             {
                 this.Show();
             }
-            
+
             if (this.WindowState == Avalonia.Controls.WindowState.Minimized)
             {
                 this.WindowState = Avalonia.Controls.WindowState.Maximized;
             }
-            
+
             this.Activate();
-this.Focus();
+            this.Focus();
         }
 
         public void NavigateToSettings()
@@ -328,7 +319,7 @@ this.Focus();
             void HandleTaskCompleted(object? s, WorkerTask task)
             {
                 TaskManager.Instance.TaskCompleted -= HandleTaskCompleted;
-                
+
                 if (task.Info?.Metadata?.Image != null && DataContext is MainViewModel vm)
                 {
                     vm.UpdatePreview(task.Info.Metadata.Image);

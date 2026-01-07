@@ -175,7 +175,7 @@ namespace ShareX.Ava.Common
                 // Actually, standard ToString of enum is "NumPad0".
                 // I'll keep original logic exactly as is to match behavior.
             }
-            
+
             // Re-implementing strictly as original:
             /*
             for (int i = 0; i < name.Length; i++)

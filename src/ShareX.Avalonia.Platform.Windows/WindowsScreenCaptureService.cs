@@ -23,10 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Drawing;
-using System.IO;
-using System.Threading.Tasks;
 using ShareX.Ava.Platform.Abstractions;
 using SkiaSharp;
 
@@ -61,7 +57,7 @@ namespace ShareX.Ava.Platform.Windows
                         {
                             graphics.CopyFromScreen((int)rect.Left, (int)rect.Top, 0, 0, new Size((int)rect.Width, (int)rect.Height));
                         }
-                        
+
                         return ToSKBitmap(bitmap);
                     }
                 }
@@ -99,7 +95,7 @@ namespace ShareX.Ava.Platform.Windows
                         {
                             graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
                         }
-                        
+
                         return ToSKBitmap(bitmap);
                     }
                 }
@@ -131,7 +127,7 @@ namespace ShareX.Ava.Platform.Windows
                         {
                             graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
                         }
-                        
+
                         return ToSKBitmap(bitmap);
                     }
                 }
@@ -163,7 +159,7 @@ namespace ShareX.Ava.Platform.Windows
                         {
                             graphics.CopyFromScreen(bounds.X, bounds.Y, 0, 0, bounds.Size);
                         }
-                        
+
                         return ToSKBitmap(bitmap);
                     }
                 }

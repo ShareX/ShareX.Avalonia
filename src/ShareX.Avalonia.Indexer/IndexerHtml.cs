@@ -24,8 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using System;
-using System.IO;
 using System.Net;
 using System.Text;
 

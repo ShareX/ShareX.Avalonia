@@ -23,7 +23,6 @@
 
 #endregion License Information (GPL v3)
 
-using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ShareX.Ava.Core;
@@ -193,7 +192,7 @@ namespace ShareX.Ava.UI.ViewModels
         partial void OnIsPluginExtensionRegisteredChanged(bool value)
         {
             if (_isLoading) return; // Don't trigger during initial load
-            
+
             ShareX.Ava.Core.Integration.IntegrationHelper.SetPluginExtensionRegistration(value);
         }
 
@@ -404,8 +403,8 @@ namespace ShareX.Ava.UI.ViewModels
         private void LoadSettings()
         {
             var settings = SettingManager.Settings;
-            
-            ScreenshotsFolder = settings.CustomScreenshotsPath ?? 
+
+            ScreenshotsFolder = settings.CustomScreenshotsPath ??
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ShareX");
             SaveImageSubFolderPattern = settings.SaveImageSubFolderPattern ?? "%y-%mo";
             UseCustomScreenshotsPath = settings.UseCustomScreenshotsPath;
@@ -421,7 +420,7 @@ namespace ShareX.Ava.UI.ViewModels
             var taskSettings = settings.DefaultTaskSettings;
             PlaySoundAfterCapture = taskSettings.GeneralSettings.PlaySoundAfterCapture;
             ShowToastNotification = taskSettings.GeneralSettings.ShowToastNotificationAfterTaskCompleted;
-            
+
             // Task Settings - Capture
             ShowCursor = taskSettings.CaptureSettings.ShowCursor;
             ScreenshotDelay = (double)taskSettings.CaptureSettings.ScreenshotDelay;
@@ -438,7 +437,7 @@ namespace ShareX.Ava.UI.ViewModels
             URLRegexReplace = taskSettings.UploadSettings.URLRegexReplace;
             URLRegexReplacePattern = taskSettings.UploadSettings.URLRegexReplacePattern;
             URLRegexReplaceReplacement = taskSettings.UploadSettings.URLRegexReplaceReplacement;
-            
+
             // Integration Settings
             SupportsFileAssociations = OperatingSystem.IsWindows();
             IsPluginExtensionRegistered = ShareX.Ava.Core.Integration.IntegrationHelper.IsPluginExtensionRegistered();
@@ -447,7 +446,7 @@ namespace ShareX.Ava.UI.ViewModels
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)
         {
             base.OnPropertyChanged(e);
-            
+
             // Auto-save when any property changes (after initial load)
             if (!_isLoading && e.PropertyName != nameof(HotkeySettings))
             {
@@ -459,7 +458,7 @@ namespace ShareX.Ava.UI.ViewModels
         private void SaveSettings()
         {
             var settings = SettingManager.Settings;
-            
+
             settings.CustomScreenshotsPath = ScreenshotsFolder;
             settings.SaveImageSubFolderPattern = SaveImageSubFolderPattern;
             settings.UseCustomScreenshotsPath = UseCustomScreenshotsPath;
@@ -475,7 +474,7 @@ namespace ShareX.Ava.UI.ViewModels
             var taskSettings = settings.DefaultTaskSettings;
             taskSettings.GeneralSettings.PlaySoundAfterCapture = PlaySoundAfterCapture;
             taskSettings.GeneralSettings.ShowToastNotificationAfterTaskCompleted = ShowToastNotification;
-            
+
             taskSettings.CaptureSettings.ShowCursor = ShowCursor;
             taskSettings.CaptureSettings.ScreenshotDelay = (decimal)ScreenshotDelay;
             taskSettings.CaptureSettings.CaptureTransparent = CaptureTransparent;
@@ -490,7 +489,7 @@ namespace ShareX.Ava.UI.ViewModels
             taskSettings.UploadSettings.URLRegexReplace = URLRegexReplace;
             taskSettings.UploadSettings.URLRegexReplacePattern = URLRegexReplacePattern;
             taskSettings.UploadSettings.URLRegexReplaceReplacement = URLRegexReplaceReplacement;
-            
+
             SettingManager.SaveApplicationConfig();
         }
 

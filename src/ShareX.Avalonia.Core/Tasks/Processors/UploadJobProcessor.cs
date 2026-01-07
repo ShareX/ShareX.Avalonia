@@ -1,13 +1,6 @@
-using System;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using ShareX.Ava.Core;
 using ShareX.Ava.Common;
-using ShareX.Ava.Core.Tasks;
-using ShareX.Ava.Uploaders;
-using ShareX.Ava.Common.Helpers;
 using ShareX.Ava.Platform.Abstractions;
+using ShareX.Ava.Uploaders;
 using ShareX.Ava.Uploaders.PluginSystem;
 
 namespace ShareX.Ava.Core.Tasks.Processors
@@ -36,14 +29,14 @@ namespace ShareX.Ava.Core.Tasks.Processors
             DebugHelper.WriteLine($"Starting upload for {info.FileName}...");
             DebugHelper.WriteLine($"Upload data type: {info.DataType}, FilePath: {info.FilePath}");
             DebugHelper.WriteLine($"Image destination: {info.TaskSettings.ImageDestination}");
-            
+
             // Wrap legacy synchronous upload in Task.Run
             result = await Task.Run(() => Upload(info), token);
 
             if (result != null)
             {
                 info.Result = result;
-                
+
                 if (result.IsSuccess)
                 {
                     DebugHelper.WriteLine($"Upload successful: {result.URL}");
@@ -71,13 +64,13 @@ namespace ShareX.Ava.Core.Tasks.Processors
                 }
                 else if (info.DataType == EDataType.Text)
                 {
-                     // Return UploadText(info);
-                     return null; // TODO implement text
+                    // Return UploadText(info);
+                    return null; // TODO implement text
                 }
                 else if (info.DataType == EDataType.File)
                 {
-                     // Return UploadFile(info);
-                     return null; // TODO implement file
+                    // Return UploadFile(info);
+                    return null; // TODO implement file
                 }
             }
             catch (Exception ex)
@@ -92,40 +85,40 @@ namespace ShareX.Ava.Core.Tasks.Processors
         private UploadResult? UploadImage(TaskInfo info)
         {
             var destination = info.TaskSettings.ImageDestination;
-            
+
             if (UploaderFactory.ImageUploaderServices.TryGetValue(destination, out var service))
             {
-                 // Create TaskReferenceHelper
-                 var helper = new TaskReferenceHelper() 
-                 {
-                     DataType = EDataType.Image,
-                     StopRequested = false, // TODO: Bind to cancellation token?
-                     OverrideFTP = info.TaskSettings.OverrideFTP,
-                     FTPIndex = info.TaskSettings.FTPIndex,
-                     OverrideCustomUploader = info.TaskSettings.OverrideCustomUploader,
-                     CustomUploaderIndex = info.TaskSettings.CustomUploaderIndex
-                 };
+                // Create TaskReferenceHelper
+                var helper = new TaskReferenceHelper()
+                {
+                    DataType = EDataType.Image,
+                    StopRequested = false, // TODO: Bind to cancellation token?
+                    OverrideFTP = info.TaskSettings.OverrideFTP,
+                    FTPIndex = info.TaskSettings.FTPIndex,
+                    OverrideCustomUploader = info.TaskSettings.OverrideCustomUploader,
+                    CustomUploaderIndex = info.TaskSettings.CustomUploaderIndex
+                };
 
-                 var uploader = service.CreateUploader(SettingManager.UploadersConfig, helper); 
-                 
-                 if (uploader is GenericUploader genericUploader)
-                 {
-                     // Get image stream with correct format/quality settings
-                     using (MemoryStream? ms = TaskHelpers.SaveImageAsStream(info.Metadata.Image, info.TaskSettings.ImageSettings.ImageFormat, info.TaskSettings))
-                     {
-                         if (ms != null)
-                         {
-                             ms.Position = 0;
-                             return genericUploader.Upload(ms, info.FileName);
-                         }
-                     }
-                 }
+                var uploader = service.CreateUploader(SettingManager.UploadersConfig, helper);
+
+                if (uploader is GenericUploader genericUploader)
+                {
+                    // Get image stream with correct format/quality settings
+                    using (MemoryStream? ms = TaskHelpers.SaveImageAsStream(info.Metadata.Image, info.TaskSettings.ImageSettings.ImageFormat, info.TaskSettings))
+                    {
+                        if (ms != null)
+                        {
+                            ms.Position = 0;
+                            return genericUploader.Upload(ms, info.FileName);
+                        }
+                    }
+                }
             }
 
             DebugHelper.WriteLine($"No legacy uploader service found for destination: {destination}");
             return UploadImageWithPluginSystem(info) ??
                 new UploadResult { IsSuccess = false, Response = "Uploader service not found or initialization failed." };
-            
+
         }
 
         private UploadResult? UploadImageWithPluginSystem(TaskInfo info)

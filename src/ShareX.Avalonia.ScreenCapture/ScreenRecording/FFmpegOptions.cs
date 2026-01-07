@@ -24,8 +24,6 @@
 #endregion License Information (GPL v3)
 
 using ShareX.Ava.Common;
-using ShareX.Ava.Common.Helpers;
-using System;
 
 namespace ShareX.Ava.ScreenCapture
 {

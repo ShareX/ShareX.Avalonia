@@ -26,7 +26,6 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
-using System.IO;
 using System.Text;
 
 namespace ShareX.Ava.Common

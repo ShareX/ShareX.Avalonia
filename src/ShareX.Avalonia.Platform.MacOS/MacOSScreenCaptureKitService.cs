@@ -23,14 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using System;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using ShareX.Ava.Common;
 using ShareX.Ava.Platform.Abstractions;
 using ShareX.Ava.Platform.MacOS.Native;
 using SkiaSharp;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace ShareX.Ava.Platform.MacOS
 {
@@ -48,7 +46,7 @@ namespace ShareX.Ava.Platform.MacOS
         {
             _fallbackService = new MacOSScreenshotService();
             _nativeAvailable = CheckNativeAvailability();
-            
+
             if (_nativeAvailable)
             {
                 DebugHelper.WriteLine("[ScreenCaptureKit] Native library loaded successfully");
@@ -124,20 +122,20 @@ namespace ShareX.Ava.Platform.MacOS
             try
             {
                 DebugHelper.WriteLine("[ScreenCaptureKit] Starting fullscreen capture");
-                
+
                 int result = ScreenCaptureKitInterop.CaptureFullscreen(out dataPtr, out int length);
-                
+
                 if (result != ScreenCaptureKitInterop.SUCCESS)
                 {
                     DebugHelper.WriteLine($"[ScreenCaptureKit] Capture failed: {ScreenCaptureKitInterop.GetErrorMessage(result)}");
-                    
+
                     // Fall back to CLI if permission denied
                     if (result == ScreenCaptureKitInterop.ERROR_PERMISSION_DENIED)
                     {
                         DebugHelper.WriteLine("[ScreenCaptureKit] Falling back to CLI due to permission issue");
                         return _fallbackService.CaptureFullScreenAsync().GetAwaiter().GetResult();
                     }
-                    
+
                     return null;
                 }
 
@@ -150,7 +148,7 @@ namespace ShareX.Ava.Platform.MacOS
                 var bitmap = DecodePngFromPointer(dataPtr, length);
                 stopwatch.Stop();
                 DebugHelper.WriteLine($"[ScreenCaptureKit] Fullscreen capture completed in {stopwatch.ElapsedMilliseconds}ms, size={bitmap?.Width}x{bitmap?.Height}");
-                
+
                 return bitmap;
             }
             catch (Exception ex)
@@ -175,11 +173,11 @@ namespace ShareX.Ava.Platform.MacOS
             try
             {
                 DebugHelper.WriteLine($"[ScreenCaptureKit] Starting rect capture: {rect.Left},{rect.Top},{rect.Width}x{rect.Height}");
-                
+
                 int result = ScreenCaptureKitInterop.CaptureRect(
                     rect.Left, rect.Top, rect.Width, rect.Height,
                     out dataPtr, out int length);
-                
+
                 if (result != ScreenCaptureKitInterop.SUCCESS)
                 {
                     DebugHelper.WriteLine($"[ScreenCaptureKit] Capture failed: {ScreenCaptureKitInterop.GetErrorMessage(result)}");
@@ -195,7 +193,7 @@ namespace ShareX.Ava.Platform.MacOS
                 var bitmap = DecodePngFromPointer(dataPtr, length);
                 stopwatch.Stop();
                 DebugHelper.WriteLine($"[ScreenCaptureKit] Rect capture completed in {stopwatch.ElapsedMilliseconds}ms, size={bitmap?.Width}x{bitmap?.Height}");
-                
+
                 return bitmap;
             }
             catch (Exception ex)
@@ -218,7 +216,7 @@ namespace ShareX.Ava.Platform.MacOS
             {
                 var bytes = new byte[length];
                 Marshal.Copy(dataPtr, bytes, 0, length);
-                
+
                 using var stream = new System.IO.MemoryStream(bytes);
                 return SKBitmap.Decode(stream);
             }
