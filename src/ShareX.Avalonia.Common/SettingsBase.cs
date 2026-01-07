@@ -29,7 +29,7 @@ using System.ComponentModel;
 using System.IO.Compression;
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public abstract class SettingsBase<T> where T : SettingsBase<T>, new()
     {

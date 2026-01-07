@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Platform.Linux
+namespace XerahS.Platform.Linux
 {
     internal static class NativeMethods
     {

@@ -3,14 +3,14 @@ using Avalonia.Data.Converters;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.History;
+using XerahS.Common;
+using XerahS.Core;
+using XerahS.History;
 using SkiaSharp;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 
-namespace ShareX.Ava.UI.ViewModels
+namespace XerahS.UI.ViewModels
 {
     public partial class HistoryViewModel : ViewModelBase, IDisposable
     {
@@ -130,7 +130,7 @@ namespace ShareX.Ava.UI.ViewModels
                 if (skBitmap == null) return;
 
                 // Open in Editor using the platform service
-                await ShareX.Ava.Platform.Abstractions.PlatformServices.UI.ShowEditorAsync(skBitmap);
+                await XerahS.Platform.Abstractions.PlatformServices.UI.ShowEditorAsync(skBitmap);
             }
             catch (Exception ex)
             {

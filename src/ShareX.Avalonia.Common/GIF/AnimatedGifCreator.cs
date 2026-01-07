@@ -25,7 +25,7 @@
 
 using SkiaSharp;
 
-namespace ShareX.Ava.Common.GIF
+namespace XerahS.Common.GIF
 {
     public class AnimatedGifCreator : IDisposable
     {

@@ -28,7 +28,7 @@
 using System.Drawing;
 using System.Text.RegularExpressions;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class ColorHelpers
     {

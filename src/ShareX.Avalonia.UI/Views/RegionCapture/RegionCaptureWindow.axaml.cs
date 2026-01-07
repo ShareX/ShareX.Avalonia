@@ -29,22 +29,22 @@ using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using ShareX.Ava.Core.Helpers;
+using XerahS.Core.Helpers;
 using SkiaSharp;
 using System.Diagnostics;
 using Path = Avalonia.Controls.Shapes.Path;
 using Point = Avalonia.Point;
 using Rectangle = Avalonia.Controls.Shapes.Rectangle;
 
-namespace ShareX.Ava.UI.Views.RegionCapture
+namespace XerahS.UI.Views.RegionCapture
 {
     public partial class RegionCaptureWindow : Window
     {
         private SKPointI GetGlobalMousePosition()
         {
-            if (ShareX.Ava.Platform.Abstractions.PlatformServices.IsInitialized)
+            if (XerahS.Platform.Abstractions.PlatformServices.IsInitialized)
             {
-                var p = ShareX.Ava.Platform.Abstractions.PlatformServices.Input.GetCursorPosition();
+                var p = XerahS.Platform.Abstractions.PlatformServices.Input.GetCursorPosition();
                 return new SKPointI(p.X, p.Y);
             }
             return new SKPointI(0, 0);
@@ -74,8 +74,8 @@ namespace ShareX.Ava.UI.Views.RegionCapture
         private readonly Stopwatch _openStopwatch = Stopwatch.StartNew();
 
         // Window detection
-        private ShareX.Ava.Platform.Abstractions.WindowInfo[]? _windows;
-        private ShareX.Ava.Platform.Abstractions.WindowInfo? _hoveredWindow;
+        private XerahS.Platform.Abstractions.WindowInfo[]? _windows;
+        private XerahS.Platform.Abstractions.WindowInfo? _hoveredWindow;
         private bool _dragStarted;
         private const int DragThreshold = 5;
 
@@ -153,9 +153,9 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             DebugLog("LIFECYCLE", $"OnOpened started (elapsed {_openStopwatch.ElapsedMilliseconds}ms since ctor)");
             DebugLog("WINDOW", $"OnOpened state: RenderScaling={RenderScaling}, Position={Position}, Bounds={Bounds}, ClientSize={ClientSize}");
 
-            if (ShareX.Ava.Platform.Abstractions.PlatformServices.IsInitialized)
+            if (XerahS.Platform.Abstractions.PlatformServices.IsInitialized)
             {
-                var screenService = ShareX.Ava.Platform.Abstractions.PlatformServices.Screen;
+                var screenService = XerahS.Platform.Abstractions.PlatformServices.Screen;
                 _usePerScreenScalingForLayout = screenService?.UsePerScreenScalingForRegionCaptureLayout ?? false;
                 _useWindowPositionForFallback = screenService?.UseWindowPositionForRegionCaptureFallback ?? false;
                 _useLogicalCoordinatesForCapture = screenService?.UseLogicalCoordinatesForRegionCapture ?? false;
@@ -164,12 +164,12 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 _myHandle = this.TryGetPlatformHandle()?.Handle ?? IntPtr.Zero;
 
                 // Initialize window list for detection
-                if (ShareX.Ava.Platform.Abstractions.PlatformServices.Window != null)
+                if (XerahS.Platform.Abstractions.PlatformServices.Window != null)
                 {
                     try
                     {
                         // Fetch windows (Z-ordered) and filter visible ones
-                        _windows = ShareX.Ava.Platform.Abstractions.PlatformServices.Window.GetAllWindows()
+                        _windows = XerahS.Platform.Abstractions.PlatformServices.Window.GetAllWindows()
                             .Where(w => w.IsVisible && !IsMyWindow(w))
                             .ToArray();
                         DebugLog("WINDOW", $"Fetched {_windows.Length} visible windows for detection");
@@ -265,7 +265,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                 _useDarkening = allScreensStandardDpi;
                 var container = this.FindControl<Canvas>("BackgroundContainer");
 
-                if (_useDarkening && container != null && ShareX.Ava.Platform.Abstractions.PlatformServices.IsInitialized)
+                if (_useDarkening && container != null && XerahS.Platform.Abstractions.PlatformServices.IsInitialized)
                 {
                     DebugLog("IMAGE", "Enabling background images and darkening (Standard DPI detected)");
                     container.Children.Clear();
@@ -284,7 +284,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
                         DebugLog("IMAGE", $"Screen {screenIndex} capture rect: {skScreenRect}");
 
                         var captureStopwatch = Stopwatch.StartNew();
-                        var screenshot = await ShareX.Ava.Platform.Abstractions.PlatformServices.ScreenCapture.CaptureRectAsync(skScreenRect);
+                        var screenshot = await XerahS.Platform.Abstractions.PlatformServices.ScreenCapture.CaptureRectAsync(skScreenRect);
                         captureStopwatch.Stop();
                         DebugLog("IMAGE", $"Screen {screenIndex} capture duration: {captureStopwatch.ElapsedMilliseconds}ms");
 
@@ -724,7 +724,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
 
         private IntPtr _myHandle;
 
-        private bool IsMyWindow(ShareX.Ava.Platform.Abstractions.WindowInfo w)
+        private bool IsMyWindow(XerahS.Platform.Abstractions.WindowInfo w)
         {
             if (_myHandle != IntPtr.Zero && w.Handle == _myHandle) return true;
 

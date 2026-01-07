@@ -25,7 +25,7 @@
 
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class StreamExtensions
     {

@@ -26,7 +26,7 @@
 using System.Xml;
 using System.Xml.Linq;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class XMLExtensions
     {

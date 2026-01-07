@@ -27,7 +27,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 
-namespace ShareX.Ava.Common;
+namespace XerahS.Common;
 
 /// <summary>
 /// General helper methods

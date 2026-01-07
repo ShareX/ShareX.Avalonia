@@ -29,7 +29,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace ShareX.Ava.Common;
+namespace XerahS.Common;
 
 public static class FileHelpers
 {

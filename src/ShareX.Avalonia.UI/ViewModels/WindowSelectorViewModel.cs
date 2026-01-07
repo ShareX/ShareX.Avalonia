@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Collections.ObjectModel;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 public partial class WindowSelectorViewModel : ViewModelBase
 {

@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Media
+namespace XerahS.Media
 {
     public class VideoThumbnailInfo
     {

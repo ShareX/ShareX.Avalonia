@@ -23,21 +23,21 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Uploaders;
+using XerahS.Common;
+using XerahS.Uploaders;
 using System.ComponentModel;
 
 namespace ShareX.UploadersLib.FileUploaders
 {
-    public class FTPAccount : ShareX.Ava.Uploaders.FileUploaders.FTPAccount
+    public class FTPAccount : XerahS.Uploaders.FileUploaders.FTPAccount
     {
     }
 
-    public class AmazonS3Settings : ShareX.Ava.Uploaders.FileUploaders.AmazonS3Settings
+    public class AmazonS3Settings : XerahS.Uploaders.FileUploaders.AmazonS3Settings
     {
     }
 
-    public class PomfUploader : ShareX.Ava.Uploaders.FileUploaders.PomfUploader
+    public class PomfUploader : XerahS.Uploaders.FileUploaders.PomfUploader
     {
         public PomfUploader()
         {

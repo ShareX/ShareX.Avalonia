@@ -25,13 +25,13 @@
 
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
+using XerahS.Common;
+using XerahS.Core;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
-namespace ShareX.Ava.UI;
+namespace XerahS.UI;
 
 /// <summary>
 /// Helper class for TrayIcon commands and actions.

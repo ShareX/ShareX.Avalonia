@@ -23,11 +23,11 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.Net;
 using System.Text;
 
-namespace ShareX.Ava.Indexer
+namespace XerahS.Indexer
 {
     public class IndexerHtml : Indexer
     {

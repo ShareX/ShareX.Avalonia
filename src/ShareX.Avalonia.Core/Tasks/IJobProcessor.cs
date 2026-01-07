@@ -1,4 +1,4 @@
-namespace ShareX.Ava.Core.Tasks
+namespace XerahS.Core.Tasks
 {
     public interface IJobProcessor
     {

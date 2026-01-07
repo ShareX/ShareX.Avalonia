@@ -1,7 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Common.Native
+namespace XerahS.Common.Native
 {
     public enum TaskbarProgressBarStatus
     {

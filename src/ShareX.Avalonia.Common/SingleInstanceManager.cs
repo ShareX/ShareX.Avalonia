@@ -26,7 +26,7 @@
 using System.IO.Pipes;
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class SingleInstanceManager : IDisposable
     {

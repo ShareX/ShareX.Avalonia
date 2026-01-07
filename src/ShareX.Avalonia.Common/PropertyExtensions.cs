@@ -26,7 +26,7 @@
 using System.ComponentModel;
 using System.Reflection;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class PropertyExtensions
     {

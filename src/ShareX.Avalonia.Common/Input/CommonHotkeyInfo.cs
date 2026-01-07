@@ -28,7 +28,7 @@ using System.Text;
 // Replaced System.Windows.Forms.Keys with local Keys enum
 // using System.Windows.Forms; 
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class CommonHotkeyInfo
     {

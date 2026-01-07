@@ -1,9 +1,9 @@
-using ShareX.Ava.Common;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Uploaders;
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Common;
+using XerahS.Platform.Abstractions;
+using XerahS.Uploaders;
+using XerahS.Uploaders.PluginSystem;
 
-namespace ShareX.Ava.Core.Tasks.Processors
+namespace XerahS.Core.Tasks.Processors
 {
     public class UploadJobProcessor : IJobProcessor
     {

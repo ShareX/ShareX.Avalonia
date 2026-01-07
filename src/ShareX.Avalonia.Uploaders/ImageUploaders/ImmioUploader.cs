@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json;
 
-namespace ShareX.Ava.Uploaders.ImageUploaders
+namespace XerahS.Uploaders.ImageUploaders
 {
     public sealed class ImmioUploader : ImageUploader
     {

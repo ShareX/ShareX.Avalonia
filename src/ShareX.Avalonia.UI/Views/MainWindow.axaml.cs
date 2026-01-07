@@ -2,14 +2,14 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Markup.Xaml;
 using FluentAvalonia.UI.Controls;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Managers;
-using ShareX.Ava.Core.Tasks;
+using XerahS.Core;
+using XerahS.Core.Managers;
+using XerahS.Core.Tasks;
 using ShareX.Editor.Annotations;
 using ShareX.Editor.ViewModels;
 using ShareX.Editor.Views;
 
-namespace ShareX.Ava.UI.Views
+namespace XerahS.UI.Views
 {
     public partial class MainWindow : Window
     {
@@ -344,7 +344,7 @@ namespace ShareX.Ava.UI.Views
             {
                 var workflow = workflows[i];
                 var description = string.IsNullOrEmpty(workflow.TaskSettings.Description)
-                    ? ShareX.Ava.Common.EnumExtensions.GetDescription(workflow.Job)
+                    ? XerahS.Common.EnumExtensions.GetDescription(workflow.Job)
                     : workflow.TaskSettings.Description;
 
                 var navItem = new NavigationViewItem

@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class AppVeyor
     {

@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Uploaders.ImageUploaders
+namespace XerahS.Uploaders.ImageUploaders
 {
     public sealed class Img1Uploader : ImageUploader
     {

@@ -25,7 +25,7 @@
 
 using System.ComponentModel;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     [Description("Image uploaders"), DefaultValue(Imgur)]
     public enum ImageDestination

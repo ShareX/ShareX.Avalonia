@@ -25,8 +25,8 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
-using ShareX.Ava.Uploaders.FileUploaders;
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Uploaders.FileUploaders;
+using XerahS.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
 
 namespace ShareX.AmazonS3.Plugin.ViewModels;

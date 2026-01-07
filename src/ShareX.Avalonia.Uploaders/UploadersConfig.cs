@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using ShareX.UploadersLib.FileUploaders;
 using ShareX.UploadersLib.ImageUploaders;
 using ShareX.UploadersLib.TextUploaders;
 using ShareX.UploadersLib.URLShorteners;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public class UploadersConfig : SettingsBase<UploadersConfig>
     {

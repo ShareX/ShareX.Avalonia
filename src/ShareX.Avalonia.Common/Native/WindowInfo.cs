@@ -26,7 +26,7 @@
 using System.Diagnostics;
 using System.Drawing;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class WindowInfo
     {

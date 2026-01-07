@@ -1,7 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Ava.Core;
+using XerahS.Core;
 
-namespace ShareX.Ava.UI.ViewModels
+namespace XerahS.UI.ViewModels
 {
     public partial class TaskSettingsViewModel : ObservableObject
     {
@@ -160,7 +160,7 @@ namespace ShareX.Ava.UI.ViewModels
             {
                 if (_settings.CaptureSettings.CaptureCustomWindow != value)
                 {
-                    ShareX.Ava.Common.DebugHelper.WriteLine($"[DEBUG] Setting CaptureCustomWindow to: '{value}'");
+                    XerahS.Common.DebugHelper.WriteLine($"[DEBUG] Setting CaptureCustomWindow to: '{value}'");
                     _settings.CaptureSettings.CaptureCustomWindow = value;
                     OnPropertyChanged();
                 }

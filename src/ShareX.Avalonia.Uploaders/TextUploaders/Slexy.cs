@@ -25,7 +25,7 @@
 
 using System.ComponentModel;
 
-namespace ShareX.Ava.Uploaders.TextUploaders
+namespace XerahS.Uploaders.TextUploaders
 {
     public class SlexyTextUploaderService : TextUploaderService
     {

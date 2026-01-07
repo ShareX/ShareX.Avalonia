@@ -1,7 +1,7 @@
 using System.Xml;
 using System.Xml.Linq;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class XMLUpdateChecker : UpdateChecker
     {

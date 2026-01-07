@@ -26,7 +26,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class GraphicsExtensions
     {

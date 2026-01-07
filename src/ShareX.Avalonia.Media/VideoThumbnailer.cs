@@ -23,11 +23,11 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using SkiaSharp;
 using System.Diagnostics;
 
-namespace ShareX.Ava.Media
+namespace XerahS.Media
 {
     public class VideoThumbnailer
     {

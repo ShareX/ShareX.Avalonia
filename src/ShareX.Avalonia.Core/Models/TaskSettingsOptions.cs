@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace ShareX.Ava.Core;
+namespace XerahS.Core;
 
 // Stubs for complex types
 public class AnnotationOptions

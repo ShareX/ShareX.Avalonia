@@ -1,8 +1,8 @@
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Drawing;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Platform.Linux
+namespace XerahS.Platform.Linux
 {
     public class LinuxWindowService : IWindowService, IDisposable
     {

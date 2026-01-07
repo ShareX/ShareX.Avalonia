@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 using System.Diagnostics;
-using DebugHelper = ShareX.Ava.Common.DebugHelper;
+using DebugHelper = XerahS.Common.DebugHelper;
 // REMOVED: System.Drawing usage
 
-namespace ShareX.Ava.Platform.MacOS
+namespace XerahS.Platform.MacOS
 {
     /// <summary>
     /// macOS screen capture implementation using the native screencapture CLI.

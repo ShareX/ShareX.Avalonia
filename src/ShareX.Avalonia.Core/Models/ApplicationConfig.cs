@@ -23,12 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Uploaders;
+using XerahS.Common;
+using XerahS.Uploaders;
 using System.ComponentModel;
 using System.Drawing;
 
-namespace ShareX.Ava.Core;
+namespace XerahS.Core;
 
 /// <summary>
 /// Application-wide configuration settings

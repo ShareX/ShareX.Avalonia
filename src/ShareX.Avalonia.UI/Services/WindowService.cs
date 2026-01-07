@@ -1,7 +1,7 @@
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Drawing;
 
-namespace ShareX.Ava.UI.Services
+namespace XerahS.UI.Services
 {
     public class WindowService : IWindowService
     {

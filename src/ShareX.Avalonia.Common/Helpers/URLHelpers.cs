@@ -28,7 +28,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     // SlashType moved to Enums.cs
 

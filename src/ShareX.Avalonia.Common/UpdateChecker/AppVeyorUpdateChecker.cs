@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class AppVeyorUpdateChecker : UpdateChecker
     {
@@ -94,7 +94,7 @@ namespace ShareX.Ava.Common
             }
             catch (Exception e)
             {
-                ShareX.Ava.Common.DebugHelper.WriteException(e);
+                XerahS.Common.DebugHelper.WriteException(e);
             }
 
             Status = UpdateStatus.UpdateCheckFailed;

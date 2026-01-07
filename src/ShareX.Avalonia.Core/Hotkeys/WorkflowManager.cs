@@ -23,10 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Diagnostics;
 
-namespace ShareX.Ava.Core.Hotkeys;
+namespace XerahS.Core.Hotkeys;
 
 /// <summary>
 /// High-level hotkey management - orchestrates registration and triggering
@@ -110,11 +110,11 @@ public class WorkflowManager : IDisposable
         {
             _hotkeyMap[settings.HotkeyInfo.Id] = settings;
             // Debug.WriteLine($"HotkeyManager: Registered {settings}");
-            ShareX.Ava.Common.DebugHelper.WriteLine($"Hotkey registered: {settings}");
+            XerahS.Common.DebugHelper.WriteLine($"Hotkey registered: {settings}");
 
             if (settings.Job == HotkeyType.CustomWindow)
             {
-                ShareX.Ava.Common.DebugHelper.WriteLine($"[DEBUG] Registering CustomWindow hotkey. Title='{settings.TaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
+                XerahS.Common.DebugHelper.WriteLine($"[DEBUG] Registering CustomWindow hotkey. Title='{settings.TaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
             }
         }
         else

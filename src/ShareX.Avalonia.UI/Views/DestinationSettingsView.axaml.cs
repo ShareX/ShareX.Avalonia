@@ -3,9 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using ShareX.Ava.Core;
+using XerahS.Core;
 
-namespace ShareX.Ava.UI.Views
+namespace XerahS.UI.Views
 {
     public partial class DestinationSettingsView : UserControl
     {

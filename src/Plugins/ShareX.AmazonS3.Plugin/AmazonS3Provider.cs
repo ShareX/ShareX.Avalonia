@@ -24,8 +24,8 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
-using ShareX.Ava.Uploaders;
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Uploaders;
+using XerahS.Uploaders.PluginSystem;
 
 namespace ShareX.AmazonS3.Plugin;
 

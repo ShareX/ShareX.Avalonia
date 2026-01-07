@@ -25,7 +25,7 @@
 
 using ShareX.UploadersLib.Properties;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public class UploaderErrorManager
     {

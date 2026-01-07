@@ -28,7 +28,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace ShareX.Ava.Common.Colors
+namespace XerahS.Common.Colors
 {
     public class GradientInfo
     {

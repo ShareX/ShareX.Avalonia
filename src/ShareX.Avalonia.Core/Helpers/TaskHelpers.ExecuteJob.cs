@@ -23,12 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Core.Managers;
+using XerahS.Common;
+using XerahS.Core.Managers;
 
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 
-namespace ShareX.Ava.Core.Helpers;
+namespace XerahS.Core.Helpers;
 
 public static partial class TaskHelpers
 {

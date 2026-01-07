@@ -25,7 +25,7 @@
 
 using SkiaSharp;
 
-namespace ShareX.Ava.Platform.Abstractions
+namespace XerahS.Platform.Abstractions
 {
     /// <summary>
     /// Platform-agnostic clipboard service

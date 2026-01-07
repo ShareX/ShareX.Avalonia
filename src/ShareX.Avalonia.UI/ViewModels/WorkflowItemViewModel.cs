@@ -1,9 +1,9 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Hotkeys;
+using XerahS.Common;
+using XerahS.Core;
+using XerahS.Core.Hotkeys;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 public partial class WorkflowItemViewModel : ObservableObject
 {

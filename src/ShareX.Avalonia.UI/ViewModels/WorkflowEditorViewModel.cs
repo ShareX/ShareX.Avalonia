@@ -1,16 +1,16 @@
 using Avalonia.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Hotkeys;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Uploaders;
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Common;
+using XerahS.Core;
+using XerahS.Core.Hotkeys;
+using XerahS.Platform.Abstractions;
+using XerahS.Uploaders;
+using XerahS.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 public partial class WorkflowEditorViewModel : ViewModelBase
 {

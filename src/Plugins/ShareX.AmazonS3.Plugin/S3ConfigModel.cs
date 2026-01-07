@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Uploaders.FileUploaders;
+using XerahS.Uploaders.FileUploaders;
 
 namespace ShareX.AmazonS3.Plugin;
 

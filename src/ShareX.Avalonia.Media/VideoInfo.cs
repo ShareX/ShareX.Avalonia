@@ -26,7 +26,7 @@
 using System.Drawing;
 using System.Globalization;
 
-namespace ShareX.Ava.Media
+namespace XerahS.Media
 {
     public class VideoInfo
     {

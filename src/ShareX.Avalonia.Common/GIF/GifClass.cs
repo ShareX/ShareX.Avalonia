@@ -26,7 +26,7 @@
 // using System.Drawing; 
 using SkiaSharp;
 
-namespace ShareX.Ava.Common.GIF
+namespace XerahS.Common.GIF
 {
     public class GifClass
     {

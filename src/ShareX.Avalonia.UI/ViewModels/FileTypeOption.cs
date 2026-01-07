@@ -25,7 +25,7 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 /// <summary>
 /// ViewModel for a file type option in the selector

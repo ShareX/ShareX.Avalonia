@@ -27,7 +27,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static partial class NativeMethods
     {

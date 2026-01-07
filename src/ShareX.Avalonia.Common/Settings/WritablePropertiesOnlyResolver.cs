@@ -26,7 +26,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class WritablePropertiesOnlyResolver : DefaultContractResolver
     {

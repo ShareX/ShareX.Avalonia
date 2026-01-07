@@ -25,10 +25,10 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.Text;
 
-namespace ShareX.Ava.History
+namespace XerahS.History
 {
     public class HistoryManagerJSON : HistoryManager
     {

@@ -25,7 +25,7 @@
 
 using Avalonia.Input;
 
-namespace ShareX.Ava.Platform.Abstractions;
+namespace XerahS.Platform.Abstractions;
 
 /// <summary>
 /// Represents a global hotkey binding

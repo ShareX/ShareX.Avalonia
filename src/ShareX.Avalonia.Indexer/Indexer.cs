@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Indexer
+namespace XerahS.Indexer
 {
     public abstract class Indexer
     {

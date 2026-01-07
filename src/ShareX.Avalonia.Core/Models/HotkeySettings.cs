@@ -25,17 +25,17 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Input;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core.Hotkeys;
+using XerahS.Common;
+using XerahS.Core.Hotkeys;
 
-using HotkeyInfo = ShareX.Ava.Platform.Abstractions.HotkeyInfo;
+using HotkeyInfo = XerahS.Platform.Abstractions.HotkeyInfo;
 
-namespace ShareX.Ava.Core;
+namespace XerahS.Core;
 
 /// <summary>
 /// Hotkey configuration bound to a specific task
 /// </summary>
-// Duplicate HotkeySettings class removed. Using ShareX.Ava.Core.Hotkeys.HotkeySettings instead.
+// Duplicate HotkeySettings class removed. using XerahS.Core.Hotkeys.HotkeySettings instead.
 
 /// <summary>
 /// Workflows configuration storage

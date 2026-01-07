@@ -23,14 +23,14 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Core.Helpers;
-using ShareX.Ava.Core.Tasks.Processors;
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Common;
+using XerahS.Core.Helpers;
+using XerahS.Core.Tasks.Processors;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 using System.Diagnostics;
 
-namespace ShareX.Ava.Core.Tasks
+namespace XerahS.Core.Tasks
 {
     public class WorkerTask
     {
@@ -48,7 +48,7 @@ namespace ShareX.Ava.Core.Tasks
         /// Delegate to show window selector when CustomWindow capture has no target configured.
         /// Returns selected window or null if cancelled.
         /// </summary>
-        public static Func<Task<ShareX.Ava.Platform.Abstractions.WindowInfo?>>? ShowWindowSelectorCallback { get; set; }
+        public static Func<Task<XerahS.Platform.Abstractions.WindowInfo?>>? ShowWindowSelectorCallback { get; set; }
 
         private WorkerTask(TaskSettings taskSettings, SKBitmap? inputImage = null)
         {

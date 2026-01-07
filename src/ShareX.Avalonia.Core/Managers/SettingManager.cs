@@ -23,12 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Uploaders;
+using XerahS.Common;
+using XerahS.Uploaders;
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace ShareX.Ava.Core
+namespace XerahS.Core
 {
     /// <summary>
     /// Manages loading and saving of all application settings.

@@ -1,6 +1,6 @@
 using SkiaSharp;
 
-namespace ShareX.Ava.Platform.Abstractions
+namespace XerahS.Platform.Abstractions
 {
     public interface IScreenCaptureService
     {

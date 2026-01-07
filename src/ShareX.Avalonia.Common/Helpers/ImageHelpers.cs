@@ -23,11 +23,11 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common.GIF;
+using XerahS.Common.GIF;
 using SkiaSharp;
 // REMOVED: System.Drawing, System.Drawing.Drawing2D, System.Drawing.Imaging
 
-namespace ShareX.Ava.Common;
+namespace XerahS.Common;
 
 public static class ImageHelpers
 {

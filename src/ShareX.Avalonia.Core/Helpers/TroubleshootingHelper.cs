@@ -25,7 +25,7 @@
 
 using System.Diagnostics;
 
-namespace ShareX.Ava.Core.Helpers
+namespace XerahS.Core.Helpers
 {
     /// <summary>
     /// Centralized troubleshooting and debug logging helper.

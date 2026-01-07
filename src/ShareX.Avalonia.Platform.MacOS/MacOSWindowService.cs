@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using DebugHelper = ShareX.Ava.Common.DebugHelper;
+using DebugHelper = XerahS.Common.DebugHelper;
 
-namespace ShareX.Ava.Platform.MacOS
+namespace XerahS.Platform.MacOS
 {
     /// <summary>
     /// macOS window management service (stub for MVP).
@@ -135,16 +135,16 @@ namespace ShareX.Ava.Platform.MacOS
             return RunOsaScriptWithOutput(script) != null;
         }
 
-        public ShareX.Ava.Platform.Abstractions.WindowInfo[] GetAllWindows()
+        public XerahS.Platform.Abstractions.WindowInfo[] GetAllWindows()
         {
             if (!TryGetFrontWindowInfo(out var title, out var bounds, out var pid))
             {
-                return Array.Empty<ShareX.Ava.Platform.Abstractions.WindowInfo>();
+                return Array.Empty<XerahS.Platform.Abstractions.WindowInfo>();
             }
 
             return new[]
             {
-                new ShareX.Ava.Platform.Abstractions.WindowInfo
+                new XerahS.Platform.Abstractions.WindowInfo
                 {
                     Handle = IntPtr.Zero,
                     Title = title,

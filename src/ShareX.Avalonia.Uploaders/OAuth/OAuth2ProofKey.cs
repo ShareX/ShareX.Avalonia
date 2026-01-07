@@ -26,7 +26,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public enum OAuth2ChallengeMethod
     {

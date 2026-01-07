@@ -23,10 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using SkiaSharp;
 
-namespace ShareX.Ava.Core;
+namespace XerahS.Core;
 
 /// <summary>
 /// Metadata about a capture task including window info and captured image

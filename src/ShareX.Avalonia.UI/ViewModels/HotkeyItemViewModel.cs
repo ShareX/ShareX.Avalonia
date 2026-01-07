@@ -1,12 +1,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.Ava.Common;
+using XerahS.Common;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 public partial class HotkeyItemViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private ShareX.Ava.Core.Hotkeys.WorkflowSettings _model;
+    private XerahS.Core.Hotkeys.WorkflowSettings _model;
 
     public string Description =>
         string.IsNullOrEmpty(Model.TaskSettings.Description)
@@ -23,7 +23,7 @@ public partial class HotkeyItemViewModel : ViewModelBase
     // Expose Status for binding - reads from Model.HotkeyInfo.Status
     public Platform.Abstractions.HotkeyStatus Status => Model.HotkeyInfo.Status;
 
-    public HotkeyItemViewModel(ShareX.Ava.Core.Hotkeys.WorkflowSettings model)
+    public HotkeyItemViewModel(XerahS.Core.Hotkeys.WorkflowSettings model)
     {
         _model = model;
     }

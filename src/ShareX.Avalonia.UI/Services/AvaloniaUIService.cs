@@ -26,14 +26,14 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.UI.ViewModels;
+using XerahS.Common;
+using XerahS.Core;
+using XerahS.Platform.Abstractions;
+using XerahS.UI.ViewModels;
 using ShareX.Editor.ViewModels;
 using SkiaSharp;
 
-namespace ShareX.Ava.UI.Services
+namespace XerahS.UI.Services
 {
     public class AvaloniaUIService : IUIService
     {

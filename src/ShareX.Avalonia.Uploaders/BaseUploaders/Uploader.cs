@@ -23,12 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.Collections.Specialized;
 using System.Net;
 using System.Text;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public class Uploader
     {

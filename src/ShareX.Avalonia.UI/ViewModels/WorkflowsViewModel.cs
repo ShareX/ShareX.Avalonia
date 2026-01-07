@@ -1,11 +1,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Hotkeys;
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Core;
+using XerahS.Core.Hotkeys;
+using XerahS.Platform.Abstractions;
 using System.Collections.ObjectModel;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 public partial class WorkflowsViewModel : ViewModelBase
 {
@@ -23,7 +23,7 @@ public partial class WorkflowsViewModel : ViewModelBase
 
 
 
-    private ShareX.Ava.Core.Hotkeys.WorkflowManager? _manager;
+    private XerahS.Core.Hotkeys.WorkflowManager? _manager;
 
     /// <summary>
     /// Delegate to request editing a hotkey. Set by the View.
@@ -74,9 +74,9 @@ public partial class WorkflowsViewModel : ViewModelBase
     private async Task AddWorkflow()
     {
         // Create new blank workflow with defaults
-        var newSettings = new ShareX.Ava.Core.Hotkeys.WorkflowSettings();
+        var newSettings = new XerahS.Core.Hotkeys.WorkflowSettings();
         // Maybe default job?
-        newSettings.Job = ShareX.Ava.Core.HotkeyType.RectangleRegion;
+        newSettings.Job = XerahS.Core.HotkeyType.RectangleRegion;
         newSettings.TaskSettings = new TaskSettings();
 
         if (EditHotkeyRequester != null)
@@ -146,7 +146,7 @@ public partial class WorkflowsViewModel : ViewModelBase
     {
         if (SelectedWorkflow != null && _manager != null)
         {
-            var clone = new ShareX.Ava.Core.Hotkeys.WorkflowSettings(SelectedWorkflow.Model.Job,
+            var clone = new XerahS.Core.Hotkeys.WorkflowSettings(SelectedWorkflow.Model.Job,
                 new HotkeyInfo(
                     SelectedWorkflow.Model.HotkeyInfo.Key,
                     SelectedWorkflow.Model.HotkeyInfo.Modifiers));

@@ -23,10 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 
-namespace ShareX.Ava.Platform.Windows
+namespace XerahS.Platform.Windows
 {
     /// <summary>
     /// Windows-specific screen capture implementation using GDI+

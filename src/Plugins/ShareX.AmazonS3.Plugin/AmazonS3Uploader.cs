@@ -23,8 +23,8 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Uploaders;
+using XerahS.Common;
+using XerahS.Uploaders;
 using System.Collections.Specialized;
 using System.Globalization;
 using System.Security.Cryptography;
@@ -152,7 +152,7 @@ public class AmazonS3Uploader : FileUploader
         string url = URLHelpers.CombineURL(scheme + host, canonicalURI);
         url = URLHelpers.FixPrefix(url);
 
-        SendRequest(ShareX.Ava.Uploaders.HttpMethod.PUT, url, stream, contentType, null, headers);
+        SendRequest(XerahS.Uploaders.HttpMethod.PUT, url, stream, contentType, null, headers);
 
         if (LastResponseInfo?.IsSuccess == true)
         {

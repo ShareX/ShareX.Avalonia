@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json;
 
-namespace ShareX.Ava.History
+namespace XerahS.History
 {
     public class HistoryItem
     {

@@ -1,9 +1,9 @@
 using Avalonia.Input;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Hotkeys;
+using XerahS.Core;
+using XerahS.Core.Hotkeys;
 using System.Collections.ObjectModel;
 
-namespace ShareX.Ava.UI.ViewModels;
+namespace XerahS.UI.ViewModels;
 
 public class JobCategoryViewModel
 {

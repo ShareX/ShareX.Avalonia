@@ -25,7 +25,7 @@
 
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class Emoji
     {

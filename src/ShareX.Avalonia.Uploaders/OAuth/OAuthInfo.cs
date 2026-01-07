@@ -23,10 +23,10 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.ComponentModel;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public class OAuthInfo : ICloneable
     {

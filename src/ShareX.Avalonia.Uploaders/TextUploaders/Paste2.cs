@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Uploaders.TextUploaders
+namespace XerahS.Uploaders.TextUploaders
 {
     public class Paste2TextUploaderService : TextUploaderService
     {

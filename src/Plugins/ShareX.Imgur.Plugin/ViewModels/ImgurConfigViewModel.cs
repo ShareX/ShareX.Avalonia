@@ -1,8 +1,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
-using ShareX.Ava.Uploaders;
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Uploaders;
+using XerahS.Uploaders.PluginSystem;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 

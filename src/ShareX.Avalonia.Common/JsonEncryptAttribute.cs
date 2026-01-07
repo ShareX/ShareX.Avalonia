@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     [AttributeUsage(AttributeTargets.Property)]
     public class JsonEncryptAttribute : Attribute

@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json;
 
-namespace ShareX.Ava.Uploaders.URLShorteners
+namespace XerahS.Uploaders.URLShorteners
 {
     public class QRnetURLShortenerService : URLShortenerService
     {

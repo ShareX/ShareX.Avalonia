@@ -24,8 +24,8 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
-using ShareX.Ava.Common;
-using ShareX.Ava.Uploaders;
+using XerahS.Common;
+using XerahS.Uploaders;
 using System.Collections.Specialized;
 
 namespace ShareX.Imgur.Plugin;
@@ -153,7 +153,7 @@ public class ImgurUploader : ImageUploader, IOAuth2
                     ["perPage"] = perPage.ToString()
                 };
 
-                string response = SendRequest(ShareX.Ava.Uploaders.HttpMethod.GET, "https://api.imgur.com/3/account/me/albums", args, GetAuthHeaders());
+                string response = SendRequest(XerahS.Uploaders.HttpMethod.GET, "https://api.imgur.com/3/account/me/albums", args, GetAuthHeaders());
                 var imgurResponse = JsonConvert.DeserializeObject<ImgurResponse>(response);
 
                 if (imgurResponse != null && imgurResponse.success && imgurResponse.status == 200)

@@ -1,6 +1,6 @@
-using ShareX.Ava.Common;
+using XerahS.Common;
 
-namespace ShareX.Ava.Core.Managers
+namespace XerahS.Core.Managers
 {
     public class WatchFolderManager : IDisposable
     {

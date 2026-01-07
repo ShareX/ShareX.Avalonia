@@ -23,11 +23,11 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Platform.MacOS.Services;
+using XerahS.Common;
+using XerahS.Platform.Abstractions;
+using XerahS.Platform.MacOS.Services;
 
-namespace ShareX.Ava.Platform.MacOS
+namespace XerahS.Platform.MacOS
 {
     /// <summary>
     /// Initializes macOS platform services

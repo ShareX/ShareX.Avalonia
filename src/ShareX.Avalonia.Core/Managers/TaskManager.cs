@@ -1,8 +1,8 @@
-using ShareX.Ava.Common;
-using ShareX.Ava.Core.Tasks;
+using XerahS.Common;
+using XerahS.Core.Tasks;
 using System.Collections.Concurrent;
 
-namespace ShareX.Ava.Core.Managers
+namespace XerahS.Core.Managers
 {
     public class TaskManager
     {

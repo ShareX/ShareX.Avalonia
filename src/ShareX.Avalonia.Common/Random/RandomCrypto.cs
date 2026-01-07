@@ -25,7 +25,7 @@
 
 using System.Security.Cryptography;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     // https://docs.microsoft.com/en-us/archive/msdn-magazine/2007/september/net-matters-tales-from-the-cryptorandom
     public static class RandomCrypto

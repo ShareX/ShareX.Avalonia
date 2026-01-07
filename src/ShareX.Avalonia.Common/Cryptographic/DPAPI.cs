@@ -26,7 +26,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     // https://en.wikipedia.org/wiki/Data_Protection_API
     public static class DPAPI

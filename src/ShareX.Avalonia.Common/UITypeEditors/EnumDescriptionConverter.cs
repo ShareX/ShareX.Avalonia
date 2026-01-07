@@ -26,7 +26,7 @@
 using System.ComponentModel;
 using System.Globalization;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class EnumDescriptionConverter : EnumConverter
     {

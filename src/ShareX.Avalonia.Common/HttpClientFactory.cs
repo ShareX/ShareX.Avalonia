@@ -25,7 +25,7 @@
 
 using System.Net.Http.Headers;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class HttpClientFactory
     {

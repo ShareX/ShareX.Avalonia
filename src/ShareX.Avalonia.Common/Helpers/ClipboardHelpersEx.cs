@@ -27,7 +27,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Common.Helpers
+namespace XerahS.Common.Helpers
 {
     public static class ClipboardHelpersEx
     {

@@ -22,13 +22,13 @@
 */
 
 #endregion License Information (GPL v3)
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.Uploaders; // For GenericUploader and UploadResult
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Platform.Abstractions;
+using XerahS.Uploaders; // For GenericUploader and UploadResult
+using XerahS.Uploaders.PluginSystem;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace ShareX.Ava.Core.Tasks;
+namespace XerahS.Core.Tasks;
 
 /// <summary>
 /// Represents a minimal workflow task for quick automation (Path A)

@@ -25,10 +25,10 @@
 
 #if NET6_0_OR_GREATER
 #endif
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 
-namespace ShareX.Ava.Common.Helpers
+namespace XerahS.Common.Helpers
 {
     public static class ClipboardHelpers
     {

@@ -5,7 +5,7 @@ using DrawingRectangleF = System.Drawing.RectangleF;
 using DrawingSize = System.Drawing.Size;
 using DrawingSizeF = System.Drawing.SizeF;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class RectangleExtensions
     {

@@ -23,9 +23,9 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Uploaders.PluginSystem;
+using XerahS.Uploaders.PluginSystem;
 
-namespace ShareX.Ava.PluginExporter;
+namespace XerahS.PluginExporter;
 
 internal static class Program
 {

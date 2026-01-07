@@ -25,7 +25,7 @@
 
 using System.Text.RegularExpressions;
 
-namespace ShareX.Ava.Uploaders.FileUploaders
+namespace XerahS.Uploaders.FileUploaders
 {
     public sealed class ShareCX : FileUploader
     {

@@ -23,12 +23,12 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Common;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 using System.Diagnostics;
 
-namespace ShareX.Ava.Platform.Linux
+namespace XerahS.Platform.Linux
 {
     /// <summary>
     /// Linux screen capture service with multiple fallback methods.

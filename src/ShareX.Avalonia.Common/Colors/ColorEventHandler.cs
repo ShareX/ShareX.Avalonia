@@ -1,4 +1,4 @@
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public delegate void ColorEventHandler(object sender, ColorEventArgs e);
 

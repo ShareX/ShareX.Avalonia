@@ -26,7 +26,7 @@
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class InputManager
     {

@@ -27,7 +27,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Resources;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class EnumExtensions
     {

@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
 
-namespace ShareX.Ava.Platform.Windows
+namespace XerahS.Platform.Windows
 {
     /// <summary>
     /// Modern Windows screen capture using Direct3D11 and DXGI Output Duplication.
@@ -65,7 +65,7 @@ namespace ShareX.Ava.Platform.Windows
         public async Task<SKBitmap?> CaptureRectAsync(SKRect rect, CaptureOptions? options = null)
         {
             bool useModern = options?.UseModernCapture ??
-                ShareX.Ava.Core.SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
+                XerahS.Core.SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
 
             if (!IsSupported || !useModern)
             {
@@ -112,7 +112,7 @@ namespace ShareX.Ava.Platform.Windows
         public async Task<SKBitmap?> CaptureFullScreenAsync(CaptureOptions? options = null)
         {
             bool useModern = options?.UseModernCapture ??
-                ShareX.Ava.Core.SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
+                XerahS.Core.SettingManager.Settings.DefaultTaskSettings.CaptureSettings.UseModernCapture;
 
             if (!IsSupported || !useModern)
             {
@@ -241,7 +241,7 @@ namespace ShareX.Ava.Platform.Windows
                         catch (Exception ex)
                         {
                             // Output might be disconnected or in use
-                            ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Setup failed for output. {ex}");
+                            XerahS.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Setup failed for output. {ex}");
                         }
                         finally
                         {
@@ -288,12 +288,12 @@ namespace ShareX.Ava.Platform.Windows
                         }
                         else
                         {
-                            ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: AcquireFrame failed or timed out.");
+                            XerahS.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: AcquireFrame failed or timed out.");
                         }
                     }
                     catch (Exception ex)
                     {
-                        ShareX.Ava.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Frame capture failed. {ex}");
+                        XerahS.Common.DebugHelper.WriteLine($"CaptureFullScreenDxgi: Frame capture failed. {ex}");
                     }
                     finally
                     {

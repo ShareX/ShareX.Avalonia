@@ -24,14 +24,14 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Threading;
-using ShareX.Ava.Core;
-using ShareX.Ava.Core.Helpers;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.UI.Views.RegionCapture;
+using XerahS.Core;
+using XerahS.Core.Helpers;
+using XerahS.Platform.Abstractions;
+using XerahS.UI.Views.RegionCapture;
 using SkiaSharp;
 using System.Diagnostics;
 
-namespace ShareX.Ava.UI.Services
+namespace XerahS.UI.Services
 {
     public class ScreenCaptureService : IScreenCaptureService
     {

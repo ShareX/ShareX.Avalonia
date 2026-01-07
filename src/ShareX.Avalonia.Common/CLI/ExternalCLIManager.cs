@@ -26,7 +26,7 @@
 using System.Diagnostics;
 using System.Text;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public abstract class ExternalCLIManager : IDisposable
     {

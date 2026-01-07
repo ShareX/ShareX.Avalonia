@@ -24,14 +24,14 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Input;
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 // Only import DebugHelper from Common, not the whole namespace
-using DebugHelper = ShareX.Ava.Common.DebugHelper;
+using DebugHelper = XerahS.Common.DebugHelper;
 
-namespace ShareX.Ava.Platform.Windows;
+namespace XerahS.Platform.Windows;
 
 /// <summary>
 /// Windows implementation of global hotkey registration using RegisterHotKey API

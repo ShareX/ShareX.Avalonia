@@ -25,7 +25,7 @@
 
 using System.Text;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public abstract class ShareXSyntaxParser
     {

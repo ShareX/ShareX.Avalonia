@@ -2,13 +2,13 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.Platform.Abstractions;
-using ShareX.Ava.UI.Views;
+using XerahS.Common;
+using XerahS.Core;
+using XerahS.Platform.Abstractions;
+using XerahS.UI.Views;
 using ShareX.Editor.ViewModels;
 
-namespace ShareX.Ava.UI;
+namespace XerahS.UI;
 
 public partial class App : Application
 {
@@ -89,7 +89,7 @@ public partial class App : Application
 
             desktop.Exit += (sender, args) =>
             {
-                ShareX.Ava.Core.SettingManager.SaveAllSettings();
+                XerahS.Core.SettingManager.SaveAllSettings();
             };
 
             // Subscribe to workflow completion for notification

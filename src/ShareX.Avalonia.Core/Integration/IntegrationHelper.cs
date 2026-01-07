@@ -1,8 +1,8 @@
 using Microsoft.Win32;
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Core.Integration;
+namespace XerahS.Core.Integration;
 
 /// <summary>
 /// Temporary helper for Windows integration until IIntegrationService is implemented

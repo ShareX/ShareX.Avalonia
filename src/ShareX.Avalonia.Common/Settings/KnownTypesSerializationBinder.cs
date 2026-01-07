@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json.Serialization;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class KnownTypesSerializationBinder : ISerializationBinder
     {

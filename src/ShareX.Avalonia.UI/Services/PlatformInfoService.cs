@@ -1,7 +1,7 @@
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.UI.Services
+namespace XerahS.UI.Services
 {
     public class PlatformInfoService : IPlatformInfo
     {

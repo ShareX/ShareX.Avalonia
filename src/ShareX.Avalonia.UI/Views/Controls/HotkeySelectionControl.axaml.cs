@@ -3,11 +3,11 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.VisualTree;
-using ShareX.Ava.Common;
-using ShareX.Ava.Core;
-using ShareX.Ava.UI.ViewModels;
+using XerahS.Common;
+using XerahS.Core;
+using XerahS.UI.ViewModels;
 
-namespace ShareX.Ava.UI.Views.Controls;
+namespace XerahS.UI.Views.Controls;
 
 /// <summary>
 /// A control for capturing and displaying hotkey combinations.
@@ -24,7 +24,7 @@ public partial class HotkeySelectionControl : UserControl
         _debugLog = (msg) =>
         {
             _debugMessages.Add(msg);
-            ShareX.Ava.Common.DebugHelper.WriteLine($"[Hotkey] {msg}");
+            XerahS.Common.DebugHelper.WriteLine($"[Hotkey] {msg}");
             callback(msg);
         };
     }
@@ -34,7 +34,7 @@ public partial class HotkeySelectionControl : UserControl
         var time = DateTime.Now.ToString("HH:mm:ss.fff");
         var formattedMsg = $"[{time}] {message}";
         // Also log to DebugHelper for file logging
-        ShareX.Ava.Common.DebugHelper.WriteLine($"[Hotkey] {message}");
+        XerahS.Common.DebugHelper.WriteLine($"[Hotkey] {message}");
         _debugLog?.Invoke(formattedMsg);
     }
 

@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Uploaders;
+using XerahS.Uploaders;
 
 namespace ShareX.Imgur.Plugin;
 

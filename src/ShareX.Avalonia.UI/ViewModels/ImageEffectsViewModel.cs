@@ -1,6 +1,6 @@
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Core;
+using XerahS.Core;
 using ShareX.Editor.Extensions;
 using ShareX.Editor.ImageEffects;
 using ShareX.Editor.ImageEffects.Adjustments;
@@ -9,7 +9,7 @@ using ShareX.Editor.ImageEffects.Manipulations;
 using SkiaSharp;
 using System.Collections.ObjectModel;
 
-namespace ShareX.Ava.UI.ViewModels
+namespace XerahS.UI.ViewModels
 {
     public partial class ImageEffectsViewModel : ViewModelBase
     {

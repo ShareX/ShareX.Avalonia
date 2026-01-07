@@ -7,7 +7,7 @@ using SkiaSharp;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace ShareX.Ava.UI.Controls
+namespace XerahS.UI.Controls
 {
     public partial class PropertyGrid : UserControl
     {

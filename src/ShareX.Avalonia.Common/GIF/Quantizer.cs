@@ -26,7 +26,7 @@
 using SkiaSharp;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Common.GIF
+namespace XerahS.Common.GIF
 {
     /// <summary>
     /// Summary description for Class1.

@@ -24,10 +24,10 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.Collections.Specialized;
 
-namespace ShareX.Ava.Uploaders.FileUploaders
+namespace XerahS.Uploaders.FileUploaders
 {
     public sealed class Copy : FileUploader, IOAuth
     {

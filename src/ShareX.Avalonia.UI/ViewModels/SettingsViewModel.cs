@@ -25,9 +25,9 @@
 
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.Ava.Core;
+using XerahS.Core;
 
-namespace ShareX.Ava.UI.ViewModels
+namespace XerahS.UI.ViewModels
 {
     public partial class SettingsViewModel : ViewModelBase
     {
@@ -193,7 +193,7 @@ namespace ShareX.Ava.UI.ViewModels
         {
             if (_isLoading) return; // Don't trigger during initial load
 
-            ShareX.Ava.Core.Integration.IntegrationHelper.SetPluginExtensionRegistration(value);
+            XerahS.Core.Integration.IntegrationHelper.SetPluginExtensionRegistration(value);
         }
 
         // OS Integration Settings
@@ -440,7 +440,7 @@ namespace ShareX.Ava.UI.ViewModels
 
             // Integration Settings
             SupportsFileAssociations = OperatingSystem.IsWindows();
-            IsPluginExtensionRegistered = ShareX.Ava.Core.Integration.IntegrationHelper.IsPluginExtensionRegistered();
+            IsPluginExtensionRegistered = XerahS.Core.Integration.IntegrationHelper.IsPluginExtensionRegistered();
         }
 
         protected override void OnPropertyChanged(System.ComponentModel.PropertyChangedEventArgs e)

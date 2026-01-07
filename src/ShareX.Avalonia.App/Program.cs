@@ -25,7 +25,7 @@
 
 using Avalonia;
 
-namespace ShareX.Ava.App
+namespace XerahS.App
 {
     internal class Program
     {
@@ -33,12 +33,12 @@ namespace ShareX.Ava.App
         public static void Main(string[] args)
         {
             // Initialize logging with datestamped file in Logs/yyyy-mm folder structure
-            var baseFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), ShareX.Ava.Core.SettingManager.AppName);
+            var baseFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), XerahS.Core.SettingManager.AppName);
             var logsFolder = System.IO.Path.Combine(baseFolder, "Logs", DateTime.Now.ToString("yyyy-MM"));
             var logPath = System.IO.Path.Combine(logsFolder, $"ShareX-{DateTime.Now:yyyy-MM-dd}.log");
-            ShareX.Ava.Common.DebugHelper.Init(logPath);
+            XerahS.Common.DebugHelper.Init(logPath);
 
-            var dh = ShareX.Ava.Common.DebugHelper.Logger;
+            var dh = XerahS.Common.DebugHelper.Logger;
             dh.AsyncWrite = false; // Synchronous for startup
 
             dh.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - ShareX starting.");
@@ -74,7 +74,7 @@ namespace ShareX.Ava.App
             InitializePlatformServices();
 
             // Initialize settings
-            ShareX.Ava.Core.SettingManager.LoadInitialSettings();
+            XerahS.Core.SettingManager.LoadInitialSettings();
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
@@ -86,44 +86,44 @@ namespace ShareX.Ava.App
             if (OperatingSystem.IsWindows())
             {
                 // Create Windows platform services
-                var screenService = new ShareX.Ava.Platform.Windows.WindowsScreenService();
+                var screenService = new XerahS.Platform.Windows.WindowsScreenService();
 
                 // Create Windows capture service
-                ShareX.Ava.Platform.Abstractions.IScreenCaptureService realCaptureService;
+                XerahS.Platform.Abstractions.IScreenCaptureService realCaptureService;
 
-                if (ShareX.Ava.Platform.Windows.WindowsModernCaptureService.IsSupported)
+                if (XerahS.Platform.Windows.WindowsModernCaptureService.IsSupported)
                 {
-                    ShareX.Ava.Common.DebugHelper.WriteLine("Windows: Using WindowsModernCaptureService (Direct3D11/DXGI)");
-                    realCaptureService = new ShareX.Ava.Platform.Windows.WindowsModernCaptureService(screenService);
+                    XerahS.Common.DebugHelper.WriteLine("Windows: Using WindowsModernCaptureService (Direct3D11/DXGI)");
+                    realCaptureService = new XerahS.Platform.Windows.WindowsModernCaptureService(screenService);
                 }
                 else
                 {
-                    ShareX.Ava.Common.DebugHelper.WriteLine("Windows: Using WindowsScreenCaptureService (GDI+)");
-                    realCaptureService = new ShareX.Ava.Platform.Windows.WindowsScreenCaptureService(screenService);
+                    XerahS.Common.DebugHelper.WriteLine("Windows: Using WindowsScreenCaptureService (GDI+)");
+                    realCaptureService = new XerahS.Platform.Windows.WindowsScreenCaptureService(screenService);
                 }
 
                 // Create UI capture service (Wrapper with Region UI)
                 // This delegates to realCaptureService for actual capture
-                var uiCaptureService = new ShareX.Ava.UI.Services.ScreenCaptureService(realCaptureService);
+                var uiCaptureService = new XerahS.UI.Services.ScreenCaptureService(realCaptureService);
 
                 // Initialize Windows platform with our UI wrapper
-                ShareX.Ava.Platform.Windows.WindowsPlatform.Initialize(uiCaptureService);
+                XerahS.Platform.Windows.WindowsPlatform.Initialize(uiCaptureService);
                 return;
             }
 #elif MACOS
             if (OperatingSystem.IsMacOS())
             {
-                ShareX.Ava.Common.DebugHelper.WriteLine("macOS: Using MacOSScreenshotService (screencapture CLI)");
-                var macCaptureService = new ShareX.Ava.Platform.MacOS.MacOSScreenshotService();
-                var uiCaptureService = new ShareX.Ava.UI.Services.ScreenCaptureService(macCaptureService);
+                XerahS.Common.DebugHelper.WriteLine("macOS: Using MacOSScreenshotService (screencapture CLI)");
+                var macCaptureService = new XerahS.Platform.MacOS.MacOSScreenshotService();
+                var uiCaptureService = new XerahS.UI.Services.ScreenCaptureService(macCaptureService);
 
-                ShareX.Ava.Platform.MacOS.MacOSPlatform.Initialize(uiCaptureService);
+                XerahS.Platform.MacOS.MacOSPlatform.Initialize(uiCaptureService);
                 return;
             }
 #elif LINUX
             if (OperatingSystem.IsLinux())
             {
-                ShareX.Ava.Platform.Linux.LinuxPlatform.Initialize();
+                XerahS.Platform.Linux.LinuxPlatform.Initialize();
                 return;
             }
 #endif
@@ -133,7 +133,7 @@ namespace ShareX.Ava.App
         }
 
         public static AppBuilder BuildAvaloniaApp()
-            => AppBuilder.Configure<ShareX.Ava.UI.App>()
+            => AppBuilder.Configure<XerahS.UI.App>()
                 .UsePlatformDetect()
                 .LogToTrace();
     }

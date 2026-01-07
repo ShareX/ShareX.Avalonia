@@ -25,7 +25,7 @@
 
 using System.Text.RegularExpressions;
 
-namespace ShareX.Ava.History
+namespace XerahS.History
 {
     public class HistoryFilter
     {

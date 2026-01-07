@@ -24,10 +24,10 @@
 #endregion License Information (GPL v3)
 
 using Avalonia.Input;
-using ShareX.Ava.Common;
-using HotkeyInfo = ShareX.Ava.Platform.Abstractions.HotkeyInfo;
+using XerahS.Common;
+using HotkeyInfo = XerahS.Platform.Abstractions.HotkeyInfo;
 
-namespace ShareX.Ava.Core.Hotkeys;
+namespace XerahS.Core.Hotkeys;
 
 /// <summary>
 /// Links a hotkey binding to an action type

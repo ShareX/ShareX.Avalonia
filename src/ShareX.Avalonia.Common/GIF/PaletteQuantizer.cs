@@ -26,7 +26,7 @@
 using SkiaSharp;
 using System.Collections;
 
-namespace ShareX.Ava.Common.GIF
+namespace XerahS.Common.GIF
 {
     /// <summary>
     /// Summary description for PaletteQuantizer.

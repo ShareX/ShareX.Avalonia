@@ -27,7 +27,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public delegate void KeyEventHandler(object sender, KeyEventArgs e);
 

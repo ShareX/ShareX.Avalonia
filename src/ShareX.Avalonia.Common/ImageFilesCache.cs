@@ -27,7 +27,7 @@ using SkiaSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public class ImageFilesCache : IDisposable
     {

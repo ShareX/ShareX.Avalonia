@@ -1,12 +1,12 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:ShareX.Ava.UI"
-             xmlns:vm="using:ShareX.Ava.UI.ViewModels"
-             xmlns:views="using:ShareX.Ava.UI.Views"
+             xmlns:local="using:XerahS.UI"
+             xmlns:vm="using:XerahS.UI.ViewModels"
+             xmlns:views="using:XerahS.UI.Views"
              xmlns:converters="clr-namespace:ShareX.Editor.Converters;assembly=ShareX.Editor"
              xmlns:sty="using:FluentAvalonia.Styling"
-             xmlns:core="using:ShareX.Ava.Core"
-             x:Class="ShareX.Ava.UI.App"
+             xmlns:core="using:XerahS.Core"
+             x:Class="XerahS.UI.App"
              RequestedThemeVariant="Default">
              <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 

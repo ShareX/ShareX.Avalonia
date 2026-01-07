@@ -25,7 +25,7 @@
 
 using Microsoft.Win32;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class RegistryHelpers
     {

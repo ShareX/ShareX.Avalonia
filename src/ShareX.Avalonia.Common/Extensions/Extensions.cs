@@ -32,7 +32,7 @@ using DrawingPoint = System.Drawing.Point;
 using DrawingPointF = System.Drawing.PointF;
 using DrawingSize = System.Drawing.Size;
 
-namespace ShareX.Ava.Common
+namespace XerahS.Common
 {
     public static class Extensions
     {

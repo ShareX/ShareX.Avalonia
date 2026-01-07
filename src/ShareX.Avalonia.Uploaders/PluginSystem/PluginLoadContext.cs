@@ -26,7 +26,7 @@
 using System.Reflection;
 using System.Runtime.Loader;
 
-namespace ShareX.Ava.Uploaders.PluginSystem;
+namespace XerahS.Uploaders.PluginSystem;
 
 /// <summary>
 /// Custom AssemblyLoadContext for plugin isolation

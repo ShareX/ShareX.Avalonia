@@ -23,13 +23,13 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.Ava.Common;
+using XerahS.Common;
 using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 
-namespace ShareX.Ava.Uploaders
+namespace XerahS.Uploaders
 {
     public static class OAuthManager
     {

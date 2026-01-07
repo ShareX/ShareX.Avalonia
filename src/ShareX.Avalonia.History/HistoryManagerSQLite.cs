@@ -25,9 +25,9 @@
 
 using Microsoft.Data.Sqlite;
 using Newtonsoft.Json;
-using ShareX.Ava.Common;
+using XerahS.Common;
 
-namespace ShareX.Ava.History
+namespace XerahS.History
 {
     public class HistoryManagerSQLite : HistoryManager, IDisposable
     {

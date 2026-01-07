@@ -1,7 +1,7 @@
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Platform.Abstractions;
 using SkiaSharp;
 
-namespace ShareX.Ava.UI.Services
+namespace XerahS.UI.Services
 {
     public class ClipboardService : IClipboardService
     {

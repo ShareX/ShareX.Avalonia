@@ -26,7 +26,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace ShareX.Ava.Media
+namespace XerahS.Media
 {
     public class ImageBeautifierOptions
     {

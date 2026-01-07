@@ -1,9 +1,9 @@
-using ShareX.Ava.Common;
-using ShareX.Ava.Platform.Abstractions;
+using XerahS.Common;
+using XerahS.Platform.Abstractions;
 using Rectangle = System.Drawing.Rectangle;
 using SysPoint = System.Drawing.Point;
 
-namespace ShareX.Ava.Platform.Linux
+namespace XerahS.Platform.Linux
 {
     public static class LinuxPlatform
     {
