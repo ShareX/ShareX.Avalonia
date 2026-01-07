@@ -25,7 +25,7 @@ jobs:
         ls -l libscreencapturekit_bridge.dylib
 
     - name: Build .NET Solution
-      run: dotnet build src/ShareX.Avalonia.sln -c Release
+      run: dotnet build ShareX.Avalonia.sln -c Release
 
     - name: Upload Native Library Artifact
       uses: actions/upload-artifact@v4
