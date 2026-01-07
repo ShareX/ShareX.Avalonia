@@ -87,6 +87,12 @@ namespace ShareX.Ava.UI.Views.RegionCapture
         private System.IO.StreamWriter? _debugLog;
         public string? DebugLogPath { get; private set; }
         private bool _loggedInitialLayout;
+        
+        /// <summary>
+        /// Static property to expose the most recent capture session's debug log path
+        /// for external classes (e.g., App.axaml.cs) to append notification logs.
+        /// </summary>
+        public static string? LastDebugLogPath { get; private set; }
 #endif
         
         public RegionCaptureWindow()
@@ -107,6 +113,7 @@ namespace ShareX.Ava.UI.Views.RegionCapture
             try
             {
                 _debugLog = new System.IO.StreamWriter(DebugLogPath, append: true) { AutoFlush = true };
+                LastDebugLogPath = DebugLogPath; // Expose for notification logging
                 DebugLog("INIT", "RegionCaptureWindow created");
                 DebugLog("INIT", $"Initial state: RenderScaling={RenderScaling}, Position={Position}, Bounds={Bounds}, ClientSize={ClientSize}");
             }

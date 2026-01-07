@@ -50,9 +50,19 @@ public partial class App : Application
 
     private void OnWorkflowTaskCompleted(object? sender, Core.Tasks.WorkerTask task)
     {
+        var logMsg = $"[Event] Workflow task completed. ID: {task.GetHashCode()}";
+        DebugHelper.WriteLine(logMsg);
+        AppendToRegionCaptureLog(logMsg);
+
         // Check if notification should be shown
         var taskSettings = task.Info?.TaskSettings ?? SettingManager.Settings.DefaultTaskSettings;
-        if (taskSettings?.GeneralSettings?.ShowToastNotificationAfterTaskCompleted == true)
+        bool showNotification = taskSettings?.GeneralSettings?.ShowToastNotificationAfterTaskCompleted == true;
+        
+        var settingsLogMsg = $"[Notification] Checking settings: ShowToast={showNotification}";
+        DebugHelper.WriteLine(settingsLogMsg);
+        AppendToRegionCaptureLog(settingsLogMsg);
+
+        if (showNotification)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
             {
@@ -72,25 +82,58 @@ public partial class App : Application
                         message = task.Info.Result.ShortenedURL;
                     }
 
-                    DebugHelper.WriteLine($"Workflow completed: {message}");
+                    var toastLogMsg = $"[Notification] Displaying toast: '{title}' - '{message}'";
+                    DebugHelper.WriteLine(toastLogMsg);
+                    AppendToRegionCaptureLog(toastLogMsg);
                     
                     // Use platform notification service if available
                     try
                     {
                         PlatformServices.Notification.ShowNotification(title, message);
+                        AppendToRegionCaptureLog("[Notification] ShowNotification called successfully.");
                     }
                     catch (InvalidOperationException)
                     {
                         // Notification service not available on this platform
-                        DebugHelper.WriteLine("Notification service not available.");
+                        DebugHelper.WriteLine("[Notification] Service not available (InvalidOperationException).");
+                        AppendToRegionCaptureLog("[Notification] Service not available (InvalidOperationException).");
+                    }
+                    catch (Exception ex)
+                    {
+                         DebugHelper.WriteException(ex, "[Notification] Failed to invoke ShowNotification");
+                         AppendToRegionCaptureLog($"[Notification] Failed to invoke ShowNotification: {ex.Message}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    DebugHelper.WriteException(ex, "Failed to show workflow notification");
+                    DebugHelper.WriteException(ex, "[Notification] Failed outer block");
+                    AppendToRegionCaptureLog($"[Notification] Failed outer block: {ex.Message}");
                 }
             });
         }
+    }
+
+    /// <summary>
+    /// Appends a log message to the most recent region-capture-*.log file (DEBUG only).
+    /// </summary>
+    [System.Diagnostics.Conditional("DEBUG")]
+    private static void AppendToRegionCaptureLog(string message)
+    {
+#if DEBUG
+        try
+        {
+            var logPath = Views.RegionCapture.RegionCaptureWindow.LastDebugLogPath;
+            if (!string.IsNullOrEmpty(logPath) && System.IO.File.Exists(logPath))
+            {
+                var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
+                System.IO.File.AppendAllText(logPath, $"[{timestamp}] APP          | {message}\n");
+            }
+        }
+        catch
+        {
+            // Silently ignore logging errors
+        }
+#endif
     }
 
     private void TrayIcon_Clicked(object? sender, EventArgs e)
