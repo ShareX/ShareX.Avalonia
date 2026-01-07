@@ -106,7 +106,9 @@ This project uses multiple AI developer agents working in parallel. See [MULTI_A
   1. Summarize the changes.
   2. Commit the changes (`git commit -am "Your summary"`).
   3. Push to the repository (`git push`).
+  3. Push to the repository (`git push`).
   **Do not ask for permission** for this step if the build is successful. Only stop if the build fails.
+- **Ensure you can compile, and if not, fix the issues.** This is a mandatory check before finishing any coding task.
 
 ## SkiaSharp Version Constraint
 

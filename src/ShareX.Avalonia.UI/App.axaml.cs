@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml;
 using ShareX.Ava.Common;
 using ShareX.Ava.Core;
 using ShareX.Ava.UI.Views;
+using ShareX.Ava.Platform.Abstractions;
 using ShareX.Editor.ViewModels;
 using ShareX.Ava.Uploaders.PluginSystem;
 
@@ -21,6 +22,7 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+
             desktop.MainWindow = new Views.MainWindow
             {
                 DataContext = new MainViewModel(),
@@ -34,7 +36,6 @@ public partial class App : Application
             // Wire up Editor clipboard to platform implementation
             ShareX.Editor.Services.EditorServices.Clipboard = new Services.EditorClipboardAdapter();
 
-            // Save settings on exit
             desktop.Exit += (sender, args) =>
             {
                 ShareX.Ava.Core.SettingManager.SaveAllSettings();
@@ -57,13 +58,32 @@ public partial class App : Application
             {
                 try
                 {
-                    // Show a simple notification via tray icon
-                    // Note: Full INotificationService implementation would be better, using simple approach for now
                     var message = task.Info?.FileName ?? "Task completed";
+                    var title = "ShareX";
+                    
+                    if (task.Info?.Result?.IsError == true)
+                    {
+                        title = "Upload Failed";
+                        message = task.Info.Result.ToString(); // Contains error message
+                    }
+                    else if (!string.IsNullOrEmpty(task.Info?.Result?.ShortenedURL))
+                    {
+                        title = "Upload Completed";
+                        message = task.Info.Result.ShortenedURL;
+                    }
+
                     DebugHelper.WriteLine($"Workflow completed: {message}");
                     
-                    // TODO: Implement platform-specific notification (Windows toast, macOS notification center, etc.)
-                    // For now, log and optionally show via main window
+                    // Use platform notification service if available
+                    try
+                    {
+                        PlatformServices.Notification.ShowNotification(title, message);
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // Notification service not available on this platform
+                        DebugHelper.WriteLine("Notification service not available.");
+                    }
                 }
                 catch (Exception ex)
                 {

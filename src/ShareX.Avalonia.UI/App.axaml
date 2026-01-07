@@ -47,7 +47,7 @@
 
     <TrayIcon.Icons>
         <TrayIcons>
-            <TrayIcon Icon="avares://ShareX.Avalonia.UI/Assets/Icons/sharex16.ico"
+            <TrayIcon Icon="avares://ShareX.Avalonia.UI/Assets/ShareX.iconset/icon_16x16.png"
                       ToolTipText="ShareX"
                       IsVisible="{Binding ShowTray, Source={x:Static local:TrayIconHelper.Instance}}"
                       Command="{Binding TrayClickCommand, Source={x:Static local:TrayIconHelper.Instance}}"

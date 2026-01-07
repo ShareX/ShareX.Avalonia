@@ -25,6 +25,7 @@
 
 using System;
 using System.Runtime.InteropServices;
+using ShareX.Ava.Services.Abstractions;
 
 namespace ShareX.Ava.Platform.Abstractions
 {
@@ -90,6 +91,13 @@ namespace ShareX.Ava.Platform.Abstractions
             set => _screenCaptureService = value;
         }
 
+        private static INotificationService? _notificationService;
+        public static INotificationService Notification
+        {
+            get => _notificationService ?? throw new InvalidOperationException("Platform services not initialized. Call Initialize() first.");
+            set => _notificationService = value;
+        }
+
         private static IUIService? _uiService;
         public static IUIService UI
         {
@@ -115,7 +123,8 @@ namespace ShareX.Ava.Platform.Abstractions
             IScreenCaptureService screenCaptureService,
             IHotkeyService hotkeyService,
             IInputService inputService,
-            IFontService fontService)
+            IFontService fontService,
+            INotificationService? notificationService = null)
         {
             _platformInfo = platformInfo ?? throw new ArgumentNullException(nameof(platformInfo));
             _screenService = screenService ?? throw new ArgumentNullException(nameof(screenService));
@@ -125,6 +134,7 @@ namespace ShareX.Ava.Platform.Abstractions
             _screenCaptureService = screenCaptureService ?? throw new ArgumentNullException(nameof(screenCaptureService));
             _hotkeyService = hotkeyService ?? throw new ArgumentNullException(nameof(hotkeyService));
             _fontService = fontService ?? throw new ArgumentNullException(nameof(fontService));
+            _notificationService = notificationService;  // Optional - null means no native notifications
         }
 
         public static void RegisterUIService(IUIService uiService)
@@ -146,6 +156,7 @@ namespace ShareX.Ava.Platform.Abstractions
             _inputService = null;
             _hotkeyService = null;
             _fontService = null;
+            _notificationService = null;
         }
     }
 }
