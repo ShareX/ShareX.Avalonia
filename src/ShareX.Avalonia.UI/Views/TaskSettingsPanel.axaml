@@ -14,8 +14,8 @@
 
     <Grid RowDefinitions="*" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <TabControl Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" MinHeight="300">
-            <!-- Notifications Tab -->
-            <TabItem Header="Notifications">
+            <!-- General Tab -->
+            <TabItem Header="General">
                 <ScrollViewer>
                     <StackPanel Margin="20" Spacing="20">
                         <StackPanel Spacing="10">
@@ -23,7 +23,32 @@
                             <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
                                 <StackPanel Spacing="10">
                                     <CheckBox IsChecked="{Binding PlaySoundAfterCapture}" Content="Play sound after capture"/>
+                                    <CheckBox IsChecked="{Binding PlaySoundAfterUpload}" Content="Play sound after upload"/>
+                                    <CheckBox IsChecked="{Binding PlaySoundAfterAction}" Content="Play sound after action"/>
                                     <CheckBox IsChecked="{Binding ShowToastNotification}" Content="Show toast notification after task completed"/>
+                                    <Grid ColumnDefinitions="Auto, 10, Auto, 10, Auto" IsVisible="{Binding ShowToastNotification}">
+                                         <TextBlock Grid.Column="0" Text="Duration:" VerticalAlignment="Center"/>
+                                         <NumericUpDown Grid.Column="2" Value="{Binding ToastWindowDuration}" Minimum="0.1" Maximum="30" Increment="0.5" FormatString="0.0" Width="100"/>
+                                         <TextBlock Grid.Column="4" Text="seconds" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, Auto, 10, Auto" IsVisible="{Binding ShowToastNotification}">
+                                         <TextBlock Grid.Column="0" Text="Fade duration:" VerticalAlignment="Center"/>
+                                         <NumericUpDown Grid.Column="2" Value="{Binding ToastWindowFadeDuration}" Minimum="0" Maximum="5" Increment="0.1" FormatString="0.0" Width="100"/>
+                                         <TextBlock Grid.Column="4" Text="seconds" VerticalAlignment="Center"/>
+                                    </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Sound" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <CheckBox IsChecked="{Binding UseCustomCaptureSound}" Content="Use custom capture sound"/>
+                                    <Grid ColumnDefinitions="Auto, 10, *" IsVisible="{Binding UseCustomCaptureSound}">
+                                        <TextBlock Grid.Column="0" Text="Path:" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Text="{Binding CustomCaptureSoundPath}"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -50,6 +75,29 @@
                                     <CheckBox IsChecked="{Binding CaptureTransparent}" Content="Capture transparency"/>
                                     <CheckBox IsChecked="{Binding CaptureShadow}" Content="Capture window shadow" IsEnabled="{Binding CaptureTransparent}" Margin="20,0,0,0"/>
                                     <CheckBox IsChecked="{Binding CaptureClientArea}" Content="Capture client area (remove window chrome)"/>
+                                    <CheckBox IsChecked="{Binding CaptureAutoHideTaskbar}" Content="Auto hide taskbar during capture"/>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Screen recorder" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="Auto, 10, Auto, 10, Auto">
+                                         <TextBlock Grid.Column="0" Text="FPS:" VerticalAlignment="Center"/>
+                                         <NumericUpDown Grid.Column="2" Value="{Binding ScreenRecordFPS}" Minimum="1" Maximum="144" Increment="1" Width="100"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, Auto, 10, Auto">
+                                         <TextBlock Grid.Column="0" Text="Duration:" VerticalAlignment="Center"/>
+                                         <NumericUpDown Grid.Column="2" Value="{Binding ScreenRecordDuration}" Minimum="0" Maximum="3600" Increment="1" Width="100"/>
+                                         <TextBlock Grid.Column="4" Text="seconds (0 to disable)" VerticalAlignment="Center"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, Auto, 10, Auto">
+                                         <TextBlock Grid.Column="0" Text="Start delay:" VerticalAlignment="Center"/>
+                                         <NumericUpDown Grid.Column="2" Value="{Binding ScreenRecordStartDelay}" Minimum="0" Maximum="60" Increment="0.1" FormatString="0.0" Width="100"/>
+                                         <TextBlock Grid.Column="4" Text="seconds" VerticalAlignment="Center"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>
@@ -82,60 +130,101 @@
             </TabItem>
 
             <TabItem Header="Image">
-                <Grid ColumnDefinitions="*, *, 1.5*, *" Margin="10">
-                    <!-- Presets -->
-                    <DockPanel Grid.Column="0" Margin="0,0,5,0">
-                        <TextBlock Text="Presets:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,5">
-                            <Button Command="{Binding ImageEffects.AddPresetCommand}" Content="Add"/>
-                            <Button Command="{Binding ImageEffects.RemovePresetCommand}" Content="Remove"/>
+                <Grid RowDefinitions="Auto, *">
+                    <StackPanel Grid.Row="0" Margin="10" Spacing="20" Orientation="Horizontal">
+                        <StackPanel Spacing="10" MinWidth="200">
+                            <TextBlock Text="Quality" FontWeight="SemiBold"/>
+                             <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="Format:" VerticalAlignment="Center"/>
+                                        <ComboBox Grid.Column="2" ItemsSource="{Binding ImageFormats}" SelectedItem="{Binding ImageFormat}" HorizontalAlignment="Stretch"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="JPEG Quality:" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Column="2" Value="{Binding ImageJPEGQuality}" Minimum="0" Maximum="100" Increment="1"/>
+                                    </Grid>
+                                </StackPanel>
+                             </Border>
                         </StackPanel>
-                        <ListBox ItemsSource="{Binding ImageEffects.Presets}" SelectedItem="{Binding ImageEffects.SelectedPreset}" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-                    </DockPanel>
-
-                    <!-- Effects List -->
-                    <DockPanel Grid.Column="1" Margin="5,0,5,0">
-                        <TextBlock Text="Effects:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
-                        <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,5">
-                            <Button Content="Add...">
-                                <Button.Flyout>
-                                    <Flyout Placement="BottomEdgeAlignedLeft" ShowMode="Standard">
-                                        <Menu ItemsSource="{Binding ImageEffects.AvailableEffects}">
-                                            <Menu.Styles>
-                                                <Style Selector="MenuItem" x:DataType="vm:EffectCategory">
-                                                    <Setter Property="Header" Value="{Binding Name}"/>
-                                                    <Setter Property="ItemsSource" Value="{Binding Effects}"/>
-                                                </Style>
-                                                <Style Selector="MenuItem" x:DataType="vm:EffectType">
-                                                    <Setter Property="Header" Value="{Binding Name}"/>
-                                                    <Setter Property="Command" Value="{Binding $parent[UserControl].DataContext.ImageEffects.AddEffectCommand}"/>
-                                                    <Setter Property="CommandParameter" Value="{Binding Type}"/>
-                                                </Style>
-                                            </Menu.Styles>
-                                        </Menu>
-                                    </Flyout>
-                                </Button.Flyout>
-                            </Button>
-                            <Button Command="{Binding ImageEffects.RemoveEffectCommand}" Content="Remove"/>
+                        
+                        <StackPanel Spacing="10" MinWidth="200">
+                            <TextBlock Text="Thumbnail" FontWeight="SemiBold"/>
+                             <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="Width:" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Column="2" Value="{Binding ThumbnailWidth}" Minimum="0" Maximum="10000" Increment="10"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="Height:" VerticalAlignment="Center"/>
+                                        <NumericUpDown Grid.Column="2" Value="{Binding ThumbnailHeight}" Minimum="0" Maximum="10000" Increment="10"/>
+                                    </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                        <TextBlock Grid.Column="0" Text="Name:" VerticalAlignment="Center"/>
+                                        <TextBox Grid.Column="2" Text="{Binding ThumbnailName}"/>
+                                    </Grid>
+                                    <CheckBox IsChecked="{Binding ThumbnailCheckSize}" Content="Save thumbnail only if smaller than image"/>
+                                </StackPanel>
+                             </Border>
                         </StackPanel>
-                        <ListBox ItemsSource="{Binding ImageEffects.Effects}" SelectedItem="{Binding ImageEffects.SelectedEffect}" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
-                    </DockPanel>
+                    </StackPanel>
 
-                    <!-- Property Grid -->
-                    <DockPanel Grid.Column="2" Margin="5,0,5,0">
-                        <TextBlock Text="Properties:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
-                        <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                            <controls:PropertyGrid x:Name="EffectPropertyGrid" SelectedObject="{Binding ImageEffects.SelectedEffect}" Margin="5"/>
-                        </Border>
-                    </DockPanel>
+                    <Grid Grid.Row="1" ColumnDefinitions="*, *, 1.5*, *" Margin="10">
+                        <!-- Presets -->
+                        <DockPanel Grid.Column="0" Margin="0,0,5,0">
+                            <TextBlock Text="Presets:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,5">
+                                <Button Command="{Binding ImageEffects.AddPresetCommand}" Content="Add"/>
+                                <Button Command="{Binding ImageEffects.RemovePresetCommand}" Content="Remove"/>
+                            </StackPanel>
+                            <ListBox ItemsSource="{Binding ImageEffects.Presets}" SelectedItem="{Binding ImageEffects.SelectedPreset}" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+                        </DockPanel>
 
-                    <!-- Preview Panel -->
-                    <DockPanel Grid.Column="3" Margin="5,0,0,0">
-                        <TextBlock Text="Preview:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
-                        <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
-                            <Image Source="{Binding ImageEffects.PreviewBitmap}" Stretch="Uniform" Margin="5"/>
-                        </Border>
-                    </DockPanel>
+                        <!-- Effects List -->
+                        <DockPanel Grid.Column="1" Margin="5,0,5,0">
+                            <TextBlock Text="Effects:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
+                            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Spacing="5" Margin="0,0,0,5">
+                                <Button Content="Add...">
+                                    <Button.Flyout>
+                                        <Flyout Placement="BottomEdgeAlignedLeft" ShowMode="Standard">
+                                            <Menu ItemsSource="{Binding ImageEffects.AvailableEffects}">
+                                                <Menu.Styles>
+                                                    <Style Selector="MenuItem" x:DataType="vm:EffectCategory">
+                                                        <Setter Property="Header" Value="{Binding Name}"/>
+                                                        <Setter Property="ItemsSource" Value="{Binding Effects}"/>
+                                                    </Style>
+                                                    <Style Selector="MenuItem" x:DataType="vm:EffectType">
+                                                        <Setter Property="Header" Value="{Binding Name}"/>
+                                                        <Setter Property="Command" Value="{Binding $parent[UserControl].DataContext.ImageEffects.AddEffectCommand}"/>
+                                                        <Setter Property="CommandParameter" Value="{Binding Type}"/>
+                                                    </Style>
+                                                </Menu.Styles>
+                                            </Menu>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                                <Button Command="{Binding ImageEffects.RemoveEffectCommand}" Content="Remove"/>
+                            </StackPanel>
+                            <ListBox ItemsSource="{Binding ImageEffects.Effects}" SelectedItem="{Binding ImageEffects.SelectedEffect}" BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}"/>
+                        </DockPanel>
+
+                        <!-- Property Grid -->
+                        <DockPanel Grid.Column="2" Margin="5,0,5,0">
+                            <TextBlock Text="Properties:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
+                            <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                <controls:PropertyGrid x:Name="EffectPropertyGrid" SelectedObject="{Binding ImageEffects.SelectedEffect}" Margin="5"/>
+                            </Border>
+                        </DockPanel>
+
+                        <!-- Preview Panel -->
+                        <DockPanel Grid.Column="3" Margin="5,0,0,0">
+                            <TextBlock Text="Preview:" DockPanel.Dock="Top" Margin="0,0,0,5"/>
+                            <Border BorderThickness="1" BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                                <Image Source="{Binding ImageEffects.PreviewBitmap}" Stretch="Uniform" Margin="5"/>
+                            </Border>
+                        </DockPanel>
+                    </Grid>
                 </Grid>
             </TabItem>
 
@@ -166,6 +255,16 @@
                                         <TextBlock Grid.Column="0" Text="Replacement:" VerticalAlignment="Center"/>
                                         <TextBox Grid.Column="2" Text="{Binding URLRegexReplaceReplacement, Mode=TwoWay}"/>
                                     </Grid>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Spacing="10">
+                            <TextBlock Text="Clipboard upload" FontWeight="SemiBold"/>
+                            <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="10">
+                                <StackPanel Spacing="10">
+                                    <CheckBox IsChecked="{Binding ClipboardUploadURLContents}" Content="Upload URL contents"/>
+                                    <CheckBox IsChecked="{Binding ClipboardUploadShortenURL}" Content="Shorten URL"/>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

@@ -16,6 +16,8 @@ namespace ShareX.Ava.UI.ViewModels
             ImageEffects = new ImageEffectsViewModel(Model.ImageSettings);
         }
 
+        public IEnumerable<EImageFormat> ImageFormats => Enum.GetValues(typeof(EImageFormat)).Cast<EImageFormat>();
+
         // Expose underlying model if needed
         public TaskSettings Model => _settings;
 
@@ -100,6 +102,58 @@ namespace ShareX.Ava.UI.ViewModels
             }
         }
 
+        public int ScreenRecordFPS
+        {
+            get => _settings.CaptureSettings.ScreenRecordFPS;
+            set
+            {
+                if (_settings.CaptureSettings.ScreenRecordFPS != value)
+                {
+                    _settings.CaptureSettings.ScreenRecordFPS = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public float ScreenRecordDuration
+        {
+            get => _settings.CaptureSettings.ScreenRecordDuration;
+            set
+            {
+                if (Math.Abs(_settings.CaptureSettings.ScreenRecordDuration - value) > 0.001f)
+                {
+                    _settings.CaptureSettings.ScreenRecordDuration = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public float ScreenRecordStartDelay
+        {
+            get => _settings.CaptureSettings.ScreenRecordStartDelay;
+            set
+            {
+                if (Math.Abs(_settings.CaptureSettings.ScreenRecordStartDelay - value) > 0.001f)
+                {
+                    _settings.CaptureSettings.ScreenRecordStartDelay = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        
+        public bool CaptureAutoHideTaskbar
+        {
+            get => _settings.CaptureSettings.CaptureAutoHideTaskbar;
+            set
+            {
+                if (_settings.CaptureSettings.CaptureAutoHideTaskbar != value)
+                {
+                    _settings.CaptureSettings.CaptureAutoHideTaskbar = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+        
         #endregion
 
         #region Upload / File Naming
@@ -190,6 +244,32 @@ namespace ShareX.Ava.UI.ViewModels
                 if (_settings.UploadSettings.URLRegexReplaceReplacement != value)
                 {
                     _settings.UploadSettings.URLRegexReplaceReplacement = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool ClipboardUploadURLContents
+        {
+            get => _settings.UploadSettings.ClipboardUploadURLContents;
+            set
+            {
+                if (_settings.UploadSettings.ClipboardUploadURLContents != value)
+                {
+                    _settings.UploadSettings.ClipboardUploadURLContents = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool ClipboardUploadShortenURL
+        {
+            get => _settings.UploadSettings.ClipboardUploadShortenURL;
+            set
+            {
+                if (_settings.UploadSettings.ClipboardUploadShortenURL != value)
+                {
+                    _settings.UploadSettings.ClipboardUploadShortenURL = value;
                     OnPropertyChanged();
                 }
             }
@@ -348,6 +428,166 @@ namespace ShareX.Ava.UI.ViewModels
                 if (_settings.GeneralSettings.ShowToastNotificationAfterTaskCompleted != value)
                 {
                     _settings.GeneralSettings.ShowToastNotificationAfterTaskCompleted = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool PlaySoundAfterUpload
+        {
+            get => _settings.GeneralSettings.PlaySoundAfterUpload;
+            set
+            {
+                if (_settings.GeneralSettings.PlaySoundAfterUpload != value)
+                {
+                    _settings.GeneralSettings.PlaySoundAfterUpload = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool PlaySoundAfterAction
+        {
+            get => _settings.GeneralSettings.PlaySoundAfterAction;
+            set
+            {
+                if (_settings.GeneralSettings.PlaySoundAfterAction != value)
+                {
+                    _settings.GeneralSettings.PlaySoundAfterAction = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool UseCustomCaptureSound
+        {
+            get => _settings.GeneralSettings.UseCustomCaptureSound;
+            set
+            {
+                if (_settings.GeneralSettings.UseCustomCaptureSound != value)
+                {
+                    _settings.GeneralSettings.UseCustomCaptureSound = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string CustomCaptureSoundPath
+        {
+            get => _settings.GeneralSettings.CustomCaptureSoundPath;
+            set
+            {
+                if (_settings.GeneralSettings.CustomCaptureSoundPath != value)
+                {
+                    _settings.GeneralSettings.CustomCaptureSoundPath = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public float ToastWindowDuration
+        {
+            get => _settings.GeneralSettings.ToastWindowDuration;
+            set
+            {
+                if (Math.Abs(_settings.GeneralSettings.ToastWindowDuration - value) > 0.001f)
+                {
+                    _settings.GeneralSettings.ToastWindowDuration = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public float ToastWindowFadeDuration
+        {
+            get => _settings.GeneralSettings.ToastWindowFadeDuration;
+            set
+            {
+                if (Math.Abs(_settings.GeneralSettings.ToastWindowFadeDuration - value) > 0.001f)
+                {
+                    _settings.GeneralSettings.ToastWindowFadeDuration = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        #endregion
+
+        #region Image Settings
+
+        public EImageFormat ImageFormat
+        {
+            get => _settings.ImageSettings.ImageFormat;
+            set
+            {
+                if (_settings.ImageSettings.ImageFormat != value)
+                {
+                    _settings.ImageSettings.ImageFormat = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int ImageJPEGQuality
+        {
+            get => _settings.ImageSettings.ImageJPEGQuality;
+            set
+            {
+                if (_settings.ImageSettings.ImageJPEGQuality != value)
+                {
+                    _settings.ImageSettings.ImageJPEGQuality = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int ThumbnailWidth
+        {
+            get => _settings.ImageSettings.ThumbnailWidth;
+            set
+            {
+                if (_settings.ImageSettings.ThumbnailWidth != value)
+                {
+                    _settings.ImageSettings.ThumbnailWidth = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public int ThumbnailHeight
+        {
+            get => _settings.ImageSettings.ThumbnailHeight;
+            set
+            {
+                if (_settings.ImageSettings.ThumbnailHeight != value)
+                {
+                    _settings.ImageSettings.ThumbnailHeight = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public string ThumbnailName
+        {
+            get => _settings.ImageSettings.ThumbnailName;
+            set
+            {
+                if (_settings.ImageSettings.ThumbnailName != value)
+                {
+                    _settings.ImageSettings.ThumbnailName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool ThumbnailCheckSize
+        {
+            get => _settings.ImageSettings.ThumbnailCheckSize;
+            set
+            {
+                if (_settings.ImageSettings.ThumbnailCheckSize != value)
+                {
+                    _settings.ImageSettings.ThumbnailCheckSize = value;
                     OnPropertyChanged();
                 }
             }
