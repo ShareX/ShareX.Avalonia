@@ -43,8 +43,9 @@ namespace ShareX.Ava.Platform.MacOS
 
             if (screenCaptureService == null)
             {
-                screenCaptureService = new MacOSScreenshotService();
-                DebugHelper.WriteLine("macOS: Using MacOSScreenshotService (screencapture CLI)");
+                // Use native ScreenCaptureKit service which includes automatic fallback to CLI
+                screenCaptureService = new MacOSScreenCaptureKitService();
+                DebugHelper.WriteLine("macOS: Using MacOSScreenCaptureKitService (native ScreenCaptureKit with CLI fallback)");
             }
 
             PlatformServices.Initialize(

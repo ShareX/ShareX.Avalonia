@@ -45,27 +45,89 @@ The implementation will be executed in three distinct stages, prioritizing the W
     *   Investigate `org.kde.KWin.ScreenShot2` for privileged, silent capture where appropriate/configured.
 *   **Fallbacks**: Maintain or refine X11 fallback for legacy sessions.
 
-### Stage 3: macOS - ScreenCaptureKit (Deferred: CLI Implementation Complete)
-**Objective**: ~~Replace the slow and limited `screencapture` CLI subprocess calls with the native `ScreenCaptureKit` framework (available macOS 12.3+).~~
+### Stage 3: macOS - Native ScreenCaptureKit Integration
+**Objective**: Replace the CLI-based `screencapture` subprocess calls with the native `ScreenCaptureKit` framework (available macOS 12.3+) for higher performance and better integration.
 
 > [!NOTE]
-> The macOS platform already has a functional `MacOSScreenshotService` using the `screencapture` CLI tool which was merged from `feature/macos-implementation`. This provides complete capture functionality including fullscreen, region, and window capture. Native ScreenCaptureKit integration is deferred for a future enhancement as it requires Swift/Obj-C interop.
+> The macOS platform has a fallback `MacOSScreenshotService` using the `screencapture` CLI tool. This will be retained as a fallback for macOS versions prior to 12.3 (Monterey).
 
-**Current Implementation Status**: ✅ Complete (CLI-based)
-- `MacOSScreenshotService.cs` - Uses `screencapture` CLI with proper temp file handling
-- Supports fullscreen, region, and window capture modes
-- Includes detailed debug logging
+**Current Implementation Status**: ✅ Complete
+- ✅ `MacOSScreenshotService.cs` - CLI-based fallback (complete)
+- ✅ `MacOSScreenCaptureKitService.cs` - Native ScreenCaptureKit (complete)
 
-**Future Enhancement** (ScreenCaptureKit):
-*   Use `SCStream` for efficient frame delivery.
-*   Use `SCShareableContent` to enumerate windows and displays efficiently.
-*   Create a thin native library or use direct P/Invoke bindings.
-*   Enable high-framerate capture suitable for video recording.
+**Technical Approach**:
+
+Since direct P/Invoke from C# to Swift is not possible due to differing calling conventions, we will:
+
+1. **Create a Native Objective-C Library** (`libscreencapturekit_bridge.dylib`):
+   - Wrap ScreenCaptureKit's `SCScreenshotManager.CaptureImage` API
+   - Expose C-compatible functions for P/Invoke
+   - Handle memory management (ARC on native side, proper cleanup on C# side)
+   - Return raw PNG/JPEG bytes to avoid complex struct marshalling
+
+2. **C# P/Invoke Layer** (`MacOSScreenCaptureKitService.cs`):
+   - Use `[LibraryImport]` to call native functions
+   - Marshal byte arrays for image data transfer
+   - Decode returned bytes with SkiaSharp
+   - Implement fallback to CLI-based service on error or unsupported OS
+
+**Native Library API Design**:
+```c
+// screencapturekit_bridge.h
+int sck_capture_fullscreen(uint8_t** out_data, int* out_length);
+int sck_capture_rect(float x, float y, float w, float h, uint8_t** out_data, int* out_length);
+int sck_capture_window(uint32_t window_id, uint8_t** out_data, int* out_length);
+void sck_free_buffer(uint8_t* data);
+int sck_is_available(); // Returns 1 if macOS 12.3+, 0 otherwise
+```
+
+**Requirements**:
+*   **macOS 12.3+ (Monterey)**: ScreenCaptureKit requires this minimum version
+*   **Screen Recording Permission**: User must grant permission in System Preferences > Privacy & Security > Screen Recording
+*   **Xcode Command Line Tools**: Required for building native library
 
 ## Architectural Changes
 *   The `IScreenCaptureService` interface already exists in `ShareX.Avalonia.Platform.Abstractions`.
 *   Each stage will implement/replace a concrete service:
-    *   **Stage 1**: `WindowsModernCaptureService` (NEW - replaces GDI+ based `WindowsScreenCaptureService`)
-    *   **Stage 2**: `LinuxScreenCaptureService` (NEW - replaces `StubScreenCaptureService` in existing `Platform.Linux` project)
-    *   **Stage 3**: `MacOSNativeCaptureService` (MODIFY - enhance existing `MacOSScreenshotService`)
-*   The system will auto-detect the OS and version to select the best available provider, falling back to legacy methods (GDI+/CLI) only when modern APIs are unavailable (e.g., older OS versions).
+    *   **Stage 1**: `WindowsModernCaptureService` ✅ Complete
+    *   **Stage 2**: `LinuxScreenCaptureService` ✅ Complete
+    *   **Stage 3**: `MacOSScreenCaptureKitService` 🔄 In Progress
+        *   Native library: `native/macos/libscreencapturekit_bridge.dylib`
+        *   Fallback: `MacOSScreenshotService` (CLI-based) for macOS < 12.3
+*   The system will auto-detect the OS and version to select the best available provider, falling back to legacy methods (GDI+/CLI) only when modern APIs are unavailable.
+
+## Stage 3 Implementation Files
+
+### Native Library (Objective-C)
+- **[NEW]** `native/macos/screencapturekit_bridge.m` - Objective-C wrapper for ScreenCaptureKit
+- **[NEW]** `native/macos/screencapturekit_bridge.h` - C-compatible header for P/Invoke
+- **[NEW]** `native/macos/Makefile` - Build script for dylib
+
+### C# Service
+- **[NEW]** `src/ShareX.Avalonia.Platform.MacOS/Native/ScreenCaptureKitInterop.cs` - P/Invoke declarations
+- **[NEW]** `src/ShareX.Avalonia.Platform.MacOS/MacOSScreenCaptureKitService.cs` - Native capture service
+- **[MODIFY]** `src/ShareX.Avalonia.Platform.MacOS/MacOSPlatform.cs` - Register new service with fallback logic
+
+## Verification Plan
+
+### Automated (Build)
+```bash
+# Build native library on macOS
+cd native/macos && make
+
+# Build the .NET solution
+dotnet build ShareX.Avalonia.sln
+```
+
+### Manual Testing (macOS 12.3+)
+1. Run the application on macOS
+2. Trigger screenshot capture (fullscreen, region, window)
+3. Verify screenshot appears correctly
+4. Check debug logs for `[ScreenCaptureKit]` entries confirming native API usage
+
+### Fallback Testing (macOS < 12.3 or native library missing)
+1. Rename/remove `libscreencapturekit_bridge.dylib`
+2. Run the application
+3. Verify capture still works (falls back to CLI)
+4. Check debug logs for `[MacOSCapture]` entries indicating CLI fallback
+
