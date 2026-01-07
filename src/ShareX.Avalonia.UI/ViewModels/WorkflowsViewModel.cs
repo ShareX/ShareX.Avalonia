@@ -46,20 +46,23 @@ public partial class WorkflowsViewModel : ViewModelBase
     private void LoadWorkflows()
     {
         Workflows.Clear();
+        
+        IEnumerable<HotkeySettings> source;
         if (_manager != null)
         {
-            foreach (var hk in _manager.Hotkeys)
-            {
-                Workflows.Add(new HotkeyItemViewModel(hk));
-            }
+            source = _manager.Hotkeys;
         }
         else
         {
-            // Fallback if manager isn't ready (e.g. design time)
-            foreach (var hk in SettingManager.WorkflowsConfig.Hotkeys)
-            {
-                Workflows.Add(new HotkeyItemViewModel(hk));
-            }
+            source = SettingManager.WorkflowsConfig.Hotkeys;
+        }
+
+        // Sort by WorkflowID
+        var sorted = source.OrderBy(x => x.WorkflowID).ToList();
+
+        foreach (var hk in sorted)
+        {
+            Workflows.Add(new HotkeyItemViewModel(hk));
         }
     }
 
@@ -84,6 +87,9 @@ public partial class WorkflowsViewModel : ViewModelBase
         // Maybe default job?
         newSettings.Job = ShareX.Ava.Core.HotkeyType.RectangleRegion;
         newSettings.TaskSettings = new TaskSettings();
+        
+        // Assign next available WorkflowID
+        newSettings.WorkflowID = GetNextWorkflowID();
         
         if (EditHotkeyRequester != null)
         {
@@ -161,10 +167,32 @@ public partial class WorkflowsViewModel : ViewModelBase
             string json = Newtonsoft.Json.JsonConvert.SerializeObject(SelectedWorkflow.Model.TaskSettings);
             clone.TaskSettings = Newtonsoft.Json.JsonConvert.DeserializeObject<TaskSettings>(json);
             
+            // Assign next available WorkflowID
+            clone.WorkflowID = GetNextWorkflowID();
+
             _manager.Hotkeys.Add(clone);
             LoadWorkflows();
             SaveHotkeys();
         }
+    }
+
+    private string GetNextWorkflowID()
+    {
+        IEnumerable<HotkeySettings> source = _manager != null ? _manager.Hotkeys : SettingManager.WorkflowsConfig.Hotkeys;
+        
+        int maxId = 0;
+        foreach (var hk in source)
+        {
+            if (!string.IsNullOrEmpty(hk.WorkflowID) && hk.WorkflowID.StartsWith("W") && hk.WorkflowID.Length > 1)
+            {
+                if (int.TryParse(hk.WorkflowID.Substring(1), out int result))
+                {
+                    if (result > maxId) maxId = result;
+                }
+            }
+        }
+        
+        return $"W{(maxId + 1):D2}";
     }
 
 

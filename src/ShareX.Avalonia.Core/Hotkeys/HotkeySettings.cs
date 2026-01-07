@@ -67,6 +67,11 @@ public class HotkeySettings
     public string? Name { get; set; }
 
     /// <summary>
+    /// Unique Workflow ID (e.g. W01, W02)
+    /// </summary>
+    public string? WorkflowID { get; set; }
+
+    /// <summary>
     /// Whether this hotkey is enabled
     /// </summary>
     public bool Enabled { get; set; } = true;

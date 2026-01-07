@@ -209,6 +209,10 @@ namespace ShareX.Ava.Core
             WorkflowsConfig = WorkflowsConfig.Load(path, BackupFolder, fallbackSupport) ?? new WorkflowsConfig();
             WorkflowsConfig.CreateBackup = true;
             WorkflowsConfig.CreateWeeklyBackup = true;
+            
+            // Ensure IDs are backfilled for existing configs
+            WorkflowsConfig.EnsureWorkflowIDs();
+            
             DebugHelper.WriteLine($"WorkflowsConfig load finished: {path}");
         }
 

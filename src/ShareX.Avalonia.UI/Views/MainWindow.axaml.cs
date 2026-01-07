@@ -33,6 +33,9 @@ namespace ShareX.Ava.UI.Views
             var navView = this.FindControl<NavigationView>("NavView");
             if (navView != null)
             {
+                // Update navigation items with Workflow IDs
+                UpdateNavigationItems(navView);
+
                 // Force selection of first item
                 if (navView.MenuItems[0] is NavigationViewItem item)
                 {
@@ -346,6 +349,50 @@ namespace ShareX.Ava.UI.Views
 
             TaskManager.Instance.TaskCompleted += HandleTaskCompleted;
             await TaskManager.Instance.StartTask(settings, image);
+        }
+        private void UpdateNavigationItems(NavigationView navView)
+        {
+            foreach (var item in navView.MenuItems)
+            {
+                if (item is NavigationViewItem navItem && navItem.Tag?.ToString() == "Capture")
+                {
+                    foreach (var subItem in navItem.MenuItems)
+                    {
+                        if (subItem is NavigationViewItem subNavItem && subNavItem.Tag is string tag)
+                        {
+                            HotkeyType? jobType = tag switch
+                            {
+                                "Capture_Fullscreen" => HotkeyType.PrintScreen,
+                                "Capture_Region" => HotkeyType.RectangleRegion,
+                                "Capture_SelectedWindow" => HotkeyType.CustomWindow,
+                                _ => null
+                            };
+
+                            if (jobType.HasValue)
+                            {
+                                var workflow = SettingManager.WorkflowsConfig.Hotkeys.FirstOrDefault(x => x.Job == jobType.Value);
+                                if (workflow != null && !string.IsNullOrEmpty(workflow.WorkflowID))
+                                {
+                                    // subNavItem.Content is initially a string (e.g., "Fullscreen")
+                                    // We replace it with a styled StackPanel
+                                    var currentContent = subNavItem.Content?.ToString() ?? "";
+                                    
+                                    var panel = new StackPanel { Orientation = Avalonia.Layout.Orientation.Horizontal, Spacing = 5 };
+                                    panel.Children.Add(new TextBlock { Text = currentContent });
+                                    panel.Children.Add(new TextBlock 
+                                    { 
+                                        Text = $"({workflow.WorkflowID})",
+                                        Foreground = Brushes.Gray,
+                                        VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center
+                                    });
+                                    
+                                    subNavItem.Content = panel;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
