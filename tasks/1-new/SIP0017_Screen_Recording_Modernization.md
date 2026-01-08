@@ -70,6 +70,15 @@ The implementation will be executed in seven distinct stages, prioritizing core 
 *   **Linux**: Implement `XDGPortalCaptureSource` (ScreenCast) via DBus. Use FFmpeg CLI for encoding initially.
 *   **macOS**: Extend `ScreenCaptureKit` interop to support stream callbacks (continuous capture). Implement `AVAssetWriterInterop` for native encoding.
 
+## Technical Implementations & Lessons Learnt
+
+### Windows TFM & CsWinRT Behavior
+During Stage 1 implementation, we discovered critical behavior regarding Target Framework Monikers (TFM) when using the `Microsoft.Windows.CsWinRT` package:
+
+1.  **Issue**: Using `net10.0-windows` with a separate `<TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>` property works for individual project builds but fails during full solution builds with "Windows Metadata not provided" errors.
+2.  **Cause**: The CsWinRT default targets file struggles to resolve metadata references correctly in transitive dependency chains when the TFM is generic.
+3.  **Solution**: Using the explicit TFM `net10.0-windows10.0.19041.0` forces the build system to include the correct Windows SDK reference assemblies natively, avoiding the metadata resolution failure. This is required for reliable solution-wide builds when using WinRT APIs like `Windows.Graphics.Capture`.
+
 ## Architectural Changes
 
 We propose a modular interface-based architecture compliant with `AGENTS.md` platform abstraction rules.
