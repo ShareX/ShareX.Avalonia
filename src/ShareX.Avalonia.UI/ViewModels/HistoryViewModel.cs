@@ -51,7 +51,37 @@ namespace XerahS.UI.ViewModels
         [ObservableProperty]
         private bool _isLoading = false;
 
+        [ObservableProperty]
+        private bool _isLoadingThumbnails = false;
+
+
+
+        // Pagination Properties
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanGoNext))]
+        [NotifyPropertyChangedFor(nameof(CanGoPrevious))]
+        [NotifyPropertyChangedFor(nameof(PageInfo))]
+        private int _currentPage = 1;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(CanGoNext))]
+        [NotifyPropertyChangedFor(nameof(PageInfo))]
+        private int _totalPages = 0;
+
+        [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(PageInfo))]
+        private int _totalItems = 0;
+
+        [ObservableProperty]
+        private int _pageSize = 50;
+
+        public bool CanGoNext => CurrentPage < TotalPages;
+        public bool CanGoPrevious => CurrentPage > 1;
+
+        public string PageInfo => $"Page {CurrentPage} of {Math.Max(1, TotalPages)} ({TotalItems} items)"; // Prevent "Page 1 of 0" looking weird
+
         private readonly HistoryManagerSQLite _historyManager;
+        private CancellationTokenSource? _thumbnailCancellationTokenSource;
 
         public HistoryViewModel()
         {
@@ -68,8 +98,20 @@ namespace XerahS.UI.ViewModels
             _historyManager.CreateBackup = true;
             _historyManager.CreateWeeklyBackup = true;
 
-            // Don't load history in constructor - do it asynchronously after view is displayed
-            LoadHistoryAsync();
+            // Start loading history asynchronously WITHOUT blocking UI
+            // Use fire-and-forget to let view display immediately
+            _ = BeginHistoryLoadAsync();
+        }
+
+        /// <summary>
+        /// Starts history loading asynchronously without blocking the UI thread.
+        /// This allows the empty panel to display immediately.
+        /// </summary>
+        private async Task BeginHistoryLoadAsync()
+        {
+            // Small delay to allow UI to render the empty history view first
+            await Task.Delay(100);
+            await LoadHistoryAsync();
         }
 
         [RelayCommand]
@@ -78,22 +120,44 @@ namespace XerahS.UI.ViewModels
             if (IsLoading) return;
 
             IsLoading = true;
+
+
             try
             {
                 var historyPath = SettingManager.GetHistoryFilePath();
                 DebugHelper.WriteLine($"History.xml location: {historyPath} (exists={File.Exists(historyPath)})");
 
-                // Load history on background thread to avoid blocking UI
-                var items = await _historyManager.GetHistoryItemsAsync();
+                // calculating offset
+                int offset = (CurrentPage - 1) * PageSize;
 
+                // Load total count first
+                TotalItems = await _historyManager.GetTotalCountAsync();
+                TotalPages = (int)Math.Ceiling((double)TotalItems / PageSize);
+                if (TotalPages == 0) TotalPages = 1; // Ensure at least 1 page even if empty
+
+                // Adjust CurrentPage if out of bounds (e.g. after deletion)
+                if (CurrentPage > TotalPages) CurrentPage = TotalPages;
+                if (CurrentPage < 1) CurrentPage = 1;
+
+                // Load paged history on background thread
+                var items = await _historyManager.GetHistoryItemsAsync(offset, PageSize);
+
+                // Clear and populate on UI thread
                 HistoryItems.Clear();
                 foreach (var item in items)
                 {
                     HistoryItems.Add(item);
                 }
 
-                DebugHelper.WriteLine($"History loaded: {HistoryItems.Count} items");
+                DebugHelper.WriteLine($"History loaded: {items.Count} items (Page {CurrentPage}/{TotalPages})");
+
+                // Start loading thumbnails in background after history is displayed
+                if (HistoryItems.Count > 0)
+                {
+                    _ = LoadThumbnailsInBackgroundAsync();
+                }
             }
+
             catch (Exception ex)
             {
                 DebugHelper.WriteException(ex, "Failed to load history");
@@ -101,6 +165,91 @@ namespace XerahS.UI.ViewModels
             finally
             {
                 IsLoading = false;
+            }
+        }
+
+        [RelayCommand]
+        private async Task NextPage()
+        {
+            if (CanGoNext)
+            {
+                CurrentPage++;
+                await LoadHistoryAsync();
+            }
+        }
+
+        [RelayCommand]
+        private async Task PreviousPage()
+        {
+            if (CanGoPrevious)
+            {
+                CurrentPage--;
+                await LoadHistoryAsync();
+            }
+        }
+
+        /// <summary>
+        /// Loads thumbnails asynchronously on a background thread.
+        /// This allows history items to display immediately while thumbnails load gradually.
+        /// </summary>
+        private async Task LoadThumbnailsInBackgroundAsync()
+        {
+            // Cancel any previous thumbnail loading
+            _thumbnailCancellationTokenSource?.Cancel();
+            _thumbnailCancellationTokenSource = new CancellationTokenSource();
+
+            IsLoadingThumbnails = true;
+            try
+            {
+                await Task.Run(() =>
+                {
+                    int loadedCount = 0;
+                    foreach (var item in HistoryItems)
+                    {
+                        // Check cancellation token
+                        _thumbnailCancellationTokenSource.Token.ThrowIfCancellationRequested();
+
+                        // Pre-load thumbnail by accessing the converter
+                        // This forces the thumbnail to be cached for faster display
+                        if (!string.IsNullOrEmpty(item.FilePath) && File.Exists(item.FilePath))
+                        {
+                            try
+                            {
+                                var ext = Path.GetExtension(item.FilePath).ToLowerInvariant();
+                                if (ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".gif" || ext == ".bmp" || ext == ".webp")
+                                {
+                                    using var stream = File.OpenRead(item.FilePath);
+                                    _ = Bitmap.DecodeToWidth(stream, 180);
+                                    loadedCount++;
+                                }
+                            }
+                            catch
+                            {
+                                // Silently skip thumbnails that fail to load
+                            }
+                        }
+
+                        // Add small delay to prevent CPU saturation
+                        if (loadedCount % 5 == 0)
+                        {
+                            System.Threading.Thread.Sleep(50);
+                        }
+                    }
+
+                    DebugHelper.WriteLine($"Thumbnails pre-loaded: {loadedCount} images");
+                }, _thumbnailCancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                DebugHelper.WriteLine("Thumbnail loading was cancelled");
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Error while loading thumbnails");
+            }
+            finally
+            {
+                IsLoadingThumbnails = false;
             }
         }
 
@@ -113,6 +262,8 @@ namespace XerahS.UI.ViewModels
         [RelayCommand]
         private async Task RefreshHistory()
         {
+            // Cancel any ongoing thumbnail loading
+            _thumbnailCancellationTokenSource?.Cancel();
             await LoadHistoryAsync();
         }
 
@@ -329,6 +480,8 @@ namespace XerahS.UI.ViewModels
 
         public void Dispose()
         {
+            _thumbnailCancellationTokenSource?.Cancel();
+            _thumbnailCancellationTokenSource?.Dispose();
             _historyManager?.Dispose();
         }
     }
