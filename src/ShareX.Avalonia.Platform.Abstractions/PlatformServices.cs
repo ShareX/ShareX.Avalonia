@@ -103,6 +103,18 @@ namespace XerahS.Platform.Abstractions
             private set => _uiService = value;
         }
 
+        private static IToastService? _toastService;
+        public static IToastService Toast
+        {
+            get => _toastService ?? throw new InvalidOperationException("Toast service not initialized. Call RegisterToastService() first.");
+            private set => _toastService = value;
+        }
+
+        /// <summary>
+        /// Checks if toast service has been initialized
+        /// </summary>
+        public static bool IsToastServiceInitialized => _toastService != null;
+
 
         /// <summary>
         /// Checks if platform services have been initialized
@@ -140,6 +152,14 @@ namespace XerahS.Platform.Abstractions
             _uiService = uiService ?? throw new ArgumentNullException(nameof(uiService));
         }
 
+        /// <summary>
+        /// Registers the toast notification service
+        /// </summary>
+        public static void RegisterToastService(IToastService toastService)
+        {
+            _toastService = toastService ?? throw new ArgumentNullException(nameof(toastService));
+        }
+
 
         /// <summary>
         /// Resets all platform services (mainly for testing)
@@ -155,6 +175,7 @@ namespace XerahS.Platform.Abstractions
             _hotkeyService = null;
             _fontService = null;
             _notificationService = null;
+            _toastService = null;
         }
     }
 }
