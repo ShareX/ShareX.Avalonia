@@ -1,305 +1,194 @@
-# SIP0017: Screen Recording Modernization
+# SIP0017 Implementation Plan
 
-## Goal
-Upgrade the `ShareX.Avalonia` screen recording subsystem to utilize modern, high-performance, and OS-native APIs. The current process-based integration utilizing FFmpeg CLI is robust but lacks efficiency and modern OS integration (e.g., proper cursor composition, protected content handling). This proposal outlines a staged approach to implement robust recording providers for Windows, Linux, and macOS, with a focus on Windows.Graphics.Capture (WGC).
+## Current Implementation Status by SIP Stage
 
-## Milestones
+### Stage 1: MVP Recording (Silent) — 🟢 100% Complete
 
-| Date | Commit | Description |
-|------|--------|-------------|
-| 2026-01-08 | `30f7273` | **Stage 1 Zero Build Errors**: UI integration complete (RecordingViewModel, RecordingToolbarView, RecordingView), COM interop fixed (IGraphicsCaptureItemInterop, IDirect3DDxgiInterfaceAccess), TFM standardized to net10.0-windows + TargetPlatformVersion=10.0.19041.0 |
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `IRecordingService` interface | ✅ Complete | Full interface with Start/Stop/Events |
+| `ICaptureSource` interface | ✅ Complete | Includes StopCaptureAsync |
+| `IVideoEncoder` interface | ✅ Complete | Initialize/WriteFrame/Finalize |
+| `IAudioCapture` interface | ✅ Complete | Prepared for Stage 6 |
+| `RecordingOptions` | ✅ Complete | All fields documented |
+| `ScreenRecordingSettings` | ✅ Complete | FPS/Bitrate/Codec/Audio flags |
+| `FrameData`, `VideoFormat` | ✅ Complete | Proper structs with init |
+| All EventArgs classes | ✅ Complete | Constructors included |
+| Enums (CaptureMode, RecordingStatus, VideoCodec, PixelFormat) | ✅ Complete | All documented |
+| `WindowsGraphicsCaptureSource` | ✅ Complete | WGC via Vortice.Direct3D11 |
+| `MediaFoundationEncoder` | ✅ Complete | IMFSinkWriter with BGRA input |
+| `ScreenRecorderService` | ✅ Complete | Orchestration with factory pattern |
+| Factory registration in `WindowsPlatform.InitializeRecording()` | ✅ Complete | Called in Program.cs |
+| **UI Integration (StartRecordingCommand)** | ✅ Complete | Implemented in `RecordingViewModel` |
+| **RecordingToolbarView** | ✅ Complete | Implemented as floating overlay |
 
-## Implementation Plan
+### Stage 2: Window & Region Parity — 🟡 ~40% Complete
 
-The implementation will be executed in seven distinct stages, prioritizing core recording capability, followed by advanced features, and finally cross-platform support.
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `InitializeForWindow(IntPtr)` | ✅ Complete | Uses WGC CreateItemForWindow |
+| `InitializeForPrimaryMonitor()` | ✅ Complete | Uses WGC CreateItemForMonitor |
+| Region cropping logic | ❌ Not Started | Currently falls back to fullscreen |
+| Cursor overlay (software) | ❌ Not Started | WGC cursor enabled by default |
+| GraphicsCapturePicker integration | ❌ Not Started | Current code takes direct HWND |
 
-### Stage 1: MVP Recording (Silent)
-**Objective**: Implement the primary recording path on Windows using **Windows.Graphics.Capture (WGC)** and **Media Foundation** (no audio).
+### Stage 3: Advanced Native Encoding — 🟡 ~30% Complete
 
-**Technical Requirements**:
-*   **Capture Source**: Implement `WindowsGraphicsCaptureSource` wrapping WGC APIs.
-*   **Encoder**: Implement `MediaFoundationEncoder` using `IMFSinkWriter` for H.264/MP4 output.
-*   **UI Integration**: Wire up `Start`/`Stop` recording actions in the main UI via `MainViewModel` and `RecordingToolbarView`.
+| Component | Status | Notes |
+|-----------|--------|-------|
+| MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS | ✅ Complete | Enabled in encoder |
+| Bitrate/FPS controls in Settings | ✅ Complete | ScreenRecordingSettings has fields |
+| UI controls for Bitrate/FPS | ❌ Not Started | No settings UI for recording |
+| Hardware encoder detection/display | ❌ Not Started | MF auto-detects but no UI indicator |
 
-### Stage 2: Window & Region Parity
-**Objective**: Achieve parity with existing region/window selection capabilities using modern APIs.
+### Stage 4: FFmpeg Fallback & Auto-Switch — 🟡 ~20% Complete
 
-**Technical Requirements**:
-*   **Window Selection**: Integrate `GraphicsCapturePicker` for targeting specific windows.
-*   **Region Cropping**: Implement a post-capture crop pipeline (Capture Full -> Crop -> Encode) to support region recording.
-*   **Cursor Overlay**: Implement software cursor rendering if WGC system cursor is disabled or unavailable.
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `FFmpegOptions` model | ✅ Complete | Full codec/source options |
+| `FFmpegCaptureDevice` | ✅ Complete | GDIGrab, DDAGrab, etc. |
+| `FFmpegRecordingService` | ❌ Not Started | Mentioned in code but not implemented |
+| Auto-switch logic on exception | ✅ Partial | ScreenRecorderService catches PlatformNotSupported/COMException |
+| `FallbackServiceFactory` registration | ❌ Not Started | Commented out in WindowsPlatform.cs |
 
-### Stage 3: Advanced Native Encoding
-**Objective**: Expose advanced encoding controls and leverage hardware acceleration.
+### Stage 5: Migration & Presets — 🔴 Not Started
 
-**Technical Requirements**:
-*   **Hardware Acceleration**: Verify and expose Media Foundation hardware encoder usage (NVENC, QSV, AMF).
-*   **Quality Controls**: Add Bitrate and FPS controls to the UI.
-*   **Configuration**: Bind these settings to the persistent `ScreenRecordingSettings`.
+| Component | Status | Notes |
+|-----------|--------|-------|
+| ShareX config import logic | ❌ Not Started | |
+| Modern vs Legacy toggle in UI | ❌ Not Started | |
 
-### Stage 4: FFmpeg Fallback & Auto-Switch
-**Objective**: Ensure reliability by falling back to FFmpeg when native methods fail.
+### Stage 6: Audio Support — 🔴 Not Started
 
-**Technical Requirements**:
-*   **FFmpeg Service**: Implement `FFmpegRecordingService` (wrapping existing CLIManager architecture) implementing `IRecordingService`.
-*   **Auto-Switch**: Implement logic in `ScreenRecorderService` to catch native exceptions and transparently switch to FFmpeg fallback.
-*   **Trigger Conditions**: 
-    1.  `PlatformNotSupportedException` (Win10 < 1803).
-    2.  `COMException` during `IMFSinkWriter` initialization (Driver issues).
-    3.  Explicit user preference (`ForceFFmpeg = true`).
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `WasapiLoopbackCapture` | ❌ Not Started | |
+| `WasapiMicrophoneCapture` | ❌ Not Started | |
+| Audio mixing in encoder | ❌ Not Started | |
 
-### Stage 5: Migration & Presets
-**Objective**: Migrate existing users and provide configuration compatibility.
+### Stage 7: macOS & Linux Implementation — 🔴 Not Started
 
-**Technical Requirements**:
-*   **Import Logic**: Parse existing ShareX config files for FFmpeg settings.
-*   **UI Controls**: Add a "Modern vs Legacy" toggle in settings.
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Linux XDGPortalCaptureSource | ❌ Not Started | |
+| macOS ScreenCaptureKit recording | ❌ Not Started | |
 
-### Stage 6: Audio Support
-**Objective**: Implement audio capture for system sound and microphone.
+---
 
-**Technical Requirements**:
-*   **System Audio**: Implement `WasapiLoopbackCapture` to capture system audio output.
-*   **Microphone**: Implement `WasapiMicrophoneCapture` for voice input.
-*   **Mixing**: Integrate audio streams into the `MediaFoundationEncoder` sink writer.
+## Alignment Assessment with SIP0017
 
-### Stage 7: macOS & Linux Implementation
-**Objective**: Expand native recording support to cross-platform targets.
+### ✅ Aligned
 
-**Technical Requirements**:
-*   **Linux**: Implement `XDGPortalCaptureSource` (ScreenCast) via DBus. Use FFmpeg CLI for encoding initially.
-*   **macOS**: Extend `ScreenCaptureKit` interop to support stream callbacks (continuous capture). Implement `AVAssetWriterInterop` for native encoding.
+1. **Interface-based architecture**: All core interfaces defined in `ShareX.Avalonia.ScreenCapture.ScreenRecording`.
+2. **Platform abstraction**: Windows implementations in `ShareX.Avalonia.Platform.Windows.Recording`.
+3. **Factory pattern**: `CaptureSourceFactory` and `EncoderFactory` in ScreenRecorderService.
+4. **Modern native APIs**: Windows.Graphics.Capture + Media Foundation as primary path.
+5. **FFmpeg as fallback only**: FFmpegRecordingService defined but not primary.
+6. **Exception-based fallback triggers**: PlatformNotSupportedException, COMException caught.
 
-## Technical Implementations & Lessons Learnt
+### ⚠️ Minor Deviations
 
-### Windows TFM & CsWinRT Behavior
-During Stage 1 implementation, we discovered critical behavior regarding Target Framework Monikers (TFM) when using the `Microsoft.Windows.CsWinRT` package:
+1. **No DI container**: Uses static factory functions instead of `IServiceCollection`. Acceptable for current complexity.
+2. **Dynamic dispatch for initialization**: `ScreenRecorderService.InitializeCaptureSource` uses `dynamic` to call platform-specific methods. Works but not type-safe.
 
-1.  **Issue**: Using `net10.0-windows` with a separate `<TargetPlatformVersion>10.0.19041.0</TargetPlatformVersion>` property works for individual project builds but fails during full solution builds with "Windows Metadata not provided" errors.
-2.  **Cause**: The CsWinRT default targets file struggles to resolve metadata references correctly in transitive dependency chains when the TFM is generic.
-3.  **Solution**: Using the explicit TFM `net10.0-windows10.0.19041.0` forces the build system to include the correct Windows SDK reference assemblies natively, avoiding the metadata resolution failure. This is required for reliable solution-wide builds when using WinRT APIs like `Windows.Graphics.Capture`.
+---
 
-## Architectural Changes
+## Resolved Gaps from SIP Review
 
-We propose a modular interface-based architecture compliant with `AGENTS.md` platform abstraction rules.
+| Gap ID | Resolution |
+|--------|------------|
+| #1 Missing enum definitions | ✅ All enums in `RecordingEnums.cs` |
+| #2 PlatformManager undefined | ✅ Using static factory pattern instead (CaptureSourceFactory/EncoderFactory) |
+| #3 IntPtr for window handle | ✅ Documented as cross-platform approach |
+| #4 Config storage precedence | ⚠️ Model exists but not integrated into SettingManager |
+| #5 Output file naming | ✅ Default pattern in `GetOutputPath()` |
+| #6 CancellationToken support | ⚠️ Deferred (documented in interface comments) |
 
-### Services & Interfaces
+---
 
-```csharp
-namespace ShareX.Avalonia.ScreenCapture.Recording;
+## Remaining Implementation Work
 
-public interface IRecordingService
-{
-    // Note: CancellationToken support deferred to future optimization
-    Task StartRecordingAsync(RecordingOptions options);
-    Task StopRecordingAsync();
-    event EventHandler<RecordingErrorEventArgs> ErrorOccurred;
-    event EventHandler<RecordingStatusEventArgs> StatusChanged;
-}
+### Priority 1: Complete Stage 1 UI Integration
 
-public interface ICaptureSource : IDisposable
-{
-    // Windows: WindowsGraphicsCaptureSource, Linux: PipeWireCaptureSource, macOS: ScreenCaptureKitSource
-    Task StartCaptureAsync();
-    event EventHandler<FrameArrivedEventArgs> FrameArrived;
-}
+**Files to create/modify:**
 
-public interface IVideoEncoder : IDisposable
-{
-    // Windows: MediaFoundationEncoder, Fallback: FFmpegPipeEncoder
-    void Initialize(VideoFormat format, string outputPath);
-    void WriteFrame(FrameData frame);
-    void Finalize();
-}
+1. **[NEW]** `src/ShareX.Avalonia.UI/ViewModels/RecordingViewModel.cs`
+   - Manages recording state
+   - Exposes `StartRecordingCommand`, `StopRecordingCommand`
+   - Binds to `ScreenRecorderService`
 
-public interface IAudioCapture : IDisposable
-{
-    // Windows: WasapiAudioCapture, Linux: PulseAudio, macOS: CoreAudio
-    void Start();
-    event EventHandler<AudioBufferEventArgs> AudioDataAvailable;
-}
-```
+2. **[MODIFY]** `src/ShareX.Avalonia.UI/ViewModels/MainViewModel.cs`
+   - Add recording commands or reference to RecordingViewModel
 
-## Detailed Design
+3. **[NEW]** `src/ShareX.Avalonia.UI/Views/RecordingToolbarView.axaml`
+   - Floating toolbar with Start/Stop button
+   - Timer display during recording
+   - Status indicator
 
-### Project Structure
-New components will be organized as follows:
-*   `ShareX.Avalonia.ScreenCapture` (Project)
-    *   `Recording/` (Folder) - Core interfaces and logic.
-    *   `Recording/Models/` (Folder) - Data models (`RecordingOptions`, etc.).
-*   `ShareX.Avalonia.Platform.Windows` (Project)
-    *   `Recording/` (Folder) - Windows implementations (`WindowsGraphicsCaptureSource`, `MediaFoundationEncoder`).
-*   `ShareX.Avalonia.UI` (Project)
-    *   `Views/RecordingToolbarView.axaml` - Overlay toolbar for recording control.
+### Priority 2: Configuration Persistence
 
-### Type Definitions
+**Files to modify:**
 
-#### Enumerations
-```csharp
-public enum CaptureMode
-{
-    Screen,
-    Window,
-    Region
-}
+1. **[MODIFY]** `src/ShareX.Avalonia.Core/Settings/TaskSettings.cs`
+   - ✅ Add `ScreenRecordingSettings` property
 
-public enum RecordingStatus
-{
-    Idle,
-    Initializing,
-    Recording,
-    Paused,
-    Finalizing,
-    Error
-}
+2. **[MODIFY]** `src/ShareX.Avalonia.Core/SettingManager.cs`
+   - ✅ Ensure ScreenRecordingSettings serializes with WorkflowsConfig.json
 
-public enum VideoCodec
-{
-    H264,
-    HEVC,
-    VP9,
-    AV1
-}
+### Priority 3: Stage 4 FFmpeg Fallback
 
-public enum PixelFormat
-{
-    Bgra8888,
-    Nv12,
-    Rgba8888,
-    Unknown
-}
-```
+**Files to create:**
 
-#### RecordingOptions
-```csharp
-public class RecordingOptions
-{
-    public CaptureMode Mode { get; set; } // Screen, Window, Region
-    // Use IntPtr for Window Handle.
-    // Windows: HWND. Linux: XID. macOS: WindowID (int cast to IntPtr).
-    // Future refactor may introduce a typed WindowId struct if needed.
-    public IntPtr TargetWindowHandle { get; set; }
-    public Rectangle Region { get; set; }
-    
-    // OutputPath:
-    // If null/empty -> PlatformManager.GetDefaultOutputPath() acts as fallback
-    // Default Pattern: "ShareX/Screenshots/yyyy-MM/Date_Time.mp4"
-    public string OutputPath { get; set; }
-    
-    public ScreenRecordingSettings Settings { get; set; } // Reference to config
-}
-```
+1. **[NEW]** `src/ShareX.Avalonia.ScreenCapture/ScreenRecording/FFmpegRecordingService.cs`
+   - Implements `IRecordingService`
+   - Uses `FFmpegCLIManager` pattern
+   - Wraps existing `FFmpegOptions`
 
-#### FrameData
-```csharp
-public struct FrameData
-{
-    public IntPtr DataPtr; // Pointer to raw pixel data
-    public int Stride;
-    public int Width;
-    public int Height;
-    public long Timestamp; // 100ns units
-    public PixelFormat Format; // BGRA32, NV12, etc.
-}
-```
+2. **[MODIFY]** `src/ShareX.Avalonia.Platform.Windows/WindowsPlatform.cs`
+   - Uncomment and complete `FallbackServiceFactory` registration
 
-#### VideoFormat
-```csharp
-public class VideoFormat
-{
-    public int Width { get; set; }
-    public int Height { get; set; }
-    public int Bitrate { get; set; }
-    public int FPS { get; set; }
-    public VideoCodec Codec { get; set; }
-}
-```
-
-#### Event Arguments
-```csharp
-public class RecordingErrorEventArgs : EventArgs
-{
-    public Exception Error { get; }
-    public bool IsFatal { get; }
-}
-
-public class RecordingStatusEventArgs : EventArgs
-{
-    public RecordingStatus Status { get; } // Idle, Recording, Paused, Finalizing
-    public TimeSpan Duration { get; }
-}
-
-public class FrameArrivedEventArgs : EventArgs
-{
-    public FrameData Frame { get; }
-}
-
-public class AudioBufferEventArgs : EventArgs
-{
-    public byte[] Buffer { get; }
-    public int BytesRecorded { get; }
-    public long Timestamp { get; }
-}
-```
-
-### Dependency Injection & PlatformManager
-Services will be registered in `App.axaml.cs` (or `Bootstrapper.cs`):
-
-```csharp
-// In ConfigureServices
-services.AddSingleton<IRecordingService, ScreenRecorderService>();
-```
-
-**PlatformManager Responsibility**:
-`ScreenRecorderService` does NOT instantiate platform classes directly. Instead, it uses `PlatformManager`:
-- `PlatformManager` acts as the service locator for OS-specific implementations.
-- Example: `_captureSource = PlatformManager.CreateCaptureSource();`
-- This ensures `ScreenRecorderService` remains platform-agnostic code.
-
-## Configuration & Persistence
-
-To ensure persistent settings, the following data model and bindings will be implemented:
-
-### Data Model
-**Class**: `ShareX.Avalonia.Core.ScreenRecordingSettings` (Serialized in `WorkflowsConfig.json`)
-
-```csharp
-public class ScreenRecordingSettings
-{
-    public VideoCodec Codec { get; set; } = VideoCodec.H264;
-    public int FPS { get; set; } = 30;
-    public int BitrateKbps { get; set; } = 4000;
-    public bool CaptureSystemAudio { get; set; } = false;
-    public bool CaptureMicrophone { get; set; } = false;
-    public string MicrophoneDeviceId { get; set; }
-    public bool ForceFFmpeg { get; set; } = false;
-}
-```
-
-### Configuration Storage Rules
-1.  **ApplicationConfig.json**: Stores global defaults for the application.
-2.  **WorkflowsConfig.json**: Stores specific settings for user-defined workflows.
-3.  **Precedence**: Workflow-specific settings in `WorkflowsConfig.json` **override** global defaults in `ApplicationConfig.json`. If a workflow setting is missing, it falls back to the Application default.
-
-### UI Integration
-*   `MainViewModel.StartRecordingCommand`: Triggers `IRecordingService.StartRecordingAsync`.
-*   `RecordingToolbarView`: Binds to `RecordingStatus` to show timer/Stop button.
-*   `TaskSettingsViewModel`: Exposes `ScreenRecordingSettings` for configuration.
+---
 
 ## Verification Plan
 
-### Automated
+### Automated Build
 ```bash
-# Build the solution to verify API contracts and type correctness
 dotnet build ShareX.Avalonia.sln
 ```
 
-### Manual Testing
-1.  **MVP Record**: Start recording via Main Window -> Perform actions -> Stop via Toolbar. Verify `.mp4` file is playable.
-2.  **Persistence**: Change FPS to 60. Restart app. Verify FPS remains 60.
-3.  **Fallback**: Rename `mfplat.dll` (simulation). Start recording. Verify app logs "Falling back to FFmpeg" and recording succeeds.
-4.  **Audio**: Enable Microphone. Record. Verify video has sound.
+### Manual Testing (Stage 1 MVP)
 
-### Compatibility
-*   **Windows 10/11**: Verify border behavior.
-*   **High DPI**: Check for scaling artifacts.
+1. **Start Recording Test**
+   - Launch application
+   - Click Start Recording button
+   - Verify status changes to "Recording"
+   - Wait 5 seconds
+   - Click Stop Recording
+   - Verify .mp4 file created in Documents/ShareX/Screenshots/yyyy-MM/
+
+2. **Fallback Test (Stage 4)**
+   - Rename `mfplat.dll` temporarily
+   - Start recording
+   - Verify fallback message in logs
+   - Verify FFmpeg process started
+
+---
+
+## Risks and Mitigations
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| WGC not available on older Windows | Medium | FFmpegRecordingService fallback |
+| Media Foundation codec missing | Medium | Check IsAvailable before attempting |
+| Frame rate mismatch between capture and encode | Low | Use timestamp from WGC, not fixed interval |
+| Memory pressure from frame copies | Medium | Consider zero-copy GPU path in Stage 3 |
+
+---
+
+## Next Steps
+
+1. Implement `RecordingViewModel` with commands
+2. Integrate recording controls into MainWindow
+3. Verify end-to-end recording works
+4. Implement FFmpegRecordingService for fallback
+5. Add settings persistence
