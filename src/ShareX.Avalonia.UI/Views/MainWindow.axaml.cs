@@ -1,4 +1,7 @@
 using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Markup.Xaml;
+using FluentAvalonia.UI.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
@@ -7,6 +10,7 @@ using XerahS.UI.ViewModels;
 using XerahS.Core.Hotkeys;
 using Avalonia; // For Application.Current
 using XerahS.Core.Tasks;
+using XerahS.Core.Managers;
 using ShareX.Editor.Annotations;
 using ShareX.Editor.ViewModels;
 using ShareX.Editor.Views;
