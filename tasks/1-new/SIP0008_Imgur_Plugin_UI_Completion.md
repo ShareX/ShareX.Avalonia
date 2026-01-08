@@ -9,6 +9,12 @@
 ## Branch
 `feature/imgur-plugin-ui`
 
+## Status
+New - Verified on 2026-01-08
+
+## Assessment
+0% Complete. `ImgurConfigView.axaml` is missing functionality. Specifically: "Use GIFV", Album Selection ListView, "Upload to Selected Album" checkbox.
+
 ## Instructions
 **CRITICAL**: Create the `feature/imgur-plugin-ui` branch first before starting work.
 

@@ -1,13 +1,13 @@
 # CX04: AfterCaptureJobs - Upload Processor Backend
 
-## Priority
-**HIGH** - Enables automatic upload workflow
-
-## Assignee
-**Codex** (Surface Laptop 5, VS Code)
-
 ## Branch
 `feature/after-capture-upload`
+
+## Status
+Complete - Verified on 2026-01-08
+
+## Assessment
+100% Complete. `CaptureJobProcessor.cs` contains `UploadImageAsync` and checks `UploadImageToHost` flag.
 
 ## Instructions
 **CRITICAL**: Create the `feature/after-capture-upload` branch first before starting work.

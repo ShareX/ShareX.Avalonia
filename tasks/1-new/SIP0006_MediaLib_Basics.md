@@ -9,6 +9,12 @@
 ## Branch
 `feature/backend-gaps` (continue on same branch as CX02)
 
+## Status
+New - Verified on 2026-01-08
+
+## Assessment
+0% Complete. `ImageCombiner.cs` and `GifHelpers.cs` not found in `src/ShareX.Avalonia.Media`.
+
 ## Instructions
 **CRITICAL**: Ensure you're on the `feature/backend-gaps` branch before starting. You should already be on this branch from CX02.
 
