@@ -108,9 +108,9 @@
 
 ## Remaining Implementation Work
 
-### Priority 1: Complete Stage 1 UI Integration
+### ✅ Completed: Stage 1 UI Integration
 
-**Files to create/modify:**
+**Files created/modified:**
 
 1. **[NEW]** `src/ShareX.Avalonia.UI/ViewModels/RecordingViewModel.cs`
    - Manages recording state
@@ -125,9 +125,9 @@
    - Timer display during recording
    - Status indicator
 
-### Priority 2: Configuration Persistence
+### ✅ Completed: Configuration Persistence
 
-**Files to modify:**
+**Files modified:**
 
 1. **[MODIFY]** `src/ShareX.Avalonia.Core/Settings/TaskSettings.cs`
    - ✅ Add `ScreenRecordingSettings` property
@@ -135,7 +135,7 @@
 2. **[MODIFY]** `src/ShareX.Avalonia.Core/SettingManager.cs`
    - ✅ Ensure ScreenRecordingSettings serializes with WorkflowsConfig.json
 
-### Priority 3: Stage 4 FFmpeg Fallback
+### 🚀 Active: Stage 4 FFmpeg Fallback
 
 **Files to create:**
 
@@ -187,8 +187,8 @@ dotnet build ShareX.Avalonia.sln
 
 ## Next Steps
 
-1. Implement `RecordingViewModel` with commands
-2. Integrate recording controls into MainWindow
-3. Verify end-to-end recording works
-4. Implement FFmpegRecordingService for fallback
-5. Add settings persistence
+1. ✅ Implement `RecordingViewModel` with commands
+2. ✅ Integrate recording controls into MainWindow
+3. ✅ Verify end-to-end recording works
+4. 🚀 Implement FFmpegRecordingService for fallback
+5. ✅ Add settings persistence
