@@ -84,6 +84,13 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _showCursor = true;
 
+    // Stage 6: Audio settings
+    [ObservableProperty]
+    private bool _captureSystemAudio = false;
+
+    [ObservableProperty]
+    private bool _captureMicrophone = false;
+
     /// <summary>
     /// Available codecs for selection
     /// </summary>
@@ -244,7 +251,10 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
                     FPS = Fps,
                     BitrateKbps = BitrateKbps,
                     Codec = Codec,
-                    ShowCursor = ShowCursor
+                    ShowCursor = ShowCursor,
+                    // Stage 6: Audio settings
+                    CaptureSystemAudio = CaptureSystemAudio,
+                    CaptureMicrophone = CaptureMicrophone
                 }
             };
 
@@ -256,6 +266,7 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
             OutputFilePath = options.OutputPath;
 
             DebugHelper.WriteLine($"Starting recording: {Codec} @ {Fps}fps, {BitrateKbps}kbps, Cursor={ShowCursor}");
+            DebugHelper.WriteLine($"  Audio: SystemAudio={CaptureSystemAudio}, Microphone={CaptureMicrophone}");
             DebugHelper.WriteLine($"Output path: {options.OutputPath}");
 
             // Use global recording manager (Stage 5)
