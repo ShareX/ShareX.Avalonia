@@ -142,7 +142,17 @@ This reduces git command overhead and provides a stable reference point for pari
 - **All .md files created during work (including artifacts in brain directory) must be committed to the GitHub repository.**
 - Ensure documentation artifacts are included in git commits alongside code changes.
 
-## Security and Privacy
+## Build Configuration Rules
+
+### Windows Target Framework Moniker (TFM)
+**CRITICAL**: When configuring projects to target Windows, use the **explicit TFM** format that includes the platform version:
+`net10.0-windows10.0.19041.0`
+
+**Do NOT use**:
+`<TargetFramework>net10.0-windows</TargetFramework>` with a separate `<TargetPlatformVersion>...` property.
+This is required to avoid "Windows Metadata not provided" errors during full solution builds with CsWinRT.
+
+### SkiaSharp Version Constraint
 
 - Do not include secrets or tokens.
 - Avoid logging sensitive data in examples.

@@ -129,7 +129,7 @@ public class WindowsGraphicsCaptureSource : ICaptureSource
                 throw new InvalidOperationException("Failed to create capture item for monitor");
             }
 
-            _framePool = Direct3D11CaptureFramePool.Create(
+            _framePool = WGC.Direct3D11CaptureFramePool.Create(
                 _device,
                 global::Windows.Graphics.DirectX.DirectXPixelFormat.B8G8R8A8UIntNormalized,
                 2,
