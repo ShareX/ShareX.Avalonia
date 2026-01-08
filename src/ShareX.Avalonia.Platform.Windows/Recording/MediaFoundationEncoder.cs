@@ -24,7 +24,7 @@
 #endregion License Information (GPL v3)
 
 using System.Runtime.InteropServices;
-using XerahS.ScreenCapture.Recording;
+using XerahS.ScreenCapture.ScreenRecording;
 
 namespace XerahS.Platform.Windows.Recording;
 

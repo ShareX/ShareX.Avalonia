@@ -25,7 +25,7 @@
 
 using System.Drawing;
 
-namespace XerahS.ScreenCapture.Recording;
+namespace XerahS.ScreenCapture.ScreenRecording;
 
 /// <summary>
 /// Configuration options for starting a recording session

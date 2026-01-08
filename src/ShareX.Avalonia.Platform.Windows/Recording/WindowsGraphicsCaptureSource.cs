@@ -28,7 +28,7 @@ using Windows.Graphics.Capture;
 using Windows.Graphics.DirectX.Direct3D11;
 using Vortice.Direct3D11;
 using Vortice.DXGI;
-using XerahS.ScreenCapture.Recording;
+using XerahS.ScreenCapture.ScreenRecording;
 
 namespace XerahS.Platform.Windows.Recording;
 

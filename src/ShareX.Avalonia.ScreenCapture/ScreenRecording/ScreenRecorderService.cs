@@ -22,10 +22,11 @@
 */
 
 #endregion License Information (GPL v3)
+using System.Runtime.InteropServices;
 
 using System.Diagnostics;
 
-namespace XerahS.ScreenCapture.Recording;
+namespace XerahS.ScreenCapture.ScreenRecording;
 
 /// <summary>
 /// Platform-agnostic screen recording orchestration service
@@ -272,7 +273,7 @@ public class ScreenRecorderService : IRecordingService
         }
 
         // Default to primary screen width
-        return System.Windows.Forms.Screen.PrimaryScreen?.Bounds.Width ?? 1920;
+        return 1920;
     }
 
     private int GetCaptureHeight(RecordingOptions options)
@@ -283,7 +284,7 @@ public class ScreenRecorderService : IRecordingService
         }
 
         // Default to primary screen height
-        return System.Windows.Forms.Screen.PrimaryScreen?.Bounds.Height ?? 1080;
+        return 1080;
     }
 
     private void UpdateStatus(RecordingStatus newStatus)

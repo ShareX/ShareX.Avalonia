@@ -86,5 +86,40 @@ namespace XerahS.Platform.Windows
         [System.Runtime.InteropServices.DllImport("shell32.dll", SetLastError = true)]
         private static extern void SetCurrentProcessExplicitAppUserModelID(
             [System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.LPWStr)] string AppID);
+
+        /// <summary>
+        /// Initializes native screen recording support
+        /// Uses Windows.Graphics.Capture + Media Foundation when available
+        /// Falls back to FFmpeg on unsupported systems (Stage 4)
+        /// </summary>
+        public static void InitializeRecording()
+        {
+            try
+            {
+                // Check if native recording is supported
+                if (Recording.WindowsGraphicsCaptureSource.IsSupported && 
+                    Recording.MediaFoundationEncoder.IsAvailable)
+                {
+                    DebugHelper.WriteLine("Native recording (WGC + Media Foundation) is supported. Enabling modern recording.");
+                    
+                    // Set up factory functions for native recording
+                    XerahS.ScreenCapture.ScreenRecording.ScreenRecorderService.CaptureSourceFactory = 
+                        () => new Recording.WindowsGraphicsCaptureSource();
+                    
+                    XerahS.ScreenCapture.ScreenRecording.ScreenRecorderService.EncoderFactory = 
+                        () => new Recording.MediaFoundationEncoder();
+                }
+                else
+                {
+                    DebugHelper.WriteLine("Native recording NOT supported. Requires Windows 10 1803+ and Media Foundation.");
+                    // Stage 4: FFmpeg fallback will be initialized here
+                    // ScreenRecorderService.FallbackServiceFactory = () => new FFmpegRecordingService();
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Failed to initialize recording support");
+            }
+        }
     }
 }

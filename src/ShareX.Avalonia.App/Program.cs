@@ -108,6 +108,7 @@ namespace XerahS.App
 
                 // Initialize Windows platform with our UI wrapper
                 XerahS.Platform.Windows.WindowsPlatform.Initialize(uiCaptureService);
+                XerahS.Platform.Windows.WindowsPlatform.InitializeRecording();
                 return;
             }
 #elif MACOS
