@@ -1,46 +1,72 @@
 # SIP0017: Screen Recording Modernization
 
-## 1. ShareX FFmpeg Integration Findings
+## Goal
+Upgrade the `ShareX.Avalonia` screen recording subsystem to utilize modern, high-performance, and OS-native APIs. The current process-based integration utilizing FFmpeg CLI is robust but lacks efficiency and modern OS integration (e.g., proper cursor composition, protected content handling). This proposal outlines a staged approach to implement robust recording providers for Windows, Linux, and macOS, with a focus on Windows.Graphics.Capture (WGC).
 
-ShareX relies heavily on the `FFmpegCLIManager` and `ScreenRecorder` classes to orchestrate screen recording. The integration is process-based (CLI), not library-based.
+## Implementation Plan
 
-**Code Paths:**
-- `ScreenRecorder.cs`: Orchestrates the recording session. Handles `Start`, `Stop`, and `Progress` events.
-- `FFmpegCLIManager.cs`: Wraps the `ffmpeg.exe` process, handling argument construction and std/err redirection.
-- `ScreenRecordingOptions.cs` & `FFmpegOptions.cs`: Define the configuration model.
+The implementation will be executed in seven distinct stages, prioritizing core recording capability, followed by advanced features, and finally cross-platform support.
 
-**FFmpeg Invocation:**
-- ShareX constructs a CLI argument string based on the selected "Source" (`gdigrab`, `ddagrab`, `dshow`) and "Codec".
-- It uses specialized DirectShow filters (`screen-capture-recorder`) for some modes, writing to the registry to configure them before starting FFmpeg.
+### Stage 1: MVP Recording (Silent)
+**Objective**: Implement the primary recording path on Windows using **Windows.Graphics.Capture (WGC)** and **Media Foundation** (no audio).
 
-**Configuration:**
-- **Capture Source**: `gdigrab` (GDI), `ddagrab` (DXGI Desktop Duplication), `dshow` (DirectShow).
-- **Encoders**: `libx264`, `nvenc` (NVIDIA), `amf` (AMD), `qsv` (Intel).
-- **Audio**: `dshow` audio devices (e.g. `virtual-audio-capturer`).
-- **Lifecycle**: `StartRecording()` launches the process. `StopRecording()` sends 'q' or kills the process. It tracks file output and manages a temporary logic for GIF generation.
+**Technical Requirements**:
+*   **Capture Source**: Implement `WindowsGraphicsCaptureSource` wrapping WGC APIs.
+*   **Encoder**: Implement `MediaFoundationEncoder` using `IMFSinkWriter` for H.264/MP4 output.
+*   **UI Integration**: Wire up `Start`/`Stop` recording actions in the main UI via `MainViewModel` and `RecordingToolbarView`.
 
-## 2. Modern Capture Methods Research (Windows)
+### Stage 2: Window & Region Parity
+**Objective**: Achieve parity with existing region/window selection capabilities using modern APIs.
 
-For ShareX.Avalonia, the primary recording path on Windows should utilize **Windows.Graphics.Capture (WGC)** and **Media Foundation**.
+**Technical Requirements**:
+*   **Window Selection**: Integrate `GraphicsCapturePicker` for targeting specific windows.
+*   **Region Cropping**: Implement a post-capture crop pipeline (Capture Full -> Crop -> Encode) to support region recording.
+*   **Cursor Overlay**: Implement software cursor rendering if WGC system cursor is disabled or unavailable.
 
-**Primary API: Windows.Graphics.Capture (WGC)**
-- **Availability**: Windows 10 (1803)+.
-- **Capabilities**: High-performance, GPU-resident frame capture. Supports specific Windows (with `GraphicsCapturePicker` or `WindowId`) and Monitors.
-- **Features**: Cursor capture (system composited), Border requirement (yellow border, can be disabled in newer builds), Protected content handling.
+### Stage 3: Advanced Native Encoding
+**Objective**: Expose advanced encoding controls and leverage hardware acceleration.
 
-**Encoding Strategy (Native):**
-- **Media Foundation (MF)**: The native Windows multimedia API.
-- **Sink Writer**: Use `IMFSinkWriter` to write frames directly to an MP4 container.
-- **Hardware Acceleration**: MF automatically utilizes hardware encoders (NVIDIA NVENC, Intel QSV, AMD VCE) if available.
-- **Benefits**: No external dependency (FFmpeg.exe), lower latency, consistent with OS behavior.
+**Technical Requirements**:
+*   **Hardware Acceleration**: Verify and expose Media Foundation hardware encoder usage (NVENC, QSV, AMF).
+*   **Quality Controls**: Add Bitrate and FPS controls to the UI.
+*   **Configuration**: Bind these settings to the persistent `ScreenRecordingSettings`.
 
-**Constraints:**
-- **Windows Versions**: WGC requires Win10 1803+. Fallbacks needed for older OS (though ShareX.Avalonia likely targets 10+).
-- **Audio**: WASAPI Loopback for system audio. `IAudioClient` for microphone.
+### Stage 4: FFmpeg Fallback & Auto-Switch
+**Objective**: Ensure reliability by falling back to FFmpeg when native methods fail.
 
-## 3. Cross-Platform Recording Architecture
+**Technical Requirements**:
+*   **FFmpeg Service**: Implement `FFmpegRecordingService` (wrapping existing CLIManager architecture) implementing `IRecordingService`.
+*   **Auto-Switch**: Implement logic in `ScreenRecorderService` to catch native exceptions and transparently switch to FFmpeg fallback.
+*   **Trigger Conditions**: 
+    1.  `PlatformNotSupportedException` (Win10 < 1803).
+    2.  `COMException` during `IMFSinkWriter` initialization (Driver issues).
+    3.  Explicit user preference (`ForceFFmpeg = true`).
 
-We propose a modular interface-based architecture to support modern native capture with clean fallbacks across Windows, Linux, and macOS.
+### Stage 5: Migration & Presets
+**Objective**: Migrate existing users and provide configuration compatibility.
+
+**Technical Requirements**:
+*   **Import Logic**: Parse existing ShareX config files for FFmpeg settings.
+*   **UI Controls**: Add a "Modern vs Legacy" toggle in settings.
+
+### Stage 6: Audio Support
+**Objective**: Implement audio capture for system sound and microphone.
+
+**Technical Requirements**:
+*   **System Audio**: Implement `WasapiLoopbackCapture` to capture system audio output.
+*   **Microphone**: Implement `WasapiMicrophoneCapture` for voice input.
+*   **Mixing**: Integrate audio streams into the `MediaFoundationEncoder` sink writer.
+
+### Stage 7: macOS & Linux Implementation
+**Objective**: Expand native recording support to cross-platform targets.
+
+**Technical Requirements**:
+*   **Linux**: Implement `XDGPortalCaptureSource` (ScreenCast) via DBus. Use FFmpeg CLI for encoding initially.
+*   **macOS**: Extend `ScreenCaptureKit` interop to support stream callbacks (continuous capture). Implement `AVAssetWriterInterop` for native encoding.
+
+## Architectural Changes
+
+We propose a modular interface-based architecture compliant with `AGENTS.md` platform abstraction rules.
 
 ### Services & Interfaces
 
@@ -49,7 +75,6 @@ namespace ShareX.Avalonia.ScreenCapture.Recording;
 
 public interface IRecordingService
 {
-    // Platform-agnostic entry point
     Task StartRecordingAsync(RecordingOptions options);
     Task StopRecordingAsync();
     event EventHandler<RecordingErrorEventArgs> ErrorOccurred;
@@ -58,19 +83,14 @@ public interface IRecordingService
 
 public interface ICaptureSource : IDisposable
 {
-    // Abstraction for frame acquisition
-    // Windows: WindowsGraphicsCaptureSource
-    // Linux: PipeWireCaptureSource / X11GrabSource
-    // macOS: ScreenCaptureKitSource
+    // Windows: WindowsGraphicsCaptureSource, Linux: PipeWireCaptureSource, macOS: ScreenCaptureKitSource
     Task StartCaptureAsync();
     event EventHandler<FrameArrivedEventArgs> FrameArrived;
 }
 
 public interface IVideoEncoder : IDisposable
 {
-    // Abstraction for encoding logic
-    // Windows: MediaFoundationEncoder
-    // Universal Fallback: FFmpegPipeEncoder
+    // Windows: MediaFoundationEncoder, Fallback: FFmpegPipeEncoder
     void Initialize(VideoFormat format, string outputPath);
     void WriteFrame(FrameData frame);
     void Finalize();
@@ -78,101 +98,138 @@ public interface IVideoEncoder : IDisposable
 
 public interface IAudioCapture : IDisposable
 {
-    // Windows: WasapiAudioCapture
-    // Linux: PulseAudioCapture / PipeWireAudioCapture
-    // macOS: CoreAudioCapture
+    // Windows: WasapiAudioCapture, Linux: PulseAudio, macOS: CoreAudio
     void Start();
     event EventHandler<AudioBufferEventArgs> AudioDataAvailable;
 }
 ```
 
-### Platform-Specific Implementations
+## Detailed Design
 
-| Component | Windows | Linux | macOS |
-|-----------|---------|-------|-------|
-| **Capture Source** | `Windows.Graphics.Capture` (Primary)<br>`GoToMeeting` / `GDI` (Fallback) | `XDG Desktop BOrtal` (ScreenCast)<br>`X11Grab` (Fallback) | `ScreenCaptureKit` (Primary)<br>`AVFoundation` (Fallback) |
-| **Encoder** | `Media Foundation` (H.264/HEVC) | `FFmpeg CLI` (VAAPI/NVENC) | `AVAssetWriter` (Native)<br>`FFmpeg CLI` (Fallback) |
-| **Audio** | `WASAPI` Loopback | `PulseAudio` / `PipeWire` Monitor | `CoreAudio` Tap |
+### Project Structure
+New components will be organized as follows:
+*   `ShareX.Avalonia.ScreenCapture` (Project)
+    *   `Recording/` (Folder) - Core interfaces and logic.
+    *   `Recording/Models/` (Folder) - Data models (`RecordingOptions`, etc.).
+*   `ShareX.Avalonia.Platform.Windows` (Project)
+    *   `Recording/` (Folder) - Windows implementations (`WindowsGraphicsCaptureSource`, `MediaFoundationEncoder`).
+*   `ShareX.Avalonia.UI` (Project)
+    *   `Views/RecordingToolbarView.axaml` - Overlay toolbar for recording control.
 
-### Threading Model
-- **Capture Thread**: WGC callbacks run on a thread pool thread (or dedicated DispatcherQueue).
-- **Encoding Thread**: A dedicated thread (producer-consumer pattern) consumes frames to avoid blocking the capture callback. Low latency is critical.
-- **Cancellation**: `CancellationToken` for async start/stop operations.
+### Type Definitions
 
-### Output
-- Primary: **MP4 (H.264/AAC)** via Media Foundation.
-- Metadata: Standard MP4 atoms.
+#### RecordingOptions
+```csharp
+public class RecordingOptions
+{
+    public CaptureMode Mode { get; set; } // Screen, Window, Region
+    public IntPtr TargetWindowHandle { get; set; }
+    public Rectangle Region { get; set; }
+    public string OutputPath { get; set; }
+    public ScreenRecordingSettings Settings { get; set; } // Reference to config
+}
+```
 
-## 4. FFmpeg Fallback Design
+#### FrameData
+```csharp
+public struct FrameData
+{
+    public IntPtr DataPtr; // Pointer to raw pixel data
+    public int Stride;
+    public int Width;
+    public int Height;
+    public long Timestamp; // 100ns units
+    public PixelFormat Format; // BGRA32, NV12, etc.
+}
+```
 
-**Trigger Conditions:**
-- Runtime Exception in Primary Path (e.g. WGC init failure).
-- Windows version < 10.0.17134.
-- User explicitly selects "Legacy (FFmpeg)" in settings.
-- Specific non-standard codecs requested (e.g. GIF recording, WebM) that MF doesn't support easily.
+#### VideoFormat
+```csharp
+public class VideoFormat
+{
+    public int Width { get; set; }
+    public int Height { get; set; }
+    public int Bitrate { get; set; }
+    public int FPS { get; set; }
+    public VideoCodec Codec { get; set; }
+}
+```
 
-**Integration:**
-- Re-use `FFmpegCLIManager.cs` (already ported).
-- **Binary Location**: Look in `Tools/ffmpeg.exe`, `PATH`, or embedded resource extraction.
-- **Parameter Mapping**:
-    - Map `WorkflowsConfig` "Video Quality" -> `CRF` or `Bitrate`.
-    - Map "Source" -> `gdigrab` (if WGC fails).
+#### Event Arguments
+```csharp
+public class RecordingErrorEventArgs : EventArgs
+{
+    public Exception Error { get; }
+    public bool IsFatal { get; }
+}
 
-**Output Consistency:**
-- Ensure fallback produces the same file container (MP4) where possible.
-- If GIF is requested, FFmpeg is the *primary* (or only) path for direct GIF recording (or record to MP4 -> Convert).
+public class RecordingStatusEventArgs : EventArgs
+{
+    public RecordingStatus Status { get; } // Idle, Recording, Paused, Finalizing
+    public TimeSpan Duration { get; }
+}
 
-## 5. Staged Delivery Plan
+public class FrameArrivedEventArgs : EventArgs
+{
+    public FrameData Frame { get; }
+}
 
-### Stage 1: MVP Recording (Silent)
-- Implement `WindowsGraphicsCaptureSource` (WGC wrapper).
-- Implement `MediaFoundationEncoder` (Simple H.264 SinkWriter).
-- Wire up `Start`/`Stop` in UI.
-- **Deliverable**: Ability to record screen to MP4 (no audio) on Win10+.
+public class AudioBufferEventArgs : EventArgs
+{
+    public byte[] Buffer { get; }
+    public int BytesRecorded { get; }
+    public long Timestamp { get; }
+}
+```
 
-### Stage 2: Audio Support
-- Implement `WasapiLoopbackCapture` (System Audio).
-- Implement `WasapiMicrophoneCapture`.
-- Mix audio into `MediaFoundationEncoder`.
+### Dependency Injection
+Services will be registered in `App.axaml.cs` (or `Bootstrapper.cs`):
 
-### Stage 3: Window & Region Parity
-- Add `GraphicsCapturePicker` support for Window selection.
-- Implement "Crop" logic for Region recording (capture Screen -> Crop -> Encode).
-- Add Cursor overlay options (if WGC cursor is disabled).
+```csharp
+// In ConfigureServices
+services.AddSingleton<IRecordingService, ScreenRecorderService>();
+// ScreenRecorderService internally manages platform specific sources via PlatformManager
+```
 
-### Stage 4: Advanced Native Encoding
-- Expose Hardware Encoding toggles (verify MF picks HW).
-- Bitrate/FPS control in Settings UI.
+## Configuration & Persistence
 
-### Stage 5: FFmpeg Fallback & Auto-Switch
-- Implement `FFmpegRecordingService` (implements `IRecordingService`).
-- Add "Auto" selector logic in `ScreenRecorderService`.
-- If `StartRecordingAsync` throws on Primary, catch -> Log -> Try Fallback.
+To ensure persistent settings, the following data model and bindings will be implemented:
 
-### Stage 6: Migration & Presets
-- Import `FFmpegOptions` from likely existing ShareX config.
-- Add UI for "Modern vs Legacy" switch.
+### Data Model
+**Class**: `ShareX.Avalonia.Core.ScreenRecordingSettings` (Serialized in `WorkflowsConfig.json`)
 
-### Stage 7: macOS & Linux Implementation
-- **Linux**: Implement `XDGPortalCaptureSource` using DBus to request ScreenCast sessions. Use FFmpeg CLI for encoding initially.
-- **macOS**: Extend `ScreenCaptureKit` interop (already started for screenshots) to support continuous stream callbacks. Implement `AVAssetWriterInterop` for native encoding.
+```csharp
+public class ScreenRecordingSettings
+{
+    public VideoCodec Codec { get; set; } = VideoCodec.H264;
+    public int FPS { get; set; } = 30;
+    public int BitrateKbps { get; set; } = 4000;
+    public bool CaptureSystemAudio { get; set; } = false;
+    public bool CaptureMicrophone { get; set; } = false;
+    public string MicrophoneDeviceId { get; set; }
+    public bool ForceFFmpeg { get; set; } = false;
+}
+```
 
+### UI Integration
+*   `MainViewModel.StartRecordingCommand`: Triggers `IRecordingService.StartRecordingAsync`.
+*   `RecordingToolbarView`: Binds to `RecordingStatus` to show timer/Stop button.
+*   `TaskSettingsViewModel`: Exposes `ScreenRecordingSettings` for configuration.
 
-## 6. Testing Plan
+## Verification Plan
 
-### Functional Tests
-- [ ] **Start/Stop**: Record 5s, 1m, 1h. Verify file playability.
-- [ ] **Cancel**: Verify no partial files lock.
-- [ ] **Window Close**: If recorded window closes, capture should stop or show black content.
+### Automated
+```bash
+# Build the solution to verify API contracts and type correctness
+dotnet build ShareX.Avalonia.sln
+```
 
-### Compatibility Tests
-- [ ] **Windows 10 vs 11**: Verify WGC behavior (borders).
-- [ ] **High DPI**: Verify video resolution matches physical pixels (not logical).
-- [ ] **Multi-Monitor**: Record secondary monitor.
+### Manual Testing
+1.  **MVP Record**: Start recording via Main Window -> Perform actions -> Stop via Toolbar. Verify `.mp4` file is playable.
+2.  **Persistence**: Change FPS to 60. Restart app. Verify FPS remains 60.
+3.  **Fallback**: Rename `mfplat.dll` (simulation). Start recording. Verify app logs "Falling back to FFmpeg" and recording succeeds.
+4.  **Audio**: Enable Microphone. Record. Verify video has sound.
 
-### Fallback Tests
-- [ ] **Force Fail**: Rename `mfplat.dll` (simulated) or use Mock to throw. Verify FFmpeg picks up.
-- [ ] **Missing FFmpeg**: If Primary fails AND FFmpeg missing -> Error Dialog.
-
-### Performance
-- [ ] **CPU/GPU Usage**: Compare WGC+MF vs GDI+FFmpeg. (Expected: WGC+MF significantly lower CPU).
+### Compatibility
+*   **Windows 10/11**: Verify border behavior.
+*   **High DPI**: Check for scaling artifacts.
