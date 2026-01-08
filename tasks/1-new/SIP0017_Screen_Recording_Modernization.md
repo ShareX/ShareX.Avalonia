@@ -32,14 +32,14 @@
 | Cursor overlay (software) | ✅ Complete | Configurable via `ShowCursor` setting |
 | GraphicsCapturePicker integration | ❌ Deferred | Direct HWND works for current needs |
 
-### Stage 3: Advanced Native Encoding — 🟡 ~30% Complete
+### Stage 3: Advanced Native Encoding — 🟢 100% Complete
 
 | Component | Status | Notes |
 |-----------|--------|-------|
 | MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS | ✅ Complete | Enabled in encoder |
 | Bitrate/FPS controls in Settings | ✅ Complete | ScreenRecordingSettings has fields |
-| UI controls for Bitrate/FPS | ❌ Not Started | No settings UI for recording |
-| Hardware encoder detection/display | ❌ Not Started | MF auto-detects but no UI indicator |
+| UI controls for Bitrate/FPS/Codec | ✅ Complete | Full settings UI in RecordingView |
+| Hardware encoder detection/display | ✅ Complete | EncoderInfo property shows platform capabilities |
 
 ### Stage 4: FFmpeg Fallback & Auto-Switch — 🟢 100% Complete
 
@@ -252,3 +252,40 @@ dotnet build ShareX.Avalonia.sln
 **Dependencies:**
 - Added ShareX.Avalonia.Media reference to ScreenCapture project
 - Uses existing `FFmpegCLIManager` for process management
+
+### Stage 3: Advanced Native Encoding UI - COMPLETED
+
+**Commit:** `739dcfe` - "SIP0017: Complete Stage 3 Advanced Native Encoding UI"
+
+**New Components:**
+1. **Recording Settings UI** - User-configurable encoding options
+   - Codec selection: H.264, HEVC, VP9, AV1
+   - Frame rate options: 15, 24, 30, 60, 120 FPS
+   - Bitrate options: 1000-32000 kbps
+   - Show cursor toggle
+
+2. **Encoder Information Display** - Platform capability detection
+   - Detects Windows 10 1803+ for native recording
+   - Shows which recording method will be used
+   - Informs users about hardware encoding availability
+
+**Modified Files:**
+- `RecordingViewModel.cs`: Added settings properties and EncoderInfo
+  - AvailableCodecs, AvailableFPS, AvailableBitrates lists
+  - Fps, BitrateKbps, Codec, ShowCursor properties
+  - EncoderInfo computed property for platform detection
+  - Settings passed to RecordingOptions during StartRecordingAsync
+
+- `RecordingView.axaml`: Added settings card UI
+  - ComboBoxes for codec, FPS, and bitrate selection
+  - CheckBox for cursor capture toggle
+  - Information banner with encoder capabilities
+  - All controls disabled during active recording
+
+**Technical Details:**
+- Settings integrated with both modern (WGC+MF) and fallback (FFmpeg) paths
+- Hardware encoding automatically used when available (MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS)
+- Settings persist within session (reset on app restart)
+- User-friendly defaults: H.264, 30fps, 4000kbps, cursor visible
+
+**Build Status:** ✅ All projects compile successfully
