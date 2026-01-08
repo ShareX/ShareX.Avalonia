@@ -140,6 +140,7 @@ This reduces git command overhead and provides a stable reference point for pari
 - Update or add docs when behavior or usage changes.
 - Keep filenames and headings descriptive and stable.
 - **All .md files created during work (including artifacts in brain directory) must be committed to the GitHub repository.**
+- **Technical Documentation Location**: Automatically save all technical `.md` files that do not properly belong to other specific `docs/` subfolders in `docs/technical`. Do not save them in the root folder.
 - Ensure documentation artifacts are included in git commits alongside code changes.
 
 ## Build Configuration Rules
