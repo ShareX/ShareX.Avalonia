@@ -152,9 +152,21 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         var workflow = GetWorkflow(index);
         if (workflow == null) return null;
-        return !string.IsNullOrEmpty(workflow.Name) 
-            ? workflow.Name 
-            : EnumExtensions.GetDescription(workflow.Job);
+
+        // Priority 1: Custom description from TaskSettings (same as Navigation Bar)
+        if (!string.IsNullOrEmpty(workflow.TaskSettings?.Description))
+        {
+            return workflow.TaskSettings.Description;
+        }
+
+        // Priority 2: Workflow Name property (backward compatibility)
+        if (!string.IsNullOrEmpty(workflow.Name))
+        {
+            return workflow.Name;
+        }
+
+        // Priority 3: Default Job description
+        return EnumExtensions.GetDescription(workflow.Job);
     }
 
     /// <summary>

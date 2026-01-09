@@ -330,11 +330,13 @@ namespace XerahS.Core
         public static void SaveWorkflowsConfig()
         {
             WorkflowsConfig?.Save(WorkflowsConfigFilePath);
+            RaiseSettingsChanged();
         }
 
         public static void SaveWorkflowsConfigAsync()
         {
             WorkflowsConfig?.SaveAsync(WorkflowsConfigFilePath);
+            RaiseSettingsChanged();
         }
 
         private static void UpdateRecentTasks()
