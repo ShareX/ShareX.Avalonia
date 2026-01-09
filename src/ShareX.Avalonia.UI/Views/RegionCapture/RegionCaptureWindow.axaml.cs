@@ -813,7 +813,7 @@ namespace XerahS.UI.Views.RegionCapture
                     window.Title ?? "",
                     processId,
                     new System.Drawing.Rectangle(window.Bounds.X, window.Bounds.Y, window.Bounds.Width, window.Bounds.Height),
-                    currentScaling,
+                    targetMonitorScaling,
                     logicalX, logicalY, logicalW, logicalH,
                     screenIndex, screenScaling);
 
