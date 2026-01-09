@@ -198,8 +198,10 @@ namespace XerahS.UI.ViewModels
         [RelayCommand]
         private async Task OpenFFmpegOptionsAsync()
         {
-            dynamic taskSettings = SettingManager.GetOrCreateWorkflowTaskSettings(HotkeyType.ScreenRecorder);
-            var vm = new FFmpegOptionsViewModel(taskSettings.FFmpegOptions);
+            var taskSettings = SettingManager.GetOrCreateWorkflowTaskSettings(HotkeyType.ScreenRecorder);
+            var ffmpegOptions = taskSettings.CaptureSettings.FFmpegOptions ?? new FFmpegOptions();
+            taskSettings.CaptureSettings.FFmpegOptions = ffmpegOptions;
+            var vm = new FFmpegOptionsViewModel(ffmpegOptions);
             var window = new FFmpegOptionsWindow
             {
                 DataContext = vm
