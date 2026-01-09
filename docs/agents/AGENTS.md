@@ -62,6 +62,7 @@ This project uses multiple AI developer agents working in parallel. See [MULTI_A
    - Check `Directory.Build.props` for the current version.
    - Increment accordingly based on the highest complexity of changes in your session.
    - Update `<Version>` tag in `Directory.Build.props`.
+   - **IMPORTANT**: `Directory.Build.props` is the **single source of truth** for the application version. When updating the version, you MUST update this file.
    - **Do not** update individual `.csproj` versions; they inherit from `Directory.Build.props`.
 
 3. **Commit Messages**:

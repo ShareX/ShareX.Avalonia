@@ -97,10 +97,20 @@ public partial class App : Application
 
             // Subscribe to workflow completion for notification
             Core.Managers.TaskManager.Instance.TaskCompleted += OnWorkflowTaskCompleted;
+
+            // Trigger async recording initialization via callback
+            // This prevents blocking the main window from showing quickly
+            PostUIInitializationCallback?.Invoke();
         }
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    /// <summary>
+    /// Callback invoked after UI initialization completes.
+    /// Set by Program.cs to perform platform-specific async initialization.
+    /// </summary>
+    public static Action? PostUIInitializationCallback { get; set; }
 
     private void OnWorkflowTaskCompleted(object? sender, Core.Tasks.WorkerTask task)
     {
