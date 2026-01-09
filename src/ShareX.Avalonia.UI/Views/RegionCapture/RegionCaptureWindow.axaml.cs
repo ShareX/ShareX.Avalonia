@@ -256,9 +256,15 @@ namespace XerahS.UI.Views.RegionCapture
                 DebugLog("WINDOW", $"Captured scaling for coordinate conversion: {_capturedScaling}");
 
                 // Comprehensive DPI troubleshooting logging
+<<<<<<< HEAD
                 LogEnvironment("RegionCapture");
                 LogMonitorInfo("RegionCapture", Screens.All);
                 LogVirtualScreenBounds("RegionCapture", minX, minY, maxX, maxY, Width, Height, RenderScaling);
+=======
+                TroubleshootingHelper.LogEnvironment("RegionCapture");
+                TroubleshootingHelper.LogMonitorInfo("RegionCapture", Screens.All);
+                TroubleshootingHelper.LogVirtualScreenBounds("RegionCapture", minX, minY, maxX, maxY, Width, Height, RenderScaling);
+>>>>>>> 875fd8b8f81c6cf30d4dcea744479f98932c22a1
 
                 // Check if all screens are 100% DPI (Scaling == 1.0)
                 // We only enable background images and darkening if ALL screens are 1.0, to avoid mixed-DPI offsets.
@@ -879,6 +885,34 @@ namespace XerahS.UI.Views.RegionCapture
                     processId,
                     new System.Drawing.Rectangle(window.Bounds.X, window.Bounds.Y, window.Bounds.Width, window.Bounds.Height),
                     scaling,
+                    logicalX, logicalY, logicalW, logicalH,
+                    screenIndex, screenScaling);
+
+                // Get screen index and scaling for this window (for logging/comparison)
+                int screenIndex = 0;
+                double screenScaling = 1.0;
+                foreach (var screen in Screens.All)
+                {
+                    if (screen.Bounds.Contains(new Avalonia.PixelPoint(window.Bounds.X, window.Bounds.Y)))
+                    {
+                        screenScaling = screen.Scaling;
+                        break;
+                    }
+                    screenIndex++;
+                }
+
+                // Comprehensive selection logging for DPI troubleshooting
+                int processId = 0;
+                if (XerahS.Platform.Abstractions.PlatformServices.IsInitialized)
+                {
+                    try { processId = (int)(XerahS.Platform.Abstractions.PlatformServices.Window?.GetWindowProcessId(window.Handle) ?? 0); }
+                    catch { }
+                }
+                TroubleshootingHelper.LogWindowSelection("RegionCapture",
+                    window.Title ?? "",
+                    processId,
+                    new System.Drawing.Rectangle(window.Bounds.X, window.Bounds.Y, window.Bounds.Width, window.Bounds.Height),
+                    targetMonitorScaling,
                     logicalX, logicalY, logicalW, logicalH,
                     screenIndex, screenScaling);
 
