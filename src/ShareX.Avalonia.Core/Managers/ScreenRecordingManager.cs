@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using XerahS.Common;
+using XerahS.Core.Helpers;
 using XerahS.ScreenCapture.ScreenRecording;
 using System.Runtime.InteropServices;
 
@@ -122,22 +123,27 @@ public class ScreenRecordingManager
                 _currentRecording = recordingService;
             }
 
-            try
-            {
-                WireRecordingEvents(recordingService);
-                DebugHelper.WriteLine($"ScreenRecordingManager: Starting {(useFallback ? "fallback (FFmpeg)" : "native")} recording - Mode={options.Mode}, Codec={options.Settings?.Codec}, FPS={options.Settings?.FPS}");
-                await recordingService.StartRecordingAsync(options);
-                return;
-            }
+        try
+        {
+            TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Attempt {attempt + 1}: useFallback={useFallback}");
+            WireRecordingEvents(recordingService);
+            DebugHelper.WriteLine($"ScreenRecordingManager: Starting {(useFallback ? "fallback (FFmpeg)" : "native")} recording - Mode={options.Mode}, Codec={options.Settings?.Codec}, FPS={options.Settings?.FPS}");
+            TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Calling recordingService.StartRecordingAsync");
+            await recordingService.StartRecordingAsync(options);
+            TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Recording started successfully");
+            return;
+        }
             catch (Exception ex) when (!useFallback && CanFallbackFrom(ex))
             {
+                TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Native recording failed: {ex.Message}, attempting FFmpeg fallback");
                 DebugHelper.WriteException(ex, "ScreenRecordingManager: Native recording failed, attempting FFmpeg fallback...");
                 lastError = ex;
                 CleanupCurrentRecording(recordingService);
                 preferFallback = true;
             }
-            catch
+            catch (Exception ex)
             {
+                TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Recording failed with unrecoverable error: {ex.Message}");
                 CleanupCurrentRecording(recordingService);
                 lock (_lock)
                 {

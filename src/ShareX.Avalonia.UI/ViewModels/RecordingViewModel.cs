@@ -269,21 +269,12 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
             SyncSettingsToWorkflow();
             SettingManager.SaveWorkflowsConfigAsync();
 
-            var options = new RecordingOptions
-            {
-                Mode = ResolveCaptureMode(),
-                Settings = _taskSettings.CaptureSettings.ScreenRecordingSettings,
-                OutputPath = ResolveOutputPath()
-            };
-
-            OutputFilePath = options.OutputPath;
-
             DebugHelper.WriteLine($"Starting recording (workflow: {_workflow?.Name ?? "unnamed"}): {Codec} @ {Fps}fps, {BitrateKbps}kbps, Cursor={ShowCursor}, Intent={RecordingIntent}");
             DebugHelper.WriteLine($"  Audio: SystemAudio={CaptureSystemAudio}, Microphone={CaptureMicrophone}");
-            DebugHelper.WriteLine($"Output path: {options.OutputPath}");
 
-            // Use global recording manager (Stage 5)
-            await ScreenRecordingManager.Instance.StartRecordingAsync(options);
+            // Use unified pipeline through TaskHelpers.ExecuteWorkflow
+            // This ensures recording goes through the same path as hotkey triggers
+            await Core.Helpers.TaskHelpers.ExecuteWorkflow(_workflow);
         }
         catch (Exception ex)
         {

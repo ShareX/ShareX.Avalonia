@@ -38,6 +38,7 @@ namespace XerahS.Core.Tasks
     {
         public TaskInfo Info { get; private set; }
         public TaskStatus Status { get; private set; }
+        public Exception? Error { get; private set; }
         public bool IsBusy => Status == TaskStatus.InQueue || IsWorking;
         public bool IsWorking => Status == TaskStatus.Preparing || Status == TaskStatus.Working || Status == TaskStatus.Stopping;
 
@@ -88,7 +89,32 @@ namespace XerahS.Core.Tasks
             catch (Exception ex)
             {
                 Status = TaskStatus.Failed;
+                Error = ex;
                 DebugHelper.WriteLine($"Task failed: {ex.Message}");
+
+                // Show error toast to user for any task failure
+                try
+                {
+                    var errorMessage = ex.InnerException?.Message ?? ex.Message;
+                    if (errorMessage.Length > 150)
+                    {
+                        errorMessage = errorMessage.Substring(0, 147) + "...";
+                    }
+
+                    PlatformServices.Toast?.ShowToast(new Platform.Abstractions.ToastConfig
+                    {
+                        Title = $"{Info.TaskSettings.Job} Failed",
+                        Text = errorMessage,
+                        Duration = 5f,
+                        Size = new System.Drawing.Size(400, 120),
+                        AutoHide = true,
+                        LeftClickAction = Platform.Abstractions.ToastClickAction.CloseNotification
+                    });
+                }
+                catch
+                {
+                    // Ignore toast errors
+                }
             }
             finally
             {
@@ -104,6 +130,8 @@ namespace XerahS.Core.Tasks
 
         private async Task DoWorkAsync(CancellationToken token)
         {
+            TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "DoWorkAsync Entry");
+            
             Status = TaskStatus.Working;
             OnStatusChanged();
 
@@ -111,6 +139,8 @@ namespace XerahS.Core.Tasks
             // Only capture if we don't already have an image (e.g. passed from UI)
             if (Info.Metadata.Image == null && PlatformServices.IsInitialized)
             {
+                TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK", "Entering capture phase");
+                
                 SKBitmap? image = null;
                 var captureStopwatch = Stopwatch.StartNew();
                 DebugHelper.WriteLine($"Capture start: Job={Info.TaskSettings.Job}");
@@ -263,7 +293,9 @@ namespace XerahS.Core.Tasks
                     // Stage 5: Screen Recording Integration
                     case HotkeyType.ScreenRecorder:
                     case HotkeyType.StartScreenRecorder:
+                        TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK", "ScreenRecorder case matched, calling HandleStartRecordingAsync");
                         await HandleStartRecordingAsync(CaptureMode.Screen);
+                        TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK", "HandleStartRecordingAsync completed");
                         return; // Recording tasks don't proceed to image processing
 
                     case HotkeyType.ScreenRecorderActiveWindow:
@@ -330,11 +362,14 @@ namespace XerahS.Core.Tasks
 
         private async Task HandleStartRecordingAsync(CaptureMode mode, IntPtr windowHandle = default)
         {
+            TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", $"HandleStartRecordingAsync Entry: mode={mode}");
+            
             try
             {
                 // Check if already recording
                 if (ScreenRecordingManager.Instance.IsRecording)
                 {
+                    TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "Already recording, stopping first");
                     DebugHelper.WriteLine("Recording already in progress, stopping existing recording first...");
                     await ScreenRecordingManager.Instance.StopRecordingAsync();
                 }
@@ -360,11 +395,13 @@ namespace XerahS.Core.Tasks
                     recordingOptions.Settings.ForceFFmpeg = true;
                 }
 
+                TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "Calling ScreenRecordingManager.StartRecordingAsync");
                 DebugHelper.WriteLine($"Starting recording: Mode={mode}, Codec={recordingOptions.Settings?.Codec}, FPS={recordingOptions.Settings?.FPS}");
                 DebugHelper.WriteLine($"Output path: {recordingOptions.OutputPath}");
 
                 // Start recording via manager
                 await ScreenRecordingManager.Instance.StartRecordingAsync(recordingOptions);
+                TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "ScreenRecordingManager.StartRecordingAsync completed");
             }
             catch (Exception ex)
             {

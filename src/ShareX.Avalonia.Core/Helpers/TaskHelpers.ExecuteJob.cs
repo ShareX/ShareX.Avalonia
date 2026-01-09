@@ -38,22 +38,28 @@ public static partial class TaskHelpers
     /// </summary>
     public static async Task ExecuteWorkflow(Core.Hotkeys.WorkflowSettings workflow)
     {
+        TroubleshootingHelper.Log(workflow?.Job.ToString() ?? "Unknown", "EXECUTE_WORKFLOW", $"Entry: workflow={workflow?.Name ?? "null"}");
+        
         if (workflow == null)
         {
             DebugHelper.WriteLine("ExecuteWorkflow: workflow is null");
+            TroubleshootingHelper.Log("Unknown", "EXECUTE_WORKFLOW", "ABORT: workflow is null");
             return;
         }
 
+        TroubleshootingHelper.Log(workflow.Job.ToString(), "EXECUTE_WORKFLOW", $"Calling ExecuteJob, TaskSettings={workflow.TaskSettings != null}");
         await ExecuteJob(workflow.Job, workflow.TaskSettings);
     }
 
     public static async Task ExecuteJob(HotkeyType job, TaskSettings? taskSettings = null)
     {
+        TroubleshootingHelper.Log(job.ToString(), "EXECUTE_JOB", $"Entry: taskSettings={taskSettings != null}");
         DebugHelper.WriteLine($"Executing job: {job}");
 
         if (!PlatformServices.IsInitialized)
         {
             DebugHelper.WriteLine("Platform services not initialized.");
+            TroubleshootingHelper.Log(job.ToString(), "EXECUTE_JOB", "ABORT: Platform services not initialized");
             return;
         }
 
@@ -83,10 +89,13 @@ public static partial class TaskHelpers
         {
             // Start the task via TaskManager
             // This ensures it appears in the UI and follows the standard lifecycle
+            TroubleshootingHelper.Log(taskSettings.Job.ToString(), "EXECUTE_JOB", "Calling TaskManager.StartTask");
             await TaskManager.Instance.StartTask(taskSettings);
+            TroubleshootingHelper.Log(taskSettings.Job.ToString(), "EXECUTE_JOB", "TaskManager.StartTask completed");
         }
         catch (Exception ex)
         {
+            TroubleshootingHelper.Log(taskSettings?.Job.ToString() ?? "Unknown", "EXECUTE_JOB", $"ERROR: {ex.Message}");
             DebugHelper.WriteException(ex, $"Error starting job {job}");
         }
     }
