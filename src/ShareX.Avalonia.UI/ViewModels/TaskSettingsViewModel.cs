@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using XerahS.Core;
+using XerahS.ScreenCapture.ScreenRecording;
 
 namespace XerahS.UI.ViewModels
 {
@@ -135,6 +136,21 @@ namespace XerahS.UI.ViewModels
                 if (Math.Abs(_settings.CaptureSettings.ScreenRecordStartDelay - value) > 0.001f)
                 {
                     _settings.CaptureSettings.ScreenRecordStartDelay = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public IEnumerable<RecordingIntent> RecordingIntents => Enum.GetValues(typeof(RecordingIntent)).Cast<RecordingIntent>();
+
+        public RecordingIntent RecordingIntent
+        {
+            get => _settings.CaptureSettings.ScreenRecordingSettings.RecordingIntent;
+            set
+            {
+                if (_settings.CaptureSettings.ScreenRecordingSettings.RecordingIntent != value)
+                {
+                    _settings.CaptureSettings.ScreenRecordingSettings.RecordingIntent = value;
                     OnPropertyChanged();
                 }
             }

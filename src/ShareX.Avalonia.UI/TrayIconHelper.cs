@@ -27,6 +27,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Input;
 using XerahS.Common;
 using XerahS.Core;
+using XerahS.Core.Hotkeys;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
@@ -45,13 +46,22 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    public ICommand CaptureRegionCommand { get; }
-    public ICommand CaptureScreenCommand { get; }
-    public ICommand CaptureWindowCommand { get; }
+    // Dynamic workflow commands (first 3 workflows from list)
+    public ICommand Workflow1Command { get; }
+    public ICommand Workflow2Command { get; }
+    public ICommand Workflow3Command { get; }
     public ICommand OpenMainWindowCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand ExitCommand { get; }
     public ICommand TrayClickCommand { get; }
+
+    // Workflow names for tray menu display
+    public string Workflow1Name => GetWorkflowName(0) ?? "Workflow 1";
+    public string Workflow2Name => GetWorkflowName(1) ?? "Workflow 2";
+    public string Workflow3Name => GetWorkflowName(2) ?? "Workflow 3";
+    public bool HasWorkflow1 => GetWorkflow(0) != null;
+    public bool HasWorkflow2 => GetWorkflow(1) != null;
+    public bool HasWorkflow3 => GetWorkflow(2) != null;
 
     private bool _showTray;
     public bool ShowTray
@@ -69,9 +79,9 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     private TrayIconHelper()
     {
-        CaptureRegionCommand = new RelayCommand(CaptureRegion);
-        CaptureScreenCommand = new RelayCommand(CaptureScreen);
-        CaptureWindowCommand = new RelayCommand(CaptureWindow);
+        Workflow1Command = new RelayCommand(() => ExecuteWorkflowByIndex(0));
+        Workflow2Command = new RelayCommand(() => ExecuteWorkflowByIndex(1));
+        Workflow3Command = new RelayCommand(() => ExecuteWorkflowByIndex(2));
         OpenMainWindowCommand = new RelayCommand(OpenMainWindow);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         ExitCommand = new RelayCommand(Exit);
@@ -88,6 +98,13 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         // Update ShowTray when settings change
         ShowTray = SettingManager.Settings.ShowTray;
+        // Notify workflow name changes in case workflow list changed
+        OnPropertyChanged(nameof(Workflow1Name));
+        OnPropertyChanged(nameof(Workflow2Name));
+        OnPropertyChanged(nameof(Workflow3Name));
+        OnPropertyChanged(nameof(HasWorkflow1));
+        OnPropertyChanged(nameof(HasWorkflow2));
+        OnPropertyChanged(nameof(HasWorkflow3));
     }
 
     /// <summary>
@@ -97,6 +114,12 @@ public class TrayIconHelper : INotifyPropertyChanged
     public void RefreshFromSettings()
     {
         ShowTray = SettingManager.Settings.ShowTray;
+        OnPropertyChanged(nameof(Workflow1Name));
+        OnPropertyChanged(nameof(Workflow2Name));
+        OnPropertyChanged(nameof(Workflow3Name));
+        OnPropertyChanged(nameof(HasWorkflow1));
+        OnPropertyChanged(nameof(HasWorkflow2));
+        OnPropertyChanged(nameof(HasWorkflow3));
     }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -104,22 +127,46 @@ public class TrayIconHelper : INotifyPropertyChanged
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    private async void CaptureRegion()
+    /// <summary>
+    /// Get workflow by list index (0-based)
+    /// </summary>
+    private static WorkflowSettings? GetWorkflow(int index)
     {
-        DebugHelper.WriteLine("Tray: Capture Region");
-        await Core.Helpers.TaskHelpers.ExecuteJob(HotkeyType.RectangleRegion);
+        var workflows = SettingManager.WorkflowsConfig?.Hotkeys;
+        if (workflows != null && index >= 0 && index < workflows.Count)
+        {
+            return workflows[index];
+        }
+        return null;
     }
 
-    private async void CaptureScreen()
+    /// <summary>
+    /// Get workflow display name by list index
+    /// </summary>
+    private static string? GetWorkflowName(int index)
     {
-        DebugHelper.WriteLine("Tray: Capture Screen");
-        await Core.Helpers.TaskHelpers.ExecuteJob(HotkeyType.PrintScreen);
+        var workflow = GetWorkflow(index);
+        if (workflow == null) return null;
+        return !string.IsNullOrEmpty(workflow.Name) 
+            ? workflow.Name 
+            : EnumExtensions.GetDescription(workflow.Job);
     }
 
-    private async void CaptureWindow()
+    /// <summary>
+    /// Execute workflow by list index using its complete WorkflowSettings
+    /// </summary>
+    private async void ExecuteWorkflowByIndex(int index)
     {
-        DebugHelper.WriteLine("Tray: Capture Window");
-        await Core.Helpers.TaskHelpers.ExecuteJob(HotkeyType.ActiveWindow);
+        var workflow = GetWorkflow(index);
+        if (workflow != null)
+        {
+            DebugHelper.WriteLine($"Tray: Execute workflow {index}: {workflow}");
+            await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow);
+        }
+        else
+        {
+            DebugHelper.WriteLine($"Tray: No workflow at index {index}");
+        }
     }
 
     private void OpenMainWindow()
@@ -182,15 +229,20 @@ public class TrayIconHelper : INotifyPropertyChanged
             case HotkeyType.OpenMainWindow:
                 OpenMainWindow();
                 break;
-            case HotkeyType.RectangleRegion:
-            case HotkeyType.PrintScreen:
-            case HotkeyType.ActiveWindow:
-            case HotkeyType.LastRegion:
-                await Core.Helpers.TaskHelpers.ExecuteJob(action);
-                break;
             default:
-                await Core.Helpers.TaskHelpers.ExecuteJob(action);
+                // For tray click actions, execute first matching workflow
+                var workflow = SettingManager.WorkflowsConfig?.Hotkeys?.FirstOrDefault(w => w.Job == action);
+                if (workflow != null)
+                {
+                    await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow);
+                }
+                else
+                {
+                    // Fallback for actions that aren't workflow-based
+                    await Core.Helpers.TaskHelpers.ExecuteJob(action, new TaskSettings { Job = action });
+                }
                 break;
         }
     }
 }
+

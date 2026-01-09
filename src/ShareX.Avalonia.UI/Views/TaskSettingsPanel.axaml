@@ -102,6 +102,14 @@
                                          <NumericUpDown Grid.Column="2" Value="{Binding ScreenRecordStartDelay}" Minimum="0" Maximum="60" Increment="0.1" FormatString="0.0" Width="100"/>
                                          <TextBlock Grid.Column="4" Text="seconds" VerticalAlignment="Center"/>
                                     </Grid>
+                                    <Grid ColumnDefinitions="Auto, 10, *">
+                                         <TextBlock Grid.Column="0" Text="Recording intent:" VerticalAlignment="Center"/>
+                                         <ComboBox Grid.Column="2"
+                                                   ItemsSource="{Binding RecordingIntents}"
+                                                   SelectedItem="{Binding RecordingIntent}"
+                                                   HorizontalAlignment="Stretch"
+                                                   MinWidth="150"/>
+                                    </Grid>
                                 </StackPanel>
                             </Border>
                         </StackPanel>

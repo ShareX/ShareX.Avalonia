@@ -23,12 +23,16 @@
 
 #endregion License Information (GPL v3)
 
+using System.Linq;
 using System.Timers;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using XerahS.Common;
+using XerahS.Core;
+using XerahS.Core.Hotkeys;
 using XerahS.Core.Managers;
 using XerahS.ScreenCapture.ScreenRecording;
+using HotkeyInfo = XerahS.Platform.Abstractions.HotkeyInfo;
 
 namespace XerahS.UI.ViewModels;
 
@@ -40,7 +44,10 @@ namespace XerahS.UI.ViewModels;
 public partial class RecordingViewModel : ViewModelBase, IDisposable
 {
     private readonly System.Timers.Timer _durationTimer;
+    private WorkflowSettings _workflow;
+    private TaskSettings _taskSettings;
     private bool _disposed;
+    private bool _initialized;
 
     /// <summary>
     /// Singleton instance for easy access from UI
@@ -91,6 +98,14 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
     [ObservableProperty]
     private bool _captureMicrophone = false;
 
+    [ObservableProperty]
+    private RecordingIntent _recordingIntent = RecordingIntent.Default;
+
+    /// <summary>
+    /// Available recording intents
+    /// </summary>
+    public List<RecordingIntent> AvailableRecordingIntents { get; } = Enum.GetValues(typeof(RecordingIntent)).Cast<RecordingIntent>().ToList();
+
     /// <summary>
     /// Available codecs for selection
     /// </summary>
@@ -139,6 +154,8 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
     public RecordingViewModel()
     {
         Current = this;
+
+        InitializeWorkflow();
 
         // Subscribe to global recording manager events
         ScreenRecordingManager.Instance.StatusChanged += OnStatusChanged;
@@ -243,31 +260,25 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
         {
             LastError = null;
 
+            if (!_initialized)
+            {
+                InitializeWorkflow();
+            }
+
+            // Update workflow TaskSettings from UI selections
+            SyncSettingsToWorkflow();
+            SettingManager.SaveWorkflowsConfigAsync();
+
             var options = new RecordingOptions
             {
-                Mode = CaptureMode.Screen,
-                Settings = new ScreenRecordingSettings
-                {
-                    FPS = Fps,
-                    BitrateKbps = BitrateKbps,
-                    Codec = Codec,
-                    ShowCursor = ShowCursor,
-                    // Stage 6: Audio settings
-                    CaptureSystemAudio = CaptureSystemAudio,
-                    CaptureMicrophone = CaptureMicrophone,
-                    // Route audio capture through FFmpeg until native audio is available
-                    ForceFFmpeg = CaptureSystemAudio || CaptureMicrophone
-                }
+                Mode = ResolveCaptureMode(),
+                Settings = _taskSettings.CaptureSettings.ScreenRecordingSettings,
+                OutputPath = ResolveOutputPath()
             };
 
-            // Generate output path
-            string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-            string recordingsPath = Path.Combine(documentsPath, "ShareX", "Recordings", DateTime.Now.ToString("yyyy-MM"));
-            Directory.CreateDirectory(recordingsPath);
-            options.OutputPath = Path.Combine(recordingsPath, $"Recording_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.mp4");
             OutputFilePath = options.OutputPath;
 
-            DebugHelper.WriteLine($"Starting recording: {Codec} @ {Fps}fps, {BitrateKbps}kbps, Cursor={ShowCursor}");
+            DebugHelper.WriteLine($"Starting recording (workflow: {_workflow?.Name ?? "unnamed"}): {Codec} @ {Fps}fps, {BitrateKbps}kbps, Cursor={ShowCursor}, Intent={RecordingIntent}");
             DebugHelper.WriteLine($"  Audio: SystemAudio={CaptureSystemAudio}, Microphone={CaptureMicrophone}");
             DebugHelper.WriteLine($"Output path: {options.OutputPath}");
 
@@ -308,6 +319,116 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
     partial void OnCanStopChanged(bool value)
     {
         StopRecordingCommand.NotifyCanExecuteChanged();
+    }
+
+    private void InitializeWorkflow()
+    {
+        var workflow = SettingManager.WorkflowsConfig.Hotkeys.FirstOrDefault(w => w.Job == HotkeyType.ScreenRecorder);
+        if (workflow == null)
+        {
+            workflow = new WorkflowSettings(HotkeyType.ScreenRecorder, new HotkeyInfo())
+            {
+                Name = "Screen Recorder (auto)"
+            };
+
+            SettingManager.WorkflowsConfig.Hotkeys.Add(workflow);
+            SettingManager.SaveWorkflowsConfigAsync();
+        }
+
+        _workflow = workflow;
+        _taskSettings = _workflow.TaskSettings ?? new TaskSettings();
+        _workflow.TaskSettings = _taskSettings;
+
+        var recordingSettings = _taskSettings.CaptureSettings.ScreenRecordingSettings;
+
+        // Seed UI from workflow settings
+        Fps = recordingSettings.FPS;
+        BitrateKbps = recordingSettings.BitrateKbps;
+        Codec = recordingSettings.Codec;
+        ShowCursor = recordingSettings.ShowCursor;
+        CaptureSystemAudio = recordingSettings.CaptureSystemAudio;
+        CaptureMicrophone = recordingSettings.CaptureMicrophone;
+        RecordingIntent = recordingSettings.RecordingIntent;
+        OutputFilePath = null;
+        _initialized = true;
+    }
+
+    private void SyncSettingsToWorkflow()
+    {
+        var recordingSettings = _taskSettings.CaptureSettings.ScreenRecordingSettings;
+
+        recordingSettings.FPS = Fps;
+        recordingSettings.BitrateKbps = BitrateKbps;
+        recordingSettings.Codec = Codec;
+        recordingSettings.ShowCursor = ShowCursor;
+        recordingSettings.CaptureSystemAudio = CaptureSystemAudio;
+        recordingSettings.CaptureMicrophone = CaptureMicrophone;
+        recordingSettings.RecordingIntent = RecordingIntent;
+        recordingSettings.ForceFFmpeg = CaptureSystemAudio || CaptureMicrophone;
+    }
+
+    private CaptureMode ResolveCaptureMode()
+    {
+        return _workflow.Job switch
+        {
+            HotkeyType.ScreenRecorderActiveWindow => CaptureMode.Window,
+            HotkeyType.ScreenRecorderCustomRegion => CaptureMode.Region,
+            _ => CaptureMode.Screen
+        };
+    }
+
+    private string ResolveOutputPath()
+    {
+        string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        string baseFolder = Path.Combine(documentsPath, "ShareX", "Recordings", DateTime.Now.ToString("yyyy-MM"));
+
+        Directory.CreateDirectory(baseFolder);
+        string fileName = $"Recording_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.mp4";
+        return Path.Combine(baseFolder, fileName);
+    }
+
+    partial void OnFpsChanged(int value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.FPS = value;
+    }
+
+    partial void OnBitrateKbpsChanged(int value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.BitrateKbps = value;
+    }
+
+    partial void OnCodecChanged(VideoCodec value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.Codec = value;
+    }
+
+    partial void OnShowCursorChanged(bool value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.ShowCursor = value;
+    }
+
+    partial void OnCaptureSystemAudioChanged(bool value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.CaptureSystemAudio = value;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.ForceFFmpeg = value || CaptureMicrophone;
+    }
+
+    partial void OnCaptureMicrophoneChanged(bool value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.CaptureMicrophone = value;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.ForceFFmpeg = value || CaptureSystemAudio;
+    }
+
+    partial void OnRecordingIntentChanged(RecordingIntent value)
+    {
+        if (!_initialized) return;
+        _taskSettings.CaptureSettings.ScreenRecordingSettings.RecordingIntent = value;
     }
 
     public void Dispose()

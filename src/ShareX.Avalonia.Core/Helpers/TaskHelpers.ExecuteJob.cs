@@ -32,6 +32,21 @@ namespace XerahS.Core.Helpers;
 
 public static partial class TaskHelpers
 {
+    /// <summary>
+    /// Execute a workflow using its complete settings.
+    /// This is the preferred method - avoids ambiguity with HotkeyType lookup.
+    /// </summary>
+    public static async Task ExecuteWorkflow(Core.Hotkeys.WorkflowSettings workflow)
+    {
+        if (workflow == null)
+        {
+            DebugHelper.WriteLine("ExecuteWorkflow: workflow is null");
+            return;
+        }
+
+        await ExecuteJob(workflow.Job, workflow.TaskSettings);
+    }
+
     public static async Task ExecuteJob(HotkeyType job, TaskSettings? taskSettings = null)
     {
         DebugHelper.WriteLine($"Executing job: {job}");

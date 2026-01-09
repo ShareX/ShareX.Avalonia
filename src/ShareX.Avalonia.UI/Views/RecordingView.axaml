@@ -80,7 +80,7 @@
                                    FontSize="16"
                                    FontWeight="SemiBold"/>
 
-                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="16">
+                        <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto" RowSpacing="12" ColumnSpacing="16">
 
                             <!-- Codec -->
                             <TextBlock Grid.Row="0" Grid.Column="0"
@@ -142,6 +142,17 @@
                                       IsChecked="{Binding CaptureMicrophone}"
                                       IsEnabled="{Binding !IsRecording}"
                                       Content="Capture microphone input"/>
+
+                            <!-- Recording Intent -->
+                            <TextBlock Grid.Row="6" Grid.Column="0"
+                                       Text="Recording intent:"
+                                       VerticalAlignment="Center"/>
+                            <ComboBox Grid.Row="6" Grid.Column="1"
+                                      ItemsSource="{Binding AvailableRecordingIntents}"
+                                      SelectedItem="{Binding RecordingIntent}"
+                                      IsEnabled="{Binding !IsRecording}"
+                                      HorizontalAlignment="Stretch"
+                                      MinWidth="150"/>
 
                         </Grid>
 

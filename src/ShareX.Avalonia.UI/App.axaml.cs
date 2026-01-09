@@ -105,7 +105,7 @@ public partial class App : Application
     private void OnWorkflowTaskCompleted(object? sender, Core.Tasks.WorkerTask task)
     {
         // Check if notification should be shown
-        var taskSettings = task.Info?.TaskSettings ?? SettingManager.Settings.DefaultTaskSettings;
+        var taskSettings = task.Info?.TaskSettings ?? new TaskSettings();
         if (taskSettings?.GeneralSettings?.ShowToastNotificationAfterTaskCompleted == true)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
