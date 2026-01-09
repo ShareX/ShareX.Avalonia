@@ -210,7 +210,7 @@ public class TaskSettingsCapture
     #endregion Capture / Screen recorder
 
     public RegionCaptureOptions RegionCaptureOptions = new RegionCaptureOptions();
-    public FFmpegOptions FFmpegOptions = new FFmpegOptions();
+    public FFmpegOptions FFmpegOptions { get; set; } = new FFmpegOptions();
     public ScreenRecordingSettings ScreenRecordingSettings = new ScreenRecordingSettings();
     public ScrollingCaptureOptions ScrollingCaptureOptions = new ScrollingCaptureOptions();
     public OCROptions OCROptions = new OCROptions();

@@ -48,6 +48,7 @@ public partial class ToastViewModel : ObservableObject, IDisposable
     private double _opacityDecrement;
     private bool _isDurationEnd;
     private bool _isMouseInside;
+    private bool _isMenuOpen;
     private bool _disposed;
 
     public event EventHandler? CloseRequested;
@@ -134,6 +135,22 @@ public partial class ToastViewModel : ObservableObject, IDisposable
         }
     }
 
+    public void OnMenuOpened()
+    {
+        _isMenuOpen = true;
+        _fadeTimer.Stop();
+
+        // Reset opacity
+        _opacity = 1.0;
+        OpacityChanged?.Invoke(this, _opacity);
+    }
+
+    public void OnMenuClosed()
+    {
+        _isMenuOpen = false;
+        CheckFade();
+    }
+
     public void OnMouseEnter()
     {
         _isMouseInside = true;
@@ -147,11 +164,7 @@ public partial class ToastViewModel : ObservableObject, IDisposable
     public void OnMouseLeave()
     {
         _isMouseInside = false;
-
-        if (_isDurationEnd && _config.AutoHide)
-        {
-            StartFade();
-        }
+        CheckFade();
     }
 
     public void ExecuteLeftClick()
@@ -175,6 +188,14 @@ public partial class ToastViewModel : ObservableObject, IDisposable
         _isDurationEnd = true;
 
         if (!_isMouseInside)
+        {
+            CheckFade();
+        }
+    }
+
+    private void CheckFade()
+    {
+        if (_isDurationEnd && _config.AutoHide && !_isMouseInside && !_isMenuOpen)
         {
             StartFade();
         }

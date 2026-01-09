@@ -225,6 +225,16 @@ public partial class ToastWindow : Window
         }
     }
 
+    private void OnFlyoutOpened(object? sender, EventArgs e)
+    {
+        _viewModel?.OnMenuOpened();
+    }
+
+    private void OnFlyoutClosed(object? sender, EventArgs e)
+    {
+        _viewModel?.OnMenuClosed();
+    }
+
     private void OnCloseRequested(object? sender, EventArgs e)
     {
         Close();

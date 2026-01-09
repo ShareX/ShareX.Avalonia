@@ -72,7 +72,7 @@
         </Grid>
         
         <Border.ContextFlyout>
-            <MenuFlyout>
+            <MenuFlyout Opened="OnFlyoutOpened" Closed="OnFlyoutClosed">
                 <MenuItem Header="Copy image to clipboard" Command="{Binding CopyImageToClipboardCommand}"/>
                 <MenuItem Header="Open file" Command="{Binding OpenFileCommand}"/>
                 <MenuItem Header="Copy file path" Command="{Binding CopyFilePathCommand}"/>
