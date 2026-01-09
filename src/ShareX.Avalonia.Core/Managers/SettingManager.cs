@@ -259,6 +259,10 @@ namespace XerahS.Core
             WorkflowsConfig = WorkflowsConfig.Load(path, BackupFolder, fallbackSupport) ?? new WorkflowsConfig();
             WorkflowsConfig.CreateBackup = true;
             WorkflowsConfig.CreateWeeklyBackup = true;
+
+            // Ensure all workflows have valid IDs
+            WorkflowsConfig.EnsureWorkflowIds();
+
             DebugHelper.WriteLine($"WorkflowsConfig load finished: {path}");
         }
 

@@ -43,6 +43,12 @@ public class TaskSettings
     [JsonIgnore]
     public bool IsSafeTaskSettings => TaskSettingsReference != null;
 
+    /// <summary>
+    /// The ID of the workflow that this task settings belongs to
+    /// </summary>
+    [JsonIgnore]
+    public string? WorkflowId { get; set; }
+
     public string Description = "";
 
     public HotkeyType Job = HotkeyType.None;

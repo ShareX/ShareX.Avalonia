@@ -245,7 +245,7 @@ public partial class App : Application
 
     private async void HotkeyManager_HotkeyTriggered(object? sender, Core.Hotkeys.WorkflowSettings settings)
     {
-        DebugHelper.WriteLine($"Hotkey triggered: {settings}");
+        DebugHelper.WriteLine($"Hotkey triggered: {settings} (ID: {settings?.Id ?? "null"})");
 
         bool isCaptureJob = settings.Job is Core.HotkeyType.PrintScreen
                                           or Core.HotkeyType.ActiveWindow
@@ -282,7 +282,9 @@ public partial class App : Application
             {
                 DebugHelper.WriteLine($"[DEBUG] Hotkey triggered for CustomWindow. Configured title: '{settings.TaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
             }
-            await Core.Helpers.TaskHelpers.ExecuteJob(settings.Job, settings.TaskSettings);
+
+            // Execute workflow with its ID for troubleshooting
+            await Core.Helpers.TaskHelpers.ExecuteWorkflow(settings, settings.Id);
         }
     }
 

@@ -63,6 +63,11 @@ public class TrayIconHelper : INotifyPropertyChanged
     public bool HasWorkflow2 => GetWorkflow(1) != null;
     public bool HasWorkflow3 => GetWorkflow(2) != null;
 
+    // Workflow IDs for execution
+    public string? Workflow1Id => GetWorkflow(0)?.Id;
+    public string? Workflow2Id => GetWorkflow(1)?.Id;
+    public string? Workflow3Id => GetWorkflow(2)?.Id;
+
     private bool _showTray;
     public bool ShowTray
     {
@@ -153,15 +158,15 @@ public class TrayIconHelper : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Execute workflow by list index using its complete WorkflowSettings
+    /// Execute workflow by list index using its ID
     /// </summary>
     private async void ExecuteWorkflowByIndex(int index)
     {
         var workflow = GetWorkflow(index);
         if (workflow != null)
         {
-            DebugHelper.WriteLine($"Tray: Execute workflow {index}: {workflow}");
-            await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow);
+            DebugHelper.WriteLine($"Tray: Execute workflow {index} (ID: {workflow.Id}): {workflow}");
+            await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow, workflow.Id);
         }
         else
         {
@@ -234,7 +239,7 @@ public class TrayIconHelper : INotifyPropertyChanged
                 var workflow = SettingManager.WorkflowsConfig?.Hotkeys?.FirstOrDefault(w => w.Job == action);
                 if (workflow != null)
                 {
-                    await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow);
+                    await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow, workflow.Id);
                 }
                 else
                 {
