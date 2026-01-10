@@ -34,16 +34,18 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
     {
         var monitors = new List<MonitorInfo>();
 
-        using var factory = new Factory1();
+        using var factory = DXGI.CreateDXGIFactory1<IDXGIFactory1>();
 
-        foreach (var adapter in factory.Adapters1)
+        uint adapterIndex = 0;
+        while (factory.EnumAdapters1(adapterIndex, out var adapter).Success)
         {
-            foreach (var output in adapter.Outputs)
+            uint outputIndex = 0;
+            while (adapter.EnumOutputs(outputIndex, out var output).Success)
             {
                 var desc = output.Description;
 
                 // Get per-monitor DPI via GetDpiForMonitor
-                var hMonitor = desc.MonitorHandle;
+                var hMonitor = desc.Monitor;
                 uint dpiX = 96, dpiY = 96;
 
                 try
@@ -92,7 +94,13 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
                 {
                     // Ignore initialization failures for individual monitors
                 }
+
+                output.Dispose();
+                outputIndex++;
             }
+
+            adapter.Dispose();
+            adapterIndex++;
         }
 
         return monitors.ToArray();
@@ -122,25 +130,28 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
         PhysicalRectangle region,
         RegionCaptureOptions options)
     {
-        var duplication = context.OutputDuplication;
+        var duplication = context.IDXGIOutputDuplication;
         var device = context.Device;
 
         // Acquire next frame
-        var result = duplication.TryAcquireNextFrame(
-            timeoutInMilliseconds: 100,
-            out var frameInfo,
-            out var desktopResource);
+        OutduplFrameInfo frameInfo;
+        IDXGIResource desktopResource;
 
-        if (result.Failure)
+        try
         {
-            // No frame available, try once more
-            result = duplication.TryAcquireNextFrame(
-                timeoutInMilliseconds: 500,
-                out frameInfo,
-                out desktopResource);
-
-            if (result.Failure)
-                throw new InvalidOperationException($"Failed to acquire frame: {result}");
+            duplication.AcquireNextFrame(100, out frameInfo, out desktopResource);
+        }
+        catch
+        {
+            // No frame available, try once more with longer timeout
+            try
+            {
+                duplication.AcquireNextFrame(500, out frameInfo, out desktopResource);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to acquire frame: {ex.Message}", ex);
+            }
         }
 
         try
@@ -159,8 +170,8 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
             // Create staging texture for CPU readback
             var stagingDesc = new Texture2DDescription
             {
-                Width = captureRegion.Width,
-                Height = captureRegion.Height,
+                Width = (uint)captureRegion.Width,
+                Height = (uint)captureRegion.Height,
                 MipLevels = 1,
                 ArraySize = 1,
                 Format = Format.B8G8R8A8_UNorm,
@@ -250,19 +261,21 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
         };
     }
 
-    private void InitializeDuplication(Output output, Adapter1 adapter, string monitorId)
+    private void InitializeDuplication(IDXGIOutput output, IDXGIAdapter1 adapter, string monitorId)
     {
-        using var output1 = output.QueryInterface<Output1>();
+        using var output1 = output.QueryInterface<IDXGIOutput1>();
 
         // Create D3D11 device for this adapter
-        var device = D3D11.D3D11CreateDevice(
+        var featureLevels = new[] { FeatureLevel.Level_11_0, FeatureLevel.Level_10_0 };
+        var result = D3D11.D3D11CreateDevice(
             adapter,
             DriverType.Unknown,
             DeviceCreationFlags.None,
-            new[] { FeatureLevel.Level_11_0, FeatureLevel.Level_10_0 });
+            featureLevels,
+            out var device);
 
-        if (device == null)
-            throw new InvalidOperationException("Failed to create D3D11 device");
+        if (result.Failure || device == null)
+            throw new InvalidOperationException($"Failed to create D3D11 device: {result}");
 
         // Create output duplication
         var duplication = output1.DuplicateOutput(device);
@@ -272,7 +285,7 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
             Device = device,
             ImmediateContext = device.ImmediateContext,
             Output = output1,
-            OutputDuplication = duplication
+            IDXGIOutputDuplication = duplication
         };
     }
 
@@ -334,7 +347,7 @@ internal sealed class DxgiCaptureStrategy : ICaptureStrategy
 
         foreach (var context in _monitorContexts.Values)
         {
-            context.OutputDuplication?.Dispose();
+            context.IDXGIOutputDuplication?.Dispose();
             context.Output?.Dispose();
             context.ImmediateContext?.Dispose();
             context.Device?.Dispose();
@@ -351,8 +364,8 @@ internal sealed class DxgiMonitorContext
 {
     public required ID3D11Device Device { get; init; }
     public required ID3D11DeviceContext ImmediateContext { get; init; }
-    public required Output1 Output { get; init; }
-    public required OutputDuplication OutputDuplication { get; init; }
+    public required IDXGIOutput1 Output { get; init; }
+    public required IDXGIOutputDuplication IDXGIOutputDuplication { get; init; }
 }
 
 /// <summary>

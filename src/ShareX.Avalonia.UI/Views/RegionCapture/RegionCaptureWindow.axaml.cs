@@ -90,6 +90,16 @@ namespace XerahS.UI.Views.RegionCapture
             DebugLog("INIT", "RegionCaptureWindow created");
             DebugLog("INIT", $"Initial state: RenderScaling={RenderScaling}, Position={Position}, Bounds={Bounds}, ClientSize={ClientSize}");
 
+            // Try to initialize new backend
+            if (TryInitializeNewBackend())
+            {
+                DebugLog("INIT", "New capture backend enabled");
+            }
+            else
+            {
+                DebugLog("INIT", "Using legacy capture backend");
+            }
+
             // Close on Escape key
             this.KeyDown += (s, e) =>
             {
@@ -189,8 +199,14 @@ namespace XerahS.UI.Views.RegionCapture
 
             DebugLog("WINDOW", "Post-delay, beginning screen enumeration");
 
-            // Multi-monitor support: Span all screens at physical pixel dimensions
-            if (Screens.ScreenCount > 0)
+            // NEW: Use new backend for positioning if available
+            if (_newCaptureService != null)
+            {
+                PositionWindowWithNewBackend();
+                // Still need to fetch windows for detection
+                // Background capture is handled differently in new backend
+            }
+            else if (Screens.ScreenCount > 0)
             {
                 DebugLog("SCREEN", $"Screen count: {Screens.ScreenCount}");
 
@@ -256,15 +272,9 @@ namespace XerahS.UI.Views.RegionCapture
                 DebugLog("WINDOW", $"Captured scaling for coordinate conversion: {_capturedScaling}");
 
                 // Comprehensive DPI troubleshooting logging
-<<<<<<< HEAD
-                LogEnvironment("RegionCapture");
-                LogMonitorInfo("RegionCapture", Screens.All);
-                LogVirtualScreenBounds("RegionCapture", minX, minY, maxX, maxY, Width, Height, RenderScaling);
-=======
                 TroubleshootingHelper.LogEnvironment("RegionCapture");
                 TroubleshootingHelper.LogMonitorInfo("RegionCapture", Screens.All);
                 TroubleshootingHelper.LogVirtualScreenBounds("RegionCapture", minX, minY, maxX, maxY, Width, Height, RenderScaling);
->>>>>>> 875fd8b8f81c6cf30d4dcea744479f98932c22a1
 
                 // Check if all screens are 100% DPI (Scaling == 1.0)
                 // We only enable background images and darkening if ALL screens are 1.0, to avoid mixed-DPI offsets.
@@ -465,41 +475,6 @@ namespace XerahS.UI.Views.RegionCapture
             }
         }
 
-        private void UpdateImagesLayout(int minX, int minY)
-        {
-            var container = this.FindControl<Canvas>("BackgroundContainer");
-            if (container == null) return;
-
-            var currentScaling = RenderScaling;
-            DebugLog("LAYOUT", $"UpdateImagesLayout: Scaling={currentScaling}");
-
-            int idx = 0;
-            foreach (var child in container.Children)
-            {
-                if (child is Image img && img.Tag is Avalonia.Platform.Screen screen)
-                {
-                    // Calculate based on WINDOW scaling, not Screen scaling
-                    // We want 1 image pixel = 1 physical pixel
-
-                    var physicalOffsetX = screen.Bounds.X - minX;
-                    var physicalOffsetY = screen.Bounds.Y - minY;
-
-                    var logicalLeft = physicalOffsetX / currentScaling;
-                    var logicalTop = physicalOffsetY / currentScaling;
-                    var logicalWidth = screen.Bounds.Width / currentScaling;
-                    var logicalHeight = screen.Bounds.Height / currentScaling;
-
-                    img.Width = logicalWidth;
-                    img.Height = logicalHeight;
-                    Canvas.SetLeft(img, logicalLeft);
-                    Canvas.SetTop(img, logicalTop);
-
-                    DebugLog("LAYOUT", $"Screen {idx} Layout: Physical {screen.Bounds.Width}x{screen.Bounds.Height} -> Logical {logicalWidth}x{logicalHeight} (@ {currentScaling}x)");
-                }
-                idx++;
-            }
-        }
-
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
@@ -614,6 +589,13 @@ namespace XerahS.UI.Views.RegionCapture
 
         private void OnPointerPressed(object sender, PointerPressedEventArgs e)
         {
+            // NEW: Delegate to new backend if available
+            if (_newCaptureService != null)
+            {
+                OnPointerPressedNew(e);
+                return;
+            }
+
             var point = e.GetCurrentPoint(this);
 
             // Handle right-click
@@ -667,6 +649,13 @@ namespace XerahS.UI.Views.RegionCapture
 
         private void OnPointerMoved(object sender, PointerEventArgs e)
         {
+            // NEW: Delegate to new backend if available
+            if (_newCaptureService != null)
+            {
+                OnPointerMovedNew(e);
+                return;
+            }
+
             // Check for right-click during drag to cancel selection
             var point = e.GetCurrentPoint(this);
             if (point.Properties.IsRightButtonPressed && _isSelecting)
@@ -711,6 +700,13 @@ namespace XerahS.UI.Views.RegionCapture
 
         private void OnPointerReleased(object sender, PointerReleasedEventArgs e)
         {
+            // NEW: Delegate to new backend if available
+            if (_newCaptureService != null)
+            {
+                OnPointerReleasedNew(e);
+                return;
+            }
+
             if (_isSelecting)
             {
                 _isSelecting = false;
@@ -772,27 +768,9 @@ namespace XerahS.UI.Views.RegionCapture
         {
             if (_myHandle != IntPtr.Zero && w.Handle == _myHandle) return true;
 
-            // Also exclude windows with empty title and small size (tooltips etc) if desired, 
+            // Also exclude windows with empty title and small size (tooltips etc) if desired,
             // but for now just safely exclude self.
             return false;
-        }
-
-        /// <summary>
-        /// Gets the DPI scaling factor for the screen containing the specified physical point.
-        /// </summary>
-        private double GetScalingForPhysicalPoint(int physicalX, int physicalY)
-        {
-            foreach (var screen in Screens.All)
-            {
-                // Screen.Bounds is in physical pixels
-                if (screen.Bounds.Contains(new PixelPoint(physicalX, physicalY)))
-                {
-                    return screen.Scaling > 0 ? screen.Scaling : 1.0;
-                }
-            }
-
-            // Fallback to window's RenderScaling if no screen found
-            return RenderScaling;
         }
 
         private void UpdateWindowSelection(SKPointI mousePos)
@@ -872,35 +850,6 @@ namespace XerahS.UI.Views.RegionCapture
 
                 // Screen index and scaling already determined above for layout
 
-
-                // Comprehensive selection logging for DPI troubleshooting
-                int processId = 0;
-                if (XerahS.Platform.Abstractions.PlatformServices.IsInitialized)
-                {
-                    try { processId = (int)(XerahS.Platform.Abstractions.PlatformServices.Window?.GetWindowProcessId(window.Handle) ?? 0); }
-                    catch { }
-                }
-                LogWindowSelection("RegionCapture",
-                    window.Title ?? "",
-                    processId,
-                    new System.Drawing.Rectangle(window.Bounds.X, window.Bounds.Y, window.Bounds.Width, window.Bounds.Height),
-                    scaling,
-                    logicalX, logicalY, logicalW, logicalH,
-                    screenIndex, screenScaling);
-
-                // Get screen index and scaling for this window (for logging/comparison)
-                int screenIndex = 0;
-                double screenScaling = 1.0;
-                foreach (var screen in Screens.All)
-                {
-                    if (screen.Bounds.Contains(new Avalonia.PixelPoint(window.Bounds.X, window.Bounds.Y)))
-                    {
-                        screenScaling = screen.Scaling;
-                        break;
-                    }
-                    screenIndex++;
-                }
-
                 // Comprehensive selection logging for DPI troubleshooting
                 int processId = 0;
                 if (XerahS.Platform.Abstractions.PlatformServices.IsInitialized)
@@ -912,7 +861,7 @@ namespace XerahS.UI.Views.RegionCapture
                     window.Title ?? "",
                     processId,
                     new System.Drawing.Rectangle(window.Bounds.X, window.Bounds.Y, window.Bounds.Width, window.Bounds.Height),
-                    targetMonitorScaling,
+                    scaling,
                     logicalX, logicalY, logicalW, logicalH,
                     screenIndex, screenScaling);
 
@@ -1029,78 +978,19 @@ namespace XerahS.UI.Views.RegionCapture
                 }
             }
         }
-        // Local Logging Helpers (Moved from TroubleshootingHelper to avoid Core->Avalonia dependency)
-        
-        [Conditional("DEBUG")]
-        private void LogWindowSelection(string category, string windowTitle, int processId, System.Drawing.Rectangle physicalBounds, double renderScaling, double logicalX, double logicalY, double logicalW, double logicalH, int screenIndex, double screenScaling)
-        {
-            TroubleshootingHelper.Log(category, "SELECTION", $"Window: \"{TruncateString(windowTitle, 30)}\" (PID={processId})");
-            TroubleshootingHelper.Log(category, "SELECTION", $"  Physical: ({physicalBounds.X},{physicalBounds.Y}) {physicalBounds.Width}x{physicalBounds.Height}");
-            TroubleshootingHelper.Log(category, "SELECTION", $"  Overlay RenderScaling: {renderScaling:F3}");
-            TroubleshootingHelper.Log(category, "SELECTION", $"  Screen[{screenIndex}] Scaling: {screenScaling:F3}");
-            
-            if (Math.Abs(renderScaling - screenScaling) > 0.001)
-            {
-                 TroubleshootingHelper.Log(category, "WARNING", $"  ** SCALING MISMATCH: Overlay={renderScaling:F3} vs PerMonitor={screenScaling:F3} **");
-            }
-            else
-            {
-                 TroubleshootingHelper.Log(category, "SELECTION", $"  Per-monitor DPI scale: {screenScaling:F3}");
-            }
-
-            TroubleshootingHelper.Log(category, "SELECTION", $"  Computed logical: ({logicalX:F1},{logicalY:F1}) {logicalW:F1}x{logicalH:F1}");
-            TroubleshootingHelper.Log(category, "SELECTION", $"  Alt (per-monitor): ({physicalBounds.X / screenScaling:F1},?) {physicalBounds.Width / screenScaling:F1}x?");
-        }
-
-        [Conditional("DEBUG")]
-        private void LogEnvironment(string category)
-        {
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", "=== Environment Details ===");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $"Machine: {Environment.MachineName}");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $"User: {Environment.UserName}");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $"OS: {Environment.OSVersion}");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $".NET: {Environment.Version}");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $"Architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $"Process Architecture: {System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture}");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", "DPI Awareness: (check app manifest for dpiAwareness setting)");
-            TroubleshootingHelper.Log(category, "ENVIRONMENT", $"Log time: {DateTime.Now:yyyy-MM-dd HH:mm:ss.fff zzz}");
-        }
-
-        [Conditional("DEBUG")]
-        private void LogMonitorInfo(string category, System.Collections.Generic.IEnumerable<Avalonia.Platform.Screen> screens)
-        {
-            TroubleshootingHelper.Log(category, "MONITORS", "=== Monitor Configuration ===");
-            int i = 0;
-            foreach (var s in screens)
-            {
-                var dpi = s.Scaling * 96.0; 
-                TroubleshootingHelper.Log(category, "MONITORS", $"Screen {i}: Bounds={s.Bounds}, IsPrimary={s.IsPrimary}, Avalonia.Scaling={s.Scaling:F3}, Win32.DPI={dpi:F0}x{dpi:F0} (Scale={s.Scaling:F3})");
-                i++;
-            }
-            TroubleshootingHelper.Log(category, "MONITORS", $"Total monitors: {i}");
-        }
-        
-        [Conditional("DEBUG")]
-        private void LogVirtualScreenBounds(string category, int minX, int minY, int maxX, int maxY, double overlayWidth, double overlayHeight, double renderScaling)
-        {
-            TroubleshootingHelper.Log(category, "VIRTUAL", "=== Virtual Screen Bounds ===");
-            TroubleshootingHelper.Log(category, "VIRTUAL", $"Virtual screen: ({minX},{minY}) to ({maxX},{maxY})");
-            TroubleshootingHelper.Log(category, "VIRTUAL", $"Virtual size: {maxX - minX}x{maxY - minY} px");
-            TroubleshootingHelper.Log(category, "VIRTUAL", $"Overlay size: {overlayWidth:F0}x{overlayHeight:F0} logical");
-            TroubleshootingHelper.Log(category, "VIRTUAL", $"Overlay RenderScaling: {renderScaling:F3}");
-            
-            var expectedW = (maxX - minX) / renderScaling;
-            var expectedH = (maxY - minY) / renderScaling;
-            if (Math.Abs(expectedW - overlayWidth) > 2 || Math.Abs(expectedH - overlayHeight) > 2)
-            {
-                TroubleshootingHelper.Log(category, "WARNING", $"  ** OVERLAY SIZE MISMATCH: Expected {expectedW:F0}x{expectedH:F0}, Got {overlayWidth:F0}x{overlayHeight:F0} (diff: {overlayWidth-expectedW:F0}x{overlayHeight-expectedH:F0}) **");
-            }
-        }
 
         private static string TruncateString(string value, int maxLength)
         {
             if (string.IsNullOrEmpty(value)) return value;
             return value.Length <= maxLength ? value : value.Substring(0, maxLength) + "...";
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+
+            // Dispose new backend if initialized
+            DisposeNewBackend();
         }
     }
 }

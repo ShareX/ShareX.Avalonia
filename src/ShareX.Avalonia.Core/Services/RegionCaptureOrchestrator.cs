@@ -162,20 +162,20 @@ public sealed class RegionCaptureOrchestrator : IDisposable
         {
             var intersection = region.Intersect(monitor.Bounds);
             if (intersection == null || intersection.Value.IsEmpty)
-                return null;
+                return ((MonitorInfo, CapturedBitmap, PhysicalRectangle)?)null;
 
             var captured = await _backend.CaptureRegionAsync(intersection.Value, options);
-            return (monitor, captured, intersection: intersection.Value);
+            return ((MonitorInfo, CapturedBitmap, PhysicalRectangle)?)(monitor, captured, intersection: intersection.Value);
         }).ToArray();
 
         var captures = await Task.WhenAll(captureTasks);
-        var validCaptures = captures.Where(c => c != null).ToArray();
+        var validCaptures = captures.Where(c => c != null).Select(c => c!.Value).ToArray();
 
         if (validCaptures.Length == 0)
             throw new InvalidOperationException("No valid captures from any monitor");
 
         // Stitch captures together
-        return StitchCaptures(validCaptures!, region);
+        return StitchCaptures(validCaptures, region);
     }
 
     private SKBitmap StitchCaptures(
