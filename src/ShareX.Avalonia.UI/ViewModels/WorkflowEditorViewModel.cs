@@ -141,7 +141,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
 
         AvailableDestinations.Clear();
 
-        string category = GetHotkeyCategory(SelectedJob);
+        string category = SelectedJob.GetHotkeyCategory();
 
         // Determine which destination types to show based on category
         bool showImageUploaders = false;
@@ -207,13 +207,10 @@ public partial class WorkflowEditorViewModel : ViewModelBase
 
     private void LoadSelectedDestination()
     {
-        // Logic to try and find the currently configured destination in the list
-        // Simplified version of WorkflowWizardViewModel.LoadFromSettings
-
         UploaderInstanceViewModel? matched = null;
         var settings = Model;
 
-        DebugHelper.WriteLine($"[DEBUG] LoadSelectedDestination Entry. Job={SelectedJob}, ImgDest={settings.TaskSettings.ImageDestination}, FileDest={settings.TaskSettings.FileDestination}");
+        DebugHelper.WriteLine($"[DEBUG] LoadSelectedDestination Entry. Job={SelectedJob}");
 
         if (settings.TaskSettings.OverrideCustomUploader)
         {
@@ -237,57 +234,16 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         }
         else
         {
-            // Determine which destination property to check based on the Job Type
-            string category = GetHotkeyCategory(SelectedJob);
+            // Use the centralized logic in TaskSettings to find the target provider ID
+            string targetProviderId = settings.TaskSettings.GetDestination(SelectedJob);
             
-            if (category == EnumExtensions.HotkeyType_Category_ScreenRecord || 
-                SelectedJob == HotkeyType.FileUpload || 
-                SelectedJob == HotkeyType.FolderUpload ||
-                SelectedJob == HotkeyType.DragDropUpload)
-            {
-                // File Jobs -> Check FileDestination
-                var fileDest = settings.TaskSettings.FileDestination;
-                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == fileDest.ToString());
-                DebugHelper.WriteLine($"[DEBUG] Checking FileDestination (Job={SelectedJob}): Target={fileDest}, Found={matched?.DisplayName}");
-            }
-            else if (SelectedJob == HotkeyType.UploadText)
-            {
-                // Text Jobs -> Check TextDestination
-                var textDest = settings.TaskSettings.TextDestination;
-                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == textDest.ToString());
-                 DebugHelper.WriteLine($"[DEBUG] Checking TextDestination: Target={textDest}, Found={matched?.DisplayName}");
-            }
-            else if (SelectedJob == HotkeyType.ShortenURL || SelectedJob == HotkeyType.UploadURL)
-            {
-                // URL Jobs -> Check URLShortenerDestination
-                var urlDest = settings.TaskSettings.URLShortenerDestination;
-                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == urlDest.ToString());
-                DebugHelper.WriteLine($"[DEBUG] Checking URLDestination: Target={urlDest}, Found={matched?.DisplayName}");
-            }
-            else
-            {
-                // Image Jobs (Screen Capture, etc) -> Check ImageDestination
-                var imgDest = settings.TaskSettings.ImageDestination;
-                
-                // Special handling for FileUploader wrapper in Image context
-                if (imgDest == ImageDestination.FileUploader)
-                {
-                    var fileDest = settings.TaskSettings.ImageFileDestination;
-                    matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == fileDest.ToString());
-                    DebugHelper.WriteLine($"[DEBUG] Checking ImageFileDestination: Target={fileDest}, Found={matched?.DisplayName}");
-                }
-                else if (imgDest != ImageDestination.CustomImageUploader)
-                {
-                    matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == imgDest.ToString());
-                    DebugHelper.WriteLine($"[DEBUG] Checking ImageDestination: Target={imgDest}, Found={matched?.DisplayName}");
-                }
-            }
+            matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == targetProviderId);
+            DebugHelper.WriteLine($"[DEBUG] TaskSettings returned target: {targetProviderId}. Matched: {matched?.DisplayName}");
         }
 
         if (matched != null)
         {
             SelectedDestination = matched;
-            DebugHelper.WriteLine($"[DEBUG] SelectedDestination set to: {matched.DisplayName}");
         }
         else
         {
@@ -341,75 +297,14 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 }
                 else if (SelectedDestination.Instance != null && !string.IsNullOrEmpty(SelectedDestination.Instance.ProviderId))
                 {
-                    // 3. Standard Uploader
-                    // Determine which property to set based on the Job Type
-                    string category = GetHotkeyCategory(SelectedJob);
-                    bool saved = false;
-
-                    if (category == EnumExtensions.HotkeyType_Category_ScreenRecord || 
-                        SelectedJob == HotkeyType.FileUpload || 
-                        SelectedJob == HotkeyType.FolderUpload ||
-                        SelectedJob == HotkeyType.DragDropUpload)
+                    // 3. Delegate to TaskSettings to determine where to save
+                    bool saved = Model.TaskSettings.SetDestination(SelectedJob, SelectedDestination.Instance.ProviderId);
+                    
+                    if (saved)
                     {
-                        // File Job -> Save to FileDestination
-                        if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
-                        {
-                            Model.TaskSettings.FileDestination = fileDest;
-                            saved = true;
-                            DebugHelper.WriteLine($"Workflow saved FileDestination: {fileDest}");
-                        }
-                    }
-                    else if (SelectedJob == HotkeyType.UploadText)
-                    {
-                        // Text Job -> Save to TextDestination
-                        if (Enum.TryParse<TextDestination>(SelectedDestination.Instance.ProviderId, out var textDest))
-                        {
-                            Model.TaskSettings.TextDestination = textDest;
-                            saved = true;
-                            DebugHelper.WriteLine($"Workflow saved TextDestination: {textDest}");
-                        }
-                    }
-                    else if (SelectedJob == HotkeyType.ShortenURL || SelectedJob == HotkeyType.UploadURL)
-                    {
-                        // URL Job -> Save to URLShortenerDestination
-                        if (Enum.TryParse<UrlShortenerType>(SelectedDestination.Instance.ProviderId, out var urlDest))
-                        {
-                            Model.TaskSettings.URLShortenerDestination = urlDest;
-                            saved = true;
-                            DebugHelper.WriteLine($"Workflow saved URLShortenerDestination: {urlDest}");
-                        }
+                         DebugHelper.WriteLine($"Workflow saved destination: {SelectedDestination.Instance.ProviderId} for job {SelectedJob}");
                     }
                     else
-                    {
-                        // Default / Image Jobs -> Save to ImageDestination
-                        // (Screen Capture, Tools, etc.)
-                        
-                        // First check if it's a FileUploader being used for images
-                        if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
-                        {
-                            // It's a file uploader completely
-                            Model.TaskSettings.FileDestination = fileDest; // Good to sync this too
-                            
-                            // Set ImageFileDestination
-                            Model.TaskSettings.ImageFileDestination = fileDest;
-                             
-                            // Point ImageDestination to delegate
-                            if (Model.TaskSettings.ImageDestination != ImageDestination.CustomImageUploader)
-                            {
-                                Model.TaskSettings.ImageDestination = ImageDestination.FileUploader;
-                            }
-                            saved = true;
-                            DebugHelper.WriteLine($"Workflow saved ImageFileDestination: {fileDest}");
-                        }
-                        else if (Enum.TryParse<ImageDestination>(SelectedDestination.Instance.ProviderId, out var imgDest))
-                        {
-                            Model.TaskSettings.ImageDestination = imgDest;
-                            saved = true;
-                            DebugHelper.WriteLine($"Workflow saved ImageDestination: {imgDest}");
-                        }
-                    }
-
-                    if (!saved)
                     {
                         DebugHelper.WriteLine($"Warning: Could not map provider {SelectedDestination.Instance.ProviderId} to the appropriate destination for job {SelectedJob}");
                     }
@@ -446,7 +341,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         var allTypes = Enum.GetValues(typeof(HotkeyType)).Cast<HotkeyType>()
             .Where(t => t != HotkeyType.None);
 
-        var grouped = allTypes.GroupBy(GetHotkeyCategory)
+        var grouped = allTypes.GroupBy(t => t.GetHotkeyCategory())
             .Where(g => !string.IsNullOrEmpty(g.Key))
             .OrderBy(g => GetCategoryOrder(g.Key));
 
@@ -478,19 +373,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         }
     }
 
-    private string GetHotkeyCategory(HotkeyType type)
-    {
-        var field = type.GetType().GetField(type.ToString());
-        if (field != null)
-        {
-            var attrs = (CategoryAttribute[])field.GetCustomAttributes(typeof(CategoryAttribute), false);
-            if (attrs.Length > 0)
-            {
-                return attrs[0].Category;
-            }
-        }
-        return string.Empty;
-    }
+
 
     private string GetCategoryDisplayName(string category)
     {

@@ -105,6 +105,112 @@ public class TaskSettings
             _ => FileDestination,
         };
     }
+
+    /// <summary>
+    /// Gets the provider ID (string) of the currently active destination for the specified job type.
+    /// </summary>
+    public string GetDestination(HotkeyType job)
+    {
+        string category = EnumExtensions.GetHotkeyCategory(job);
+
+        // File Jobs (Screen Record, File Upload) -> FileDestination
+        if (category == EnumExtensions.HotkeyType_Category_ScreenRecord || 
+            job == HotkeyType.FileUpload || 
+            job == HotkeyType.FolderUpload || 
+            job == HotkeyType.DragDropUpload)
+        {
+            return FileDestination.ToString();
+        }
+        
+        // Text Jobs -> TextDestination
+        if (job == HotkeyType.UploadText)
+        {
+            return TextDestination.ToString();
+        }
+
+        // URL Jobs -> URLShortenerDestination
+        if (job == HotkeyType.ShortenURL || job == HotkeyType.UploadURL)
+        {
+            return URLShortenerDestination.ToString();
+        }
+
+        // Default: Image Jobs (Screen Capture) -> ImageDestination
+        if (ImageDestination == ImageDestination.FileUploader)
+        {
+            return ImageFileDestination.ToString();
+        }
+
+        return ImageDestination.ToString();
+    }
+
+    /// <summary>
+    /// Sets the destination for the specified job type, parsing the provider ID into the correct Enum.
+    /// </summary>
+    public bool SetDestination(HotkeyType job, string providerId)
+    {
+        string category = EnumExtensions.GetHotkeyCategory(job);
+        
+        // 1. Check for File Job
+        if (category == EnumExtensions.HotkeyType_Category_ScreenRecord || 
+            job == HotkeyType.FileUpload || 
+            job == HotkeyType.FolderUpload || 
+            job == HotkeyType.DragDropUpload)
+        {
+            if (Enum.TryParse<FileDestination>(providerId, out var fileDest))
+            {
+                FileDestination = fileDest;
+                // Also sync ImageFileDestination if widely applicable or leave specific? 
+                // Best keep them separate as intended, but FileDestination is primary here.
+                return true;
+            }
+        }
+        // 2. Check for Text Job
+        else if (job == HotkeyType.UploadText)
+        {
+             if (Enum.TryParse<TextDestination>(providerId, out var textDest))
+            {
+                TextDestination = textDest;
+                return true;
+            }
+        }
+        // 3. Check for URL Job
+        else if (job == HotkeyType.ShortenURL || job == HotkeyType.UploadURL)
+        {
+             if (Enum.TryParse<UrlShortenerType>(providerId, out var urlDest))
+            {
+                URLShortenerDestination = urlDest;
+                return true;
+            }
+        }
+        // 4. Default: Image Job (Screen Capture, etc.)
+        else
+        {
+            // Try as FileDestination first (File Uploader Wrapper)
+            if (Enum.TryParse<FileDestination>(providerId, out var fileDest))
+            {
+                ImageFileDestination = fileDest;
+                
+                // If it's not a CustomImageUploader, we need to defer to FileUploader
+                if (ImageDestination != ImageDestination.CustomImageUploader)
+                {
+                    ImageDestination = ImageDestination.FileUploader;
+                }
+                
+                // Sync generic FileDestination too for consistency? Optional but safer.
+                FileDestination = fileDest; 
+                return true;
+            }
+            
+            // Try as ImageDestination
+            if (Enum.TryParse<ImageDestination>(providerId, out var imgDest))
+            {
+                ImageDestination = imgDest;
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 /// <summary>
