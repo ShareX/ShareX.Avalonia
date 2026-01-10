@@ -98,7 +98,7 @@ namespace XerahS.UI.Services
             TroubleshootingHelper.Log("RegionCapture", "SELECTION", "Delaying 200ms...");
 
             // Small delay to allow window to close fully
-            await Task.Delay(200);
+            await Task.Delay(60);
 
             // Delegate capture to platform implementation
             var workflowTaskSettings = SettingManager.GetOrCreateWorkflowTaskSettings(HotkeyType.None);
