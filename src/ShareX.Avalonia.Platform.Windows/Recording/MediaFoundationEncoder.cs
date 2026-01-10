@@ -376,11 +376,17 @@ public class MediaFoundationEncoder : IVideoEncoder
     [DllImport("mfplat.dll", EntryPoint = "MFCreateSample", ExactSpelling = true)]
     private static extern int MFCreateSample(out IntPtr sample);
 
-    [DllImport("mfplat.dll", EntryPoint = "MFSetAttributeSize", ExactSpelling = true)]
-    private static extern int MFSetAttributeSize(IntPtr attributes, in Guid key, int width, int height);
+    private static void MFSetAttributeSize(IntPtr attributes, Guid key, int width, int height)
+    {
+        ulong value = ((ulong)(uint)width << 32) | (uint)height;
+        ComFunctions.SetUINT64(attributes, key, value);
+    }
 
-    [DllImport("mfplat.dll", EntryPoint = "MFSetAttributeRatio", ExactSpelling = true)]
-    private static extern int MFSetAttributeRatio(IntPtr attributes, in Guid key, int numerator, int denominator);
+    private static void MFSetAttributeRatio(IntPtr attributes, Guid key, int numerator, int denominator)
+    {
+        ulong value = ((ulong)(uint)numerator << 32) | (uint)denominator;
+        ComFunctions.SetUINT64(attributes, key, value);
+    }
 
     // Media Foundation GUIDs
     private static readonly Guid MF_MT_MAJOR_TYPE = new("48eba18e-f8c9-4687-bf11-0a74c9f96a8f");
@@ -409,6 +415,9 @@ public class MediaFoundationEncoder : IVideoEncoder
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate int SetUINT32Delegate(IntPtr thisPtr, [In] ref Guid key, uint value);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetUINT64Delegate(IntPtr thisPtr, [In] ref Guid key, ulong value);
 
         [UnmanagedFunctionPointer(CallingConvention.StdCall)]
         public delegate int SetGUIDDelegate(IntPtr thisPtr, [In] ref Guid key, [In] ref Guid value);
@@ -452,9 +461,11 @@ public class MediaFoundationEncoder : IVideoEncoder
         // IMFAttributes (IUnknown + Methods)
         // Correct Indices (Vortice/SharpDX standard):
         // SetUINT32 = 21
+        // SetUINT64 = 22
         // SetGUID = 24
         
         public static int SetUINT32(IntPtr ptr, Guid key, uint value) => Call<SetUINT32Delegate>(ptr, 21)(ptr, ref key, value);
+        public static int SetUINT64(IntPtr ptr, Guid key, ulong value) => Call<SetUINT64Delegate>(ptr, 22)(ptr, ref key, value);
         public static int SetGUID(IntPtr ptr, Guid key, Guid value) => Call<SetGUIDDelegate>(ptr, 24)(ptr, ref key, ref value);
 
         // IMFSinkWriter (IUnknown + 8 methods)
@@ -478,7 +489,6 @@ public class MediaFoundationEncoder : IVideoEncoder
         public static int SetCurrentLength(IntPtr ptr, int currentLength) => Call<SetCurrentLengthDelegate>(ptr, 5)(ptr, currentLength);
 
         // IMFSample (Inherits IMFAttributes)
-        // IMFAttributes has ~30 methods (0-28 or 0-32).
         // Correct start for IMFSample is 33.
         // 33: GetSampleFlags
         // 34: SetSampleFlags
