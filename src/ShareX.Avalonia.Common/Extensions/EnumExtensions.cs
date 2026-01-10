@@ -171,6 +171,23 @@ namespace XerahS.Common
             return i == values.Length ? (T)values.GetValue(0) : (T)values.GetValue(i);
         }
 
+        public static string GetHotkeyCategory(this Enum value)
+        {
+            FieldInfo fi = value.GetType().GetField(value.ToString());
+
+            if (fi != null)
+            {
+                CategoryAttribute[] attributes = (CategoryAttribute[])fi.GetCustomAttributes(typeof(CategoryAttribute), false);
+
+                if (attributes.Length > 0)
+                {
+                    return attributes[0].Category;
+                }
+            }
+
+            return HotkeyType_Category_Other;
+        }
+
         public static T Previous<T>(this Enum value)
         {
             Array values = Enum.GetValues(value.GetType());
