@@ -205,6 +205,8 @@ public class MediaFoundationEncoder : IVideoEncoder
     private void SetGuid(IntPtr ptr, Guid key, Guid value) => ComFunctions.SetGUID(ptr, key, value);
     private void SetUInt32(IntPtr ptr, Guid key, uint value) => ComFunctions.SetUINT32(ptr, key, value);
 
+    private int _frameCount = 0;
+
     public void WriteFrame(FrameData frame)
     {
         lock (_lock)
@@ -215,6 +217,11 @@ public class MediaFoundationEncoder : IVideoEncoder
 
             try
             {
+                if (_frameCount == 0 || _frameCount % 30 == 0)
+                {
+                    Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"WriteFrame[{_frameCount}] calling. Stride={frame.Stride}, Height={frame.Height}, SampleTime={_sampleTime}");
+                }
+
                 // Create media buffer from frame data
                 var hr = MFCreateMemoryBuffer(frame.Stride * frame.Height, out var buffer);
                 if (hr != 0) throw new COMException("Failed to create media buffer", hr);
@@ -222,7 +229,7 @@ public class MediaFoundationEncoder : IVideoEncoder
                 try
                 {
                     // Lock buffer and copy data
-                    hr = ComFunctions.Lock(buffer, out var bufferPtr, out _, out _);
+                    hr = ComFunctions.Lock(buffer, out var bufferPtr, out var maxLen, out var curLen);
                     if (hr != 0) throw new COMException("Failed to lock buffer", hr);
 
                     try
@@ -236,14 +243,15 @@ public class MediaFoundationEncoder : IVideoEncoder
                                 frame.Stride * frame.Height,
                                 frame.Stride * frame.Height);
                         }
-
-                        hr = ComFunctions.SetCurrentLength(buffer, frame.Stride * frame.Height);
-                        if (hr != 0) throw new COMException("Failed to set buffer length", hr);
                     }
                     finally
                     {
                         ComFunctions.Unlock(buffer);
                     }
+
+                    // Set length
+                    hr = ComFunctions.SetCurrentLength(buffer, frame.Stride * frame.Height);
+                    if (hr != 0) throw new COMException("Failed to set buffer length", hr);
 
                     // Create sample
                     hr = MFCreateSample(out var sample);
@@ -267,6 +275,7 @@ public class MediaFoundationEncoder : IVideoEncoder
                         if (hr != 0) throw new COMException("Failed to write sample", hr);
 
                         _sampleTime += duration;
+                        _frameCount++;
                     }
                     finally
                     {
@@ -280,6 +289,7 @@ public class MediaFoundationEncoder : IVideoEncoder
             }
             catch (Exception ex)
             {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"WriteFrame FAILED: {ex.Message}");
                 throw new InvalidOperationException("Failed to write frame to encoder", ex);
             }
         }
@@ -287,6 +297,7 @@ public class MediaFoundationEncoder : IVideoEncoder
 
     public void Finalize()
     {
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize called. Total frames: {_frameCount}");
         lock (_lock)
         {
             if (!_initialized || _sinkWriter == IntPtr.Zero) return;
@@ -294,6 +305,7 @@ public class MediaFoundationEncoder : IVideoEncoder
             try
             {
                 var hr = ComFunctions.Finalize(_sinkWriter);
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize returned HRESULT: 0x{hr:X8}");
                 if (hr != 0)
                 {
                     System.Diagnostics.Debug.WriteLine($"Warning: Sink writer finalize returned error: {hr}");
@@ -301,6 +313,7 @@ public class MediaFoundationEncoder : IVideoEncoder
             }
             catch (Exception ex)
             {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize EXCEPTION: {ex.Message}");
                 System.Diagnostics.Debug.WriteLine($"Error finalizing encoder: {ex.Message}");
             }
             finally
