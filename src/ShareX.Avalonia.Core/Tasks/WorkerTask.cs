@@ -152,7 +152,8 @@ namespace XerahS.Core.Tasks
                     ShowCursor = Info.TaskSettings.CaptureSettings.ShowCursor,
                     CaptureTransparent = Info.TaskSettings.CaptureSettings.CaptureTransparent,
                     CaptureShadow = Info.TaskSettings.CaptureSettings.CaptureShadow,
-                    CaptureClientArea = Info.TaskSettings.CaptureSettings.CaptureClientArea
+                    CaptureClientArea = Info.TaskSettings.CaptureSettings.CaptureClientArea,
+                    WorkflowId = Info.TaskSettings.WorkflowId
                 };
 
                 switch (Info.TaskSettings.Job)

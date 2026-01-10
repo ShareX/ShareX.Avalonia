@@ -173,6 +173,12 @@ namespace XerahS.Core
             return WorkflowsConfig?.Hotkeys?.FirstOrDefault(w => w.Job == hotkeyType);
         }
 
+        public static WorkflowSettings? GetWorkflowById(string id)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            return WorkflowsConfig?.Hotkeys?.FirstOrDefault(w => w.Id == id);
+        }
+
         /// <summary>
         /// Retrieve a workflow's task settings by hotkey type, creating a workflow entry if none exists.
         /// </summary>
@@ -196,6 +202,12 @@ namespace XerahS.Core
             }
 
             return workflow.TaskSettings;
+        }
+
+        public static TaskSettings GetWorkflowTaskSettings(string workflowId)
+        {
+            var workflow = GetWorkflowById(workflowId);
+            return workflow?.TaskSettings ?? DefaultTaskSettings;
         }
 
         /// <summary>

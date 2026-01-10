@@ -61,11 +61,13 @@ namespace XerahS.Platform.Windows
         {
             return await CaptureFullScreenAsync(options);
         }
-
         public async Task<SKBitmap?> CaptureRectAsync(SKRect rect, CaptureOptions? options = null)
         {
-            var fallbackTaskSettings = XerahS.Core.SettingManager.GetOrCreateWorkflowTaskSettings(XerahS.Core.HotkeyType.None);
-            bool useModern = options?.UseModernCapture ?? fallbackTaskSettings.CaptureSettings.UseModernCapture;
+            var captureSettings = options?.WorkflowId != null 
+                ? XerahS.Core.SettingManager.GetWorkflowTaskSettings(options.WorkflowId)?.CaptureSettings 
+                : XerahS.Core.SettingManager.DefaultTaskSettings.CaptureSettings;
+
+            bool useModern = options?.UseModernCapture ?? captureSettings.UseModernCapture;
 
             if (!IsSupported || !useModern)
             {
@@ -111,8 +113,11 @@ namespace XerahS.Platform.Windows
 
         public async Task<SKBitmap?> CaptureFullScreenAsync(CaptureOptions? options = null)
         {
-            var fallbackTaskSettings = XerahS.Core.SettingManager.GetOrCreateWorkflowTaskSettings(XerahS.Core.HotkeyType.None);
-            bool useModern = options?.UseModernCapture ?? fallbackTaskSettings.CaptureSettings.UseModernCapture;
+            var captureSettings = options?.WorkflowId != null 
+                ? XerahS.Core.SettingManager.GetWorkflowTaskSettings(options.WorkflowId)?.CaptureSettings 
+                : XerahS.Core.SettingManager.DefaultTaskSettings.CaptureSettings;
+
+            bool useModern = options?.UseModernCapture ?? captureSettings.UseModernCapture;
 
             if (!IsSupported || !useModern)
             {

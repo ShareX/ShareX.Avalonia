@@ -101,9 +101,9 @@ namespace XerahS.UI.Services
             await Task.Delay(60);
 
             // Delegate capture to platform implementation
-            var workflowTaskSettings = SettingManager.GetOrCreateWorkflowTaskSettings(HotkeyType.None);
-            bool effectiveModern = options?.UseModernCapture ?? workflowTaskSettings.CaptureSettings.UseModernCapture;
-            TroubleshootingHelper.Log("RegionCapture", "CONFIG", $"Capture Configuration: UseModernCapture={effectiveModern} (Explicit={options?.UseModernCapture.ToString() ?? "null"}), ShowCursor={options?.ShowCursor ?? workflowTaskSettings.CaptureSettings.ShowCursor}");
+            var captureSettings = SettingManager.GetWorkflowTaskSettings(options?.WorkflowId)?.CaptureSettings ?? SettingManager.DefaultTaskSettings.CaptureSettings;
+            bool effectiveModern = options?.UseModernCapture ?? captureSettings.UseModernCapture;
+            TroubleshootingHelper.Log("RegionCapture", "CONFIG", $"Capture Configuration: UseModernCapture={effectiveModern} (Explicit={options?.UseModernCapture.ToString() ?? "null"}), ShowCursor={options?.ShowCursor ?? captureSettings.ShowCursor}");
 
             TroubleshootingHelper.Log("RegionCapture", "CAPTURE", "Calling Platform.CaptureRectAsync...");
             var skRect = new SKRect(selection.Left, selection.Top, selection.Right, selection.Bottom);

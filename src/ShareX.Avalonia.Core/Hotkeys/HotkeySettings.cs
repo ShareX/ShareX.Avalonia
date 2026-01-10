@@ -123,5 +123,11 @@ public class WorkflowSettings
         {
             Id = GenerateId();
         }
+
+        // Sync ID to task settings so it propagates to capture options
+        if (TaskSettings != null)
+        {
+            TaskSettings.WorkflowId = Id;
+        }
     }
 }
