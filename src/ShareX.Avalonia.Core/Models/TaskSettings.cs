@@ -29,6 +29,7 @@ using XerahS.Uploaders;
 using XerahS.ScreenCapture.ScreenRecording;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 
 namespace XerahS.Core;
 
@@ -62,6 +63,14 @@ public class TaskSettings
     public FileDestination FileDestination = FileDestination.Dropbox;
     public UrlShortenerType URLShortenerDestination = UrlShortenerType.BITLY;
     public URLSharingServices URLSharingServiceDestination = URLSharingServices.Email;
+
+    /// <summary>
+    /// Destination instance IDs (plugin system). Prefer these over enum destinations when present.
+    /// </summary>
+    public string? ImageDestinationInstanceId { get; set; }
+    public string? TextDestinationInstanceId { get; set; }
+    public string? FileDestinationInstanceId { get; set; }
+    public string? UrlShortenerDestinationInstanceId { get; set; }
 
     public bool OverrideFTP = false;
     public int FTPIndex = 0;
@@ -104,6 +113,12 @@ public class TaskSettings
     /// </summary>
     public string GetDestination(HotkeyType job)
     {
+        var instanceId = GetDestinationInstanceId(job);
+        if (!string.IsNullOrEmpty(instanceId))
+        {
+            return instanceId;
+        }
+
         string category = EnumExtensions.GetHotkeyCategory(job);
 
         // File Jobs (Screen Record, File Upload) -> FileDestination
@@ -141,6 +156,12 @@ public class TaskSettings
     /// </summary>
     public bool SetDestination(HotkeyType job, string providerId)
     {
+        // If a providerId looks like SHA-1 (40 hex chars), treat as plugin instance id
+        if (!string.IsNullOrEmpty(providerId) && providerId.Length == 40 && providerId.All(c => Uri.IsHexDigit(c)))
+        {
+            return SetDestinationInstanceId(job, providerId);
+        }
+
         string category = EnumExtensions.GetHotkeyCategory(job);
         
         // 1. Check for File Job
@@ -202,6 +223,71 @@ public class TaskSettings
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Returns the destination instance ID for the given job, if configured.
+    /// </summary>
+    public string? GetDestinationInstanceId(HotkeyType job)
+    {
+        string category = EnumExtensions.GetHotkeyCategory(job);
+
+        if (category == EnumExtensions.HotkeyType_Category_ScreenRecord ||
+            job == HotkeyType.FileUpload ||
+            job == HotkeyType.FolderUpload ||
+            job == HotkeyType.DragDropUpload)
+        {
+            return FileDestinationInstanceId;
+        }
+
+        if (job == HotkeyType.UploadText)
+        {
+            return TextDestinationInstanceId;
+        }
+
+        if (job == HotkeyType.ShortenURL || job == HotkeyType.UploadURL)
+        {
+            return UrlShortenerDestinationInstanceId;
+        }
+
+        return ImageDestinationInstanceId;
+    }
+
+    /// <summary>
+    /// Sets the destination instance ID for the given job/category.
+    /// </summary>
+    public bool SetDestinationInstanceId(HotkeyType job, string instanceId)
+    {
+        if (string.IsNullOrWhiteSpace(instanceId))
+        {
+            return false;
+        }
+
+        string category = EnumExtensions.GetHotkeyCategory(job);
+
+        if (category == EnumExtensions.HotkeyType_Category_ScreenRecord ||
+            job == HotkeyType.FileUpload ||
+            job == HotkeyType.FolderUpload ||
+            job == HotkeyType.DragDropUpload)
+        {
+            FileDestinationInstanceId = instanceId;
+            return true;
+        }
+
+        if (job == HotkeyType.UploadText)
+        {
+            TextDestinationInstanceId = instanceId;
+            return true;
+        }
+
+        if (job == HotkeyType.ShortenURL || job == HotkeyType.UploadURL)
+        {
+            UrlShortenerDestinationInstanceId = instanceId;
+            return true;
+        }
+
+        ImageDestinationInstanceId = instanceId;
+        return true;
     }
 }
 

@@ -202,6 +202,17 @@
                                 </StackPanel>
                             </Border>
 
+                            <!-- Show stable SHA1 instance ID for reference -->
+                            <StackPanel Spacing="3">
+                                <TextBlock Text="Instance ID" FontWeight="SemiBold"/>
+                                <TextBox Text="{Binding SelectedCategory.SelectedInstance.InstanceId}"
+                                         IsReadOnly="True"
+                                         FontFamily="Consolas, Monospace"
+                                         Background="{DynamicResource ControlAltFillColorDefaultBrush}"
+                                         BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"
+                                         Padding="6,4,6,4"/>
+                            </StackPanel>
+
                             <TextBlock Text="Instance Settings" FontWeight="SemiBold" FontSize="16"/>
                             
                             <StackPanel Spacing="5">

@@ -158,10 +158,22 @@ namespace XerahS.Core.Tasks.Processors
             EnsurePluginsLoaded();
 
             var instanceManager = InstanceManager.Instance;
-            var defaultInstance = instanceManager.GetDefaultInstance(UploaderCategory.Image);
+            var targetInstanceId = info.TaskSettings.GetDestinationInstanceId(info.TaskSettings.Job);
+            UploaderInstance? targetInstance = null;
+
+            if (!string.IsNullOrEmpty(targetInstanceId))
+            {
+                targetInstance = instanceManager.GetInstance(targetInstanceId);
+                if (targetInstance == null)
+                {
+                    DebugHelper.WriteLine($"Configured destination instance not found: {targetInstanceId}");
+                }
+            }
+
+            var defaultInstance = targetInstance ?? instanceManager.GetDefaultInstance(UploaderCategory.Image);
             if (defaultInstance == null)
             {
-                DebugHelper.WriteLine("No default image uploader instance configured (plugin system).");
+                DebugHelper.WriteLine("No image uploader instance configured (plugin system).");
                 return null;
             }
 

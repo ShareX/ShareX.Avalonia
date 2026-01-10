@@ -11,7 +11,7 @@ namespace XerahS.UI.ViewModels;
 public partial class UploaderInstanceViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private Guid _instanceId;
+    private string _instanceId = string.Empty;
 
     [ObservableProperty]
     private string _providerId = string.Empty;

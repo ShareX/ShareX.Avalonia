@@ -234,11 +234,21 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         }
         else
         {
-            // Use the centralized logic in TaskSettings to find the target provider ID
-            string targetProviderId = settings.TaskSettings.GetDestination(SelectedJob);
-            
-            matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == targetProviderId);
-            DebugHelper.WriteLine($"[DEBUG] TaskSettings returned target: {targetProviderId}. Matched: {matched?.DisplayName}");
+            // Prefer instance ID if present
+            string? instanceId = settings.TaskSettings.GetDestinationInstanceId(SelectedJob);
+            if (!string.IsNullOrEmpty(instanceId))
+            {
+                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.InstanceId == instanceId);
+                DebugHelper.WriteLine($"[DEBUG] TaskSettings returned instanceId: {instanceId}. Matched: {matched?.DisplayName}");
+            }
+
+            if (matched == null)
+            {
+                // Fallback to provider ID mapping for legacy enums
+                string targetProviderId = settings.TaskSettings.GetDestination(SelectedJob);
+                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == targetProviderId);
+                DebugHelper.WriteLine($"[DEBUG] TaskSettings returned legacy target: {targetProviderId}. Matched: {matched?.DisplayName}");
+            }
         }
 
         if (matched != null)
@@ -295,18 +305,18 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                         DebugHelper.WriteLine($"Workflow saved with FTP: {ftpName}");
                     }
                 }
-                else if (SelectedDestination.Instance != null && !string.IsNullOrEmpty(SelectedDestination.Instance.ProviderId))
+                else if (SelectedDestination.Instance != null && !string.IsNullOrEmpty(SelectedDestination.Instance.InstanceId))
                 {
-                    // 3. Delegate to TaskSettings to determine where to save
-                    bool saved = Model.TaskSettings.SetDestination(SelectedJob, SelectedDestination.Instance.ProviderId);
+                    // Save instance ID reference for plugin-based uploader
+                    bool saved = Model.TaskSettings.SetDestinationInstanceId(SelectedJob, SelectedDestination.Instance.InstanceId);
                     
                     if (saved)
                     {
-                         DebugHelper.WriteLine($"Workflow saved destination: {SelectedDestination.Instance.ProviderId} for job {SelectedJob}");
+                         DebugHelper.WriteLine($"Workflow saved destination instance: {SelectedDestination.Instance.InstanceId} for job {SelectedJob}");
                     }
                     else
                     {
-                        DebugHelper.WriteLine($"Warning: Could not map provider {SelectedDestination.Instance.ProviderId} to the appropriate destination for job {SelectedJob}");
+                        DebugHelper.WriteLine($"Warning: Could not map instance {SelectedDestination.Instance.InstanceId} to the appropriate destination for job {SelectedJob}");
                     }
                 }
             }
