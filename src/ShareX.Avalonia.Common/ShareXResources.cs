@@ -29,8 +29,15 @@ namespace XerahS.Common
     {
         public const string AppName = "XerahS";
         public const string ProductName = AppName;
-        public const string Version = "v0.2.0";
-        public const string ProductNameWithVersion = ProductName + " " + Version;
+        
+        public static readonly string Version = GetVersion();
+        public static readonly string ProductNameWithVersion = ProductName + " " + Version;
+
+        private static string GetVersion()
+        {
+            var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
+            return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v0.0.0";
+        }
         public const string HistoryFolderName = "History";
         public const string HistoryFileName = "History.db";
         public static string UserAgent => AppName;
