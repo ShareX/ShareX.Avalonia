@@ -43,7 +43,7 @@ namespace XerahS.App
 
             dh.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - ShareX starting.");
 
-            var version = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            var version = XerahS.Common.ShareXResources.Version;
             dh.WriteLine($"Version: {version} Dev");
 
 #if DEBUG
