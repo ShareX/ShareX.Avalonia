@@ -88,6 +88,10 @@ namespace XerahS.CLI.Commands
                     return 1;
                 }
 
+                var runStart = DateTime.Now;
+                Console.WriteLine($"CLI flags: workflowId={workflowId}, duration={duration}s, exitOnComplete={exitOnComplete}, started={runStart:O}");
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "CLI", $"Workflow run flags: workflowId={workflowId}, duration={duration}s, exitOnComplete={exitOnComplete}, started={runStart:O}");
+
                 Console.WriteLine($"Executing workflow: {workflow.Name} ({workflowId})");
 
                 // Create a task completion source to wait for workflow completion

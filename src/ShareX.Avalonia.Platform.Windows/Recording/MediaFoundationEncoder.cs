@@ -42,6 +42,7 @@ public class MediaFoundationEncoder : IVideoEncoder
     private string? _outputPath;
     private bool _initialized;
     private bool _disposed;
+    private bool _finalized;
     private readonly object _lock = new();
 
     /// <summary>
@@ -298,10 +299,22 @@ public class MediaFoundationEncoder : IVideoEncoder
 
     public void Finalize()
     {
-        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize called. Total frames: {_frameCount}");
         lock (_lock)
         {
-            if (!_initialized || _sinkWriter == IntPtr.Zero) return;
+            if (_finalized)
+            {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "Finalize skipped (already finalized)");
+                return;
+            }
+
+            _finalized = true;
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize called. Total frames: {_frameCount}");
+
+            if (!_initialized || _sinkWriter == IntPtr.Zero)
+            {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "Finalize skipped: encoder not initialized or sink writer missing");
+                return;
+            }
 
             try
             {
@@ -310,6 +323,19 @@ public class MediaFoundationEncoder : IVideoEncoder
                 if (hr != 0)
                 {
                     System.Diagnostics.Debug.WriteLine($"Warning: Sink writer finalize returned error: {hr}");
+                }
+
+                if (!string.IsNullOrEmpty(_outputPath))
+                {
+                    try
+                    {
+                        var fileInfo = new System.IO.FileInfo(_outputPath);
+                        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize file state: exists={fileInfo.Exists}, size={fileInfo.Length} bytes");
+                    }
+                    catch (Exception sizeEx)
+                    {
+                        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Finalize size check failed: {sizeEx.Message}");
+                    }
                 }
             }
             catch (Exception ex)
@@ -351,9 +377,16 @@ public class MediaFoundationEncoder : IVideoEncoder
     {
         if (_disposed) return;
 
+        bool needsFinalize;
         lock (_lock)
         {
             _disposed = true;
+            needsFinalize = !_finalized;
+        }
+
+        // [2026-01-10T14:02:37+08:00] Guard against duplicate sink finalization when Dispose follows StopRecordingAsync; outcome (2026-01-10T14:09:06+08:00) shows single finalize entry with valid mp4 size.
+        if (needsFinalize)
+        {
             Finalize();
         }
 

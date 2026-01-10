@@ -23,8 +23,9 @@
 
 #endregion License Information (GPL v3)
 using System.Runtime.InteropServices;
-
 using System.Diagnostics;
+using System.IO;
+using XerahS.Common;
 
 namespace XerahS.ScreenCapture.ScreenRecording;
 
@@ -97,12 +98,13 @@ public class ScreenRecorderService : IRecordingService
             if (EncoderFactory == null)
             {
                 throw new InvalidOperationException("EncoderFactory not set. Platform initialization missing.");
-            }
+        }
 
             _encoder = EncoderFactory();
 
             // Determine output path
             string outputPath = GetOutputPath(options);
+            DebugHelper.WriteLine($"[ScreenRecorder] Output path resolved: {outputPath}");
 
             // Configure video format
             var videoFormat = new VideoFormat
@@ -152,6 +154,8 @@ public class ScreenRecorderService : IRecordingService
     {
         ICaptureSource? captureSource;
         IVideoEncoder? encoder;
+        string? outputPath;
+        TimeSpan elapsed;
 
         lock (_lock)
         {
@@ -165,7 +169,11 @@ public class ScreenRecorderService : IRecordingService
 
             captureSource = _captureSource;
             encoder = _encoder;
+            outputPath = _currentOptions?.OutputPath;
+            elapsed = _stopwatch.Elapsed;
         }
+
+        DebugHelper.WriteLine($"[ScreenRecorder] StopRecordingAsync invoked. Duration={elapsed.TotalSeconds:F2}s, outputPath={outputPath ?? "(null)"}");
 
         try
         {
@@ -180,6 +188,18 @@ public class ScreenRecorderService : IRecordingService
             // Finalize encoder
             encoder?.Finalize();
             encoder?.Dispose();
+
+            if (!string.IsNullOrEmpty(outputPath))
+            {
+                var info = new FileInfo(outputPath);
+                DebugHelper.WriteLine($"[ScreenRecorder] Output validation: exists={info.Exists}, size={info.Length} bytes");
+
+                // [2026-01-10T14:02:37+08:00] Fail fast on zero-byte recordings observed intermittently; outcome (2026-01-10T14:09:06+08:00) validated mp4 > 0 bytes after guarded finalize.
+                if (!info.Exists || info.Length <= 0)
+                {
+                    throw new InvalidOperationException($"Recording output invalid (exists={info.Exists}, size={info.Length}) for {outputPath}");
+                }
+            }
         }
         catch (Exception ex)
         {
