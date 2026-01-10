@@ -58,9 +58,7 @@ public class TaskSettings
     public AfterUploadTasks AfterUploadJob = AfterUploadTasks.CopyURLToClipboard;
 
     public ImageDestination ImageDestination = ImageDestination.Imgur;
-    public FileDestination ImageFileDestination = FileDestination.Dropbox;
     public TextDestination TextDestination = TextDestination.Pastebin;
-    public FileDestination TextFileDestination = FileDestination.Dropbox;
     public FileDestination FileDestination = FileDestination.Dropbox;
     public UrlShortenerType URLShortenerDestination = UrlShortenerType.BITLY;
     public URLSharingServices URLSharingServiceDestination = URLSharingServices.Email;
@@ -98,12 +96,7 @@ public class TaskSettings
 
     public FileDestination GetFileDestinationByDataType(EDataType dataType)
     {
-        return dataType switch
-        {
-            EDataType.Image => ImageFileDestination,
-            EDataType.Text => TextFileDestination,
-            _ => FileDestination,
-        };
+        return FileDestination;
     }
 
     /// <summary>
@@ -137,7 +130,7 @@ public class TaskSettings
         // Default: Image Jobs (Screen Capture) -> ImageDestination
         if (ImageDestination == ImageDestination.FileUploader)
         {
-            return ImageFileDestination.ToString();
+            return FileDestination.ToString();
         }
 
         return ImageDestination.ToString();
@@ -188,7 +181,8 @@ public class TaskSettings
             // Try as FileDestination first (File Uploader Wrapper)
             if (Enum.TryParse<FileDestination>(providerId, out var fileDest))
             {
-                ImageFileDestination = fileDest;
+                // Unify to FileDestination
+                FileDestination = fileDest;
                 
                 // If it's not a CustomImageUploader, we need to defer to FileUploader
                 if (ImageDestination != ImageDestination.CustomImageUploader)
@@ -196,8 +190,6 @@ public class TaskSettings
                     ImageDestination = ImageDestination.FileUploader;
                 }
                 
-                // Sync generic FileDestination too for consistency? Optional but safer.
-                FileDestination = fileDest; 
                 return true;
             }
             

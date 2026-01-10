@@ -96,12 +96,7 @@ public class TaskInfo
             {
                 EDataType.Image => EnumExtensions.GetDescription(TaskSettings.ImageDestination),
                 EDataType.Text => EnumExtensions.GetDescription(TaskSettings.TextDestination),
-                EDataType.File => DataType switch
-                {
-                    EDataType.Image => EnumExtensions.GetDescription(TaskSettings.ImageFileDestination),
-                    EDataType.Text => EnumExtensions.GetDescription(TaskSettings.TextFileDestination),
-                    _ => EnumExtensions.GetDescription(TaskSettings.FileDestination)
-                },
+                EDataType.File => EnumExtensions.GetDescription(TaskSettings.FileDestination),
                 EDataType.URL => Job == TaskJob.ShareURL
                     ? EnumExtensions.GetDescription(TaskSettings.URLSharingServiceDestination)
                     : EnumExtensions.GetDescription(TaskSettings.URLShortenerDestination),
