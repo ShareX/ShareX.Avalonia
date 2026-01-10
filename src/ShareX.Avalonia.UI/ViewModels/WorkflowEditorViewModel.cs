@@ -213,6 +213,8 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         UploaderInstanceViewModel? matched = null;
         var settings = Model;
 
+        DebugHelper.WriteLine($"[DEBUG] LoadSelectedDestination Entry. Job={SelectedJob}, ImgDest={settings.TaskSettings.ImageDestination}, FileDest={settings.TaskSettings.FileDestination}");
+
         if (settings.TaskSettings.OverrideCustomUploader)
         {
             var customList = SettingManager.UploadersConfig.CustomUploadersList;
@@ -220,6 +222,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
             {
                 var custom = customList[settings.TaskSettings.CustomUploaderIndex];
                 matched = AvailableDestinations.FirstOrDefault(d => d.DisplayName == custom.Name);
+                DebugHelper.WriteLine($"[DEBUG] Matched Custom Uploader: {matched?.DisplayName}");
             }
         }
         else if (settings.TaskSettings.OverrideFTP)
@@ -229,28 +232,67 @@ public partial class WorkflowEditorViewModel : ViewModelBase
             {
                 var ftp = ftpList[settings.TaskSettings.FTPIndex];
                 matched = AvailableDestinations.FirstOrDefault(d => d.DisplayName == $"FTP: {ftp.Name}");
+                DebugHelper.WriteLine($"[DEBUG] Matched FTP: {matched?.DisplayName}");
             }
         }
         else
         {
-            var imgDest = settings.TaskSettings.ImageDestination;
+            // Determine which destination property to check based on the Job Type
+            string category = GetHotkeyCategory(SelectedJob);
             
-            // Special handling for FileUploader wrapper
-            if (imgDest == ImageDestination.FileUploader)
+            if (category == EnumExtensions.HotkeyType_Category_ScreenRecord || 
+                SelectedJob == HotkeyType.FileUpload || 
+                SelectedJob == HotkeyType.FolderUpload ||
+                SelectedJob == HotkeyType.DragDropUpload)
             {
-                var fileDest = settings.TaskSettings.ImageFileDestination;
-                var candidate = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == fileDest.ToString());
-                if (candidate != null) matched = candidate;
+                // File Jobs -> Check FileDestination
+                var fileDest = settings.TaskSettings.FileDestination;
+                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == fileDest.ToString());
+                DebugHelper.WriteLine($"[DEBUG] Checking FileDestination (Job={SelectedJob}): Target={fileDest}, Found={matched?.DisplayName}");
             }
-            else if (imgDest != ImageDestination.CustomImageUploader)
+            else if (SelectedJob == HotkeyType.UploadText)
             {
-                var candidate = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == imgDest.ToString());
-                if (candidate != null) matched = candidate;
+                // Text Jobs -> Check TextDestination
+                var textDest = settings.TaskSettings.TextDestination;
+                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == textDest.ToString());
+                 DebugHelper.WriteLine($"[DEBUG] Checking TextDestination: Target={textDest}, Found={matched?.DisplayName}");
+            }
+            else if (SelectedJob == HotkeyType.ShortenURL || SelectedJob == HotkeyType.UploadURL)
+            {
+                // URL Jobs -> Check URLShortenerDestination
+                var urlDest = settings.TaskSettings.URLShortenerDestination;
+                matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == urlDest.ToString());
+                DebugHelper.WriteLine($"[DEBUG] Checking URLDestination: Target={urlDest}, Found={matched?.DisplayName}");
+            }
+            else
+            {
+                // Image Jobs (Screen Capture, etc) -> Check ImageDestination
+                var imgDest = settings.TaskSettings.ImageDestination;
+                
+                // Special handling for FileUploader wrapper in Image context
+                if (imgDest == ImageDestination.FileUploader)
+                {
+                    var fileDest = settings.TaskSettings.ImageFileDestination;
+                    matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == fileDest.ToString());
+                    DebugHelper.WriteLine($"[DEBUG] Checking ImageFileDestination: Target={fileDest}, Found={matched?.DisplayName}");
+                }
+                else if (imgDest != ImageDestination.CustomImageUploader)
+                {
+                    matched = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == imgDest.ToString());
+                    DebugHelper.WriteLine($"[DEBUG] Checking ImageDestination: Target={imgDest}, Found={matched?.DisplayName}");
+                }
             }
         }
 
         if (matched != null)
+        {
             SelectedDestination = matched;
+            DebugHelper.WriteLine($"[DEBUG] SelectedDestination set to: {matched.DisplayName}");
+        }
+        else
+        {
+            DebugHelper.WriteLine("[DEBUG] No matching destination found, keeping default.");
+        }
     }
 
     public void Save()
@@ -299,54 +341,77 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 }
                 else if (SelectedDestination.Instance != null && !string.IsNullOrEmpty(SelectedDestination.Instance.ProviderId))
                 {
-                    // 3. Standard Uploader - Try to update relevant destination enums
-                    // We update the specific destination type based on what the provider ID parses to.
-                    // This handles Image, File, Text, and URL Shorteners.
-                    
-                    bool typeFound = false;
+                    // 3. Standard Uploader
+                    // Determine which property to set based on the Job Type
+                    string category = GetHotkeyCategory(SelectedJob);
+                    bool saved = false;
 
-                    if (Enum.TryParse<ImageDestination>(SelectedDestination.Instance.ProviderId, out var imgDest))
+                    if (category == EnumExtensions.HotkeyType_Category_ScreenRecord || 
+                        SelectedJob == HotkeyType.FileUpload || 
+                        SelectedJob == HotkeyType.FolderUpload ||
+                        SelectedJob == HotkeyType.DragDropUpload)
                     {
-                        Model.TaskSettings.ImageDestination = imgDest;
-                        typeFound = true;
-                    }
-                    else if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
-                    {
-                        // It's a file uploader completely
-                        Model.TaskSettings.FileDestination = fileDest;
-                        
-                        // BUT, if this is an image/screen capture task, we must also set ImageFileDestination
-                        // and point the primary ImageDestination to "FileUploader" so it knows to look there.
-                        Model.TaskSettings.ImageFileDestination = fileDest;
-                         
-                        // We set ImageDestination to FileUploader so the engine delegates to ImageFileDestination
-                        if (Model.TaskSettings.ImageDestination != ImageDestination.CustomImageUploader)
+                        // File Job -> Save to FileDestination
+                        if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
                         {
-                            Model.TaskSettings.ImageDestination = ImageDestination.FileUploader;
+                            Model.TaskSettings.FileDestination = fileDest;
+                            saved = true;
+                            DebugHelper.WriteLine($"Workflow saved FileDestination: {fileDest}");
                         }
-
-                         typeFound = true;
                     }
-                    
-                    if (Enum.TryParse<TextDestination>(SelectedDestination.Instance.ProviderId, out var textDest))
+                    else if (SelectedJob == HotkeyType.UploadText)
                     {
-                        Model.TaskSettings.TextDestination = textDest;
-                         typeFound = true;
+                        // Text Job -> Save to TextDestination
+                        if (Enum.TryParse<TextDestination>(SelectedDestination.Instance.ProviderId, out var textDest))
+                        {
+                            Model.TaskSettings.TextDestination = textDest;
+                            saved = true;
+                            DebugHelper.WriteLine($"Workflow saved TextDestination: {textDest}");
+                        }
                     }
-                    
-                     if (Enum.TryParse<UrlShortenerType>(SelectedDestination.Instance.ProviderId, out var urlDest))
+                    else if (SelectedJob == HotkeyType.ShortenURL || SelectedJob == HotkeyType.UploadURL)
                     {
-                        Model.TaskSettings.URLShortenerDestination = urlDest;
-                         typeFound = true;
-                    }
-
-                    if (typeFound)
-                    {
-                        DebugHelper.WriteLine($"Workflow saved with standard destination: {SelectedDestination.Instance.ProviderId}");
+                        // URL Job -> Save to URLShortenerDestination
+                        if (Enum.TryParse<UrlShortenerType>(SelectedDestination.Instance.ProviderId, out var urlDest))
+                        {
+                            Model.TaskSettings.URLShortenerDestination = urlDest;
+                            saved = true;
+                            DebugHelper.WriteLine($"Workflow saved URLShortenerDestination: {urlDest}");
+                        }
                     }
                     else
                     {
-                        DebugHelper.WriteLine($"Warning: Could not map provider {SelectedDestination.Instance.ProviderId} to any destination enum.");
+                        // Default / Image Jobs -> Save to ImageDestination
+                        // (Screen Capture, Tools, etc.)
+                        
+                        // First check if it's a FileUploader being used for images
+                        if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
+                        {
+                            // It's a file uploader completely
+                            Model.TaskSettings.FileDestination = fileDest; // Good to sync this too
+                            
+                            // Set ImageFileDestination
+                            Model.TaskSettings.ImageFileDestination = fileDest;
+                             
+                            // Point ImageDestination to delegate
+                            if (Model.TaskSettings.ImageDestination != ImageDestination.CustomImageUploader)
+                            {
+                                Model.TaskSettings.ImageDestination = ImageDestination.FileUploader;
+                            }
+                            saved = true;
+                            DebugHelper.WriteLine($"Workflow saved ImageFileDestination: {fileDest}");
+                        }
+                        else if (Enum.TryParse<ImageDestination>(SelectedDestination.Instance.ProviderId, out var imgDest))
+                        {
+                            Model.TaskSettings.ImageDestination = imgDest;
+                            saved = true;
+                            DebugHelper.WriteLine($"Workflow saved ImageDestination: {imgDest}");
+                        }
+                    }
+
+                    if (!saved)
+                    {
+                        DebugHelper.WriteLine($"Warning: Could not map provider {SelectedDestination.Instance.ProviderId} to the appropriate destination for job {SelectedJob}");
                     }
                 }
             }
