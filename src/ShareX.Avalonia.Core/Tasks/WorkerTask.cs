@@ -382,11 +382,16 @@ namespace XerahS.Core.Tasks
                     TargetWindowHandle = windowHandle
                 };
 
-                // Generate output path
-                string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                string recordingsPath = Path.Combine(documentsPath, "ShareX", "Recordings", DateTime.Now.ToString("yyyy-MM"));
-                Directory.CreateDirectory(recordingsPath);
-                recordingOptions.OutputPath = Path.Combine(recordingsPath, $"Recording_{DateTime.Now:yyyy-MM-dd_HH-mm-ss}.mp4");
+                // [2026-01-10T14:40:00+08:00] Align screen recording output with screenshot naming/destination using TaskHelpers.
+                var recordingMetadata = Info.Metadata ?? new TaskMetadata();
+                string recordingsFolder = TaskHelpers.GetScreenshotsFolder(Info.TaskSettings, recordingMetadata);
+                string fileName = TaskHelpers.GetFileName(Info.TaskSettings, "mp4", recordingMetadata);
+                Directory.CreateDirectory(recordingsFolder);
+                var resolvedPath = TaskHelpers.HandleExistsFile(recordingsFolder, fileName, Info.TaskSettings);
+                recordingOptions.OutputPath = resolvedPath;
+                Info.FilePath = resolvedPath;
+                Info.DataType = EDataType.File;
+                DebugHelper.WriteLine($"[PathTrace {Info.CorrelationId}] ScreenRecorder resolved path: dir=\"{recordingsFolder}\", fileName=\"{fileName}\", fullPath=\"{resolvedPath}\"");
 
                 if (recordingOptions.Settings != null &&
                     (recordingOptions.Settings.CaptureSystemAudio || recordingOptions.Settings.CaptureMicrophone))
@@ -426,8 +431,13 @@ namespace XerahS.Core.Tasks
                 if (!string.IsNullOrEmpty(outputPath))
                 {
                     DebugHelper.WriteLine($"Recording saved to: {outputPath}");
-                    // TODO: Process recording file (upload, after-capture tasks, etc.)
-                    // For now, just log the completion
+                    Info.FilePath = outputPath;
+                    Info.DataType = EDataType.File;
+                    // [2026-01-10T14:40:00+08:00] Reuse upload pipeline for recordings; flag upload when AfterUpload tasks exist.
+                    Info.TaskSettings.AfterCaptureJob |= AfterCaptureTasks.UploadImageToHost;
+
+                    var uploadProcessor = new UploadJobProcessor();
+                    await uploadProcessor.ProcessAsync(Info, CancellationToken.None);
                 }
             }
             catch (Exception ex)
