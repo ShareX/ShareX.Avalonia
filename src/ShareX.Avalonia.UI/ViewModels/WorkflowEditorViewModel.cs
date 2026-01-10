@@ -234,7 +234,15 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         else
         {
             var imgDest = settings.TaskSettings.ImageDestination;
-            if (imgDest != ImageDestination.CustomImageUploader && imgDest != ImageDestination.FileUploader)
+            
+            // Special handling for FileUploader wrapper
+            if (imgDest == ImageDestination.FileUploader)
+            {
+                var fileDest = settings.TaskSettings.ImageFileDestination;
+                var candidate = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == fileDest.ToString());
+                if (candidate != null) matched = candidate;
+            }
+            else if (imgDest != ImageDestination.CustomImageUploader)
             {
                 var candidate = AvailableDestinations.FirstOrDefault(d => d.Instance.ProviderId == imgDest.ToString());
                 if (candidate != null) matched = candidate;
@@ -302,10 +310,21 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                         Model.TaskSettings.ImageDestination = imgDest;
                         typeFound = true;
                     }
-                    
-                    if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
+                    else if (Enum.TryParse<FileDestination>(SelectedDestination.Instance.ProviderId, out var fileDest))
                     {
+                        // It's a file uploader completely
                         Model.TaskSettings.FileDestination = fileDest;
+                        
+                        // BUT, if this is an image/screen capture task, we must also set ImageFileDestination
+                        // and point the primary ImageDestination to "FileUploader" so it knows to look there.
+                        Model.TaskSettings.ImageFileDestination = fileDest;
+                         
+                        // We set ImageDestination to FileUploader so the engine delegates to ImageFileDestination
+                        if (Model.TaskSettings.ImageDestination != ImageDestination.CustomImageUploader)
+                        {
+                            Model.TaskSettings.ImageDestination = ImageDestination.FileUploader;
+                        }
+
                          typeFound = true;
                     }
                     
