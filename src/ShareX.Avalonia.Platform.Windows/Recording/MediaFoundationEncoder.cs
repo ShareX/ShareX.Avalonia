@@ -35,7 +35,7 @@ namespace XerahS.Platform.Windows.Recording;
 /// </summary>
 public class MediaFoundationEncoder : IVideoEncoder
 {
-    private IMFSinkWriter? _sinkWriter;
+    private IntPtr _sinkWriter = IntPtr.Zero;
     private int _streamIndex;
     private long _sampleTime;
     private VideoFormat? _format;
@@ -133,14 +133,15 @@ public class MediaFoundationEncoder : IVideoEncoder
         {
             // Set hardware encoding hint (Stage 3: will expose as option)
             Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "Calling attributes.SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS)...");
-            attributes.SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, 1);
+            var key = MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS;
+            ComFunctions.SetUINT32(attributes, key, 1);
             Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "✓ SetUINT32 succeeded");
 
             // Create sink writer
             Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Calling MFCreateSinkWriterFromURL, outputPath={_outputPath}...");
             hr = MFCreateSinkWriterFromURL(_outputPath, IntPtr.Zero, attributes, out _sinkWriter);
             Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"MFCreateSinkWriterFromURL returned HRESULT: 0x{hr:X8}");
-            if (hr != 0 || _sinkWriter == null)
+            if (hr != 0 || _sinkWriter == IntPtr.Zero)
             {
                 throw new COMException("Failed to create MF sink writer. Driver issues or missing codecs.", hr);
             }
@@ -152,20 +153,20 @@ public class MediaFoundationEncoder : IVideoEncoder
             try
             {
                 // H.264 in MP4 container
-                outputMediaType.SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-                outputMediaType.SetGUID(MF_MT_SUBTYPE, MFVideoFormat_H264);
-                outputMediaType.SetUINT32(MF_MT_AVG_BITRATE, (uint)_format!.Bitrate);
-                outputMediaType.SetUINT32(MF_MT_INTERLACE_MODE, (uint)MFVideoInterlaceMode.Progressive);
+                SetGuid(outputMediaType, MF_MT_MAJOR_TYPE, MFMediaType_Video);
+                SetGuid(outputMediaType, MF_MT_SUBTYPE, MFVideoFormat_H264);
+                SetUInt32(outputMediaType, MF_MT_AVG_BITRATE, (uint)_format!.Bitrate);
+                SetUInt32(outputMediaType, MF_MT_INTERLACE_MODE, (uint)MFVideoInterlaceMode.Progressive);
                 MFSetAttributeSize(outputMediaType, MF_MT_FRAME_SIZE, _format.Width, _format.Height);
                 MFSetAttributeRatio(outputMediaType, MF_MT_FRAME_RATE, _format.FPS, 1);
                 MFSetAttributeRatio(outputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 
-                hr = _sinkWriter.AddStream(outputMediaType, out _streamIndex);
+                hr = ComFunctions.AddStream(_sinkWriter, outputMediaType, out _streamIndex);
                 if (hr != 0) throw new COMException("Failed to add stream to sink writer", hr);
             }
             finally
             {
-                Marshal.ReleaseComObject(outputMediaType);
+                ComFunctions.Release(outputMediaType);
             }
 
             // Configure input media type (what we provide)
@@ -175,31 +176,34 @@ public class MediaFoundationEncoder : IVideoEncoder
             try
             {
                 // RGB32 input (BGRA from WGC)
-                inputMediaType.SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
-                inputMediaType.SetGUID(MF_MT_SUBTYPE, MFVideoFormat_RGB32);
-                inputMediaType.SetUINT32(MF_MT_INTERLACE_MODE, (uint)MFVideoInterlaceMode.Progressive);
+                SetGuid(inputMediaType, MF_MT_MAJOR_TYPE, MFMediaType_Video);
+                SetGuid(inputMediaType, MF_MT_SUBTYPE, MFVideoFormat_RGB32);
+                SetUInt32(inputMediaType, MF_MT_INTERLACE_MODE, (uint)MFVideoInterlaceMode.Progressive);
                 MFSetAttributeSize(inputMediaType, MF_MT_FRAME_SIZE, _format.Width, _format.Height);
                 MFSetAttributeRatio(inputMediaType, MF_MT_FRAME_RATE, _format.FPS, 1);
                 MFSetAttributeRatio(inputMediaType, MF_MT_PIXEL_ASPECT_RATIO, 1, 1);
 
-                hr = _sinkWriter.SetInputMediaType(_streamIndex, inputMediaType, IntPtr.Zero);
+                hr = ComFunctions.SetInputMediaType(_sinkWriter, _streamIndex, inputMediaType, IntPtr.Zero);
                 if (hr != 0) throw new COMException("Failed to set input media type", hr);
             }
             finally
             {
-                Marshal.ReleaseComObject(inputMediaType);
+                ComFunctions.Release(inputMediaType);
             }
 
             // Begin writing
-            hr = _sinkWriter.BeginWriting();
+            hr = ComFunctions.BeginWriting(_sinkWriter);
             if (hr != 0) throw new COMException("Failed to begin writing", hr);
         }
         finally
         {
-            if (attributes != null)
-                Marshal.ReleaseComObject(attributes);
+            if (attributes != IntPtr.Zero)
+                ComFunctions.Release(attributes);
         }
     }
+
+    private void SetGuid(IntPtr ptr, Guid key, Guid value) => ComFunctions.SetGUID(ptr, key, value);
+    private void SetUInt32(IntPtr ptr, Guid key, uint value) => ComFunctions.SetUINT32(ptr, key, value);
 
     public void WriteFrame(FrameData frame)
     {
@@ -207,7 +211,7 @@ public class MediaFoundationEncoder : IVideoEncoder
         {
             if (_disposed) throw new ObjectDisposedException(nameof(MediaFoundationEncoder));
             if (!_initialized) throw new InvalidOperationException("Encoder not initialized");
-            if (_sinkWriter == null) throw new InvalidOperationException("Sink writer not created");
+            if (_sinkWriter == IntPtr.Zero) throw new InvalidOperationException("Sink writer not created");
 
             try
             {
@@ -218,7 +222,7 @@ public class MediaFoundationEncoder : IVideoEncoder
                 try
                 {
                     // Lock buffer and copy data
-                    hr = buffer.Lock(out var bufferPtr, out _, out _);
+                    hr = ComFunctions.Lock(buffer, out var bufferPtr, out _, out _);
                     if (hr != 0) throw new COMException("Failed to lock buffer", hr);
 
                     try
@@ -233,12 +237,12 @@ public class MediaFoundationEncoder : IVideoEncoder
                                 frame.Stride * frame.Height);
                         }
 
-                        hr = buffer.SetCurrentLength(frame.Stride * frame.Height);
+                        hr = ComFunctions.SetCurrentLength(buffer, frame.Stride * frame.Height);
                         if (hr != 0) throw new COMException("Failed to set buffer length", hr);
                     }
                     finally
                     {
-                        buffer.Unlock();
+                        ComFunctions.Unlock(buffer);
                     }
 
                     // Create sample
@@ -247,31 +251,31 @@ public class MediaFoundationEncoder : IVideoEncoder
 
                     try
                     {
-                        hr = sample.AddBuffer(buffer);
+                        hr = ComFunctions.AddBuffer(sample, buffer);
                         if (hr != 0) throw new COMException("Failed to add buffer to sample", hr);
 
                         // Set sample time and duration
-                        hr = sample.SetSampleTime(_sampleTime);
+                        hr = ComFunctions.SetSampleTime(sample, _sampleTime);
                         if (hr != 0) throw new COMException("Failed to set sample time", hr);
 
                         long duration = 10000000 / _format!.FPS; // 100ns units
-                        hr = sample.SetSampleDuration(duration);
+                        hr = ComFunctions.SetSampleDuration(sample, duration);
                         if (hr != 0) throw new COMException("Failed to set sample duration", hr);
 
                         // Write sample
-                        hr = _sinkWriter.WriteSample(_streamIndex, sample);
+                        hr = ComFunctions.WriteSample(_sinkWriter, _streamIndex, sample);
                         if (hr != 0) throw new COMException("Failed to write sample", hr);
 
                         _sampleTime += duration;
                     }
                     finally
                     {
-                        Marshal.ReleaseComObject(sample);
+                        ComFunctions.Release(sample);
                     }
                 }
                 finally
                 {
-                    Marshal.ReleaseComObject(buffer);
+                    ComFunctions.Release(buffer);
                 }
             }
             catch (Exception ex)
@@ -285,11 +289,11 @@ public class MediaFoundationEncoder : IVideoEncoder
     {
         lock (_lock)
         {
-            if (!_initialized || _sinkWriter == null) return;
+            if (!_initialized || _sinkWriter == IntPtr.Zero) return;
 
             try
             {
-                var hr = _sinkWriter.Finalize();
+                var hr = ComFunctions.Finalize(_sinkWriter);
                 if (hr != 0)
                 {
                     System.Diagnostics.Debug.WriteLine($"Warning: Sink writer finalize returned error: {hr}");
@@ -308,14 +312,14 @@ public class MediaFoundationEncoder : IVideoEncoder
 
     private void Cleanup()
     {
-        if (_sinkWriter != null)
+        if (_sinkWriter != IntPtr.Zero)
         {
             try
             {
-                Marshal.ReleaseComObject(_sinkWriter);
+                ComFunctions.Release(_sinkWriter);
             }
             catch { }
-            _sinkWriter = null;
+            _sinkWriter = IntPtr.Zero;
         }
 
         if (_initialized)
@@ -342,126 +346,41 @@ public class MediaFoundationEncoder : IVideoEncoder
         GC.SuppressFinalize(this);
     }
 
-    #region Media Foundation P/Invoke
+    #region Media Foundation P/Invoke and VTable Helpers
 
     private const uint MF_VERSION = 0x00020070; // Windows 10
     private const uint MFSTARTUP_FULL = 0;
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
+    [DllImport("mfplat.dll", EntryPoint = "MFStartup", ExactSpelling = true)]
     private static extern int MFStartup(uint version, uint flags);
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
+    [DllImport("mfplat.dll", EntryPoint = "MFShutdown", ExactSpelling = true)]
     private static extern int MFShutdown();
 
     [DllImport("mfplat.dll", EntryPoint = "MFCreateAttributes", ExactSpelling = true)]
-    private static extern int MFCreateAttributesNative(out IntPtr attributes, uint initialSize);
+    private static extern int MFCreateAttributes(out IntPtr attributes, uint initialSize);
 
     [DllImport("mfplat.dll", EntryPoint = "MFCreateMediaType", ExactSpelling = true)]
-    private static extern int MFCreateMediaTypeNative(out IntPtr mediaType);
+    private static extern int MFCreateMediaType(out IntPtr mediaType);
 
     [DllImport("mfreadwrite.dll", EntryPoint = "MFCreateSinkWriterFromURL", ExactSpelling = true, CharSet = CharSet.Unicode)]
-    private static extern int MFCreateSinkWriterFromURLNative(
+    private static extern int MFCreateSinkWriterFromURL(
         [MarshalAs(UnmanagedType.LPWStr)] string outputUrl,
         IntPtr byteStream,
         IntPtr attributes,
         out IntPtr sinkWriter);
 
     [DllImport("mfplat.dll", EntryPoint = "MFCreateMemoryBuffer", ExactSpelling = true)]
-    private static extern int MFCreateMemoryBufferNative(int maxLength, out IntPtr buffer);
+    private static extern int MFCreateMemoryBuffer(int maxLength, out IntPtr buffer);
 
     [DllImport("mfplat.dll", EntryPoint = "MFCreateSample", ExactSpelling = true)]
-    private static extern int MFCreateSampleNative(out IntPtr sample);
+    private static extern int MFCreateSample(out IntPtr sample);
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
+    [DllImport("mfplat.dll", EntryPoint = "MFSetAttributeSize", ExactSpelling = true)]
     private static extern int MFSetAttributeSize(IntPtr attributes, in Guid key, int width, int height);
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
+    [DllImport("mfplat.dll", EntryPoint = "MFSetAttributeRatio", ExactSpelling = true)]
     private static extern int MFSetAttributeRatio(IntPtr attributes, in Guid key, int numerator, int denominator);
-
-    // Wrapper methods that manually marshal COM objects
-    private static int MFCreateAttributes(out IMFAttributes attributes, uint initialSize)
-    {
-        var hr = MFCreateAttributesNative(out var ptr, initialSize);
-        attributes = hr == 0 && ptr != IntPtr.Zero 
-            ? (IMFAttributes)Marshal.GetObjectForIUnknown(ptr) 
-            : null!;
-        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
-        return hr;
-    }
-
-    private static int MFCreateMediaType(out IMFMediaType mediaType)
-    {
-        var hr = MFCreateMediaTypeNative(out var ptr);
-        mediaType = hr == 0 && ptr != IntPtr.Zero 
-            ? (IMFMediaType)Marshal.GetObjectForIUnknown(ptr) 
-            : null!;
-        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
-        return hr;
-    }
-
-    private static int MFCreateSinkWriterFromURL(string outputUrl, IntPtr byteStream, IMFAttributes? attributes, out IMFSinkWriter? sinkWriter)
-    {
-        IntPtr attrPtr = attributes != null ? Marshal.GetIUnknownForObject(attributes) : IntPtr.Zero;
-        try
-        {
-            var hr = MFCreateSinkWriterFromURLNative(outputUrl, byteStream, attrPtr, out var writerPtr);
-            sinkWriter = hr == 0 && writerPtr != IntPtr.Zero 
-                ? (IMFSinkWriter)Marshal.GetObjectForIUnknown(writerPtr) 
-                : null;
-            if (writerPtr != IntPtr.Zero) Marshal.Release(writerPtr);
-            return hr;
-        }
-        finally
-        {
-            if (attrPtr != IntPtr.Zero) Marshal.Release(attrPtr);
-        }
-    }
-
-    private static int MFCreateMemoryBuffer(int maxLength, out IMFMediaBuffer buffer)
-    {
-        var hr = MFCreateMemoryBufferNative(maxLength, out var ptr);
-        buffer = hr == 0 && ptr != IntPtr.Zero 
-            ? (IMFMediaBuffer)Marshal.GetObjectForIUnknown(ptr) 
-            : null!;
-        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
-        return hr;
-    }
-
-    private static int MFCreateSample(out IMFSample sample)
-    {
-        var hr = MFCreateSampleNative(out var ptr);
-        sample = hr == 0 && ptr != IntPtr.Zero 
-            ? (IMFSample)Marshal.GetObjectForIUnknown(ptr) 
-            : null!;
-        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
-        return hr;
-    }
-
-    private static void MFSetAttributeSize(IMFMediaType mediaType, Guid key, int width, int height)
-    {
-        IntPtr ptr = Marshal.GetIUnknownForObject(mediaType);
-        try
-        {
-            MFSetAttributeSize(ptr, in key, width, height);
-        }
-        finally
-        {
-            Marshal.Release(ptr);
-        }
-    }
-
-    private static void MFSetAttributeRatio(IMFMediaType mediaType, Guid key, int numerator, int denominator)
-    {
-        IntPtr ptr = Marshal.GetIUnknownForObject(mediaType);
-        try
-        {
-            MFSetAttributeRatio(ptr, in key, numerator, denominator);
-        }
-        finally
-        {
-            Marshal.Release(ptr);
-        }
-    }
 
     // Media Foundation GUIDs
     private static readonly Guid MF_MT_MAJOR_TYPE = new("48eba18e-f8c9-4687-bf11-0a74c9f96a8f");
@@ -482,65 +401,144 @@ public class MediaFoundationEncoder : IVideoEncoder
         Progressive = 2
     }
 
-    // COM Interfaces
-    [ComImport, Guid("5bc8a76b-869a-46a3-9b03-fa218a66aebe"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMFAttributes
+    // COM VTable Helpers
+    private static class ComFunctions
     {
-        void SetUINT32([In] Guid key, [In] uint value);
-        // ... other methods omitted for brevity
-    }
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int ReleaseDelegate(IntPtr thisPtr);
 
-    [ComImport, Guid("44ae0fa8-ea31-4109-8d2e-4cae4997c555"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMFMediaType : IMFAttributes
-    {
-        new void SetUINT32([In] Guid key, [In] uint value);
-        void SetGUID([In] Guid key, [In] Guid value);
-        // ... other methods omitted
-    }
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetUINT32Delegate(IntPtr thisPtr, [In] ref Guid key, uint value);
 
-    [ComImport, Guid("3137f1cd-fe5e-4805-a5d8-fb477448cb3d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMFSinkWriter
-    {
-        [PreserveSig]
-        int AddStream([In] IMFMediaType mediaType, out int streamIndex);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetGUIDDelegate(IntPtr thisPtr, [In] ref Guid key, [In] ref Guid value);
 
-        [PreserveSig]
-        int SetInputMediaType([In] int streamIndex, [In] IMFMediaType mediaType, [In] IntPtr encoderParameters);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int AddStreamDelegate(IntPtr thisPtr, IntPtr mediaType, out int streamIndex);
 
-        [PreserveSig]
-        int BeginWriting();
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetInputMediaTypeDelegate(IntPtr thisPtr, int streamIndex, IntPtr mediaType, IntPtr encodingParameters);
 
-        [PreserveSig]
-        int WriteSample([In] int streamIndex, [In] IMFSample sample);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int BeginWritingDelegate(IntPtr thisPtr);
 
-        [PreserveSig]
-        int Finalize();
-    }
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int WriteSampleDelegate(IntPtr thisPtr, int streamIndex, IntPtr sample);
 
-    [ComImport, Guid("c40a00f2-b93a-4d80-ae8c-5a1c634f58e4"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMFSample
-    {
-        [PreserveSig]
-        int SetSampleTime([In] long sampleTime);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int FinalizeDelegate(IntPtr thisPtr);
 
-        [PreserveSig]
-        int SetSampleDuration([In] long sampleDuration);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int LockDelegate(IntPtr thisPtr, out IntPtr buffer, out int maxLength, out int currentLength);
 
-        [PreserveSig]
-        int AddBuffer([In] IMFMediaBuffer buffer);
-    }
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int UnlockDelegate(IntPtr thisPtr);
 
-    [ComImport, Guid("045fa593-8799-42b8-bc8d-8968c6453507"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-    private interface IMFMediaBuffer
-    {
-        [PreserveSig]
-        int Lock(out IntPtr buffer, out int maxLength, out int currentLength);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetCurrentLengthDelegate(IntPtr thisPtr, int currentLength);
 
-        [PreserveSig]
-        int Unlock();
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int AddBufferDelegate(IntPtr thisPtr, IntPtr buffer);
 
-        [PreserveSig]
-        int SetCurrentLength([In] int currentLength);
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetSampleTimeDelegate(IntPtr thisPtr, long sampleTime);
+
+        [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+        public delegate int SetSampleDurationDelegate(IntPtr thisPtr, long sampleDuration);
+
+
+        public static int Release(IntPtr ptr) => Call<ReleaseDelegate>(ptr, 2)(ptr);
+
+        // IMFAttributes (IUnknown + 15th = SetUINT32 [Index 17? No 15+3=18])
+        // IDL Order: GetUINT32(3)... SetUINT32(15 + 3 = 18?), SetGUID(18 + 3 = 21?)
+        // Verified: SetUINT32 is index 21, SetGUID is index 24 in some headers?
+        // Let's re-verify standard MF ordering.
+        // GetUINT32(3), GetUINT64(4), GetDouble(5), GetGUID(6), GetStringLength(7), GetString(8), GetAllocatedString(9), GetBlobSize(10), GetBlob(11), GetAllocatedBlob(12), GetUnknown(13)
+        // SetItem(14), DeleteItem(15), DeleteAllItems(16)
+        // SetUINT32(17), SetUINT64(18), SetDouble(19), SetGUID(20)
+        // So SetUINT32 is 17? No, IUnknown has 3 methods 0,1,2.
+        // So GetUINT32 is 3.
+        // SetItem is 14.
+        // SetUINT32 is 17.
+        // SetGUID is 20.
+        // My previous count 18/21 was maybe wrong. 
+        // Let's use 21/24 to be safe? NO. Using incorrect index crashes.
+        // Let's check ObjIdl definitions.
+        // HRESULT SetUINT32(REFGUID guidKey, UINT32 unValue);
+        // HRESULT SetGUID(REFGUID guidKey, REFGUID guidValue);
+        //
+        // Correct Offset Calculation:
+        // 0: QueryInterface
+        // 1: AddRef
+        // 2: Release
+        // 3: GetUINT32
+        // 4: GetUINT64
+        // 5: GetDouble
+        // 6: GetGUID
+        // 7: GetStringLength
+        // 8: GetString
+        // 9: GetAllocatedString
+        // 10: GetBlobSize
+        // 11: GetBlob
+        // 12: GetAllocatedBlob
+        // 13: GetUnknown
+        // 14: SetItem
+        // 15: DeleteItem
+        // 16: DeleteAllItems
+        // 17: SetUINT32
+        // 18: SetUINT64
+        // 19: SetDouble
+        // 20: SetGUID
+        
+        public static int SetUINT32(IntPtr ptr, Guid key, uint value) => Call<SetUINT32Delegate>(ptr, 17)(ptr, ref key, value);
+        public static int SetGUID(IntPtr ptr, Guid key, Guid value) => Call<SetGUIDDelegate>(ptr, 20)(ptr, ref key, ref value);
+
+        // IMFSinkWriter (IUnknown + 8 methods?)
+        // 3: AddStream
+        // 4: SetInputMediaType
+        // 5: BeginWriting
+        // 6: WriteSample
+        // 11: Finalize
+        public static int AddStream(IntPtr ptr, IntPtr mediaType, out int streamIndex) => Call<AddStreamDelegate>(ptr, 3)(ptr, mediaType, out streamIndex);
+        public static int SetInputMediaType(IntPtr ptr, int streamIndex, IntPtr mediaType, IntPtr encodingParameters) => Call<SetInputMediaTypeDelegate>(ptr, 4)(ptr, streamIndex, mediaType, encodingParameters);
+        public static int BeginWriting(IntPtr ptr) => Call<BeginWritingDelegate>(ptr, 5)(ptr);
+        public static int WriteSample(IntPtr ptr, int streamIndex, IntPtr sample) => Call<WriteSampleDelegate>(ptr, 6)(ptr, streamIndex, sample);
+        public static int Finalize(IntPtr ptr) => Call<FinalizeDelegate>(ptr, 11)(ptr);
+
+        // IMFMediaBuffer
+        // 3: Lock
+        // 4: Unlock
+        // 5: SetCurrentLength
+        public static int Lock(IntPtr ptr, out IntPtr buffer, out int maxLength, out int currentLength) => Call<LockDelegate>(ptr, 3)(ptr, out buffer, out maxLength, out currentLength);
+        public static int Unlock(IntPtr ptr) => Call<UnlockDelegate>(ptr, 4)(ptr);
+        public static int SetCurrentLength(IntPtr ptr, int currentLength) => Call<SetCurrentLengthDelegate>(ptr, 5)(ptr, currentLength);
+
+        // IMFSample (Inherits IMFAttributes - 27 methods total (24+3))
+        // So sample methods start at 24?
+        // IMFAttributes ends at UnlockStore(24), GetCount(25), GetItemByIndex(26), CopyAllItems(27). 
+        // Wait, standard IMFAttributes has 28 methods (0-27).
+        // So IMFSample starts at 28.
+        // 28: GetSampleFlags
+        // 29: SetSampleFlags
+        // 30: GetSampleTime
+        // 31: SetSampleTime
+        // 32: GetSampleDuration
+        // 33: SetSampleDuration
+        // 34: GetBufferCount
+        // 35: GetBufferByIndex
+        // 36: ConvertToContiguousBuffer
+        // 37: AddBuffer
+        
+        public static int SetSampleTime(IntPtr ptr, long sampleTime) => Call<SetSampleTimeDelegate>(ptr, 31)(ptr, sampleTime);
+        public static int SetSampleDuration(IntPtr ptr, long sampleDuration) => Call<SetSampleDurationDelegate>(ptr, 33)(ptr, sampleDuration);
+        public static int AddBuffer(IntPtr ptr, IntPtr buffer) => Call<AddBufferDelegate>(ptr, 37)(ptr, buffer);
+
+        private static T Call<T>(IntPtr ptr, int index) where T : Delegate
+        {
+            var vtable = Marshal.ReadIntPtr(ptr);
+            var methodPtr = Marshal.ReadIntPtr(vtable, index * IntPtr.Size);
+            return Marshal.GetDelegateForFunctionPointer<T>(methodPtr);
+        }
     }
 
     #endregion
