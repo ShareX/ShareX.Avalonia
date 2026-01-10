@@ -158,38 +158,46 @@ public class WindowsGraphicsCaptureSource : ICaptureSource
 
         // Check if running on Windows 10 20H1+ for monitor capture
         var version = Environment.OSVersion.Version;
-        System.Diagnostics.Debug.WriteLine($"Windows version: {version.Major}.{version.Minor}.{version.Build}");
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"Windows version: {version.Major}.{version.Minor}.{version.Build}");
         
         if (version.Build < 19041)
         {
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"✗ Build {version.Build} < 19041, monitor capture not supported");
             throw new PlatformNotSupportedException(
                 $"Monitor capture requires Windows 10 20H1 (build 19041) or later. Current build: {version.Build}");
         }
 
         try
         {
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "Creating D3D11 device...");
             _d3dDevice = CreateD3DDevice();
-            System.Diagnostics.Debug.WriteLine("D3D device created successfully");
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "✓ D3D device created successfully");
             
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "Creating IDirect3DDevice from D3D11...");
             _device = CreateDirect3DDeviceFromD3D11Device(_d3dDevice);
-            System.Diagnostics.Debug.WriteLine("IDirect3DDevice created successfully");
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "✓ IDirect3DDevice created successfully");
 
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "Getting primary monitor handle...");
             var monitorHandle = GetPrimaryMonitorHandle();
-            System.Diagnostics.Debug.WriteLine($"Primary monitor handle: 0x{monitorHandle:X}");
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"Primary monitor handle: 0x{monitorHandle:X}");
             
             if (monitorHandle == IntPtr.Zero)
             {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "✗ Monitor handle is NULL");
                 throw new InvalidOperationException("Failed to get primary monitor handle");
             }
 
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "Calling CaptureHelper.CreateItemForMonitor...");
             _captureItem = CaptureHelper.CreateItemForMonitor(monitorHandle);
-            System.Diagnostics.Debug.WriteLine($"Capture item created: {_captureItem?.DisplayName ?? "null"}");
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"✓ Capture item created: {_captureItem?.DisplayName ?? "null"}");
             
             if (_captureItem == null)
             {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "✗ Capture item is NULL");
                 throw new InvalidOperationException("Failed to create capture item for monitor");
             }
 
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"Creating frame pool (size: {_captureItem.Size.Width}x{_captureItem.Size.Height})...");
             _framePool = WGC.Direct3D11CaptureFramePool.Create(
                 _device,
                 global::Windows.Graphics.DirectX.DirectXPixelFormat.B8G8R8A8UIntNormalized,
@@ -197,11 +205,16 @@ public class WindowsGraphicsCaptureSource : ICaptureSource
                 _captureItem.Size);
 
             _framePool.FrameArrived += OnFrameArrived;
-            System.Diagnostics.Debug.WriteLine("Frame pool created and event wired");
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", "✓ Frame pool created and event wired");
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"InitializeForPrimaryMonitor failed: {ex}");
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"✗ InitializeForPrimaryMonitor FAILED: {ex.GetType().Name}: {ex.Message}");
+            if (ex.InnerException != null)
+            {
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"  Inner exception: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+            }
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INIT", $"  Stack trace: {ex.StackTrace}");
             Dispose();
             throw new PlatformNotSupportedException(
                 "Failed to initialize Windows.Graphics.Capture for monitor.",
@@ -356,14 +369,13 @@ public class WindowsGraphicsCaptureSource : ICaptureSource
     {
         // Use Windows.Graphics.Capture interop to create IDirect3DDevice
         var dxgiDevice = d3dDevice.QueryInterface<IDXGIDevice>();
-        var inspectable = CreateDirect3D11DeviceFromDXGIDevice(dxgiDevice);
-        return (WD3D.IDirect3DDevice)inspectable;
+        return CreateDirect3DDeviceFromDXGIDevice(dxgiDevice);
     }
 
     [DllImport("d3d11.dll", EntryPoint = "CreateDirect3D11DeviceFromDXGIDevice", SetLastError = true, CharSet = CharSet.Unicode, ExactSpelling = true, CallingConvention = CallingConvention.StdCall)]
     private static extern uint CreateDirect3D11DeviceFromDXGIDevice(IntPtr dxgiDevice, out IntPtr graphicsDevice);
 
-    private static object CreateDirect3D11DeviceFromDXGIDevice(IDXGIDevice dxgiDevice)
+    private static WD3D.IDirect3DDevice CreateDirect3DDeviceFromDXGIDevice(IDXGIDevice dxgiDevice)
     {
         var hr = CreateDirect3D11DeviceFromDXGIDevice(dxgiDevice.NativePointer, out var pUnknown);
         if (hr != 0)
@@ -371,7 +383,8 @@ public class WindowsGraphicsCaptureSource : ICaptureSource
             throw new COMException("Failed to create Direct3D11 device from DXGI device", (int)hr);
         }
 
-        return Marshal.GetObjectForIUnknown(pUnknown);
+        // Use CsWinRT marshaling for proper WinRT type projection
+        return WinRT.MarshalInterface<WD3D.IDirect3DDevice>.FromAbi(pUnknown);
     }
 
     private static IntPtr GetPrimaryMonitorHandle()
@@ -452,10 +465,11 @@ internal static class CaptureHelper
             if (interop == null) return null;
             
             var guid = GraphicsCaptureItemGuid;
-            var hr = interop.CreateForWindow(hwnd, ref guid, out var item);
-            if (hr != 0 || item == null) return null;
+            var hr = interop.CreateForWindow(hwnd, ref guid, out var itemPtr);
+            if (hr != 0 || itemPtr == IntPtr.Zero) return null;
             
-            return item;
+            // Use CsWinRT marshaling - properly handles WinRT type projection from COM interface pointer
+            return WinRT.MarshalInterface<WGC.GraphicsCaptureItem>.FromAbi(itemPtr);
         }
         catch
         {
@@ -465,25 +479,37 @@ internal static class CaptureHelper
 
     public static WGC.GraphicsCaptureItem? CreateItemForMonitor(IntPtr hmonitor)
     {
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", $"CreateItemForMonitor called with handle: 0x{hmonitor:X}");
+        
         var interop = GraphicsCaptureItemInterop.GetInterop();
         if (interop == null)
         {
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", "✗ GetInterop() returned null - WGC activation factory not available");
             throw new InvalidOperationException("Failed to get IGraphicsCaptureItemInterop activation factory. Windows.Graphics.Capture may not be supported.");
         }
         
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", "✓ Interop factory obtained, calling CreateForMonitor...");
         var guid = GraphicsCaptureItemGuid;
-        var hr = interop.CreateForMonitor(hmonitor, ref guid, out var item);
+        var hr = interop.CreateForMonitor(hmonitor, ref guid, out var itemPtr);
+        
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", $"CreateForMonitor returned HRESULT: 0x{hr:X8}, itemPtr=0x{itemPtr:X}");
         
         if (hr != 0)
         {
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", $"✗ CreateForMonitor FAILED with HRESULT 0x{hr:X8}");
             throw new InvalidOperationException($"CreateForMonitor failed with HRESULT 0x{hr:X8}. Monitor handle: 0x{hmonitor:X}");
         }
         
-        if (item == null)
+        if (itemPtr == IntPtr.Zero)
         {
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", "✗ CreateForMonitor returned null pointer");
             throw new InvalidOperationException($"CreateForMonitor returned null for monitor handle 0x{hmonitor:X}");
         }
         
+        // Use CsWinRT marshaling - properly handles WinRT type projection from COM interface pointer
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", "Marshaling IntPtr to GraphicsCaptureItem using CsWinRT...");
+        var item = WinRT.MarshalInterface<WGC.GraphicsCaptureItem>.FromAbi(itemPtr);
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "WGC_INTEROP", $"✓ GraphicsCaptureItem created successfully: {item.DisplayName}");
         return item;
     }
 }
@@ -491,6 +517,7 @@ internal static class CaptureHelper
 /// <summary>
 /// COM interface for creating GraphicsCaptureItem from Win32 handles
 /// This avoids the need for Windows App SDK WindowId/DisplayId types
+/// NOTE: Uses IntPtr for output because WinRT marshaling doesn't work with COM interop attributes
 /// </summary>
 [ComImport]
 [Guid("3628E81B-3CAC-4C60-B7F4-23CE0E0C3356")]
@@ -501,13 +528,13 @@ internal interface IGraphicsCaptureItemInterop
     int CreateForWindow(
         IntPtr window,
         [In] ref Guid riid,
-        [Out, MarshalAs(UnmanagedType.Interface)] out WGC.GraphicsCaptureItem result);
+        out IntPtr result);
 
     [PreserveSig]
     int CreateForMonitor(
         IntPtr monitor,
         [In] ref Guid riid,
-        [Out, MarshalAs(UnmanagedType.Interface)] out WGC.GraphicsCaptureItem result);
+        out IntPtr result);
 }
 
 /// <summary>

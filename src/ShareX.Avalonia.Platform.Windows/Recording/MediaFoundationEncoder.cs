@@ -121,17 +121,25 @@ public class MediaFoundationEncoder : IVideoEncoder
 
     private void CreateSinkWriter()
     {
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "CreateSinkWriter() starting...");
+        
         // Create attributes
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "Calling MFCreateAttributes...");
         var hr = MFCreateAttributes(out var attributes, 1);
+        Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"MFCreateAttributes returned HRESULT: 0x{hr:X8}");
         if (hr != 0) throw new COMException("Failed to create MF attributes", hr);
 
         try
         {
             // Set hardware encoding hint (Stage 3: will expose as option)
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "Calling attributes.SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS)...");
             attributes.SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, 1);
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", "✓ SetUINT32 succeeded");
 
             // Create sink writer
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"Calling MFCreateSinkWriterFromURL, outputPath={_outputPath}...");
             hr = MFCreateSinkWriterFromURL(_outputPath, IntPtr.Zero, attributes, out _sinkWriter);
+            Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "MF_ENCODER", $"MFCreateSinkWriterFromURL returned HRESULT: 0x{hr:X8}");
             if (hr != 0 || _sinkWriter == null)
             {
                 throw new COMException("Failed to create MF sink writer. Driver issues or missing codecs.", hr);
@@ -345,30 +353,115 @@ public class MediaFoundationEncoder : IVideoEncoder
     [DllImport("mfplat.dll", ExactSpelling = true)]
     private static extern int MFShutdown();
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
-    private static extern int MFCreateAttributes(out IMFAttributes attributes, uint initialSize);
+    [DllImport("mfplat.dll", EntryPoint = "MFCreateAttributes", ExactSpelling = true)]
+    private static extern int MFCreateAttributesNative(out IntPtr attributes, uint initialSize);
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
-    private static extern int MFCreateMediaType(out IMFMediaType mediaType);
+    [DllImport("mfplat.dll", EntryPoint = "MFCreateMediaType", ExactSpelling = true)]
+    private static extern int MFCreateMediaTypeNative(out IntPtr mediaType);
 
-    [DllImport("mfreadwrite.dll", ExactSpelling = true, CharSet = CharSet.Unicode)]
-    private static extern int MFCreateSinkWriterFromURL(
+    [DllImport("mfreadwrite.dll", EntryPoint = "MFCreateSinkWriterFromURL", ExactSpelling = true, CharSet = CharSet.Unicode)]
+    private static extern int MFCreateSinkWriterFromURLNative(
         [MarshalAs(UnmanagedType.LPWStr)] string outputUrl,
         IntPtr byteStream,
-        IMFAttributes? attributes,
-        out IMFSinkWriter? sinkWriter);
+        IntPtr attributes,
+        out IntPtr sinkWriter);
+
+    [DllImport("mfplat.dll", EntryPoint = "MFCreateMemoryBuffer", ExactSpelling = true)]
+    private static extern int MFCreateMemoryBufferNative(int maxLength, out IntPtr buffer);
+
+    [DllImport("mfplat.dll", EntryPoint = "MFCreateSample", ExactSpelling = true)]
+    private static extern int MFCreateSampleNative(out IntPtr sample);
 
     [DllImport("mfplat.dll", ExactSpelling = true)]
-    private static extern int MFCreateMemoryBuffer(int maxLength, out IMFMediaBuffer buffer);
+    private static extern int MFSetAttributeSize(IntPtr attributes, in Guid key, int width, int height);
 
     [DllImport("mfplat.dll", ExactSpelling = true)]
-    private static extern int MFCreateSample(out IMFSample sample);
+    private static extern int MFSetAttributeRatio(IntPtr attributes, in Guid key, int numerator, int denominator);
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
-    private static extern int MFSetAttributeSize(IMFMediaType attributes, Guid key, int width, int height);
+    // Wrapper methods that manually marshal COM objects
+    private static int MFCreateAttributes(out IMFAttributes attributes, uint initialSize)
+    {
+        var hr = MFCreateAttributesNative(out var ptr, initialSize);
+        attributes = hr == 0 && ptr != IntPtr.Zero 
+            ? (IMFAttributes)Marshal.GetObjectForIUnknown(ptr) 
+            : null!;
+        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
+        return hr;
+    }
 
-    [DllImport("mfplat.dll", ExactSpelling = true)]
-    private static extern int MFSetAttributeRatio(IMFMediaType attributes, Guid key, int numerator, int denominator);
+    private static int MFCreateMediaType(out IMFMediaType mediaType)
+    {
+        var hr = MFCreateMediaTypeNative(out var ptr);
+        mediaType = hr == 0 && ptr != IntPtr.Zero 
+            ? (IMFMediaType)Marshal.GetObjectForIUnknown(ptr) 
+            : null!;
+        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
+        return hr;
+    }
+
+    private static int MFCreateSinkWriterFromURL(string outputUrl, IntPtr byteStream, IMFAttributes? attributes, out IMFSinkWriter? sinkWriter)
+    {
+        IntPtr attrPtr = attributes != null ? Marshal.GetIUnknownForObject(attributes) : IntPtr.Zero;
+        try
+        {
+            var hr = MFCreateSinkWriterFromURLNative(outputUrl, byteStream, attrPtr, out var writerPtr);
+            sinkWriter = hr == 0 && writerPtr != IntPtr.Zero 
+                ? (IMFSinkWriter)Marshal.GetObjectForIUnknown(writerPtr) 
+                : null;
+            if (writerPtr != IntPtr.Zero) Marshal.Release(writerPtr);
+            return hr;
+        }
+        finally
+        {
+            if (attrPtr != IntPtr.Zero) Marshal.Release(attrPtr);
+        }
+    }
+
+    private static int MFCreateMemoryBuffer(int maxLength, out IMFMediaBuffer buffer)
+    {
+        var hr = MFCreateMemoryBufferNative(maxLength, out var ptr);
+        buffer = hr == 0 && ptr != IntPtr.Zero 
+            ? (IMFMediaBuffer)Marshal.GetObjectForIUnknown(ptr) 
+            : null!;
+        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
+        return hr;
+    }
+
+    private static int MFCreateSample(out IMFSample sample)
+    {
+        var hr = MFCreateSampleNative(out var ptr);
+        sample = hr == 0 && ptr != IntPtr.Zero 
+            ? (IMFSample)Marshal.GetObjectForIUnknown(ptr) 
+            : null!;
+        if (ptr != IntPtr.Zero) Marshal.Release(ptr);
+        return hr;
+    }
+
+    private static void MFSetAttributeSize(IMFMediaType mediaType, Guid key, int width, int height)
+    {
+        IntPtr ptr = Marshal.GetIUnknownForObject(mediaType);
+        try
+        {
+            MFSetAttributeSize(ptr, in key, width, height);
+        }
+        finally
+        {
+            Marshal.Release(ptr);
+        }
+    }
+
+    private static void MFSetAttributeRatio(IMFMediaType mediaType, Guid key, int numerator, int denominator)
+    {
+        IntPtr ptr = Marshal.GetIUnknownForObject(mediaType);
+        try
+        {
+            MFSetAttributeRatio(ptr, in key, numerator, denominator);
+        }
+        finally
+        {
+            Marshal.Release(ptr);
+        }
+    }
 
     // Media Foundation GUIDs
     private static readonly Guid MF_MT_MAJOR_TYPE = new("48eba18e-f8c9-4687-bf11-0a74c9f96a8f");
