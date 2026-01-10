@@ -51,24 +51,30 @@ namespace XerahS.CLI.Commands
                 description: "Duration in seconds to record (only for recording tasks)",
                 getDefaultValue: () => 0);
 
+            var dumpFrameOption = new Option<bool>(
+                name: "--dump-frame",
+                description: "Dump the first captured frame to disk for debugging",
+                getDefaultValue: () => false);
+
             var exitOnCompleteOption = new Option<bool>(
                 name: "--exit-on-complete",
                 description: "Exit the CLI process immediately after workflow completion",
                 getDefaultValue: () => false);
 
             runCommand.AddOption(durationOption);
+            runCommand.AddOption(dumpFrameOption);
             runCommand.AddOption(exitOnCompleteOption);
             runCommand.AddArgument(workflowIdArg);
 
-            runCommand.SetHandler(async (string workflowId, int duration, bool exitOnComplete) =>
+            runCommand.SetHandler(async (string workflowId, int duration, bool dumpFrame, bool exitOnComplete) =>
             {
-                Environment.ExitCode = await RunWorkflowAsync(workflowId, duration, exitOnComplete);
-            }, workflowIdArg, durationOption, exitOnCompleteOption);
+                Environment.ExitCode = await RunWorkflowAsync(workflowId, duration, dumpFrame, exitOnComplete);
+            }, workflowIdArg, durationOption, dumpFrameOption, exitOnCompleteOption);
 
             return runCommand;
         }
 
-        private static async Task<int> RunWorkflowAsync(string workflowId, int duration, bool exitOnComplete)
+        private static async Task<int> RunWorkflowAsync(string workflowId, int duration, bool dumpFrame, bool exitOnComplete)
         {
             try
             {
@@ -89,8 +95,11 @@ namespace XerahS.CLI.Commands
                 }
 
                 var runStart = DateTime.Now;
-                Console.WriteLine($"CLI flags: workflowId={workflowId}, duration={duration}s, exitOnComplete={exitOnComplete}, started={runStart:O}");
-                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "CLI", $"Workflow run flags: workflowId={workflowId}, duration={duration}s, exitOnComplete={exitOnComplete}, started={runStart:O}");
+                Console.WriteLine($"CLI flags: workflowId={workflowId}, duration={duration}s, dumpFrame={dumpFrame}, exitOnComplete={exitOnComplete}, started={runStart:O}");
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "CLI", $"Workflow run flags: workflowId={workflowId}, duration={duration}s, dumpFrame={dumpFrame}, exitOnComplete={exitOnComplete}, started={runStart:O}");
+
+                // [2026-01-10T14:24:00+08:00] Enable first-frame dump when requested to diagnose orientation; disable by default.
+                XerahS.ScreenCapture.ScreenRecording.ScreenRecorderService.DebugDumpFirstFrame = dumpFrame;
 
                 Console.WriteLine($"Executing workflow: {workflow.Name} ({workflowId})");
 

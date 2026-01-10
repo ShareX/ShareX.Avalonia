@@ -44,6 +44,7 @@ public class MediaFoundationEncoder : IVideoEncoder
     private bool _disposed;
     private bool _finalized;
     private readonly object _lock = new();
+    private static readonly bool _applyOrientation180 = true; // default fix for flipped output
 
     /// <summary>
     /// Check if Media Foundation is available on this system
@@ -234,20 +235,12 @@ public class MediaFoundationEncoder : IVideoEncoder
                     hr = ComFunctions.Lock(buffer, out var bufferPtr, out var maxLen, out var curLen);
                     if (hr != 0) throw new COMException("Failed to lock buffer", hr);
 
-                    try
-                    {
-                        // Copy frame data to buffer
-                        unsafe
-                        {
-                            Buffer.MemoryCopy(
-                                frame.DataPtr.ToPointer(),
-                                bufferPtr.ToPointer(),
-                                frame.Stride * frame.Height,
-                                frame.Stride * frame.Height);
-                        }
-                    }
-                    finally
-                    {
+            try
+            {
+                CopyFrame(frame, bufferPtr);
+            }
+            finally
+            {
                         ComFunctions.Unlock(buffer);
                     }
 
@@ -347,6 +340,40 @@ public class MediaFoundationEncoder : IVideoEncoder
             {
                 Cleanup();
             }
+        }
+    }
+
+    private unsafe void CopyFrame(FrameData frame, IntPtr bufferPtr)
+    {
+        if (_applyOrientation180)
+        {
+            // [2026-01-10T14:24:00+08:00] Apply 180-degree rotation to correct mirrored/upside-down recordings observed in WGC->MF path.
+            byte* srcBase = (byte*)frame.DataPtr.ToPointer();
+            byte* dstBase = (byte*)bufferPtr.ToPointer();
+            int width = frame.Width;
+            int height = frame.Height;
+            int stride = frame.Stride;
+
+            for (int y = 0; y < height; y++)
+            {
+                byte* srcRow = srcBase + (height - 1 - y) * stride;
+                byte* dstRow = dstBase + y * stride;
+
+                for (int x = 0; x < width; x++)
+                {
+                    int srcIndex = x * 4;
+                    int dstIndex = (width - 1 - x) * 4;
+
+                    dstRow[dstIndex] = srcRow[srcIndex];
+                    dstRow[dstIndex + 1] = srcRow[srcIndex + 1];
+                    dstRow[dstIndex + 2] = srcRow[srcIndex + 2];
+                    dstRow[dstIndex + 3] = srcRow[srcIndex + 3];
+                }
+            }
+        }
+        else
+        {
+            Buffer.MemoryCopy(frame.DataPtr.ToPointer(), bufferPtr.ToPointer(), frame.Stride * frame.Height, frame.Stride * frame.Height);
         }
     }
 

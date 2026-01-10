@@ -25,6 +25,8 @@
 using System.Runtime.InteropServices;
 using System.Diagnostics;
 using System.IO;
+using System.Drawing;
+using System.Drawing.Imaging;
 using XerahS.Common;
 
 namespace XerahS.ScreenCapture.ScreenRecording;
@@ -61,6 +63,12 @@ public class ScreenRecorderService : IRecordingService
     /// Set during platform initialization (Stage 4)
     /// </summary>
     public static Func<IRecordingService>? FallbackServiceFactory { get; set; }
+
+    /// <summary>
+    /// Debug: dump the first captured frame to disk for orientation analysis.
+    /// </summary>
+    public static bool DebugDumpFirstFrame { get; set; } = false;
+    private static bool _debugFrameDumped = false;
 
     public event EventHandler<RecordingErrorEventArgs>? ErrorOccurred;
     public event EventHandler<RecordingStatusEventArgs>? StatusChanged;
@@ -291,6 +299,12 @@ public class ScreenRecorderService : IRecordingService
                 }
             }
 
+            if (DebugDumpFirstFrame && !_debugFrameDumped)
+            {
+                DumpFrame(frameToEncode, "capture");
+                _debugFrameDumped = true;
+            }
+
             _encoder?.WriteFrame(frameToEncode);
         }
         catch (Exception ex)
@@ -414,5 +428,26 @@ public class ScreenRecorderService : IRecordingService
         }
 
         GC.SuppressFinalize(this);
+    }
+
+    private static void DumpFrame(FrameData frame, string tag)
+    {
+        try
+        {
+            string dumpDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ShareX", "Recordings", "FrameDumps");
+            Directory.CreateDirectory(dumpDir);
+
+            string fileName = $"{DateTime.Now:yyyy-MM-dd_HH-mm-ss-fff}_{tag}_{frame.Width}x{frame.Height}.png";
+            string path = Path.Combine(dumpDir, fileName);
+
+            using var bitmap = new Bitmap(frame.Width, frame.Height, frame.Stride, System.Drawing.Imaging.PixelFormat.Format32bppArgb, frame.DataPtr);
+            bitmap.Save(path, ImageFormat.Png);
+
+            DebugHelper.WriteLine($"[ScreenRecorder] Dumped frame to {path}");
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteLine($"[ScreenRecorder] Frame dump failed: {ex.Message}");
+        }
     }
 }
