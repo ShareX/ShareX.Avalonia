@@ -58,6 +58,11 @@ public partial class WorkflowsViewModel : ViewModelBase
         int index = 0;
         foreach (var hk in source)
         {
+            if (hk.Job == HotkeyType.None)
+            {
+                continue;
+            }
+
             var vm = new HotkeyItemViewModel(hk);
             // Highlight top 3 (0, 1, 2)
             vm.IsNavWorkflow = index < 3;
@@ -92,18 +97,21 @@ public partial class WorkflowsViewModel : ViewModelBase
             var saved = await EditHotkeyRequester(newSettings);
             if (saved)
             {
-                if (_manager != null)
+                if (newSettings.Job != HotkeyType.None)
                 {
-                    _manager.Workflows.Add(newSettings);
-                    _manager.RegisterHotkey(newSettings);
-                }
-                else
-                {
-                    SettingManager.WorkflowsConfig.Hotkeys.Add(newSettings);
-                }
+                    if (_manager != null)
+                    {
+                        _manager.Workflows.Add(newSettings);
+                        _manager.RegisterHotkey(newSettings);
+                    }
+                    else
+                    {
+                        SettingManager.WorkflowsConfig.Hotkeys.Add(newSettings);
+                    }
 
-                SaveHotkeys();
-                LoadWorkflows();
+                    SaveHotkeys();
+                    LoadWorkflows();
+                }
             }
         }
     }
