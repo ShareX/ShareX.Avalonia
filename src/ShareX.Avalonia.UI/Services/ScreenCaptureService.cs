@@ -72,12 +72,13 @@ namespace XerahS.UI.Services
         public async Task<SKBitmap?> CaptureRegionAsync(CaptureOptions? options = null)
         {
             SKRectI selection = SKRectI.Empty;
+            RegionCaptureWindow? window = null;
             var regionStopwatch = Stopwatch.StartNew();
 
             // Show UI window on UI thread
             await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var window = new RegionCaptureWindow();
+                window = new RegionCaptureWindow();
 
                 // Window will handle background capture in OnOpened
                 window.Show();
@@ -90,7 +91,27 @@ namespace XerahS.UI.Services
                 return null;
             }
 
-            TroubleshootingHelper.Log("RegionCapture", "SELECTION", $"Received selection: {selection}, Delaying 200ms...");
+            TroubleshootingHelper.Log("RegionCapture", "SELECTION", $"Received selection: {selection}");
+
+            // Check if new backend captured the bitmap
+            if (window != null && window.IsNewBackendInitialized)
+            {
+                var capturedBitmap = window.GetCapturedBitmap();
+                if (capturedBitmap != null)
+                {
+                    TroubleshootingHelper.Log("RegionCapture", "CAPTURE", $"[NEW] Using new backend captured bitmap: {capturedBitmap.Width}x{capturedBitmap.Height}");
+                    regionStopwatch.Stop();
+                    TroubleshootingHelper.Log("RegionCapture", "TOTAL", $"Total region capture workflow time: {regionStopwatch.ElapsedMilliseconds}ms");
+                    return capturedBitmap;
+                }
+                else
+                {
+                    TroubleshootingHelper.Log("RegionCapture", "WARNING", "[NEW] New backend initialized but bitmap is null, falling back to old capture");
+                }
+            }
+
+            // Fallback to old capture method (if new backend not available or failed)
+            TroubleshootingHelper.Log("RegionCapture", "SELECTION", "Delaying 200ms...");
 
             // Small delay to allow window to close fully
             await Task.Delay(200);

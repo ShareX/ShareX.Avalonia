@@ -22,9 +22,16 @@ namespace XerahS.UI.Views.RegionCapture
         private RegionCaptureService? _newCaptureService;
         private MonitorInfo[] _newMonitors = Array.Empty<MonitorInfo>();
         private LogicalRectangle _newVirtualDesktopLogical;
+        private SKBitmap? _capturedBitmap;
 
         // Feature flag to enable new backend
         private const bool USE_NEW_BACKEND = true; // New backend enabled - platform backends now compile successfully
+
+        // Public property to check if new backend is initialized
+        public bool IsNewBackendInitialized => _newCaptureService != null;
+
+        // Public property to get the captured bitmap (will be set after selection)
+        public SKBitmap? GetCapturedBitmap() => _capturedBitmap;
 
         /// <summary>
         /// NEW: Initialize the new capture service backend.
@@ -243,6 +250,32 @@ namespace XerahS.UI.Views.RegionCapture
             {
                 var rect = _hoveredWindow.Bounds;
                 DebugLog("RESULT", $"[NEW] Selected window: {rect}");
+
+                // Capture the window using new backend
+                try
+                {
+                    // Convert physical rect to logical for capture service
+                    var physicalRect = new PhysicalRectangle(rect.X, rect.Y, rect.Width, rect.Height);
+                    var logicalRect = _newCaptureService.PhysicalToLogical(physicalRect);
+
+                    var captureOptions = new RegionCaptureOptions
+                    {
+                        IncludeCursor = false
+                    };
+
+                    DebugLog("CAPTURE", $"[NEW] Capturing window: Physical={physicalRect}, Logical={logicalRect}");
+                    var captureTask = _newCaptureService.CaptureRegionAsync(logicalRect, captureOptions);
+                    captureTask.Wait();
+
+                    _capturedBitmap = captureTask.Result;
+                    DebugLog("CAPTURE", $"[NEW] Captured window bitmap: {_capturedBitmap?.Width}x{_capturedBitmap?.Height}");
+                }
+                catch (Exception ex)
+                {
+                    DebugLog("ERROR", $"[NEW] Window capture failed: {ex.Message}");
+                    _capturedBitmap = null;
+                }
+
                 _tcs.TrySetResult(new SKRectI(rect.X, rect.Y, rect.X + rect.Width, rect.Y + rect.Height));
                 Close();
                 return;
@@ -266,7 +299,34 @@ namespace XerahS.UI.Views.RegionCapture
             if (width <= 0) width = 1;
             if (height <= 0) height = 1;
 
-            // Return physical coordinates for capture
+            // Capture the selected region using new backend
+            try
+            {
+                // Convert physical rect to logical for capture service
+                var physicalRect = new PhysicalRectangle(x, y, width, height);
+                var logicalRect = _newCaptureService.PhysicalToLogical(physicalRect);
+
+                var captureOptions = new RegionCaptureOptions
+                {
+                    IncludeCursor = false
+                };
+
+                DebugLog("CAPTURE", $"[NEW] Capturing region: Physical={physicalRect}, Logical={logicalRect}");
+
+                // Synchronous capture (we're already on UI thread and about to close)
+                var captureTask = _newCaptureService.CaptureRegionAsync(logicalRect, captureOptions);
+                captureTask.Wait(); // Wait for capture to complete before closing
+
+                _capturedBitmap = captureTask.Result;
+                DebugLog("CAPTURE", $"[NEW] Captured bitmap: {_capturedBitmap?.Width}x{_capturedBitmap?.Height}");
+            }
+            catch (Exception ex)
+            {
+                DebugLog("ERROR", $"[NEW] Capture failed: {ex.Message}");
+                _capturedBitmap = null;
+            }
+
+            // Return physical coordinates for backwards compatibility
             var resultRect = new SKRectI(x, y, x + width, y + height);
             _tcs.TrySetResult(resultRect);
             Close();
