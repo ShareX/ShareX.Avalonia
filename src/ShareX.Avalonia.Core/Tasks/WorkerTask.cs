@@ -360,200 +360,6 @@ namespace XerahS.Core.Tasks
 
         #region Recording Handlers (Stage 5)
 
-        private async Task HandleStartRecordingAsync(CaptureMode mode, IntPtr windowHandle = default)
-                        if (PlatformServices.Window != null)
-                        {
-                            image = await PlatformServices.ScreenCapture.CaptureActiveWindowAsync(PlatformServices.Window, captureOptions);
-                        }
-                        break;
-
-                    case HotkeyType.CustomWindow:
-                        if (PlatformServices.Window != null)
-                        {
-                            TroubleshootingHelper.Log("CustomWindow", "TASK", "Task started for CustomWindow");
-                            TroubleshootingHelper.Log("CustomWindow", "TASK", $"TaskSettings provided: {Info.TaskSettings != null}");
-
-                            string targetWindow = Info.TaskSettings?.CaptureSettings?.CaptureCustomWindow;
-                            TroubleshootingHelper.Log("CustomWindow", "CONFIG", $"Configured target window: '{targetWindow}'");
-
-                            // Also inspect global settings as sanity check
-                            TroubleshootingHelper.Log("CustomWindow", "CONFIG", $"Global default target window: '{SettingManager.DefaultTaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
-
-                            if (string.IsNullOrEmpty(targetWindow))
-                            {
-                                // No target window configured - show window selector
-                                TroubleshootingHelper.Log("CustomWindow", "UI", "No target window configured. Showing window selector...");
-
-                                if (ShowWindowSelectorCallback != null)
-                                {
-                                    var selectedWindow = await ShowWindowSelectorCallback();
-                                    if (selectedWindow != null)
-                                    {
-                                        TroubleshootingHelper.Log("CustomWindow", "UI", $"User selected window: '{selectedWindow.Title}' (Handle: {selectedWindow.Handle}, PID: {selectedWindow.ProcessId})");
-                                        TroubleshootingHelper.Log("CustomWindow", "UI", $"Window bounds: X={selectedWindow.Bounds.X}, Y={selectedWindow.Bounds.Y}, W={selectedWindow.Bounds.Width}, H={selectedWindow.Bounds.Height}");
-
-                                        // Restore if minimized
-                                        if (PlatformServices.Window.IsWindowMinimized(selectedWindow.Handle))
-                                        {
-                                            TroubleshootingHelper.Log("CustomWindow", "WINDOW", "Window is minimized, restoring...");
-                                            PlatformServices.Window.ShowWindow(selectedWindow.Handle, 9); // SW_RESTORE = 9
-                                            await Task.Delay(250, token);
-                                        }
-
-                                        // Capture using window handle directly (guarantees correct window)
-                                        TroubleshootingHelper.Log("CustomWindow", "CAPTURE", $"Capturing window by handle: {selectedWindow.Handle}");
-
-                                        // Log window info at capture time for verification
-                                        var captureTimeTitle = PlatformServices.Window.GetWindowText(selectedWindow.Handle);
-                                        var captureTimeBounds = PlatformServices.Window.GetWindowBounds(selectedWindow.Handle);
-                                        TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Selected title: '{selectedWindow.Title}'");
-                                        TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Capture-time title: '{captureTimeTitle}'");
-                                        TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Capture-time bounds: X={captureTimeBounds.X}, Y={captureTimeBounds.Y}, W={captureTimeBounds.Width}, H={captureTimeBounds.Height}");
-
-                                        // Always activate the selected window before capture
-                                        TroubleshootingHelper.Log("CustomWindow", "ACTIVATE", "Activating selected window before capture...");
-                                        if (!PlatformServices.Window.ActivateWindow(selectedWindow.Handle))
-                                        {
-                                            TroubleshootingHelper.Log("CustomWindow", "ACTIVATE", "ActivateWindow returned false, but proceeding check...");
-                                        }
-                                        await Task.Delay(250, token); // Increased delay for activation to settle
-
-                                        // Verify foreground is now our target
-                                        var foregroundHandle = PlatformServices.Window.GetForegroundWindow();
-                                        var foregroundTitle = PlatformServices.Window.GetWindowText(foregroundHandle);
-                                        TroubleshootingHelper.Log("CustomWindow", "ACTIVATE", $"After activation - Foreground handle: {foregroundHandle}, Title: '{foregroundTitle}'");
-                                        TroubleshootingHelper.Log("CustomWindow", "ACTIVATE", $"Foreground matches selected: {foregroundHandle == selectedWindow.Handle}");
-
-                                        // Capture active window
-                                        image = await PlatformServices.ScreenCapture.CaptureActiveWindowAsync(PlatformServices.Window, captureOptions);
-                                        TroubleshootingHelper.Log("CustomWindow", "CAPTURE", $"Capture active window result: {image != null}");
-                                    }
-                                    else
-                                    {
-                                        TroubleshootingHelper.Log("CustomWindow", "UI", "User cancelled window selection");
-                                        DebugHelper.WriteLine("Custom window capture cancelled by user");
-                                    }
-                                }
-                                else
-                                {
-                                    TroubleshootingHelper.Log("CustomWindow", "ERROR", "Window selector callback not configured");
-                                    DebugHelper.WriteLine("Custom window capture failed: Window selector not available");
-                                }
-                            }
-                            else
-                            {
-                                // Use SearchWindow to find the target window (matches original ShareX behavior)
-                                TroubleshootingHelper.Log("CustomWindow", "SEARCH", $"Searching for window using SearchWindow: '{targetWindow}'");
-                                IntPtr hWnd = PlatformServices.Window.SearchWindow(targetWindow);
-
-                                if (hWnd != IntPtr.Zero)
-                                {
-                                    TroubleshootingHelper.Log("CustomWindow", "SEARCH", $"Window found with handle: {hWnd}");
-
-                                    // Get window bounds for logging and potential restore
-                                    var bounds = PlatformServices.Window.GetWindowBounds(hWnd);
-                                    TroubleshootingHelper.Log("CustomWindow", "WINDOW", $"Window bounds: X={bounds.X}, Y={bounds.Y}, W={bounds.Width}, H={bounds.Height}");
-
-                                    // Restore if minimized (like original ShareX)
-                                    if (PlatformServices.Window.IsWindowMinimized(hWnd))
-                                    {
-                                        TroubleshootingHelper.Log("CustomWindow", "WINDOW", "Window is minimized, restoring...");
-                                        PlatformServices.Window.ShowWindow(hWnd, 9); // SW_RESTORE = 9
-                                        await Task.Delay(250, token);
-                                    }
-
-                                    // Capture using window handle directly (guarantees correct window)
-                                    TroubleshootingHelper.Log("CustomWindow", "CAPTURE", $"Capturing window by handle: {hWnd}");
-
-                                    // Verify window title at capture time matches search term
-                                    var captureTimeTitle = PlatformServices.Window.GetWindowText(hWnd);
-                                    var captureTimeBounds = PlatformServices.Window.GetWindowBounds(hWnd);
-                                    TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Search term: '{targetWindow}'");
-                                    TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Capture-time title: '{captureTimeTitle}'");
-                                    TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Capture-time bounds: X={captureTimeBounds.X}, Y={captureTimeBounds.Y}, W={captureTimeBounds.Width}, H={captureTimeBounds.Height}");
-                                    TroubleshootingHelper.Log("CustomWindow", "VERIFY", $"Title contains search term: {captureTimeTitle?.Contains(targetWindow, StringComparison.OrdinalIgnoreCase) ?? false}");
-
-                                    image = await PlatformServices.ScreenCapture.CaptureWindowAsync(hWnd, PlatformServices.Window, captureOptions);
-                                    TroubleshootingHelper.Log("CustomWindow", "CAPTURE", $"Capture window result: {image != null}");
-                                }
-                                else
-                                {
-                                    TroubleshootingHelper.Log("CustomWindow", "ERROR", $"Window with title containing '{targetWindow}' not found via SearchWindow.");
-                                    DebugHelper.WriteLine($"Custom window capture failed: Unable to find window with title '{targetWindow}'.");
-                                }
-                            }
-                        }
-                        break;
-
-                    // Stage 5: Screen Recording Integration
-                    case HotkeyType.ScreenRecorder:
-                    case HotkeyType.StartScreenRecorder:
-                        TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK", "ScreenRecorder case matched, calling HandleStartRecordingAsync");
-                        await HandleStartRecordingAsync(CaptureMode.Screen);
-                        TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK", "HandleStartRecordingAsync completed");
-                        return; // Recording tasks don't proceed to image processing
-
-                    case HotkeyType.ScreenRecorderActiveWindow:
-                        if (PlatformServices.Window != null)
-                        {
-                            var foregroundWindow = PlatformServices.Window.GetForegroundWindow();
-                            await HandleStartRecordingAsync(CaptureMode.Window, foregroundWindow);
-                        }
-                        return;
-
-                    case HotkeyType.ScreenRecorderCustomRegion:
-                        // TODO: Show region selector UI and get selected region
-                        // For now, just start full screen recording
-                        DebugHelper.WriteLine("ScreenRecorderCustomRegion: Region selector not yet implemented, falling back to full screen");
-                        await HandleStartRecordingAsync(CaptureMode.Screen);
-                        return;
-
-                    case HotkeyType.StopScreenRecording:
-                        await HandleStopRecordingAsync();
-                        return;
-
-                    case HotkeyType.AbortScreenRecording:
-                        await HandleAbortRecordingAsync();
-                        return;
-                }
-
-                captureStopwatch.Stop();
-
-                if (image != null)
-                {
-                    Info.Metadata.Image = image;
-                    DebugHelper.WriteLine($"Captured image: {image.Width}x{image.Height} in {captureStopwatch.ElapsedMilliseconds}ms");
-                }
-                else
-                {
-                    DebugHelper.WriteLine($"Capture returned null for job type: {Info.TaskSettings.Job} (elapsed {captureStopwatch.ElapsedMilliseconds}ms)");
-                }
-            }
-            else if (Info.Metadata.Image == null)
-            {
-                DebugHelper.WriteLine("PlatformServices not initialized - cannot capture");
-            }
-
-            // Execute Capture Job (File Save, Clipboard, etc)
-            var captureProcessor = new CaptureJobProcessor();
-            await captureProcessor.ProcessAsync(Info, token);
-
-            // Execute Upload Job
-            var uploadProcessor = new UploadJobProcessor();
-            await uploadProcessor.ProcessAsync(Info, token);
-        }
-
-        public void Stop()
-        {
-            if (IsWorking)
-            {
-                Status = TaskStatus.Stopping;
-                OnStatusChanged();
-                _cancellationTokenSource.Cancel();
-            }
-        }
-
-        #region Recording Handlers (Stage 5)
 
         private async Task HandleStartRecordingAsync(CaptureMode mode, IntPtr windowHandle = default)
         {
@@ -561,13 +367,7 @@ namespace XerahS.Core.Tasks
             
             try
             {
-                if (ScreenRecordingManager.Instance.IsRecording)
-                {
-                    TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "Already recording, stopping (toggle behavior)");
-                    DebugHelper.WriteLine("Recording already in progress, stopping existing recording (toggle)...");
-                    await ScreenRecordingManager.Instance.StopRecordingAsync();
-                    return;
-                }
+                // Note: We don't check IsRecording here because App.axaml.cs ensures we only get here if NOT recording.
 
                 // Build recording options from task settings
                 var recordingOptions = new RecordingOptions
@@ -599,27 +399,16 @@ namespace XerahS.Core.Tasks
                 DebugHelper.WriteLine($"Starting recording: Mode={mode}, Codec={recordingOptions.Settings?.Codec}, FPS={recordingOptions.Settings?.FPS}");
                 DebugHelper.WriteLine($"Output path: {recordingOptions.OutputPath}");
 
-                // Start recording via manager
+                // 1. Start recording
                 await ScreenRecordingManager.Instance.StartRecordingAsync(recordingOptions);
                 TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "ScreenRecordingManager.StartRecordingAsync completed");
-            }
-            catch (Exception ex)
-            {
-                DebugHelper.WriteException(ex, "Failed to start recording");
-                throw;
-            }
-        }
 
-        private async Task HandleStopRecordingAsync()
-        {
-            try
-            {
-                if (!ScreenRecordingManager.Instance.IsRecording)
-                {
-                    DebugHelper.WriteLine("No recording in progress to stop");
-                    return;
-                }
+                // 2. Wait for stop signal (ASYNC WAIT - Yields thread, keeps task alive)
+                TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "Waiting for stop signal...");
+                await ScreenRecordingManager.Instance.WaitForStopSignalAsync();
+                TroubleshootingHelper.Log(Info.TaskSettings?.Job.ToString() ?? "Unknown", "WORKER_TASK", "Stop signal received. Resuming...");
 
+                // 3. Stop recording
                 DebugHelper.WriteLine("Stopping recording...");
                 string? outputPath = await ScreenRecordingManager.Instance.StopRecordingAsync();
 
@@ -628,7 +417,8 @@ namespace XerahS.Core.Tasks
                     DebugHelper.WriteLine($"Recording saved to: {outputPath}");
                     Info.FilePath = outputPath;
                     Info.DataType = EDataType.File;
-                    // [2026-01-10T14:40:00+08:00] Reuse upload pipeline for recordings; flag upload when AfterUpload tasks exist.
+                    
+                    // Reuse upload pipeline for recordings; flag upload when AfterUpload tasks exist.
                     Info.TaskSettings.AfterCaptureJob |= AfterCaptureTasks.UploadImageToHost;
 
                     var uploadProcessor = new UploadJobProcessor();
@@ -637,29 +427,21 @@ namespace XerahS.Core.Tasks
             }
             catch (Exception ex)
             {
-                DebugHelper.WriteException(ex, "Failed to stop recording");
+                DebugHelper.WriteException(ex, "Failed during recording workflow");
                 throw;
             }
         }
 
+        private async Task HandleStopRecordingAsync()
+        {
+             // Legacy handler - mapped to SignalStop in UI now
+             await Task.CompletedTask;
+        }
+
         private async Task HandleAbortRecordingAsync()
         {
-            try
-            {
-                if (!ScreenRecordingManager.Instance.IsRecording)
-                {
-                    DebugHelper.WriteLine("No recording in progress to abort");
-                    return;
-                }
-
-                DebugHelper.WriteLine("Aborting recording...");
-                await ScreenRecordingManager.Instance.AbortRecordingAsync();
-            }
-            catch (Exception ex)
-            {
-                DebugHelper.WriteException(ex, "Failed to abort recording");
-                throw;
-            }
+             // Legacy handler
+             await ScreenRecordingManager.Instance.AbortRecordingAsync();
         }
 
         #endregion

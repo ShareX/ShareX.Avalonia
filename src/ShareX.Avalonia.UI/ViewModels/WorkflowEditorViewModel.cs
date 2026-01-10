@@ -317,7 +317,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                     
                      if (Enum.TryParse<UrlShortenerType>(SelectedDestination.Instance.ProviderId, out var urlDest))
                     {
-                        Model.TaskSettings.UrlShortenerType = urlDest;
+                        Model.TaskSettings.URLShortenerDestination = urlDest;
                          typeFound = true;
                     }
 

@@ -43,6 +43,7 @@ public class ScreenRecordingManager
     private readonly object _lock = new();
     private IRecordingService? _currentRecording;
     private RecordingOptions? _currentOptions;
+    private TaskCompletionSource<bool>? _stopSignal;
 
     /// <summary>
     /// Task representing platform-specific recording initialization.
@@ -98,6 +99,34 @@ public class ScreenRecordingManager
     }
 
     /// <summary>
+    /// Signals the current recording task to stop.
+    /// Used by the hotkey handler to resume the waiting WorkerTask.
+    /// </summary>
+    public void SignalStop()
+    {
+        lock (_lock)
+        {
+            _stopSignal?.TrySetResult(true);
+        }
+    }
+
+    /// <summary>
+    /// Asynchronously waits for the Stop signal.
+    /// Called by the WorkerTask to yield execution while recording.
+    /// </summary>
+    public Task WaitForStopSignalAsync()
+    {
+        lock (_lock)
+        {
+            if (_stopSignal == null || _stopSignal.Task.IsCompleted)
+            {
+                _stopSignal = new TaskCompletionSource<bool>();
+            }
+            return _stopSignal.Task;
+        }
+    }
+
+    /// <summary>
     /// Starts a new recording session
     /// </summary>
     /// <param name="options">Recording configuration</param>
@@ -121,6 +150,8 @@ public class ScreenRecordingManager
             }
 
             _currentOptions = options;
+            // Reset stop signal for new session
+            _stopSignal = new TaskCompletionSource<bool>();
         }
 
         for (int attempt = 0; attempt < 2; attempt++)
@@ -198,6 +229,9 @@ public class ScreenRecordingManager
         {
             DebugHelper.WriteLine("ScreenRecordingManager: Stopping recording...");
             await recordingService.StopRecordingAsync();
+            
+            // Ensure waiting tasks are signaled
+            SignalStop();
 
             // Notify completion
             if (!string.IsNullOrEmpty(outputPath))

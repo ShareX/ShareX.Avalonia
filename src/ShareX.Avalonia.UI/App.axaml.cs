@@ -116,16 +116,6 @@ public partial class App : Application
     {
         // Check if notification should be shown
         var taskSettings = task.Info?.TaskSettings ?? new TaskSettings();
-        
-        // Suppress toast for Screen Recorder start jobs (toast should only show on stop/finalize)
-        var job = taskSettings.Job;
-        bool isRecordingStart = job == Core.HotkeyType.ScreenRecorder || 
-                                job == Core.HotkeyType.StartScreenRecorder ||
-                                job == Core.HotkeyType.ScreenRecorderActiveWindow ||
-                                job == Core.HotkeyType.ScreenRecorderCustomRegion;
-                                
-        if (isRecordingStart) return;
-
         if (taskSettings?.GeneralSettings?.ShowToastNotificationAfterTaskCompleted == true)
         {
             Avalonia.Threading.Dispatcher.UIThread.Post(() =>
@@ -303,8 +293,23 @@ public partial class App : Application
                 DebugHelper.WriteLine($"[DEBUG] Hotkey triggered for CustomWindow. Configured title: '{settings.TaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
             }
 
-            // Execute workflow with its ID for troubleshooting
-            await Core.Helpers.TaskHelpers.ExecuteWorkflow(settings, settings.Id);
+            // Screen Recorder Toggle Logic (Unified Pipeline)
+            // If we are recording and get a recording-related hotkey, we Signal the existing task to stop.
+            // We do NOT start a new workflow.
+            bool isRecordingHotkey = settings.Job == Core.HotkeyType.ScreenRecorder || 
+                                     settings.Job == Core.HotkeyType.StopScreenRecording || 
+                                     settings.Job == Core.HotkeyType.StartScreenRecorder;
+
+            if (isRecordingHotkey && Core.Managers.ScreenRecordingManager.Instance.IsRecording)
+            {
+                 DebugHelper.WriteLine("Screen Recording active - flagging Stop Signal to existing task...");
+                 Core.Managers.ScreenRecordingManager.Instance.SignalStop();
+            }
+            else
+            {
+                 // Normal workflow execution
+                 await Core.Helpers.TaskHelpers.ExecuteWorkflow(settings, settings.Id);
+            }
         }
     }
 
