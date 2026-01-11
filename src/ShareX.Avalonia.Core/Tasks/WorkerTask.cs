@@ -446,7 +446,10 @@ namespace XerahS.Core.Tasks
                     Info.DataType = EDataType.File;
                     
                     // Reuse upload pipeline for recordings; flag upload when AfterUpload tasks exist.
-                    Info.TaskSettings.AfterCaptureJob |= AfterCaptureTasks.UploadImageToHost;
+                    if (Info.TaskSettings.AfterUploadJob != AfterUploadTasks.None)
+                    {
+                        Info.TaskSettings.AfterCaptureJob |= AfterCaptureTasks.UploadImageToHost;
+                    }
 
                     var uploadProcessor = new UploadJobProcessor();
                     await uploadProcessor.ProcessAsync(Info, CancellationToken.None);
