@@ -17,7 +17,9 @@
       "Bash(dotnet --version:*)",
       "Bash(dotnet sln:*)",
       "Bash(mkdir:*)",
-      "Bash(test:*)"
+      "Bash(test:*)",
+      "Bash(nul)",
+      "Bash(git log:*)"
     ]
   }
 }
