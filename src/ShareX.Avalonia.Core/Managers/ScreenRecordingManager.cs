@@ -78,6 +78,11 @@ public class ScreenRecordingManager
     public event EventHandler<string>? RecordingCompleted;
 
     /// <summary>
+    /// Event fired when recording starts, includes information about the recording method
+    /// </summary>
+    public event EventHandler<RecordingStartedEventArgs>? RecordingStarted;
+
+    /// <summary>
     /// Indicates whether a recording is currently active
     /// </summary>
     public bool IsRecording
@@ -90,6 +95,11 @@ public class ScreenRecordingManager
             }
         }
     }
+
+    /// <summary>
+    /// Indicates whether the current recording is using FFmpeg fallback
+    /// </summary>
+    public bool IsUsingFallback { get; private set; }
 
     /// <summary>
     /// Current recording options (null if not recording)
@@ -190,6 +200,11 @@ public class ScreenRecordingManager
             TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Calling recordingService.StartRecordingAsync");
             await recordingService.StartRecordingAsync(options);
             TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", $"Recording started successfully");
+
+            // Track fallback status and notify UI
+            IsUsingFallback = useFallback;
+            RecordingStarted?.Invoke(this, new RecordingStartedEventArgs(useFallback, options));
+
             return;
         }
             catch (Exception ex) when (!useFallback && CanFallbackFrom(ex))

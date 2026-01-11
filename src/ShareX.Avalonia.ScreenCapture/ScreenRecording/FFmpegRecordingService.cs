@@ -241,6 +241,7 @@ public class FFmpegRecordingService : IRecordingService
                 {
                     args.Add("-draw_mouse 1");
                 }
+                // Red border will be shown by RecordingBorderWindow
                 args.Add("-i desktop");
                 break;
 
@@ -252,6 +253,7 @@ public class FFmpegRecordingService : IRecordingService
                 {
                     args.Add("-draw_mouse 1");
                 }
+                // Red border will be shown by RecordingBorderWindow
                 args.Add("-i desktop");
                 break;
 
@@ -269,6 +271,7 @@ public class FFmpegRecordingService : IRecordingService
                     args.Add($"-offset_y {options.Region.Y}");
                     args.Add($"-video_size {options.Region.Width}x{options.Region.Height}");
                 }
+                // Red border will be shown by RecordingBorderWindow
                 args.Add("-i desktop");
                 break;
         }
