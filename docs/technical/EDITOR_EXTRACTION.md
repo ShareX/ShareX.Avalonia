@@ -2,13 +2,13 @@
 
 ## Executive Summary
 
-The image editor component was successfully extracted from ShareX.Avalonia into a standalone project called **ShareX.Editor**. This architectural change enables the editor to be shared across multiple applications including ShareX.Avalonia, the original ShareX (WinForms), and XerahS.
+The image editor component was successfully extracted from XerhaS (ShareX.Avalonia) into a standalone project called **ShareX.Editor**. This architectural change enables the editor to be shared across XerahS, and the original ShareX (WinForms.
 
 ## Background
 
 ### Origins
 
-The image editor was originally developed as part of the **XerahS** project, which is a fork of ShareX.Avalonia with enhanced features and branding. The editor provides a comprehensive suite of annotation tools and image effects built on Avalonia UI and SkiaSharp.
+The image editor was originally developed as part of the **XerahS** project. The editor provides a comprehensive suite of annotation tools and image effects built on Avalonia UI and SkiaSharp.
 
 ### Motivation
 
@@ -47,7 +47,7 @@ ShareX.Editor/
 
 ## What Was Moved
 
-### From ShareX.Avalonia to ShareX.Editor
+### From XerahS to ShareX.Editor
 
 | Component | Files | Description |
 |-----------|-------|-------------|
@@ -57,7 +57,7 @@ ShareX.Editor/
 | **Views** | Multiple | EditorView, EditorCanvas, toolbar controls |
 | **Serialization** | 1 file | AnnotationSerializer for save/load functionality |
 
-### Removed from ShareX.Avalonia
+### Removed from XerahS
 
 The following projects were removed after migration:
 
@@ -79,9 +79,9 @@ All code was reorganized under the `ShareX.Editor` namespace:
 
 ## Integration Points
 
-### ShareX.Avalonia Integration
+### XerahS Integration
 
-ShareX.Avalonia now references ShareX.Editor as an external dependency:
+XerahS now references ShareX.Editor as an external dependency:
 
 ```csharp
 // ShareX.Avalonia.UI/Views/EditorWindow.axaml.cs
@@ -188,9 +188,8 @@ The editor extraction was completed through the following commits:
 
 ## Current Users
 
-1. **ShareX.Avalonia** ✅ - Fully integrated
-2. **XerahS** ✅ - Using via ShareX.Avalonia
-3. **ShareX (WinForms)** ⏸️ - Planned integration
+1. **XerahS** ✅ - Using via ShareX.Avalonia
+2. **ShareX (WinForms)** ⏸️ - Planned integration
 
 ## Related Documentation
 
