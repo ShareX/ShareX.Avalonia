@@ -61,20 +61,25 @@ namespace XerahS.CLI.Commands
                 description: "Exit the CLI process immediately after workflow completion",
                 getDefaultValue: () => false);
 
+            var regionOption = new Option<string?>(
+                name: "--region",
+                description: "Region override in format 'x,y,width,height' (e.g. '0,0,500,500')");
+
             runCommand.AddOption(durationOption);
             runCommand.AddOption(dumpFrameOption);
             runCommand.AddOption(exitOnCompleteOption);
+            runCommand.AddOption(regionOption);
             runCommand.AddArgument(workflowIdArg);
 
-            runCommand.SetHandler(async (string workflowId, int duration, bool dumpFrame, bool exitOnComplete) =>
+            runCommand.SetHandler(async (string workflowId, int duration, bool dumpFrame, bool exitOnComplete, string? region) =>
             {
-                Environment.ExitCode = await RunWorkflowAsync(workflowId, duration, dumpFrame, exitOnComplete);
-            }, workflowIdArg, durationOption, dumpFrameOption, exitOnCompleteOption);
+                Environment.ExitCode = await RunWorkflowAsync(workflowId, duration, dumpFrame, exitOnComplete, region);
+            }, workflowIdArg, durationOption, dumpFrameOption, exitOnCompleteOption, regionOption);
 
             return runCommand;
         }
 
-        private static async Task<int> RunWorkflowAsync(string workflowId, int duration, bool dumpFrame, bool exitOnComplete)
+        private static async Task<int> RunWorkflowAsync(string workflowId, int duration, bool dumpFrame, bool exitOnComplete, string? region)
         {
             try
             {
@@ -95,8 +100,8 @@ namespace XerahS.CLI.Commands
                 }
 
                 var runStart = DateTime.Now;
-                Console.WriteLine($"CLI flags: workflowId={workflowId}, duration={duration}s, dumpFrame={dumpFrame}, exitOnComplete={exitOnComplete}, started={runStart:O}");
-                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "CLI", $"Workflow run flags: workflowId={workflowId}, duration={duration}s, dumpFrame={dumpFrame}, exitOnComplete={exitOnComplete}, started={runStart:O}");
+                Console.WriteLine($"CLI flags: workflowId={workflowId}, duration={duration}s, dumpFrame={dumpFrame}, exitOnComplete={exitOnComplete}, region={region ?? "null"}, started={runStart:O}");
+                Core.Helpers.TroubleshootingHelper.Log("ScreenRecorder", "CLI", $"Workflow run flags: workflowId={workflowId}, duration={duration}s, dumpFrame={dumpFrame}, exitOnComplete={exitOnComplete}, region={region ?? "null"}, started={runStart:O}");
 
                 // [2026-01-10T14:24:00+08:00] Enable first-frame dump when requested to diagnose orientation; disable by default.
                 XerahS.ScreenCapture.ScreenRecording.ScreenRecorderService.DebugDumpFirstFrame = dumpFrame;
@@ -105,11 +110,16 @@ namespace XerahS.CLI.Commands
 
                 // Create a task completion source to wait for workflow completion
                 var tcs = new TaskCompletionSource<bool>();
+                
+                // Need to keep reference to the specific task ID we start
+                string? expectedTaskId = null;
 
                 EventHandler<WorkerTask>? handler = null;
                 handler = async (sender, task) =>
                 {
-                    if (task.Info.TaskSettings.WorkflowId == workflowId)
+                    // If we have an expected Task ID, use it. Otherwise fall back to WorkflowID match (legacy)
+                    if ((expectedTaskId != null && task.Info.CorrelationId == expectedTaskId) || 
+                        (expectedTaskId == null && task.Info.TaskSettings.WorkflowId == workflowId))
                     {
                         // Check if it's a recording task and handle duration
                         if (task.Info.TaskSettings.Job == HotkeyType.ScreenRecorderActiveWindow && duration > 0)
@@ -134,8 +144,72 @@ namespace XerahS.CLI.Commands
 
                 TaskManager.Instance.TaskCompleted += handler;
                 
-                // Use the same entry point as UI
-                await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow, workflowId);
+                if (!string.IsNullOrEmpty(region))
+                {
+                     // Region Override Mode
+                    try 
+                    {
+                        var parts = region.Split(',');
+                        if (parts.Length != 4) throw new ArgumentException("Region must be x,y,width,height");
+                        int x = int.Parse(parts[0]);
+                        int y = int.Parse(parts[1]);
+                        int w = int.Parse(parts[2]);
+                        int h = int.Parse(parts[3]);
+                        
+                        Console.WriteLine($"Capturing override region: {region}");
+                        var rect = new SkiaSharp.SKRect(x, y, x + w, y + h);
+                        var image = await XerahS.Platform.Abstractions.PlatformServices.ScreenCapture.CaptureRectAsync(rect);
+                        
+                        if (image == null)
+                        {
+                            Console.Error.WriteLine("Region capture failed (returned null)");
+                            return 1;
+                        }
+                        
+                        Console.WriteLine("Region captured. Starting worker task with workflow settings...");
+                        
+                        // Ensure WorkflowId is set in settings
+                        workflow.TaskSettings.WorkflowId = workflowId;
+                        
+                        var worker = WorkerTask.Create(workflow.TaskSettings, image);
+                        expectedTaskId = worker.Info.CorrelationId;
+                        
+                        // We must start it manually since we bypassed TaskManager.StartTask(settings)
+                        // But we want TaskManager events to fire? 
+                        // WorkerTask triggers TaskManager events via TaskManager instance usually? No, TaskManager listens to new tasks?
+                        // TaskManager.Instance doesn't automatically pick up manually created tasks unless we add them
+                        // BUT WorkerTask internally calls TaskManager events? No.
+                        // TaskManager wraps WorkerTask.
+                        
+                        // Workaround: Use TaskManager logic if possible.
+                        // TaskManager doesn't expose "StartTask(settings, image)".
+                        // So we will just run the worker and manually fire/wait.
+                        // Wait, my handler listens to TaskManager.Instance.TaskCompleted.
+                        // Does WorkerTask fire TaskManager.TaskCompleted?
+                        // WorkerTask fires its own TaskCompleted event.
+                        
+                        // Let's attach to the worker directly
+                        worker.TaskCompleted += (s, e) => 
+                        {
+                             // Bridge to our handler logic if needed, or just set tcs directly
+                             bool success = worker.Status == Core.TaskStatus.Completed;
+                             tcs.TrySetResult(success);
+                        };
+                        
+                        await worker.StartAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                         Console.Error.WriteLine($"Region capture/execution error: {ex.Message}");
+                         DebugHelper.WriteException(ex);
+                         return 1;
+                    }
+                }
+                else
+                {
+                    // Standard Execution
+                    await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow, workflowId);
+                }
 
                 // Wait for completion (with timeout backup)
                 var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(30000 + (duration * 1000)));
@@ -143,6 +217,7 @@ namespace XerahS.CLI.Commands
                 if (completedTask != tcs.Task)
                 {
                     Console.Error.WriteLine("Workflow execution timed out");
+                    if (exitOnComplete) Environment.Exit(1);
                     return 1;
                 }
 
@@ -162,18 +237,21 @@ namespace XerahS.CLI.Commands
                     if (exitOnComplete)
                     {
                         Console.WriteLine("Exiting (--exit-on-complete specified).");
+                        Environment.Exit(0);
                         return 0;
                     }
                     
                     return 0;
                 }
                 
+                if (exitOnComplete) Environment.Exit(1);
                 return 1;
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Workflow execution failed: {ex.Message}");
                 DebugHelper.WriteException(ex);
+                if (exitOnComplete) Environment.Exit(1);
                 return 1;
             }
         }

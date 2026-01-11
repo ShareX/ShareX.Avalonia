@@ -42,7 +42,6 @@ namespace XerahS.Core.Tasks.Processors
                     await HandleAfterUploadTasksAsync(info, result, token);
                 }
                 else
-                else
                 {
                     var errorMsg = result.Response ?? "Unknown error";
                     DebugHelper.WriteLine($"Upload failed: {errorMsg}");
@@ -54,8 +53,7 @@ namespace XerahS.Core.Tasks.Processors
                             Title = "Upload Failed",
                             Text = errorMsg,
                             Duration = 4f,
-                            AutoHide = true,
-                            IsError = true
+                            AutoHide = true
                         });
                     }
                 }

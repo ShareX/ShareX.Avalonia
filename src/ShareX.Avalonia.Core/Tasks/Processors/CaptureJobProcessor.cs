@@ -101,6 +101,41 @@ namespace XerahS.Core.Tasks.Processors
 
             // TODO: Add other tasks
 
+            // TODO: Add other tasks
+
+            // Add to History (after all tasks, including upload, are complete)
+            if (!string.IsNullOrEmpty(info.FilePath))
+            {
+                try
+                {
+                    DebugHelper.WriteLine("Trace: History pipeline - Starting history item creation.");
+
+                    // Use centralized history file path
+                    var historyPath = SettingManager.GetHistoryFilePath();
+
+                    DebugHelper.WriteLine($"Trace: History pipeline - History file path: {historyPath}");
+
+                    using var historyManager = new HistoryManagerSQLite(historyPath);
+                    var historyItem = new HistoryItem
+                    {
+                        FilePath = info.FilePath,
+                        FileName = Path.GetFileName(info.FilePath),
+                        DateTime = DateTime.Now,
+                        Type = "Image",
+                        URL = info.Metadata?.UploadURL
+                    };
+
+                    historyManager.AppendHistoryItem(historyItem);
+                    DebugHelper.WriteLine($"Trace: History pipeline - AppendHistoryItem called for: {historyItem.FileName} (URL: {historyItem.URL})");
+                    DebugHelper.WriteLine($"Added to history: {historyItem.FileName}");
+                }
+                catch (Exception ex)
+                {
+                    DebugHelper.WriteLine($"Failed to add to history: {ex.Message}");
+                    DebugHelper.WriteException(ex);
+                }
+            }
+
             await Task.CompletedTask;
         }
 
@@ -128,34 +163,8 @@ namespace XerahS.Core.Tasks.Processors
                 info.FilePath = filePath;
                 DebugHelper.WriteLine($"Image saved: {filePath}");
 
-                // Add to History
-                try
-                {
-                    DebugHelper.WriteLine("Trace: History pipeline - Starting history item creation.");
-
-                    // Use centralized history file path
-                    var historyPath = SettingManager.GetHistoryFilePath();
-
-                    DebugHelper.WriteLine($"Trace: History pipeline - History file path: {historyPath}");
-
-                    using var historyManager = new HistoryManagerSQLite(historyPath);
-                    var historyItem = new HistoryItem
-                    {
-                        FilePath = filePath,
-                        FileName = Path.GetFileName(filePath),
-                        DateTime = DateTime.Now,
-                        Type = "Image"
-                    };
-
-                    historyManager.AppendHistoryItem(historyItem);
-                    DebugHelper.WriteLine($"Trace: History pipeline - AppendHistoryItem called for: {historyItem.FileName}");
-                    DebugHelper.WriteLine($"Added to history: {historyItem.FileName}");
-                }
-                catch (Exception ex)
-                {
-                    DebugHelper.WriteLine($"Failed to add to history: {ex.Message}");
-                    DebugHelper.WriteException(ex);
-                }
+                info.FilePath = filePath;
+                DebugHelper.WriteLine($"Image saved: {filePath}");
             }
             else
             {

@@ -362,6 +362,21 @@ namespace XerahS.UI.ViewModels
         }
 
         [RelayCommand]
+        private void OpenURL(HistoryItem? item)
+        {
+            if (item == null || string.IsNullOrEmpty(item.URL)) return;
+
+            try
+            {
+                XerahS.Platform.Abstractions.PlatformServices.System.OpenUrl(item.URL);
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteLine($"Failed to open URL: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
         private async Task DeleteItem(HistoryItem? item)
         {
             if (item == null) return;

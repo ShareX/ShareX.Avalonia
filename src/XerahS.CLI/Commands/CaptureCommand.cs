@@ -29,6 +29,8 @@ using XerahS.Core;
 using XerahS.Core.Helpers;
 using XerahS.Core.Managers;
 using XerahS.Core.Tasks;
+using XerahS.History;
+using XerahS.Platform.Abstractions;
 
 namespace XerahS.CLI.Commands
 {
@@ -37,6 +39,11 @@ namespace XerahS.CLI.Commands
         public static Command Create()
         {
             var captureCommand = new Command("capture", "Screen capture operations");
+            
+            var uploadOption = new Option<bool>(
+                name: "--upload",
+                description: "Upload the captured image/file"
+            );
 
             // Screen capture subcommand
             var screenCommand = new Command("screen", "Capture full screen");
@@ -44,30 +51,33 @@ namespace XerahS.CLI.Commands
                 name: "--output",
                 description: "Output file path");
             screenCommand.AddOption(outputOption);
-            screenCommand.SetHandler(async (string? output) =>
+            screenCommand.AddOption(uploadOption);
+            screenCommand.SetHandler(async (string? output, bool upload) =>
             {
-                Environment.ExitCode = await CaptureScreenAsync(output);
-            }, outputOption);
+                Environment.ExitCode = await CaptureScreenAsync(output, upload);
+            }, outputOption, uploadOption);
 
             // Window capture subcommand
             var windowCommand = new Command("window", "Capture active window");
             windowCommand.AddOption(outputOption);
-            windowCommand.SetHandler(async (string? output) =>
+            windowCommand.AddOption(uploadOption);
+            windowCommand.SetHandler(async (string? output, bool upload) =>
             {
-                Environment.ExitCode = await CaptureWindowAsync(output);
-            }, outputOption);
+                Environment.ExitCode = await CaptureWindowAsync(output, upload);
+            }, outputOption, uploadOption);
 
             // Region capture subcommand
             var regionCommand = new Command("region", "Capture specific region");
             var regionOption = new Option<string>(
                 name: "--region",
-                description: "Region in format 'x,y,width,height'");
+                description: "Region in format 'x,y,width,height' (e.g. '0,0,400,400')");
             regionCommand.AddOption(regionOption);
             regionCommand.AddOption(outputOption);
-            regionCommand.SetHandler(async (string region, string? output) =>
+            regionCommand.AddOption(uploadOption);
+            regionCommand.SetHandler(async (string region, string? output, bool upload) =>
             {
-                Environment.ExitCode = await CaptureRegionAsync(region, output);
-            }, regionOption, outputOption);
+                Environment.ExitCode = await CaptureRegionAsync(region, output, upload);
+            }, regionOption, outputOption, uploadOption);
 
             captureCommand.AddCommand(screenCommand);
             captureCommand.AddCommand(windowCommand);
@@ -76,55 +86,116 @@ namespace XerahS.CLI.Commands
             return captureCommand;
         }
 
-        private static async Task<int> CaptureScreenAsync(string? output)
+        private static void ConfigureTask(TaskSettings settings, string? output, bool upload)
+        {
+            if (!string.IsNullOrEmpty(output))
+            {
+                settings.AfterCaptureJob |= AfterCaptureTasks.SaveImageToFile;
+                settings.OverrideScreenshotsFolder = true;
+                settings.ScreenshotsFolder = Path.GetDirectoryName(output);
+                settings.UploadSettings.NameFormatPattern = Path.GetFileNameWithoutExtension(output);
+            }
+            
+            if (upload)
+            {
+                settings.AfterCaptureJob |= AfterCaptureTasks.UploadImageToHost;
+                settings.AfterUploadJob |= AfterUploadTasks.CopyURLToClipboard; // To match user scenario
+            }
+        }
+
+        private static async Task<int> RunTask(TaskSettings taskSettings, SkiaSharp.SKBitmap? image = null)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+
+            EventHandler<WorkerTask>? handler = null;
+            handler = (sender, task) =>
+            {
+                TaskManager.Instance.TaskCompleted -= handler;
+                
+                // Wait a bit for async history/clipboard ops (though they should be awaited in task)
+                // But History is added at end of task.
+                
+                bool success = task.Status == Core.TaskStatus.Completed;
+                
+                if (success)
+                {
+                    if (!string.IsNullOrEmpty(task.Info.FilePath))
+                        Console.WriteLine($"Saved: {task.Info.FilePath}");
+                    
+                    if (!string.IsNullOrEmpty(task.Info.Metadata.UploadURL))
+                        Console.WriteLine($"URL: {task.Info.Metadata.UploadURL}");
+                        
+                    // Check History
+                     try
+                    {
+                        var historyPath = SettingManager.GetHistoryFilePath();
+                        using var historyManager = new HistoryManagerSQLite(historyPath);
+                        // Simple check: get latest item and see if it matches
+                        var items = historyManager.GetHistoryItems(0, 1);
+                        if (items.Count > 0)
+                        {
+                            var latest = items[0];
+                            Console.WriteLine($"[History Verification] Latest Item: {latest.FileName}");
+                            Console.WriteLine($"[History Verification] URL: '{latest.URL}'");
+                            if (latest.FilePath == task.Info.FilePath && latest.URL == task.Info.Metadata.UploadURL)
+                            {
+                                 Console.WriteLine($"[History Verification] SUCCESS: History matches task output.");
+                            }
+                            else
+                            {
+                                 Console.WriteLine($"[History Verification] WARNING: History item mismatch.");
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[History Verification] Failed to read history: {ex.Message}");
+                    }
+                }
+                else
+                {
+                    var errorMsg = task.Error?.Message ?? task.Status.ToString();
+                    Console.Error.WriteLine($"Task failed: {errorMsg}");
+                }
+                
+                tcs.SetResult(success);
+            };
+
+            TaskManager.Instance.TaskCompleted += handler;
+
+            // Execute
+            if (image != null)
+            {
+                // Bypass capture, start worker directly
+                var worker = WorkerTask.Create(taskSettings, image);
+                await worker.StartAsync();
+            }
+            else
+            {
+                await Core.Helpers.TaskHelpers.ExecuteJob(taskSettings.Job, taskSettings);
+            }
+
+            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
+
+            if (completedTask != tcs.Task)
+            {
+                Console.Error.WriteLine("Operation timed out");
+                return 1;
+            }
+
+            return await tcs.Task ? 0 : 1;
+        }
+
+        private static async Task<int> CaptureScreenAsync(string? output, bool upload)
         {
             try
             {
                 Console.WriteLine("Capturing full screen...");
-
                 var taskSettings = new TaskSettings();
                 taskSettings.Job = HotkeyType.PrintScreen;
-
-                if (!string.IsNullOrEmpty(output))
-                {
-                    taskSettings.AfterCaptureJob = AfterCaptureTasks.SaveImageToFile;
-                    // Note: Output path will be set by the task execution logic
-                }
-
-                var tcs = new TaskCompletionSource<bool>();
-
-                EventHandler<WorkerTask>? handler = null;
-                handler = (sender, task) =>
-                {
-                    TaskManager.Instance.TaskCompleted -= handler;
-                    bool success = task.Status == Core.TaskStatus.Completed;
-                    tcs.SetResult(success);
-
-                    if (success && !string.IsNullOrEmpty(task.Info.FilePath))
-                    {
-                        Console.WriteLine($"Screenshot saved: {task.Info.FilePath}");
-                    }
-                    else if (!success)
-                    {
-                        var errorMsg = task.Error?.Message ?? task.Status.ToString();
-                        Console.Error.WriteLine($"Capture failed: {errorMsg}");
-                    }
-                };
-
-                TaskManager.Instance.TaskCompleted += handler;
-
-                await Core.Helpers.TaskHelpers.ExecuteJob(taskSettings.Job, taskSettings);
-
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-                var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
-
-                if (completedTask != tcs.Task)
-                {
-                    Console.Error.WriteLine("Capture operation timed out");
-                    return 1;
-                }
-
-                return await tcs.Task ? 0 : 1;
+                ConfigureTask(taskSettings, output, upload);
+                return await RunTask(taskSettings);
             }
             catch (Exception ex)
             {
@@ -134,55 +205,15 @@ namespace XerahS.CLI.Commands
             }
         }
 
-        private static async Task<int> CaptureWindowAsync(string? output)
+        private static async Task<int> CaptureWindowAsync(string? output, bool upload)
         {
             try
             {
                 Console.WriteLine("Capturing active window...");
-
                 var taskSettings = new TaskSettings();
                 taskSettings.Job = HotkeyType.ActiveWindow;
-
-                if (!string.IsNullOrEmpty(output))
-                {
-                    taskSettings.AfterCaptureJob = AfterCaptureTasks.SaveImageToFile;
-                    // Note: Output path will be set by the task execution logic
-                }
-
-                var tcs = new TaskCompletionSource<bool>();
-
-                EventHandler<WorkerTask>? handler = null;
-                handler = (sender, task) =>
-                {
-                    TaskManager.Instance.TaskCompleted -= handler;
-                    bool success = task.Status == Core.TaskStatus.Completed;
-                    tcs.SetResult(success);
-
-                    if (success && !string.IsNullOrEmpty(task.Info.FilePath))
-                    {
-                        Console.WriteLine($"Screenshot saved: {task.Info.FilePath}");
-                    }
-                    else if (!success)
-                    {
-                        var errorMsg = task.Error?.Message ?? task.Status.ToString();
-                        Console.Error.WriteLine($"Capture failed: {errorMsg}");
-                    }
-                };
-
-                TaskManager.Instance.TaskCompleted += handler;
-
-                await Core.Helpers.TaskHelpers.ExecuteJob(taskSettings.Job, taskSettings);
-
-                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-                var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(Timeout.Infinite, cts.Token));
-
-                if (completedTask != tcs.Task)
-                {
-                    Console.Error.WriteLine("Capture operation timed out");
-                    return 1;
-                }
-
-                return await tcs.Task ? 0 : 1;
+                ConfigureTask(taskSettings, output, upload);
+                return await RunTask(taskSettings);
             }
             catch (Exception ex)
             {
@@ -192,14 +223,34 @@ namespace XerahS.CLI.Commands
             }
         }
 
-        private static async Task<int> CaptureRegionAsync(string region, string? output)
+        private static async Task<int> CaptureRegionAsync(string region, string? output, bool upload)
         {
             try
             {
                 Console.WriteLine($"Capturing region: {region}");
-                Console.Error.WriteLine("Note: Region capture from CLI is not fully implemented yet.");
-                Console.Error.WriteLine("Please use 'capture screen' or 'capture window' instead.");
-                return 1;
+                
+                var parts = region.Split(',');
+                if (parts.Length != 4) throw new ArgumentException("Region must be x,y,width,height");
+                
+                int x = int.Parse(parts[0]);
+                int y = int.Parse(parts[1]);
+                int w = int.Parse(parts[2]);
+                int h = int.Parse(parts[3]);
+                
+                var rect = new SkiaSharp.SKRect(x, y, x + w, y + h);
+                var image = await PlatformServices.ScreenCapture.CaptureRectAsync(rect);
+                
+                if (image == null)
+                {
+                    Console.Error.WriteLine("Capture returned null");
+                    return 1;
+                }
+                
+                var taskSettings = new TaskSettings();
+                taskSettings.Job = HotkeyType.RectangleRegion;
+                ConfigureTask(taskSettings, output, upload);
+                
+                return await RunTask(taskSettings, image);
             }
             catch (Exception ex)
             {

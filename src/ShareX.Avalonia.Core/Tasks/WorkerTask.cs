@@ -31,6 +31,7 @@ using XerahS.Platform.Abstractions;
 using XerahS.ScreenCapture.ScreenRecording;
 using SkiaSharp;
 using System.Diagnostics;
+using XerahS.History;
 
 namespace XerahS.Core.Tasks
 {
@@ -453,6 +454,30 @@ namespace XerahS.Core.Tasks
 
                     var uploadProcessor = new UploadJobProcessor();
                     await uploadProcessor.ProcessAsync(Info, CancellationToken.None);
+
+                    // Add to History
+                    try
+                    {
+                        var historyPath = SettingManager.GetHistoryFilePath();
+                        using var historyManager = new HistoryManagerSQLite(historyPath);
+                        var historyItem = new HistoryItem
+                        {
+                            FilePath = outputPath,
+                            FileName = Path.GetFileName(outputPath),
+                            DateTime = DateTime.Now,
+                            Type = "Video",
+                            URL = Info.Metadata.UploadURL // Will be populated if upload succeeded
+                        };
+
+                        DebugHelper.WriteLine($"[HistoryTrace] Preparing to add item. URL='{historyItem.URL}', File='{historyItem.FileName}'");
+
+                        await Task.Run(() => historyManager.AppendHistoryItem(historyItem));
+                        DebugHelper.WriteLine($"Added recording to history: {historyItem.FileName} (URL: {historyItem.URL})");
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugHelper.WriteException(ex, "Failed to add recording to history");
+                    }
                 }
             }
             catch (Exception ex)
