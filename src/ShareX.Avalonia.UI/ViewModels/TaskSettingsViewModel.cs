@@ -202,7 +202,7 @@ namespace XerahS.UI.ViewModels
 
             if (!string.IsNullOrEmpty(_settings.WorkflowId))
             {
-                var workflow = SettingManager.GetWorkflowById(_settings.WorkflowId);
+                var workflow = SettingsManager.GetWorkflowById(_settings.WorkflowId);
                 if (workflow != null)
                 {
                     taskSettings = workflow.TaskSettings;

@@ -184,7 +184,7 @@ namespace XerahS.CLI.Commands
             ScreenRecordingManager.PlatformInitializationTask = Task.CompletedTask;
             
             // Initialize Settings
-            SettingManager.LoadAllSettings();
+            SettingsManager.LoadAllSettings();
                 var manager = ScreenRecordingManager.Instance;
                 await manager.StartRecordingAsync(recordingOptions);
 

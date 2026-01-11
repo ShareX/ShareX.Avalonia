@@ -206,7 +206,7 @@ namespace XerahS.Core.Tasks
                             TroubleshootingHelper.Log("CustomWindow", "CONFIG", $"Configured target window: '{targetWindow}'");
 
                             // Also inspect global settings as sanity check
-                            TroubleshootingHelper.Log("CustomWindow", "CONFIG", $"Global default target window: '{SettingManager.DefaultTaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
+                            TroubleshootingHelper.Log("CustomWindow", "CONFIG", $"Global default target window: '{SettingsManager.DefaultTaskSettings?.CaptureSettings?.CaptureCustomWindow}'");
 
                             if (string.IsNullOrEmpty(targetWindow))
                             {
@@ -509,7 +509,7 @@ namespace XerahS.Core.Tasks
                     // Add to History
                     try
                     {
-                        var historyPath = SettingManager.GetHistoryFilePath();
+                        var historyPath = SettingsManager.GetHistoryFilePath();
                         using var historyManager = new HistoryManagerSQLite(historyPath);
                         var historyItem = new HistoryItem
                         {

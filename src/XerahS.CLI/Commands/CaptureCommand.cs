@@ -128,7 +128,7 @@ namespace XerahS.CLI.Commands
                     // Check History
                      try
                     {
-                        var historyPath = SettingManager.GetHistoryFilePath();
+                        var historyPath = SettingsManager.GetHistoryFilePath();
                         using var historyManager = new HistoryManagerSQLite(historyPath);
                         // Simple check: get latest item and see if it matches
                         var items = historyManager.GetHistoryItems(0, 1);

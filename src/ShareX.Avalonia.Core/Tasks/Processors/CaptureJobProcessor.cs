@@ -111,7 +111,7 @@ namespace XerahS.Core.Tasks.Processors
                     DebugHelper.WriteLine("Trace: History pipeline - Starting history item creation.");
 
                     // Use centralized history file path
-                    var historyPath = SettingManager.GetHistoryFilePath();
+                    var historyPath = SettingsManager.GetHistoryFilePath();
 
                     DebugHelper.WriteLine($"Trace: History pipeline - History file path: {historyPath}");
 

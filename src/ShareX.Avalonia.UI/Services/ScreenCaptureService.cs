@@ -130,7 +130,7 @@ namespace XerahS.UI.Services
             await Task.Delay(60);
 
             // Delegate capture to platform implementation
-            var captureSettings = SettingManager.GetWorkflowTaskSettings(options?.WorkflowId)?.CaptureSettings ?? SettingManager.DefaultTaskSettings.CaptureSettings;
+            var captureSettings = SettingsManager.GetWorkflowTaskSettings(options?.WorkflowId)?.CaptureSettings ?? SettingsManager.DefaultTaskSettings.CaptureSettings;
             bool effectiveModern = options?.UseModernCapture ?? captureSettings.UseModernCapture;
             TroubleshootingHelper.Log("RegionCapture", "CONFIG", $"Capture Configuration: UseModernCapture={effectiveModern} (Explicit={options?.UseModernCapture.ToString() ?? "null"}), ShowCursor={options?.ShowCursor ?? captureSettings.ShowCursor}");
 

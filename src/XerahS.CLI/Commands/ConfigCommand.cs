@@ -61,7 +61,7 @@ namespace XerahS.CLI.Commands
                 Console.WriteLine("ShareX Configuration Summary:");
                 Console.WriteLine();
 
-                var appConfig = SettingManager.Settings;
+                var appConfig = SettingsManager.Settings;
                 if (appConfig != null)
                 {
                     Console.WriteLine("Application Settings:");
@@ -72,7 +72,7 @@ namespace XerahS.CLI.Commands
                     Console.WriteLine();
                 }
 
-                var workflowsConfig = SettingManager.WorkflowsConfig;
+                var workflowsConfig = SettingsManager.WorkflowsConfig;
                 if (workflowsConfig != null)
                 {
                     var enabledCount = workflowsConfig.Hotkeys?.Count(w => w.Enabled) ?? 0;
@@ -101,21 +101,21 @@ namespace XerahS.CLI.Commands
                 Console.WriteLine();
 
                 Console.WriteLine($"Personal Folder:");
-                Console.WriteLine($"  {SettingManager.PersonalFolder}");
+                Console.WriteLine($"  {SettingsManager.PersonalFolder}");
                 Console.WriteLine();
 
                 Console.WriteLine($"Settings Folder:");
-                Console.WriteLine($"  {SettingManager.SettingsFolder}");
+                Console.WriteLine($"  {SettingsManager.SettingsFolder}");
                 Console.WriteLine();
 
                 Console.WriteLine($"Configuration Files:");
-                Console.WriteLine($"  ApplicationConfig: {SettingManager.ApplicationConfigFilePath}");
-                Console.WriteLine($"  WorkflowsConfig:   {SettingManager.WorkflowsConfigFilePath}");
-                Console.WriteLine($"  UploadersConfig:   {SettingManager.UploadersConfigFilePath}");
+                Console.WriteLine($"  ApplicationConfig: {SettingsManager.ApplicationConfigFilePath}");
+                Console.WriteLine($"  WorkflowsConfig:   {SettingsManager.WorkflowsConfigFilePath}");
+                Console.WriteLine($"  UploadersConfig:   {SettingsManager.UploadersConfigFilePath}");
                 Console.WriteLine();
 
                 Console.WriteLine($"Backup Folder:");
-                Console.WriteLine($"  {SettingManager.BackupFolder}");
+                Console.WriteLine($"  {SettingsManager.BackupFolder}");
 
                 return 0;
             }

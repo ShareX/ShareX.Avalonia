@@ -69,7 +69,7 @@ public partial class DestinationSettingsViewModel : ViewModelBase
     private void Provider_ConfigChanged(object? sender, EventArgs e)
     {
         // Save uploaders config when any provider's configuration changes
-        SettingManager.SaveUploadersConfigAsync();
+        SettingsManager.SaveUploadersConfigAsync();
     }
 
     private void LoadCategories()
@@ -161,8 +161,8 @@ public partial class DestinationSettingsViewModel : ViewModelBase
                 configPath = files[0].Path.LocalPath;
             }
 
-            var result = UploadersConfigImporter.ImportFromFile(configPath, SettingManager.UploadersConfig);
-            SettingManager.SaveUploadersConfig();
+            var result = UploadersConfigImporter.ImportFromFile(configPath, SettingsManager.UploadersConfig);
+            SettingsManager.SaveUploadersConfig();
 
             OnPropertyChanged(string.Empty);
 

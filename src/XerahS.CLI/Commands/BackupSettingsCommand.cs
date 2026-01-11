@@ -20,12 +20,12 @@ namespace XerahS.CLI.Commands
             try
             {
                 Console.WriteLine("Loading settings...");
-                SettingManager.LoadInitialSettings();
+                SettingsManager.LoadInitialSettings();
 
                 Console.WriteLine("Backing up settings...");
-                SettingManager.SaveAllSettings();
+                SettingsManager.SaveAllSettings();
 
-                Console.WriteLine($"[SUCCESS] Settings backed up to: {SettingManager.BackupFolder}");
+                Console.WriteLine($"[SUCCESS] Settings backed up to: {SettingsManager.BackupFolder}");
             }
             catch (Exception ex)
             {

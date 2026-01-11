@@ -78,19 +78,19 @@ public class TrayIconHelper : INotifyPropertyChanged
         TrayClickCommand = new RelayCommand(OnTrayClick);
 
         // Initialize from settings
-        _showTray = SettingManager.Settings.ShowTray;
+        _showTray = SettingsManager.Settings.ShowTray;
 
         // Build initial menu
         BuildTrayMenu();
 
         // Subscribe to settings changes 
-        SettingManager.SettingsChanged += OnSettingsChanged;
+        SettingsManager.SettingsChanged += OnSettingsChanged;
     }
 
     private void OnSettingsChanged(object? sender, EventArgs e)
     {
         // Update ShowTray when settings change
-        ShowTray = SettingManager.Settings.ShowTray;
+        ShowTray = SettingsManager.Settings.ShowTray;
         // Rebuild menu on settings change (e.g. workflows changed)
         BuildTrayMenu();
     }
@@ -101,7 +101,7 @@ public class TrayIconHelper : INotifyPropertyChanged
     /// </summary>
     public void RefreshFromSettings()
     {
-        ShowTray = SettingManager.Settings.ShowTray;
+        ShowTray = SettingsManager.Settings.ShowTray;
         BuildTrayMenu();
     }
 
@@ -109,7 +109,7 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         TrayMenu.Items.Clear();
 
-        var workflows = SettingManager.WorkflowsConfig?.Hotkeys;
+        var workflows = SettingsManager.WorkflowsConfig?.Hotkeys;
         if (workflows != null)
         {
             int index = 0;
@@ -214,21 +214,21 @@ public class TrayIconHelper : INotifyPropertyChanged
     private void OnTrayClick()
     {
         // Execute the configured left-click action
-        var action = SettingManager.Settings.TrayLeftClickAction;
+        var action = SettingsManager.Settings.TrayLeftClickAction;
         DebugHelper.WriteLine($"Tray click: {action}");
         ExecuteTrayAction(action);
     }
 
     public void OnTrayDoubleClick()
     {
-        var action = SettingManager.Settings.TrayLeftDoubleClickAction;
+        var action = SettingsManager.Settings.TrayLeftDoubleClickAction;
         DebugHelper.WriteLine($"Tray double click: {action}");
         ExecuteTrayAction(action);
     }
 
     public void OnTrayMiddleClick()
     {
-        var action = SettingManager.Settings.TrayMiddleClickAction;
+        var action = SettingsManager.Settings.TrayMiddleClickAction;
         DebugHelper.WriteLine($"Tray middle click: {action}");
         ExecuteTrayAction(action);
     }
@@ -242,7 +242,7 @@ public class TrayIconHelper : INotifyPropertyChanged
                 break;
             default:
                 // For tray click actions, execute first matching workflow
-                var workflow = SettingManager.WorkflowsConfig?.Hotkeys?.FirstOrDefault(w => w.Job == action);
+                var workflow = SettingsManager.WorkflowsConfig?.Hotkeys?.FirstOrDefault(w => w.Job == action);
                 if (workflow != null)
                 {
                     await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow, workflow.Id);

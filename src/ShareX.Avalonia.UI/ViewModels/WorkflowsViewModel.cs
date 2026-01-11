@@ -53,7 +53,7 @@ public partial class WorkflowsViewModel : ViewModelBase
         }
         else
         {
-            source = SettingManager.WorkflowsConfig.Hotkeys;
+            source = SettingsManager.WorkflowsConfig.Hotkeys;
         }
 
         // No sorting - use the stored order
@@ -77,9 +77,9 @@ public partial class WorkflowsViewModel : ViewModelBase
     {
         if (_manager != null)
         {
-            SettingManager.WorkflowsConfig.Hotkeys = _manager.Workflows;
+            SettingsManager.WorkflowsConfig.Hotkeys = _manager.Workflows;
         }
-        SettingManager.SaveWorkflowsConfig();
+        SettingsManager.SaveWorkflowsConfig();
     }
 
     [RelayCommand]
@@ -108,7 +108,7 @@ public partial class WorkflowsViewModel : ViewModelBase
                     }
                     else
                     {
-                        SettingManager.WorkflowsConfig.Hotkeys.Add(newSettings);
+                        SettingsManager.WorkflowsConfig.Hotkeys.Add(newSettings);
                     }
 
                     SaveHotkeys();
@@ -153,7 +153,7 @@ public partial class WorkflowsViewModel : ViewModelBase
         }
         else if (SelectedWorkflow != null && _manager == null) // Fallback
         {
-            SettingManager.WorkflowsConfig.Hotkeys.Remove(SelectedWorkflow.Model);
+            SettingsManager.WorkflowsConfig.Hotkeys.Remove(SelectedWorkflow.Model);
             Workflows.Remove(SelectedWorkflow);
             SaveHotkeys();
         }
@@ -194,7 +194,7 @@ public partial class WorkflowsViewModel : ViewModelBase
         var index = Workflows.IndexOf(SelectedWorkflow);
         if (index <= 0) return;
 
-        var hotkeys = _manager?.Workflows ?? SettingManager.WorkflowsConfig.Hotkeys;
+        var hotkeys = _manager?.Workflows ?? SettingsManager.WorkflowsConfig.Hotkeys;
         var model = SelectedWorkflow.Model;
         var modelIndex = hotkeys.IndexOf(model);
 
@@ -230,7 +230,7 @@ public partial class WorkflowsViewModel : ViewModelBase
         var index = Workflows.IndexOf(SelectedWorkflow);
         if (index < 0 || index >= Workflows.Count - 1) return;
 
-        var hotkeys = _manager?.Workflows ?? SettingManager.WorkflowsConfig.Hotkeys;
+        var hotkeys = _manager?.Workflows ?? SettingsManager.WorkflowsConfig.Hotkeys;
         var model = SelectedWorkflow.Model;
         var modelIndex = hotkeys.IndexOf(model);
 

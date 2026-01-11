@@ -148,7 +148,7 @@ public class ScreenRecordingManager
 
         if (string.IsNullOrEmpty(options.OutputPath))
         {
-            string screenCapturesFolder = SettingManager.ScreencastsFolder;
+            string screenCapturesFolder = SettingsManager.ScreencastsFolder;
             string dateFolderPath = Path.Combine(screenCapturesFolder, DateTime.Now.ToString("yyyy-MM"));
             Directory.CreateDirectory(dateFolderPath);
 

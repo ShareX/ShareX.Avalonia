@@ -33,7 +33,7 @@ namespace XerahS.App
         public static void Main(string[] args)
         {
             // Initialize logging with datestamped file in Logs/yyyy-mm folder structure
-            var baseFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), XerahS.Core.SettingManager.AppName);
+            var baseFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), XerahS.Core.SettingsManager.AppName);
             var logsFolder = System.IO.Path.Combine(baseFolder, "Logs", DateTime.Now.ToString("yyyy-MM"));
             var logPath = System.IO.Path.Combine(logsFolder, $"ShareX-{DateTime.Now:yyyy-MM-dd}.log");
             XerahS.Common.DebugHelper.Init(logPath);
@@ -77,7 +77,7 @@ namespace XerahS.App
             XerahS.UI.App.PostUIInitializationCallback = InitializeRecordingAsync;
 
             // Initialize settings
-            XerahS.Core.SettingManager.LoadInitialSettings();
+            XerahS.Core.SettingsManager.LoadInitialSettings();
 
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);

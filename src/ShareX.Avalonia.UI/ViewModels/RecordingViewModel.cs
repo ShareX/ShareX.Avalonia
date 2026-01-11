@@ -315,7 +315,7 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
 
             // Update workflow TaskSettings from UI selections
             SyncSettingsToWorkflow();
-            SettingManager.SaveWorkflowsConfigAsync();
+            SettingsManager.SaveWorkflowsConfigAsync();
 
             DebugHelper.WriteLine($"Starting recording (workflow: {_workflow?.Name ?? "unnamed"}): {Codec} @ {Fps}fps, {BitrateKbps}kbps, Cursor={ShowCursor}, Intent={RecordingIntent}");
             DebugHelper.WriteLine($"  Audio: SystemAudio={CaptureSystemAudio}, Microphone={CaptureMicrophone}");
@@ -362,7 +362,7 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
 
     private void InitializeWorkflow()
     {
-        var workflow = SettingManager.WorkflowsConfig.Hotkeys.FirstOrDefault(w => w.Job == HotkeyType.ScreenRecorder);
+        var workflow = SettingsManager.WorkflowsConfig.Hotkeys.FirstOrDefault(w => w.Job == HotkeyType.ScreenRecorder);
         if (workflow == null)
         {
             workflow = new WorkflowSettings(HotkeyType.ScreenRecorder, new HotkeyInfo())
@@ -370,8 +370,8 @@ public partial class RecordingViewModel : ViewModelBase, IDisposable
                 Name = "Screen Recorder (auto)"
             };
 
-            SettingManager.WorkflowsConfig.Hotkeys.Add(workflow);
-            SettingManager.SaveWorkflowsConfigAsync();
+            SettingsManager.WorkflowsConfig.Hotkeys.Add(workflow);
+            SettingsManager.SaveWorkflowsConfigAsync();
         }
 
         _workflow = workflow;

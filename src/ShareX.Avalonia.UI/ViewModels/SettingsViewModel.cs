@@ -68,17 +68,17 @@ namespace XerahS.UI.ViewModels
 
         public UpdateChannel[] UpdateChannels => (UpdateChannel[])Enum.GetValues(typeof(UpdateChannel));
 
-        private TaskSettings ActiveTaskSettings => SettingManager.GetOrCreateWorkflowTaskSettings(HotkeyType.None);
+        private TaskSettings ActiveTaskSettings => SettingsManager.GetOrCreateWorkflowTaskSettings(HotkeyType.None);
 
         // Tray Click Actions
         public HotkeyType TrayLeftClickAction
         {
-            get => SettingManager.Settings.TrayLeftClickAction;
+            get => SettingsManager.Settings.TrayLeftClickAction;
             set
             {
-                if (SettingManager.Settings.TrayLeftClickAction != value)
+                if (SettingsManager.Settings.TrayLeftClickAction != value)
                 {
-                    SettingManager.Settings.TrayLeftClickAction = value;
+                    SettingsManager.Settings.TrayLeftClickAction = value;
                     OnPropertyChanged();
                 }
             }
@@ -86,12 +86,12 @@ namespace XerahS.UI.ViewModels
 
         public HotkeyType TrayLeftDoubleClickAction
         {
-            get => SettingManager.Settings.TrayLeftDoubleClickAction;
+            get => SettingsManager.Settings.TrayLeftDoubleClickAction;
             set
             {
-                if (SettingManager.Settings.TrayLeftDoubleClickAction != value)
+                if (SettingsManager.Settings.TrayLeftDoubleClickAction != value)
                 {
-                    SettingManager.Settings.TrayLeftDoubleClickAction = value;
+                    SettingsManager.Settings.TrayLeftDoubleClickAction = value;
                     OnPropertyChanged();
                 }
             }
@@ -99,12 +99,12 @@ namespace XerahS.UI.ViewModels
 
         public HotkeyType TrayMiddleClickAction
         {
-            get => SettingManager.Settings.TrayMiddleClickAction;
+            get => SettingsManager.Settings.TrayMiddleClickAction;
             set
             {
-                if (SettingManager.Settings.TrayMiddleClickAction != value)
+                if (SettingsManager.Settings.TrayMiddleClickAction != value)
                 {
-                    SettingManager.Settings.TrayMiddleClickAction = value;
+                    SettingsManager.Settings.TrayMiddleClickAction = value;
                     OnPropertyChanged();
                 }
             }
@@ -115,20 +115,20 @@ namespace XerahS.UI.ViewModels
         // History Settings
         public bool HistorySaveTasks
         {
-            get => SettingManager.Settings.HistorySaveTasks;
+            get => SettingsManager.Settings.HistorySaveTasks;
             set
             {
-                SettingManager.Settings.HistorySaveTasks = value;
+                SettingsManager.Settings.HistorySaveTasks = value;
                 OnPropertyChanged();
             }
         }
 
         public bool HistoryCheckURL
         {
-            get => SettingManager.Settings.HistoryCheckURL;
+            get => SettingsManager.Settings.HistoryCheckURL;
             set
             {
-                SettingManager.Settings.HistoryCheckURL = value;
+                SettingsManager.Settings.HistoryCheckURL = value;
                 OnPropertyChanged();
             }
         }
@@ -136,50 +136,50 @@ namespace XerahS.UI.ViewModels
         // Recent Tasks Settings
         public bool RecentTasksSave
         {
-            get => SettingManager.Settings.RecentTasksSave;
+            get => SettingsManager.Settings.RecentTasksSave;
             set
             {
-                SettingManager.Settings.RecentTasksSave = value;
+                SettingsManager.Settings.RecentTasksSave = value;
                 OnPropertyChanged();
             }
         }
 
         public int RecentTasksMaxCount
         {
-            get => SettingManager.Settings.RecentTasksMaxCount;
+            get => SettingsManager.Settings.RecentTasksMaxCount;
             set
             {
-                SettingManager.Settings.RecentTasksMaxCount = value;
+                SettingsManager.Settings.RecentTasksMaxCount = value;
                 OnPropertyChanged();
             }
         }
 
         public bool RecentTasksShowInMainWindow
         {
-            get => SettingManager.Settings.RecentTasksShowInMainWindow;
+            get => SettingsManager.Settings.RecentTasksShowInMainWindow;
             set
             {
-                SettingManager.Settings.RecentTasksShowInMainWindow = value;
+                SettingsManager.Settings.RecentTasksShowInMainWindow = value;
                 OnPropertyChanged();
             }
         }
 
         public bool RecentTasksShowInTrayMenu
         {
-            get => SettingManager.Settings.RecentTasksShowInTrayMenu;
+            get => SettingsManager.Settings.RecentTasksShowInTrayMenu;
             set
             {
-                SettingManager.Settings.RecentTasksShowInTrayMenu = value;
+                SettingsManager.Settings.RecentTasksShowInTrayMenu = value;
                 OnPropertyChanged();
             }
         }
 
         public bool RecentTasksTrayMenuMostRecentFirst
         {
-            get => SettingManager.Settings.RecentTasksTrayMenuMostRecentFirst;
+            get => SettingsManager.Settings.RecentTasksTrayMenuMostRecentFirst;
             set
             {
-                SettingManager.Settings.RecentTasksTrayMenuMostRecentFirst = value;
+                SettingsManager.Settings.RecentTasksTrayMenuMostRecentFirst = value;
                 OnPropertyChanged();
             }
         }
@@ -201,12 +201,12 @@ namespace XerahS.UI.ViewModels
         // OS Integration Settings
         public bool RunAtStartup
         {
-            get => SettingManager.Settings.RunAtStartup;
+            get => SettingsManager.Settings.RunAtStartup;
             set
             {
-                if (SettingManager.Settings.RunAtStartup != value)
+                if (SettingsManager.Settings.RunAtStartup != value)
                 {
-                    SettingManager.Settings.RunAtStartup = value;
+                    SettingsManager.Settings.RunAtStartup = value;
                     OnPropertyChanged();
                     // TODO: Call platform-specific startup registration service
                 }
@@ -215,12 +215,12 @@ namespace XerahS.UI.ViewModels
 
         public bool EnableContextMenuIntegration
         {
-            get => SettingManager.Settings.EnableContextMenuIntegration;
+            get => SettingsManager.Settings.EnableContextMenuIntegration;
             set
             {
-                if (SettingManager.Settings.EnableContextMenuIntegration != value)
+                if (SettingsManager.Settings.EnableContextMenuIntegration != value)
                 {
-                    SettingManager.Settings.EnableContextMenuIntegration = value;
+                    SettingsManager.Settings.EnableContextMenuIntegration = value;
                     OnPropertyChanged();
                     // TODO: Call platform-specific context menu registration service
                 }
@@ -229,12 +229,12 @@ namespace XerahS.UI.ViewModels
 
         public bool EnableSendToIntegration
         {
-            get => SettingManager.Settings.EnableSendToIntegration;
+            get => SettingsManager.Settings.EnableSendToIntegration;
             set
             {
-                if (SettingManager.Settings.EnableSendToIntegration != value)
+                if (SettingsManager.Settings.EnableSendToIntegration != value)
                 {
-                    SettingManager.Settings.EnableSendToIntegration = value;
+                    SettingsManager.Settings.EnableSendToIntegration = value;
                     OnPropertyChanged();
                     // TODO: Call platform-specific Send To registration service
                 }
@@ -404,7 +404,7 @@ namespace XerahS.UI.ViewModels
 
         private void LoadSettings()
         {
-            var settings = SettingManager.Settings;
+            var settings = SettingsManager.Settings;
 
             ScreenshotsFolder = settings.CustomScreenshotsPath ??
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ShareX");
@@ -459,7 +459,7 @@ namespace XerahS.UI.ViewModels
         [RelayCommand]
         private void SaveSettings()
         {
-            var settings = SettingManager.Settings;
+            var settings = SettingsManager.Settings;
 
             settings.CustomScreenshotsPath = ScreenshotsFolder;
             settings.SaveImageSubFolderPattern = SaveImageSubFolderPattern;
@@ -492,7 +492,7 @@ namespace XerahS.UI.ViewModels
             taskSettings.UploadSettings.URLRegexReplacePattern = URLRegexReplacePattern;
             taskSettings.UploadSettings.URLRegexReplaceReplacement = URLRegexReplaceReplacement;
 
-            SettingManager.SaveApplicationConfig();
+            SettingsManager.SaveApplicationConfig();
         }
 
         [RelayCommand]

@@ -37,7 +37,7 @@ namespace XerahS.Core
     /// Manages loading and saving of all application settings.
     /// Provides centralized access to all configuration objects.
     /// </summary>
-    public static class SettingManager
+    public static class SettingsManager
     {
         public const string AppName = ShareXResources.AppName;
 

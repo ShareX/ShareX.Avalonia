@@ -98,7 +98,7 @@ public partial class App : Application
 
             desktop.Exit += (sender, args) =>
             {
-                XerahS.Core.SettingManager.SaveAllSettings();
+                XerahS.Core.SettingsManager.SaveAllSettings();
             };
 
             // Subscribe to workflow completion for notification
@@ -229,14 +229,14 @@ public partial class App : Application
             WorkflowManager.HotkeyTriggered += HotkeyManager_HotkeyTriggered;
 
             // Load hotkeys from configuration
-            var hotkeys = Core.SettingManager.WorkflowsConfig.Hotkeys;
+            var hotkeys = Core.SettingsManager.WorkflowsConfig.Hotkeys;
 
             // If configuration is empty/null, fallback to defaults
             if (hotkeys == null || hotkeys.Count == 0)
             {
                 hotkeys = Core.Hotkeys.WorkflowManager.GetDefaultWorkflowList();
                 // Update config with defaults so they get saved
-                Core.SettingManager.WorkflowsConfig.Hotkeys = hotkeys;
+                Core.SettingsManager.WorkflowsConfig.Hotkeys = hotkeys;
             }
 
             WorkflowManager.UpdateHotkeys(hotkeys);

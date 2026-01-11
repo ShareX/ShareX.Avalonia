@@ -223,7 +223,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
 
         if (settings.TaskSettings.OverrideCustomUploader)
         {
-            var customList = SettingManager.UploadersConfig.CustomUploadersList;
+            var customList = SettingsManager.UploadersConfig.CustomUploadersList;
             if (settings.TaskSettings.CustomUploaderIndex >= 0 && settings.TaskSettings.CustomUploaderIndex < customList.Count)
             {
                 var custom = customList[settings.TaskSettings.CustomUploaderIndex];
@@ -233,7 +233,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
         }
         else if (settings.TaskSettings.OverrideFTP)
         {
-            var ftpList = SettingManager.UploadersConfig.FTPAccountList;
+            var ftpList = SettingsManager.UploadersConfig.FTPAccountList;
             if (settings.TaskSettings.FTPIndex >= 0 && settings.TaskSettings.FTPIndex < ftpList.Count)
             {
                 var ftp = ftpList[settings.TaskSettings.FTPIndex];
@@ -284,7 +284,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 Model.TaskSettings.OverrideFTP = false;
 
                 // 1. Check if it's a Custom Uploader
-                var customList = SettingManager.UploadersConfig.CustomUploadersList;
+                var customList = SettingsManager.UploadersConfig.CustomUploadersList;
                 var customIndex = customList.FindIndex(c => c.Name == SelectedDestination.DisplayName);
                 
                 // 2. Check if it's an FTP account (DisplayName format is "FTP: Name")
@@ -299,7 +299,7 @@ public partial class WorkflowEditorViewModel : ViewModelBase
                 else if (isFtp)
                 {
                     var ftpName = SelectedDestination.DisplayName.Substring(5);
-                    var ftpList = SettingManager.UploadersConfig.FTPAccountList;
+                    var ftpList = SettingsManager.UploadersConfig.FTPAccountList;
                     var ftpIndex = ftpList.FindIndex(f => f.Name == ftpName);
                     
                     if (ftpIndex >= 0)

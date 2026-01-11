@@ -83,7 +83,7 @@ namespace XerahS.CLI.Commands
         {
             try
             {
-                var workflow = SettingManager.WorkflowsConfig?.Hotkeys?
+                var workflow = SettingsManager.WorkflowsConfig?.Hotkeys?
                     .FirstOrDefault(w => w.Id == workflowId);
 
                 if (workflow == null)

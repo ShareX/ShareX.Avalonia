@@ -59,7 +59,7 @@ namespace XerahS.Bootstrap
                 result.PlatformServicesInitialized = true;
 
                 // 3. Load configuration
-                SettingManager.LoadInitialSettings();
+                SettingsManager.LoadInitialSettings();
                 result.ConfigurationLoaded = true;
 
                 // 4. Initialize recording (async, critical for ScreenRecorder)
@@ -104,7 +104,7 @@ namespace XerahS.Bootstrap
             {
                 var baseFolder = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    SettingManager.AppName);
+                    SettingsManager.AppName);
                 var logsFolder = Path.Combine(baseFolder, "Logs", DateTime.Now.ToString("yyyy-MM"));
                 logPath = Path.Combine(logsFolder, $"ShareX-{DateTime.Now:yyyy-MM-dd}.log");
             }

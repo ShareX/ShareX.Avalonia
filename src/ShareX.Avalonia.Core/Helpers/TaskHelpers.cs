@@ -224,7 +224,7 @@ public static partial class TaskHelpers
     /// </summary>
     public static string GetFileName(TaskSettings taskSettings, string extension, TaskMetadata? metadata)
     {
-        var settings = SettingManager.Settings;
+        var settings = SettingsManager.Settings;
         string pattern;
 
         // Use window-specific pattern if available
@@ -281,7 +281,7 @@ public static partial class TaskHelpers
     /// </summary>
     public static string GetScreenshotsFolder(TaskSettings? taskSettings = null, TaskMetadata? metadata = null)
     {
-        var settings = SettingManager.Settings;
+        var settings = SettingsManager.Settings;
         string screenshotsFolder;
 
         var nameParser = new NameParser(NameParserType.FilePath);
@@ -329,7 +329,7 @@ public static partial class TaskHelpers
     /// </summary>
     public static string GetScreenshotsParentFolder(TaskSettings? taskSettings = null)
     {
-        var settings = SettingManager.Settings;
+        var settings = SettingsManager.Settings;
 
         // Check if custom path is configured
         if (settings.UseCustomScreenshotsPath && !string.IsNullOrEmpty(settings.CustomScreenshotsPath))
@@ -506,7 +506,7 @@ public static partial class TaskHelpers
     /// </summary>
     public static bool IsUploadAllowed()
     {
-        return !SettingManager.Settings.DisableUpload;
+        return !SettingsManager.Settings.DisableUpload;
     }
 
     #endregion

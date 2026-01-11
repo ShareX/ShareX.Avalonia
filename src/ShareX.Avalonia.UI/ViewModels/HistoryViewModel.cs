@@ -88,13 +88,13 @@ namespace XerahS.UI.ViewModels
             HistoryItems = new ObservableCollection<HistoryItem>();
 
             // Create history manager with centralized path
-            var historyPath = SettingManager.GetHistoryFilePath();
+            var historyPath = SettingsManager.GetHistoryFilePath();
             DebugHelper.WriteLine($"HistoryViewModel - History file path: {historyPath}");
 
             _historyManager = new HistoryManagerSQLite(historyPath);
 
             // Configure backup settings similar to JSON files
-            _historyManager.BackupFolder = SettingManager.HistoryBackupFolder;
+            _historyManager.BackupFolder = SettingsManager.HistoryBackupFolder;
             _historyManager.CreateBackup = true;
             _historyManager.CreateWeeklyBackup = true;
 
@@ -124,7 +124,7 @@ namespace XerahS.UI.ViewModels
 
             try
             {
-                var historyPath = SettingManager.GetHistoryFilePath();
+                var historyPath = SettingsManager.GetHistoryFilePath();
                 DebugHelper.WriteLine($"History.xml location: {historyPath} (exists={File.Exists(historyPath)})");
 
                 // calculating offset

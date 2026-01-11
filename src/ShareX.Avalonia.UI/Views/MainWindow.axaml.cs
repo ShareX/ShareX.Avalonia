@@ -99,7 +99,7 @@ namespace XerahS.UI.Views
                         // Fallback to SettingManager
                         if (workflow == null)
                         {
-                            workflow = SettingManager.WorkflowsConfig.Hotkeys.FirstOrDefault(w => w.Id == workflowId);
+                            workflow = SettingsManager.WorkflowsConfig.Hotkeys.FirstOrDefault(w => w.Id == workflowId);
                         }
 
                         if (workflow != null)
@@ -340,14 +340,14 @@ namespace XerahS.UI.Views
 
                 if (workflow == null)
                 {
-                    workflow = SettingManager.WorkflowsConfig.Hotkeys.FirstOrDefault(x => x.Id == workflowId);
+                    workflow = SettingsManager.WorkflowsConfig.Hotkeys.FirstOrDefault(x => x.Id == workflowId);
                 }
             }
 
             // Fallback to job type if no ID provided or not found
             if (workflow == null)
             {
-                workflow = SettingManager.WorkflowsConfig.Hotkeys.FirstOrDefault(x => x.Job == jobType);
+                workflow = SettingsManager.WorkflowsConfig.Hotkeys.FirstOrDefault(x => x.Job == jobType);
             }
 
             if (workflow != null && workflow.TaskSettings != null)

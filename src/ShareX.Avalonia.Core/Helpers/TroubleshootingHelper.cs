@@ -167,7 +167,7 @@ namespace XerahS.Core.Helpers
         /// </summary>
         public static string GetTroubleshootingFolder()
         {
-            return Path.Combine(SettingManager.PersonalFolder, "Troubleshooting");
+            return Path.Combine(SettingsManager.PersonalFolder, "Troubleshooting");
         }
 
         #region DPI Troubleshooting Logging
