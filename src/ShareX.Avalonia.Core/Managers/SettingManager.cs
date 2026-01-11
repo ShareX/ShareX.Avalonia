@@ -50,29 +50,19 @@ namespace XerahS.Core
         public const string WorkflowsConfigFileNamePrefix = "WorkflowsConfig";
         public const string WorkflowsConfigFileNameExtension = "json";
         public const string WorkflowsConfigFileName = WorkflowsConfigFileNamePrefix + "." + WorkflowsConfigFileNameExtension;
-        public const string BackupFolderName = "Backup";
-        public const string SettingsFolderName = "Settings";
 
         #endregion
 
         #region Static Properties
 
         /// <summary>
-        /// Root folder for user settings. Defaults to Documents/XerahS.
+        /// Root folder for user settings. Delegates to PathsManager.
         /// </summary>
         public static string PersonalFolder
         {
-            get
-            {
-                if (string.IsNullOrEmpty(_personalFolder))
-                {
-                    _personalFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), AppName);
-                }
-                return _personalFolder;
-            }
-            set => _personalFolder = value;
+            get => XerahS.Common.PathsManager.PersonalFolder;
+            set => XerahS.Common.PathsManager.PersonalFolder = value;
         }
-        private static string _personalFolder = "";
 
         /// <summary>
         /// Event raised when settings are saved
@@ -90,12 +80,12 @@ namespace XerahS.Core
         /// <summary>
         /// Folder containing settings files
         /// </summary>
-        public static string SettingsFolder => Path.Combine(PersonalFolder, SettingsFolderName);
+        public static string SettingsFolder => XerahS.Common.PathsManager.SettingsFolder;
 
         /// <summary>
         /// History folder path
         /// </summary>
-        public static string HistoryFolder => Path.Combine(PersonalFolder, ShareXResources.HistoryFolderName);
+        public static string HistoryFolder => XerahS.Common.PathsManager.HistoryFolder;
 
         /// <summary>
         /// Screenshots folder path
@@ -115,12 +105,12 @@ namespace XerahS.Core
         /// <summary>
         /// Backup folder path
         /// </summary>
-        public static string BackupFolder => Path.Combine(SettingsFolder, BackupFolderName);
+        public static string BackupFolder => XerahS.Common.PathsManager.BackupFolder;
 
         /// <summary>
         /// History backup folder path
         /// </summary>
-        public static string HistoryBackupFolder => Path.Combine(HistoryFolder, BackupFolderName);
+        public static string HistoryBackupFolder => XerahS.Common.PathsManager.HistoryBackupFolder;
 
         /// <summary>
         /// Application config file path
@@ -502,14 +492,14 @@ namespace XerahS.Core
 
 
             // Initialize PathsManager
-            XerahS.Common.PathsManager.PersonalFolder = PersonalFolder;
             EnsureDirectoriesExist();
         }
 
         public static void EnsureDirectoriesExist()
         {
-                FileHelpers.CreateDirectory(FrameDumpsFolder);
-            }
+            // Delegate all directory creation to PathsManager
+            XerahS.Common.PathsManager.EnsureDirectoriesExist();
+        }
 
 
         /// <summary>

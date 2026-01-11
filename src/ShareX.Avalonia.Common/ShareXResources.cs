@@ -38,10 +38,14 @@ namespace XerahS.Common
             var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version;
             return version != null ? $"v{version.Major}.{version.Minor}.{version.Build}" : "v0.0.0";
         }
+        
         public const string HistoryFolderName = "History";
         public const string ScreenshotsFolderName = "Screenshots";
         public const string ScreencastsFolderName = "Screencasts";
+        public const string SettingsFolderName = "Settings";
+        public const string BackupFolderName = "Backup";
         public const string HistoryFileName = "History.db";
+        
         public static string UserAgent => AppName;
     }
 }

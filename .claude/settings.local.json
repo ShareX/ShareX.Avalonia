@@ -19,7 +19,16 @@
       "Bash(mkdir:*)",
       "Bash(test:*)",
       "Bash(nul)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(systeminfo:*)",
+      "Bash(findstr:*)",
+      "Bash(ver:*)",
+      "Bash(cmd.exe /c ver)",
+      "Bash(cmd.exe /c \"echo %USERPROFILE%\")",
+      "Bash(./XerahS.exe list workflows)",
+      "Bash(./XerahS.exe workflow run:*)",
+      "Bash(./XerahS.exe run:*)",
+      "Bash(echo:*)"
     ]
   }
 }

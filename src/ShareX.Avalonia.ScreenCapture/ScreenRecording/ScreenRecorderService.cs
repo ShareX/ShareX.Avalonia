@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Linq;
 using XerahS.Common;
 
 namespace XerahS.ScreenCapture.ScreenRecording;
@@ -343,7 +344,39 @@ public class ScreenRecorderService : IRecordingService
             return options.Region.Width;
         }
 
-        // Default to primary screen width
+        if (options.Mode == CaptureMode.Window && options.TargetWindowHandle != IntPtr.Zero)
+        {
+            try
+            {
+                var windowBounds = XerahS.Platform.Abstractions.PlatformServices.Window.GetWindowBounds(options.TargetWindowHandle);
+                if (windowBounds.Width > 0)
+                {
+                    DebugHelper.WriteLine($"[ScreenRecorder] Window capture width from handle: {windowBounds.Width}");
+                    return windowBounds.Width;
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteLine($"[ScreenRecorder] Failed to get window bounds: {ex.Message}");
+            }
+        }
+
+        // Get actual screen width from platform services
+        try
+        {
+            var screens = XerahS.Platform.Abstractions.PlatformServices.Screen.GetAllScreens();
+            var primaryScreen = screens.FirstOrDefault(s => s.IsPrimary);
+            if (primaryScreen != null)
+            {
+                return primaryScreen.Bounds.Width;
+            }
+        }
+        catch
+        {
+            // Fallback if platform services not available
+        }
+
+        // Default fallback
         return 1920;
     }
 
@@ -354,7 +387,39 @@ public class ScreenRecorderService : IRecordingService
             return options.Region.Height;
         }
 
-        // Default to primary screen height
+        if (options.Mode == CaptureMode.Window && options.TargetWindowHandle != IntPtr.Zero)
+        {
+            try
+            {
+                var windowBounds = XerahS.Platform.Abstractions.PlatformServices.Window.GetWindowBounds(options.TargetWindowHandle);
+                if (windowBounds.Height > 0)
+                {
+                    DebugHelper.WriteLine($"[ScreenRecorder] Window capture height from handle: {windowBounds.Height}");
+                    return windowBounds.Height;
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteLine($"[ScreenRecorder] Failed to get window bounds: {ex.Message}");
+            }
+        }
+
+        // Get actual screen height from platform services
+        try
+        {
+            var screens = XerahS.Platform.Abstractions.PlatformServices.Screen.GetAllScreens();
+            var primaryScreen = screens.FirstOrDefault(s => s.IsPrimary);
+            if (primaryScreen != null)
+            {
+                return primaryScreen.Bounds.Height;
+            }
+        }
+        catch
+        {
+            // Fallback if platform services not available
+        }
+
+        // Default fallback
         return 1080;
     }
 

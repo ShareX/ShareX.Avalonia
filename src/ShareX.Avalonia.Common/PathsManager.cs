@@ -5,11 +5,20 @@ namespace XerahS.Common
 {
     public static class PathsManager
     {
-        private static string _personalFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "ShareX");
+        private static string _personalFolder = "";
 
         public static string PersonalFolder
         {
-            get => _personalFolder;
+            get
+            {
+                if (string.IsNullOrEmpty(_personalFolder))
+                {
+                    _personalFolder = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), 
+                        ShareXResources.AppName);
+                }
+                return _personalFolder;
+            }
             set
             {
                 if (!string.IsNullOrEmpty(value))
@@ -22,6 +31,11 @@ namespace XerahS.Common
         public static string ScreenshotsFolder => Path.Combine(PersonalFolder, ShareXResources.ScreenshotsFolderName);
         public static string ScreencastsFolder => Path.Combine(PersonalFolder, ShareXResources.ScreencastsFolderName);
         public static string FrameDumpsFolder => Path.Combine(ScreencastsFolder, "FrameDumps");
+        
+        public static string SettingsFolder => Path.Combine(PersonalFolder, ShareXResources.SettingsFolderName);
+        public static string HistoryFolder => Path.Combine(PersonalFolder, ShareXResources.HistoryFolderName);
+        public static string BackupFolder => Path.Combine(SettingsFolder, ShareXResources.BackupFolderName);
+        public static string HistoryBackupFolder => Path.Combine(HistoryFolder, ShareXResources.BackupFolderName);
 
         public static void EnsureDirectoriesExist()
         {
@@ -33,6 +47,18 @@ namespace XerahS.Common
             
             if (!Directory.Exists(ScreencastsFolder))
                 Directory.CreateDirectory(ScreencastsFolder);
+            
+            if (!Directory.Exists(FrameDumpsFolder))
+                Directory.CreateDirectory(FrameDumpsFolder);
+            
+            if (!Directory.Exists(SettingsFolder))
+                Directory.CreateDirectory(SettingsFolder);
+            
+            if (!Directory.Exists(HistoryFolder))
+                Directory.CreateDirectory(HistoryFolder);
+            
+            if (!Directory.Exists(BackupFolder))
+                Directory.CreateDirectory(BackupFolder);
         }
     }
 }
