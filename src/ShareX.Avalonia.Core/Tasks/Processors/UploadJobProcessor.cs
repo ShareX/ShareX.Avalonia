@@ -35,7 +35,7 @@ namespace XerahS.Core.Tasks.Processors
             {
                 info.Result = result;
 
-                if (result.IsSuccess)
+                if (result.IsSuccess || (!result.IsError && !string.IsNullOrEmpty(result.URL)))
                 {
                     info.Metadata.UploadURL = result.URL;
                     DebugHelper.WriteLine($"[UploadTrace {info.CorrelationId}] Upload successful: {result.URL}");
@@ -44,17 +44,27 @@ namespace XerahS.Core.Tasks.Processors
                 else
                 {
                     var errorMsg = result.Response ?? "Unknown error";
-                    DebugHelper.WriteLine($"Upload failed: {errorMsg}");
-                    
-                    if (PlatformServices.IsInitialized && PlatformServices.Toast != null)
+                    // If URL is present but we fell here, it means IsError is true
+                    if (!string.IsNullOrEmpty(result.URL))
                     {
-                        PlatformServices.Toast.ShowToast(new Platform.Abstractions.ToastConfig
+                         DebugHelper.WriteLine($"Upload finished with errors but URL present: {result.URL}. (Error: {errorMsg})");
+                         // If we have a URL, let's treat it as partial success for metadata purposes
+                         info.Metadata.UploadURL = result.URL;
+                    }
+                    else
+                    {
+                        DebugHelper.WriteLine($"Upload failed: {errorMsg}");
+                    
+                        if (PlatformServices.IsInitialized && PlatformServices.Toast != null)
                         {
-                            Title = "Upload Failed",
-                            Text = errorMsg,
-                            Duration = 4f,
-                            AutoHide = true
-                        });
+                            PlatformServices.Toast.ShowToast(new Platform.Abstractions.ToastConfig
+                            {
+                                Title = "Upload Failed",
+                                Text = errorMsg,
+                                Duration = 4f,
+                                AutoHide = true
+                            });
+                        }
                     }
                 }
             }

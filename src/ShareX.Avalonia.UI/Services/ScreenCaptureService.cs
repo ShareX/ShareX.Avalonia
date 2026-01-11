@@ -49,17 +49,30 @@ namespace XerahS.UI.Services
 
         public async Task<SKRectI> SelectRegionAsync(CaptureOptions? options = null)
         {
+            TroubleshootingHelper.Log("RegionSelection", "START", "SelectRegionAsync called");
             SKRectI selection = SKRectI.Empty;
 
-            // Show UI window on UI thread
-            await Dispatcher.UIThread.InvokeAsync(async () =>
+            try
             {
-                var window = new RegionCaptureWindow();
-                window.Show();
-                selection = await window.GetResultAsync();
-            });
+                // Show UI window on UI thread
+                await Dispatcher.UIThread.InvokeAsync(async () =>
+                {
+                    TroubleshootingHelper.Log("RegionSelection", "UI_THREAD", "Creating RegionCaptureWindow");
+                    var window = new RegionCaptureWindow();
+                    window.Show();
+                    TroubleshootingHelper.Log("RegionSelection", "UI_THREAD", "Window shown, waiting for result");
+                    selection = await window.GetResultAsync();
+                    TroubleshootingHelper.Log("RegionSelection", "UI_THREAD", $"GetResultAsync returned: {selection}");
+                });
 
-            TroubleshootingHelper.Log("RegionSelection", "RESULT", $"Region selection returned: {selection}");
+                TroubleshootingHelper.Log("RegionSelection", "RESULT", $"Region selection returned: {selection} (IsEmpty={selection.IsEmpty}, Width={selection.Width}, Height={selection.Height})");
+            }
+            catch (Exception ex)
+            {
+                TroubleshootingHelper.Log("RegionSelection", "ERROR", $"Exception in SelectRegionAsync: {ex.Message}");
+                TroubleshootingHelper.Log("RegionSelection", "ERROR", $"Stack trace: {ex.StackTrace}");
+            }
+
             return selection;
         }
 

@@ -41,7 +41,7 @@ namespace XerahS.Uploaders
         {
             get
             {
-                return isSuccess && !string.IsNullOrEmpty(Response);
+                return isSuccess && (!string.IsNullOrEmpty(Response) || !string.IsNullOrEmpty(URL));
             }
             set
             {
