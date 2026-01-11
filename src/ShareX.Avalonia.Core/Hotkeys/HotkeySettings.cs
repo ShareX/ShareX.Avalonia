@@ -73,6 +73,11 @@ public class WorkflowSettings
     /// </summary>
     public bool Enabled { get; set; } = true;
 
+    /// <summary>
+    /// Whether this workflow is pinned to the tray menu
+    /// </summary>
+    public bool PinnedToTray { get; set; }
+
     public WorkflowSettings()
     {
         HotkeyInfo = new HotkeyInfo();

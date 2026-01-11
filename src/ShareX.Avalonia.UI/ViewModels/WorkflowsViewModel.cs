@@ -17,6 +17,8 @@ public partial class WorkflowsViewModel : ViewModelBase
     [NotifyCanExecuteChangedFor(nameof(DuplicateCommand))]
     [NotifyCanExecuteChangedFor(nameof(MoveUpCommand))]
     [NotifyCanExecuteChangedFor(nameof(MoveDownCommand))]
+    [NotifyCanExecuteChangedFor(nameof(TogglePinCommand))]
+    [NotifyPropertyChangedFor(nameof(PinButtonText))]
     private HotkeyItemViewModel? _selectedWorkflow;
 
 
@@ -285,4 +287,23 @@ public partial class WorkflowsViewModel : ViewModelBase
             SaveHotkeys();
         }
     }
+
+    [RelayCommand(CanExecute = nameof(CanTogglePin))]
+    private void TogglePin()
+    {
+        if (SelectedWorkflow != null && !SelectedWorkflow.IsNavWorkflow)
+        {
+            SelectedWorkflow.PinnedToTray = !SelectedWorkflow.PinnedToTray;
+            SaveHotkeys();
+            TrayIconHelper.Instance.RefreshFromSettings();
+            OnPropertyChanged(nameof(PinButtonText));
+        }
+    }
+
+    private bool CanTogglePin()
+    {
+        return SelectedWorkflow != null && !SelectedWorkflow.IsNavWorkflow;
+    }
+
+    public string PinButtonText => SelectedWorkflow?.PinnedToTray == true ? "Unpin from Tray" : "Pin to Tray";
 }

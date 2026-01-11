@@ -23,6 +23,7 @@
 
 #endregion License Information (GPL v3)
 
+using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Input;
 using XerahS.Common;
@@ -46,27 +47,12 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     public event PropertyChangedEventHandler? PropertyChanged;
 
-    // Dynamic workflow commands (first 3 workflows from list)
-    public ICommand Workflow1Command { get; }
-    public ICommand Workflow2Command { get; }
-    public ICommand Workflow3Command { get; }
+    public NativeMenu TrayMenu { get; private set; }
+
     public ICommand OpenMainWindowCommand { get; }
     public ICommand OpenSettingsCommand { get; }
     public ICommand ExitCommand { get; }
     public ICommand TrayClickCommand { get; }
-
-    // Workflow names for tray menu display
-    public string Workflow1Name => GetWorkflowName(0) ?? "Workflow 1";
-    public string Workflow2Name => GetWorkflowName(1) ?? "Workflow 2";
-    public string Workflow3Name => GetWorkflowName(2) ?? "Workflow 3";
-    public bool HasWorkflow1 => GetWorkflow(0) != null;
-    public bool HasWorkflow2 => GetWorkflow(1) != null;
-    public bool HasWorkflow3 => GetWorkflow(2) != null;
-
-    // Workflow IDs for execution
-    public string? Workflow1Id => GetWorkflow(0)?.Id;
-    public string? Workflow2Id => GetWorkflow(1)?.Id;
-    public string? Workflow3Id => GetWorkflow(2)?.Id;
 
     private bool _showTray;
     public bool ShowTray
@@ -84,9 +70,8 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     private TrayIconHelper()
     {
-        Workflow1Command = new RelayCommand(() => ExecuteWorkflowByIndex(0));
-        Workflow2Command = new RelayCommand(() => ExecuteWorkflowByIndex(1));
-        Workflow3Command = new RelayCommand(() => ExecuteWorkflowByIndex(2));
+        TrayMenu = new NativeMenu();
+        
         OpenMainWindowCommand = new RelayCommand(OpenMainWindow);
         OpenSettingsCommand = new RelayCommand(OpenSettings);
         ExitCommand = new RelayCommand(Exit);
@@ -94,6 +79,9 @@ public class TrayIconHelper : INotifyPropertyChanged
 
         // Initialize from settings
         _showTray = SettingManager.Settings.ShowTray;
+
+        // Build initial menu
+        BuildTrayMenu();
 
         // Subscribe to settings changes 
         SettingManager.SettingsChanged += OnSettingsChanged;
@@ -103,13 +91,8 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         // Update ShowTray when settings change
         ShowTray = SettingManager.Settings.ShowTray;
-        // Notify workflow name changes in case workflow list changed
-        OnPropertyChanged(nameof(Workflow1Name));
-        OnPropertyChanged(nameof(Workflow2Name));
-        OnPropertyChanged(nameof(Workflow3Name));
-        OnPropertyChanged(nameof(HasWorkflow1));
-        OnPropertyChanged(nameof(HasWorkflow2));
-        OnPropertyChanged(nameof(HasWorkflow3));
+        // Rebuild menu on settings change (e.g. workflows changed)
+        BuildTrayMenu();
     }
 
     /// <summary>
@@ -119,12 +102,45 @@ public class TrayIconHelper : INotifyPropertyChanged
     public void RefreshFromSettings()
     {
         ShowTray = SettingManager.Settings.ShowTray;
-        OnPropertyChanged(nameof(Workflow1Name));
-        OnPropertyChanged(nameof(Workflow2Name));
-        OnPropertyChanged(nameof(Workflow3Name));
-        OnPropertyChanged(nameof(HasWorkflow1));
-        OnPropertyChanged(nameof(HasWorkflow2));
-        OnPropertyChanged(nameof(HasWorkflow3));
+        BuildTrayMenu();
+    }
+
+    public void BuildTrayMenu()
+    {
+        TrayMenu.Items.Clear();
+
+        var workflows = SettingManager.WorkflowsConfig?.Hotkeys;
+        if (workflows != null)
+        {
+            int index = 0;
+            foreach (var workflow in workflows)
+            {
+                // Include if it's one of the top 3 (NavWorkflow) OR manually pinned
+                if (index < 3 || workflow.PinnedToTray)
+                {
+                    string displayName = GetWorkflowName(workflow);
+                    var item = new NativeMenuItem
+                    {
+                        Header = displayName,
+                        Command = new RelayCommand(() => ExecuteWorkflow(workflow))
+                    };
+                    TrayMenu.Items.Add(item);
+                }
+                index++;
+            }
+        }
+
+        if (TrayMenu.Items.Count > 0)
+        {
+            TrayMenu.Items.Add(new NativeMenuItemSeparator());
+        }
+
+        TrayMenu.Items.Add(new NativeMenuItem { Header = "Open Main Window", Command = OpenMainWindowCommand });
+        TrayMenu.Items.Add(new NativeMenuItem { Header = "Settings", Command = OpenSettingsCommand });
+        TrayMenu.Items.Add(new NativeMenuItemSeparator());
+        TrayMenu.Items.Add(new NativeMenuItem { Header = "Exit", Command = ExitCommand });
+
+        OnPropertyChanged(nameof(TrayMenu));
     }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
@@ -133,25 +149,11 @@ public class TrayIconHelper : INotifyPropertyChanged
     }
 
     /// <summary>
-    /// Get workflow by list index (0-based)
+    /// Get workflow display name
     /// </summary>
-    private static WorkflowSettings? GetWorkflow(int index)
+    private static string GetWorkflowName(WorkflowSettings workflow)
     {
-        var workflows = SettingManager.WorkflowsConfig?.Hotkeys;
-        if (workflows != null && index >= 0 && index < workflows.Count)
-        {
-            return workflows[index];
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Get workflow display name by list index
-    /// </summary>
-    private static string? GetWorkflowName(int index)
-    {
-        var workflow = GetWorkflow(index);
-        if (workflow == null) return null;
+        if (workflow == null) return "Unknown Workflow";
 
         // Priority 1: Custom description from TaskSettings (same as Navigation Bar)
         if (!string.IsNullOrEmpty(workflow.TaskSettings?.Description))
@@ -169,20 +171,12 @@ public class TrayIconHelper : INotifyPropertyChanged
         return EnumExtensions.GetDescription(workflow.Job);
     }
 
-    /// <summary>
-    /// Execute workflow by list index using its ID
-    /// </summary>
-    private async void ExecuteWorkflowByIndex(int index)
+    private async void ExecuteWorkflow(WorkflowSettings workflow)
     {
-        var workflow = GetWorkflow(index);
         if (workflow != null)
         {
-            DebugHelper.WriteLine($"Tray: Execute workflow {index} (ID: {workflow.Id}): {workflow}");
+            DebugHelper.WriteLine($"Tray: Execute workflow (ID: {workflow.Id}): {workflow}");
             await Core.Helpers.TaskHelpers.ExecuteWorkflow(workflow, workflow.Id);
-        }
-        else
-        {
-            DebugHelper.WriteLine($"Tray: No workflow at index {index}");
         }
     }
 
