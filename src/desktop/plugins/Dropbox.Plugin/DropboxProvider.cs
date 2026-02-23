@@ -103,6 +103,42 @@ public class DropboxProvider : UploaderProviderBase, IUploaderExplorer
 
     public bool SupportsFolders => true;
 
+    public override bool ValidateSettings(string settingsJson)
+    {
+        if (string.IsNullOrWhiteSpace(settingsJson) || Secrets == null)
+        {
+            return false;
+        }
+
+        DropboxConfigModel config = DeserializeConfig(settingsJson);
+        if (string.IsNullOrWhiteSpace(config.SecretKey))
+        {
+            return false;
+        }
+
+        string clientId = Secrets.GetSecret(ProviderId, config.SecretKey, "clientId") ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(clientId))
+        {
+            return false;
+        }
+
+        string? tokenJson = Secrets.GetSecret(ProviderId, config.SecretKey, "oauthToken");
+        if (string.IsNullOrWhiteSpace(tokenJson))
+        {
+            return false;
+        }
+
+        try
+        {
+            OAuth2Token? token = JsonConvert.DeserializeObject<OAuth2Token>(tokenJson);
+            return token != null && !string.IsNullOrWhiteSpace(token.access_token);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<ExplorerPage> ListAsync(ExplorerQuery query, CancellationToken cancellation = default)
     {
         DropboxConfigModel config = DeserializeConfig(query.SettingsJson);
@@ -253,9 +289,9 @@ public class DropboxProvider : UploaderProviderBase, IUploaderExplorer
 
         string clientId = Secrets.GetSecret(ProviderId, config.SecretKey, "clientId") ?? string.Empty;
         string clientSecret = Secrets.GetSecret(ProviderId, config.SecretKey, "clientSecret") ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(clientId) || string.IsNullOrWhiteSpace(clientSecret))
+        if (string.IsNullOrWhiteSpace(clientId))
         {
-            throw new InvalidOperationException("Dropbox client credentials are missing.");
+            throw new InvalidOperationException("Dropbox client ID is missing.");
         }
 
         OAuth2Info authInfo = new(clientId, clientSecret);
@@ -519,12 +555,9 @@ public class DropboxProvider : UploaderProviderBase, IUploaderExplorer
             mode = "strict"
         };
 
-        string body = JsonConvert.SerializeObject(payload);
-        using SysHttpRequestMessage request = new(SysHttpMethod.Post, UrlGetThumbnail)
-        {
-            Content = new StringContent(body, Encoding.UTF8, "application/json")
-        };
+        using SysHttpRequestMessage request = new(SysHttpMethod.Post, UrlGetThumbnail);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.TryAddWithoutValidation("Dropbox-API-Arg", JsonConvert.SerializeObject(payload));
 
         try
         {
@@ -647,4 +680,3 @@ public class DropboxProvider : UploaderProviderBase, IUploaderExplorer
         }
     }
 }
-

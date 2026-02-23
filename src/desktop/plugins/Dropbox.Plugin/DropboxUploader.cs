@@ -74,32 +74,74 @@ public sealed class DropboxUploader : FileUploader, IOAuth2Basic
 
     public string GetAuthorizationURL()
     {
+        string redirectUri = string.IsNullOrWhiteSpace(_config.RedirectUri) ? Links.Callback : _config.RedirectUri;
+        return GetAuthorizationURL(redirectUri);
+    }
+
+    public string GetAuthorizationURL(string redirectUri, string? state = null, OAuth2ProofKey? proofKey = null)
+    {
+        if (string.IsNullOrWhiteSpace(redirectUri))
+        {
+            redirectUri = Links.Callback;
+        }
+
         Dictionary<string, string> args = new()
         {
             ["response_type"] = "code",
             ["client_id"] = _authInfo.Client_ID,
-            ["redirect_uri"] = Links.Callback,
+            ["redirect_uri"] = redirectUri,
             ["token_access_type"] = "offline"
         };
+
+        if (!string.IsNullOrWhiteSpace(state))
+        {
+            args["state"] = state;
+        }
+
+        if (proofKey != null)
+        {
+            args["code_challenge"] = proofKey.CodeChallenge;
+            args["code_challenge_method"] = proofKey.ChallengeMethod;
+        }
 
         return URLHelpers.CreateQueryString(UrlOAuth2Authorize, args);
     }
 
     public bool GetAccessToken(string code)
     {
+        string redirectUri = string.IsNullOrWhiteSpace(_config.RedirectUri) ? Links.Callback : _config.RedirectUri;
+        return GetAccessToken(code, redirectUri);
+    }
+
+    public bool GetAccessToken(string code, string redirectUri, string? codeVerifier = null)
+    {
         if (string.IsNullOrWhiteSpace(code))
         {
             return false;
         }
 
+        if (string.IsNullOrWhiteSpace(redirectUri))
+        {
+            redirectUri = Links.Callback;
+        }
+
         Dictionary<string, string> args = new()
         {
             ["client_id"] = _authInfo.Client_ID,
-            ["client_secret"] = _authInfo.Client_Secret,
             ["grant_type"] = "authorization_code",
             ["code"] = code.Trim(),
-            ["redirect_uri"] = Links.Callback
+            ["redirect_uri"] = redirectUri
         };
+
+        if (!string.IsNullOrWhiteSpace(_authInfo.Client_Secret))
+        {
+            args["client_secret"] = _authInfo.Client_Secret;
+        }
+
+        if (!string.IsNullOrWhiteSpace(codeVerifier))
+        {
+            args["code_verifier"] = codeVerifier;
+        }
 
         string? response = SendRequestURLEncoded(XerahS.Uploaders.HttpMethod.POST, UrlOAuth2Token, args);
         return ApplyTokenResponse(response);
@@ -116,10 +158,14 @@ public sealed class DropboxUploader : FileUploader, IOAuth2Basic
         Dictionary<string, string> args = new()
         {
             ["client_id"] = _authInfo.Client_ID,
-            ["client_secret"] = _authInfo.Client_Secret,
             ["grant_type"] = "refresh_token",
             ["refresh_token"] = currentToken.refresh_token
         };
+
+        if (!string.IsNullOrWhiteSpace(_authInfo.Client_Secret))
+        {
+            args["client_secret"] = _authInfo.Client_Secret;
+        }
 
         string? response = SendRequestURLEncoded(XerahS.Uploaders.HttpMethod.POST, UrlOAuth2Token, args);
         return ApplyTokenResponse(response);
@@ -366,7 +412,6 @@ public sealed class DropboxUploader : FileUploader, IOAuth2Basic
     private bool HasOAuthConfiguration()
     {
         return !string.IsNullOrWhiteSpace(_authInfo.Client_ID)
-            && !string.IsNullOrWhiteSpace(_authInfo.Client_Secret)
             && _authInfo.Token != null
             && !string.IsNullOrWhiteSpace(_authInfo.Token.access_token);
     }

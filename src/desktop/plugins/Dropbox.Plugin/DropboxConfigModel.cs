@@ -32,6 +32,8 @@ namespace ShareX.Dropbox.Plugin;
 /// </summary>
 public class DropboxConfigModel
 {
+    public const string DefaultRedirectUri = "http://127.0.0.1:52475/oauth2/callback";
+
     public string SecretKey { get; set; } = Guid.NewGuid().ToString("N");
 
     public string UploadPath { get; set; } = "ShareX/%y/%mo";
@@ -39,5 +41,6 @@ public class DropboxConfigModel
     public bool AutoCreateShareableLink { get; set; } = true;
 
     public bool UseDirectLink { get; set; } = false;
-}
 
+    public string RedirectUri { get; set; } = DefaultRedirectUri;
+}

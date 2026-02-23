@@ -19,12 +19,32 @@
         </StackPanel>
 
         <StackPanel Spacing="5">
-            <TextBlock Text="Client Secret *" FontWeight="Medium"/>
+            <TextBlock Text="Client Secret" FontWeight="Medium"/>
             <TextBox Text="{Binding ClientSecret, UpdateSourceTrigger=PropertyChanged}"
-                     Watermark="Enter Dropbox app secret"
+                     Watermark="Optional for PKCE-enabled Dropbox apps"
                      PasswordChar="*"
                      Width="420"
                      HorizontalAlignment="Left"/>
+            <TextBlock Text="Desktop OAuth with PKCE can work without storing a client secret."
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="OAuth Redirect URI *" FontWeight="Medium"/>
+            <TextBox Text="{Binding RedirectUri, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="http://127.0.0.1:52475/oauth2/callback"
+                     Width="420"
+                     HorizontalAlignment="Left"/>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+                <Button Content="Open Dropbox App Console"
+                        Command="{Binding OpenDropboxAppConsoleCommand}"
+                        HorizontalAlignment="Left"/>
+                <TextBlock Text="Add this exact URI to your Dropbox app redirect URIs."
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
         </StackPanel>
 
         <StackPanel Spacing="5">
@@ -52,17 +72,35 @@
                 <TextBlock Text="Account Login" FontWeight="SemiBold"/>
 
                 <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsLoggedIn}">
-                    <Button Content="Step 1: Open Login URL"
-                            Command="{Binding OpenLoginUrlCommand}"/>
+                    <Button Content="Login with Browser"
+                            Command="{Binding StartBrowserLoginCommand}"
+                            IsEnabled="{Binding !IsLoginInProgress}"
+                            Classes="accent"/>
+                    <Button Content="Cancel"
+                            Command="{Binding CancelLoginCommand}"
+                            IsVisible="{Binding IsLoginInProgress}"/>
                 </StackPanel>
 
+                <ProgressBar IsIndeterminate="True"
+                             Height="6"
+                             IsVisible="{Binding IsLoginInProgress}"/>
+
+                <TextBlock Text="Primary flow: click Login with Browser, approve Dropbox in your browser, and return to app."
+                           FontSize="12"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           TextWrapping="Wrap"/>
+
                 <StackPanel Spacing="5" IsVisible="{Binding !IsLoggedIn}">
-                    <TextBlock Text="Step 2: Paste 'code' from Dropbox callback URL" FontSize="12"/>
+                    <TextBlock Text="Manual fallback (if callback capture fails)" FontSize="12" FontWeight="SemiBold"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Content="Open Login URL"
+                                Command="{Binding OpenLoginUrlCommand}"/>
+                    </StackPanel>
                     <StackPanel Orientation="Horizontal" Spacing="10">
                         <TextBox Text="{Binding AuthorizationCode}"
                                  Watermark="Paste code"
                                  Width="280"/>
-                        <Button Content="Complete Login"
+                        <Button Content="Exchange Code"
                                 Command="{Binding CompleteLoginCommand}"
                                 Classes="accent"/>
                     </StackPanel>
@@ -70,6 +108,9 @@
 
                 <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsLoggedIn}">
                     <TextBlock Text="Logged in" Foreground="Green" VerticalAlignment="Center"/>
+                    <Button Content="Re-login in Browser"
+                            Command="{Binding StartBrowserLoginCommand}"
+                            IsEnabled="{Binding !IsLoginInProgress}"/>
                     <Button Content="Refresh Account"
                             Command="{Binding RefreshAccountInfoCommand}"/>
                     <Button Content="Clear Login"
@@ -93,4 +134,3 @@
         </Border>
     </StackPanel>
 </UserControl>
-

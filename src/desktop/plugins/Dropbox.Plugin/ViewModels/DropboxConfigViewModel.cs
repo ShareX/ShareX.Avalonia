@@ -26,9 +26,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
+using XerahS.Common;
 using XerahS.Uploaders;
 using XerahS.Uploaders.PluginSystem;
 using System.Diagnostics;
+using System.Net;
 using System.Runtime.InteropServices;
 
 namespace ShareX.Dropbox.Plugin.ViewModels;
@@ -54,10 +56,16 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
     private bool _useDirectLink;
 
     [ObservableProperty]
+    private string _redirectUri = DropboxConfigModel.DefaultRedirectUri;
+
+    [ObservableProperty]
     private string _authorizationCode = string.Empty;
 
     [ObservableProperty]
     private bool _isLoggedIn;
+
+    [ObservableProperty]
+    private bool _isLoginInProgress;
 
     [ObservableProperty]
     private string? _accountSummary;
@@ -69,33 +77,136 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
     private ISecretStore? _secrets;
     private DropboxConfigModel _config = new();
     private DropboxUploader? _uploader;
+    private CancellationTokenSource? _browserLoginCts;
+    private string? _pendingRedirectUri;
+    private string? _pendingCodeVerifier;
+
+    [RelayCommand]
+    private async Task StartBrowserLoginAsync()
+    {
+        EnsureConfigFromFields(resetToken: false);
+
+        if (!TryValidateRequiredInputs(out string? validationError))
+        {
+            StatusMessage = validationError;
+            return;
+        }
+
+        if (!TryGetValidatedRedirectUri(out Uri redirectUri, out string? redirectUriError))
+        {
+            StatusMessage = redirectUriError;
+            return;
+        }
+
+        PersistCredentials();
+        DropboxUploader uploader = BuildUploader();
+        _uploader = uploader;
+        string state = Guid.NewGuid().ToString("N");
+        OAuth2ProofKey proofKey = new(OAuth2ChallengeMethod.SHA256);
+
+        _pendingRedirectUri = redirectUri.AbsoluteUri;
+        _pendingCodeVerifier = proofKey.CodeVerifier;
+        AuthorizationCode = string.Empty;
+
+        _browserLoginCts?.Cancel();
+        _browserLoginCts?.Dispose();
+        _browserLoginCts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+
+        IsLoginInProgress = true;
+        StatusMessage = "Opening Dropbox login in your browser...";
+
+        try
+        {
+            using DropboxOAuthLoopbackListener listener = new(redirectUri);
+            listener.Start();
+
+            string url = uploader.GetAuthorizationURL(redirectUri.AbsoluteUri, state, proofKey);
+            OpenUrl(url);
+
+            StatusMessage = "Complete login in your browser. Waiting for callback...";
+            DropboxOAuthCallbackResult callbackResult = await listener.WaitForCallbackAsync(state, _browserLoginCts.Token);
+            if (!callbackResult.IsSuccess || string.IsNullOrWhiteSpace(callbackResult.Code))
+            {
+                string callbackError = callbackResult.ErrorDescription ?? callbackResult.Error ?? "Unknown error";
+                StatusMessage = "Dropbox authorization failed: " + callbackError;
+                return;
+            }
+
+            AuthorizationCode = callbackResult.Code;
+            if (uploader.GetAccessToken(callbackResult.Code, redirectUri.AbsoluteUri, proofKey.CodeVerifier))
+            {
+                PersistToken(uploader.AuthInfo.Token);
+                IsLoggedIn = true;
+                AuthorizationCode = string.Empty;
+                _pendingCodeVerifier = null;
+                _pendingRedirectUri = null;
+                StatusMessage = "Dropbox login completed.";
+                LoadAccountSummary();
+            }
+            else
+            {
+                StatusMessage = "Dropbox token exchange failed. Verify app credentials and redirect URI.";
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            StatusMessage = "Dropbox login canceled.";
+        }
+        catch (HttpListenerException ex)
+        {
+            StatusMessage = "Unable to listen on redirect URI. " +
+                            "Use a free local port and configure the same URI in Dropbox app settings. " +
+                            ex.Message;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Dropbox login failed: " + ex.Message;
+        }
+        finally
+        {
+            IsLoginInProgress = false;
+            _browserLoginCts?.Dispose();
+            _browserLoginCts = null;
+        }
+    }
+
+    [RelayCommand]
+    private void CancelLogin()
+    {
+        _browserLoginCts?.Cancel();
+    }
+
+    [RelayCommand]
+    private void OpenDropboxAppConsole()
+    {
+        OpenUrl("https://www.dropbox.com/developers/apps");
+    }
 
     [RelayCommand]
     private void OpenLoginUrl()
     {
         EnsureConfigFromFields(resetToken: false);
 
-        if (string.IsNullOrWhiteSpace(ClientId))
+        if (!TryValidateRequiredInputs(out string? validationError))
         {
-            StatusMessage = "Client ID is required.";
+            StatusMessage = validationError;
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(ClientSecret))
+        if (!TryGetValidatedRedirectUri(out Uri redirectUri, out string? redirectUriError))
         {
-            StatusMessage = "Client Secret is required.";
+            StatusMessage = redirectUriError;
             return;
         }
 
-        _uploader = BuildUploader();
-        string url = _uploader.GetAuthorizationURL();
+        DropboxUploader uploader = BuildUploader();
+        _uploader = uploader;
+        string url = uploader.GetAuthorizationURL(redirectUri.AbsoluteUri);
 
         try
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-            }
+            OpenUrl(url);
+            StatusMessage = "Browser opened. Complete Dropbox login, then paste the returned code below.";
         }
         catch (Exception ex)
         {
@@ -114,13 +225,23 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
             return;
         }
 
-        _uploader ??= BuildUploader();
-
-        if (_uploader.GetAccessToken(AuthorizationCode))
+        if (!TryGetValidatedRedirectUri(out Uri redirectUri, out string? redirectUriError))
         {
-            PersistToken();
+            StatusMessage = redirectUriError;
+            return;
+        }
+
+        DropboxUploader uploader = BuildUploader();
+        _uploader = uploader;
+        string redirectUriToUse = string.IsNullOrWhiteSpace(_pendingRedirectUri) ? redirectUri.AbsoluteUri : _pendingRedirectUri!;
+
+        if (uploader.GetAccessToken(AuthorizationCode, redirectUriToUse, _pendingCodeVerifier))
+        {
+            PersistToken(uploader.AuthInfo.Token);
             IsLoggedIn = true;
             AuthorizationCode = string.Empty;
+            _pendingCodeVerifier = null;
+            _pendingRedirectUri = null;
             StatusMessage = "Dropbox login completed.";
             LoadAccountSummary();
         }
@@ -133,7 +254,13 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
     [RelayCommand]
     private void ClearLogin()
     {
+        _browserLoginCts?.Cancel();
+        _browserLoginCts?.Dispose();
+        _browserLoginCts = null;
         _secrets?.DeleteSecret("dropbox", _secretKey, "oauthToken");
+        _pendingCodeVerifier = null;
+        _pendingRedirectUri = null;
+        IsLoginInProgress = false;
         IsLoggedIn = false;
         AccountSummary = string.Empty;
         StatusMessage = "Stored Dropbox login token has been cleared.";
@@ -170,6 +297,7 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
             UploadPath = _config.UploadPath;
             AutoCreateShareableLink = _config.AutoCreateShareableLink;
             UseDirectLink = _config.UseDirectLink;
+            RedirectUri = string.IsNullOrWhiteSpace(_config.RedirectUri) ? DropboxConfigModel.DefaultRedirectUri : _config.RedirectUri;
 
             ClientId = _secrets?.GetSecret("dropbox", _secretKey, "clientId") ?? string.Empty;
             ClientSecret = _secrets?.GetSecret("dropbox", _secretKey, "clientSecret") ?? string.Empty;
@@ -192,15 +320,9 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
 
     public bool Validate()
     {
-        if (string.IsNullOrWhiteSpace(ClientId))
+        if (!TryValidateRequiredInputs(out string? validationError))
         {
-            StatusMessage = "Client ID is required.";
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(ClientSecret))
-        {
-            StatusMessage = "Client Secret is required.";
+            StatusMessage = validationError;
             return false;
         }
 
@@ -213,6 +335,12 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
         if (!IsLoggedIn)
         {
             StatusMessage = "You must login to Dropbox.";
+            return false;
+        }
+
+        if (!TryGetValidatedRedirectUri(out _, out string? redirectUriError))
+        {
+            StatusMessage = redirectUriError;
             return false;
         }
 
@@ -232,10 +360,13 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
         _config.UploadPath = UploadPath;
         _config.AutoCreateShareableLink = AutoCreateShareableLink;
         _config.UseDirectLink = UseDirectLink;
+        _config.RedirectUri = RedirectUri;
 
         if (resetToken)
         {
             _secrets?.DeleteSecret("dropbox", _secretKey, "oauthToken");
+            _pendingCodeVerifier = null;
+            _pendingRedirectUri = null;
             IsLoggedIn = false;
             AccountSummary = string.Empty;
         }
@@ -256,7 +387,7 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
             }
         }
 
-        return new DropboxUploader(_config, authInfo);
+        return new DropboxUploader(_config, authInfo, PersistToken);
     }
 
     private void PersistCredentials()
@@ -285,19 +416,20 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
         }
     }
 
-    private void PersistToken()
+    private void PersistToken(OAuth2Token? token = null)
     {
-        if (_secrets == null || _uploader?.AuthInfo.Token == null)
+        OAuth2Token? targetToken = token ?? _uploader?.AuthInfo.Token;
+        if (_secrets == null || targetToken == null)
         {
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(_uploader.AuthInfo.Token.access_token))
+        if (string.IsNullOrWhiteSpace(targetToken.access_token))
         {
             return;
         }
 
-        string tokenJson = JsonConvert.SerializeObject(_uploader.AuthInfo.Token, Formatting.None);
+        string tokenJson = JsonConvert.SerializeObject(targetToken, Formatting.None);
         _secrets.SetSecret("dropbox", _secretKey, "oauthToken", tokenJson);
     }
 
@@ -336,5 +468,80 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
         string email = account.Email ?? "unknown email";
         AccountSummary = $"{displayName} ({email})";
     }
-}
 
+    private bool TryValidateRequiredInputs(out string? error)
+    {
+        if (string.IsNullOrWhiteSpace(ClientId))
+        {
+            error = "Client ID is required.";
+            return false;
+        }
+
+        error = null;
+        return true;
+    }
+
+    private bool TryGetValidatedRedirectUri(out Uri uri, out string? error)
+    {
+        uri = null!;
+        error = null;
+
+        if (string.IsNullOrWhiteSpace(RedirectUri))
+        {
+            error = "Redirect URI is required.";
+            return false;
+        }
+
+        if (!Uri.TryCreate(RedirectUri.Trim(), UriKind.Absolute, out Uri? parsedUri))
+        {
+            error = "Redirect URI is not a valid absolute URI.";
+            return false;
+        }
+
+        if (!parsedUri.Scheme.Equals(Uri.UriSchemeHttp, StringComparison.OrdinalIgnoreCase))
+        {
+            error = "Redirect URI must use http:// for local loopback login.";
+            return false;
+        }
+
+        bool isLocalhost = parsedUri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase);
+        bool isLoopbackIp = IPAddress.TryParse(parsedUri.Host, out IPAddress? ipAddress) && IPAddress.IsLoopback(ipAddress);
+        if (!isLocalhost && !isLoopbackIp)
+        {
+            error = "Redirect URI host must be localhost or a loopback IP address.";
+            return false;
+        }
+
+        if (parsedUri.IsDefaultPort || parsedUri.Port < 1024)
+        {
+            error = "Redirect URI must include a non-privileged local port (for example: 127.0.0.1:52475).";
+            return false;
+        }
+
+        UriBuilder builder = new(parsedUri)
+        {
+            Query = string.Empty,
+            Fragment = string.Empty
+        };
+
+        uri = builder.Uri;
+        return true;
+    }
+
+    private static void OpenUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return;
+        }
+
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+        else
+        {
+            URLHelpers.OpenURL(url);
+        }
+    }
+}
