@@ -10,7 +10,16 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 ## Unreleased
 
-## v0.16.4
+## v0.17.4
+
+### Features
+- **Indexer**: Modernize HTML output flow and default to dark theme with light-mode toggle `(cc58316, d24cdcf)`
+
+### Build
+- **CI**: Split Linux release builds by runner architecture and set release title metadata `(aeccb68)`
+- **Automation**: Add release bump/tag workflow skill for standardized release prep `(55f25d3)`
+
+## v0.16.3
 
 ### Features
 - **Mobile**: Add active upload destination selector and in-app destination label on Android and iOS `(0b42d73, ccfa4ea)`
@@ -21,11 +30,13 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 - **Mobile**: Add adaptive theming infrastructure with native styling polish `(4b79ddb, a7cfb22, 1e5f9eb, 30bbe98)`
 - **Mobile**: Add upload queue, picker, and history screens `(68d97d9, 52d6ad2)`
 - **UI**: Add Copy Errors to UI (HistoryView, AfterUploadWindow, Toast) `(5c08812)`
+- **ImageEditor**: Add app/editor theme synchronization with platform-aware styling `(0d42719, 71fa3e1)`
 
 ### Fixes
 - **iOS**: Use App Group settings so Share Extension can read Amazon S3 configuration `(42a1033)`
-- **ImageEditor**: Fix critical startup crash (`XamlLoadException: No precompiled XAML found for XerahS.UI.App`) caused by incompatible `MultiBinding` on `Bounds` in precompiled Avalonia XAML
-- **ImageEditor**: Optimize Black & White filter, Smart Eraser, and canvas zooming performance
+- **ImageEditor**: Fix precompiled Avalonia XAML startup crash (`XamlLoadException`) in editor app initialization `(258bb09, f987eaa)`
+- **ImageEditor**: Improve highlight rendering/fill behavior, Smart Eraser, text defaults, and canvas zoom performance `(73dff63, 0eca71e, fcddf02, d9ab54a, db3bcaa, 584de4e, bd44498)`
+- **ImageEditor**: Restore crop UX and precision with full-image/L-shape fixes, visible handles, and DPI-aware hit zones `(80eb42f, a1ac173, 592a2f1, 2cbc692, f85c57f)`
 - **Scrolling Capture**: Improve auto-scroll behavior and workflow settings integration `(1fa45f2, 971219c, 8ac2c8b)`
 - **Workflows**: Allow OCR and scrolling workflows from tray `(4e07852)`
 - **Media Explorer**: Harden listing, normalize URLs, and improve error handling `(9bab13e, e1a5d59, 6b2b8d6, f4e796b)`

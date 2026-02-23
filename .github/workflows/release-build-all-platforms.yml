@@ -14,6 +14,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.version.outputs.version }}
+      release_title: ${{ steps.version.outputs.release_title }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,13 +28,26 @@ jobs:
             exit 1
           fi
 
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
-          if [[ "${GITHUB_REF_TYPE}" == "tag" && "$VERSION" != "$TAG_VERSION" ]]; then
-            echo "Tag version '$TAG_VERSION' does not match Directory.Build.props version '$VERSION'"
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version '$VERSION' must follow x.y.z format."
             exit 1
           fi
 
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Tag '${GITHUB_REF_NAME}' must follow vX.Y.Z format."
+              exit 1
+            fi
+
+            TAG_VERSION="${GITHUB_REF_NAME#v}"
+            if [[ "$VERSION" != "$TAG_VERSION" ]]; then
+              echo "Tag version '$TAG_VERSION' does not match Directory.Build.props version '$VERSION'"
+              exit 1
+            fi
+          fi
+
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "release_title=XerahS $VERSION" >> "$GITHUB_OUTPUT"
 
   build-windows:
     needs: validate-version
@@ -203,7 +217,7 @@ jobs:
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: XerahS ${{ needs.validate-version.outputs.version }}
+          name: ${{ needs.validate-version.outputs.release_title }}
           files: |
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-x64.exe
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64.exe
