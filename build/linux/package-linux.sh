@@ -15,6 +15,15 @@ fi
 VERSION=$(grep '<Version>' "$ROOT/Directory.Build.props" | sed -n 's/.*<Version>\(.*\)<\/Version>.*/\1/p' | tr -d '[:space:]')
 echo "Building XerahS version $VERSION for Linux..."
 
+dotnet_publish_serial() {
+    dotnet publish "$@" \
+        --disable-build-servers \
+        -p:nodeReuse=false \
+        -p:UseSharedCompilation=false \
+        -p:BuildInParallel=false \
+        -m:1
+}
+
 # Define Architectures to Build
 ARCHITECTURES=("linux-x64" "linux-arm64")
 
@@ -32,7 +41,16 @@ for ARCH in "${ARCHITECTURES[@]}"; do
     fi
 
     echo "Running dotnet publish ($ARCH)..."
-    dotnet publish "$PROJECT" -c Release -r "$ARCH" -p:OS=Linux -p:DefineConstants=LINUX -p:PublishSingleFile=true --self-contained true -p:EnableWindowsTargeting=true
+    dotnet build-server shutdown >/dev/null 2>&1 || true
+    dotnet_publish_serial "$PROJECT" \
+        -c Release \
+        -r "$ARCH" \
+        -p:OS=Linux \
+        -p:DefineConstants=LINUX \
+        -p:PublishSingleFile=true \
+        --self-contained true \
+        -p:EnableWindowsTargeting=true \
+        -p:SkipBundlePlugins=true
 
     # 1.5 Publish Plugins
     echo "Publishing Plugins ($ARCH)..."
@@ -58,7 +76,7 @@ for ARCH in "${ARCHITECTURES[@]}"; do
         rm -rf "$PLUGIN_OUTPUT"
         mkdir -p "$PLUGIN_OUTPUT"
 
-        dotnet publish "$PLUGIN_PROJECT" \
+        dotnet_publish_serial "$PLUGIN_PROJECT" \
             -c Release \
             -r "$ARCH" \
             -p:OS=Linux \
@@ -101,6 +119,7 @@ for ARCH in "${ARCHITECTURES[@]}"; do
     fi
 
     echo "Published $PLUGIN_COUNT plugins to startup Plugins folder: $PLUGINS_DIR"
+    dotnet build-server shutdown >/dev/null 2>&1 || true
 
     # 2. Package
     echo "Packaging ($ARCH)..."
