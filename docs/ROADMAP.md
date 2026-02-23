@@ -1,80 +1,52 @@
-# XerahS - Project Status & Next Steps
+# XerahS - Project Status and Roadmap
 
-## Current Status (Updated 2026-01-21)
+## Current Status (Updated 2026-02-23)
 
-**Progress: ~98% of Core Editor Features Complete**
+Core desktop workflow (capture -> annotate/edit -> save/copy/upload) is implemented and active.
 
-We have successfully implemented the Reimagined UI, Multi-monitor Region Capture, comprehensive Annotation System with 17 annotation types, and Image Effects integration with 40+ effects.
+This roadmap has been reconciled against the current codebase, including the `ImageEditor` submodule (`ShareX.ImageEditor`) and current release/build automation.
 
-### ✅ Recently Completed
-- **Capture Engine Polish**:
-    - ✅ **Capture Start Delay**: Configurable timer for screens/recordings
-    - ✅ **Modeless Tools**: Color Picker and QR Code tools no longer block UI
-    - ✅ **Global Cursor Hiding**: Improved cursor visibility control
-    - ✅ **Visual Accuracy**: Fixed selection rectangle offsets
-- **Plugin Architecture (Phase 3 - 100%)**:
-    - ✅ **Pure Dynamic Loading**: Zero compile-time coupling
-    - ✅ **Manifest System**: `plugin.json` discovery
-    - ✅ **Two Working Plugins**: Imgur (OAuth2) and Amazon S3
-    - ✅ **UI Integration**: Provider Catalog with ListBox selection
-    - ✅ **Documentation**: Detailed implementation plan and developer guide
-- **Settings Architecture Refactor**:
-    - Reorganized settings navigation (Application, Task, Hotkey, Destination)
-    - **Application Settings**: Migrated "General", "Theme", "Paths"
-    - **Task Settings**: Ported "General" and "Capture" tabs
-    - **Destination Settings**: Full multi-instance provider management
+## Completed Highlights
 
-### 🚧 In Progress / Next Steps
-- **Annotation System Phase 2 (Canvas Control)**:
-    - **Canvas Implementation**: Replacing WinForms/GDI+ with Avalonia/Skia
-    - **Tools**: Implementing drawing logic for Rectangle, Arrow, Text, etc.
-    - **Interaction**: Handles for resizing, moving, rotating annotations
-    - **Rendering**: High-performance vector drawing
-- **Backend Porting (ShareX.HelpersLib)**:
-    - Continuing to port non-UI utilities (Gap Report)
-    - Enforcing platform abstraction rules
-- **macOS Platform Layer (CX07)**:
-    - MVP `XerahS.Platform.MacOS` project created
-    - `screencapture` screenshot service implemented
-    - SharpHook global hotkeys implemented (needs on-device validation)
-    - Clipboard/text/image/files implemented via `pbcopy`/`osascript` (needs verification)
-- **Testing**:
-    - Comprehensive testing of the new Plugin System
+- [x] Reimagined desktop UI and workflow-based capture pipeline
+- [x] Region capture annotation overlay backed by `ShareX.ImageEditor` types
+- [x] Annotation toolset and image effects integrated through the editor submodule
+- [x] Smart Eraser drawing path and color sampling logic implemented
+- [x] Export flow: copy to clipboard, save, save-as, and upload-to-host task routing
+- [x] Dynamic uploader/plugin architecture with provider catalog and instance manager
+- [x] File-type routing for upload destinations
+- [x] System tray integration with recording-aware state
+- [x] Multi-platform release packaging workflow (Windows, Linux x64/arm64, macOS x64/arm64)
+- [x] App icon assets and packaging scripts for desktop platforms
 
----
+## ImageEditor Integration Status
+
+- [x] `ShareX.ImageEditor` is referenced by UI/Core/RegionCapture projects
+- [x] Theme synchronization between XerahS app theme and editor theme manager
+- [x] Legacy image-effect preset namespace compatibility (`ShareX.Editor`/`XerahS.Editor` -> `ShareX.ImageEditor`)
+- [x] Region capture overlay compatibility toolbar (`XerahS.RegionCapture.UI.Controls.AnnotationToolbar`) kept locally for upstream parity gaps
+- [ ] Full regression parity test coverage for prior in-repo editor behavior (legacy editor tests are currently excluded in `tests/XerahS.Tests/XerahS.Tests.csproj`)
 
 ## Roadmap
 
-### Phase 7: Polish & Distribution (Current)
-- [x] **Export Logic Enhancement**:
-    - [x] Copy to Clipboard - Native OS clipboard via PlatformServices (System.Drawing.Image)
-    - [x] Save to File (Quick Save) - Existing implementation functional
-    - [x] SaveAs Dialog - File picker with PNG/JPEG/BMP format selection
-    - [ ] Upload to Host - Full integration with upload providers (deferred)
-- [ ] **Testing & Verification**:
-    - [ ] All annotation tools functional testing
-    - [ ] All image effects verification
-    - [ ] Keyboard shortcuts testing
-    - [ ] Serialization save/load testing
-    - [ ] Copy/Paste in native apps (Paint, Word, etc.)
-- [ ] **Cross-Platform**:
-    - [ ] Linux compatibility testing
-    - [ ] macOS compatibility testing (hotkeys, clipboard, screen/window services)
-- [ ] **Distribution**:
-    - [ ] App Icon and Assets
-    - [ ] System Tray Icon (Platform specific)
-    - [ ] CI/CD Pipeline setup
-    - [ ] macOS `osx-arm64` publish validation (entitlements, Screen Recording prompt) — see `docs/macos_publish_checklist.md`
+### Phase 7: Stabilization and Distribution (Current)
 
----
+- [x] Export and destination integration
+- [x] Clipboard copy path through platform services
+- [x] Quick save and save-as flows
+- [x] Upload-to-host integration with provider selection/fallback pipeline
+- [x] Distribution baseline (icons/assets, tray, release workflows)
+- [ ] End-to-end verification matrix for annotation tools across desktop platforms
+- [ ] End-to-end verification matrix for image effects across desktop platforms
+- [ ] Native app interoperability validation (copy/paste in external apps)
+- [x] Linux packaging and Linux capture/hotkey orchestration test coverage
+- [ ] macOS on-device validation for capture/hotkeys/clipboard/permissions
+- [ ] macOS platform completion for remaining stubs/TODOs (ScreenCaptureKit strategy internals, window service gaps, OCR implementation)
+- [ ] Restore or replace editor regression scenarios removed during upstream ImageEditor swap
+- [ ] Complete remaining after-upload automation gaps (URL shortener and related tasks)
 
 ## Known Issues / Notes
-- Smart Eraser tool has visual structure but no actual erasing logic yet
-- Upload functionality uses basic implementations, needs full provider integration
-- Cross-platform testing pending for Linux/macOS
-- **Hotkey Key Capture Not Working**: The HotkeySelectionControl fails to capture keyboard input during edit mode. Multiple approaches tried:
-  - Button-based capture with AddHandler and handledEventsToo: true
-  - Tunnel routing strategy
-  - UserControl-level fallback handler
-  - Visual feedback (yellow background) works, but key events not reaching handler
-  - **Needs Investigation**: May require window-level key capture or platform-specific implementation similar to SnapX
+
+- Editor regression suites tied to the legacy in-repo editor API are currently excluded from build (`tests/XerahS.Tests/XerahS.Tests.csproj` removes `Editor/EditorHistoryEffectsTests.cs` and `Editor/EditorRotateAnnotationsTests.cs`).
+- macOS platform layer still contains MVP stubs and TODOs in capture/window/OCR paths (for example `src/platform/XerahS.Platform.MacOS/Capture/ScreenCaptureKitStrategy.cs` and `src/platform/XerahS.Platform.MacOS/MacOSWindowService.cs`).
+- After-upload URL shortener automation is logged as not implemented in `src/desktop/core/XerahS.Core/Tasks/Processors/UploadJobProcessor.cs`.
