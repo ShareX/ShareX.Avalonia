@@ -9,10 +9,10 @@
     <ProjectReference Include="..\XerahS.Common\XerahS.Common.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="FluentFTP" Version="53.0.2" />
-    <PackageReference Include="MegaApiClient" Version="1.10.5" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
-    <PackageReference Include="SkiaSharp" Version="2.88.9" />
-    <PackageReference Include="SSH.NET" Version="2025.1.0" />
+    <PackageReference Include="FluentFTP" />
+    <PackageReference Include="MegaApiClient" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SSH.NET" />
   </ItemGroup>
 </Project>

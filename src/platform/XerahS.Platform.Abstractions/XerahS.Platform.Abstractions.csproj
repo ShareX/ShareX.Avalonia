@@ -6,9 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="11.3.9" />
-    <PackageReference Include="SkiaSharp" Version="2.88.9" />
-    <PackageReference Include="System.Drawing.Common" Version="10.0.1" />
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="System.Drawing.Common" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\desktop\core\XerahS.Services.Abstractions\XerahS.Services.Abstractions.csproj" />

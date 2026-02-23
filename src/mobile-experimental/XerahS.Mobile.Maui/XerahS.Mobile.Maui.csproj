@@ -37,10 +37,10 @@
 
   <!-- NuGet Packages -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.30" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="14.0.0" />
-    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="CommunityToolkit.Maui" />
+    <PackageReference Include="SkiaSharp" />
   </ItemGroup>
 
   <!-- Project References -->
