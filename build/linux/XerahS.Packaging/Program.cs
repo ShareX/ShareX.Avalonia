@@ -538,6 +538,8 @@ class Program
         sb.AppendLine("cp -a usr %{buildroot}/usr");
         sb.AppendLine("chmod 755 %{buildroot}/usr/bin/xerahs");
         sb.AppendLine("chmod 755 %{buildroot}/usr/lib/xerahs/XerahS");
+        sb.AppendLine("if [ -f %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon ]; then chmod 755 %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon; fi");
+        sb.AppendLine("if [ -f %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon.exe ]; then chmod 755 %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon.exe; fi");
         sb.AppendLine("desktop-file-validate %{buildroot}/usr/share/applications/xerahs.desktop");
         sb.AppendLine();
         sb.AppendLine("%files");
@@ -652,7 +654,7 @@ class Program
 
             // Permission handling
             UnixFileMode mode;
-            if (relativePath.EndsWith("/xerahs") || relativePath.EndsWith("/XerahS")) // Wrapper script or main executable
+            if (IsExecutablePayloadPath(relativePath))
             {
                 mode = (UnixFileMode)Convert.ToInt32("755", 8);
             }
@@ -687,7 +689,7 @@ class Program
         {
             entry.Mode = modeOverride.Value;
         }
-        else if (entryPath.EndsWith("/xerahs") || entryPath.EndsWith("/XerahS"))
+        else if (IsExecutablePayloadPath(entryPath))
         {
             entry.Mode = (UnixFileMode)Convert.ToInt32("755", 8);
         }
@@ -697,6 +699,15 @@ class Program
         }
 
         tar.WriteEntry(entry);
+    }
+
+    static bool IsExecutablePayloadPath(string path)
+    {
+        string normalized = path.Replace('\\', '/');
+        return normalized.EndsWith("/xerahs", StringComparison.OrdinalIgnoreCase) ||
+               normalized.EndsWith("/XerahS", StringComparison.OrdinalIgnoreCase) ||
+               normalized.EndsWith("/xerahs-watchfolder-daemon", StringComparison.OrdinalIgnoreCase) ||
+               normalized.EndsWith("/xerahs-watchfolder-daemon.exe", StringComparison.OrdinalIgnoreCase);
     }
 
     static void WriteArEntry(Stream stream, string name, byte[] content)
