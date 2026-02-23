@@ -94,7 +94,8 @@
     <Message Text="Publishing watch folder daemon..." Importance="High" />
     <MSBuild Projects="..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj"
              Targets="Restore;Publish"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;PublishDir=$(PublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting)" />
+             BuildInParallel="false"
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;PublishDir=$(PublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
   </Target>
 
   <Target Name="BuildWatchFolderDaemonForDev" AfterTargets="Build">

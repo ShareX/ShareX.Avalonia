@@ -18,6 +18,15 @@ fi
 
 echo "Building XerahS version $VERSION for macOS..."
 
+dotnet_publish_serial() {
+    dotnet publish "$@" \
+        --disable-build-servers \
+        -p:nodeReuse=false \
+        -p:UseSharedCompilation=false \
+        -p:BuildInParallel=false \
+        -m:1
+}
+
 build_native_library() {
     if [[ "$OSTYPE" == darwin* ]]; then
         echo "Building native ScreenCaptureKit library..."
@@ -152,14 +161,15 @@ publish_and_package() {
     echo "------------------------------------------------"
     echo "Building for $rid..."
 
+    # Ensure compiler/build servers from prior arch are not holding files.
+    dotnet build-server shutdown >/dev/null 2>&1 || true
     rm -rf "$publish_dir"
 
-    dotnet publish "$PROJECT" \
+    dotnet_publish_serial "$PROJECT" \
         -c Release \
         -r "$rid" \
         -p:PublishSingleFile=false \
         --self-contained true \
-        -p:nodeReuse=false \
         -p:SkipBundlePlugins=true
 
     if [ ! -d "$app_bundle_path" ]; then
@@ -190,12 +200,11 @@ publish_and_package() {
         plugin_out="$plugins_dir/$plugin_id"
         rm -rf "$plugin_out"
         mkdir -p "$plugin_out"
-        dotnet publish "$plugin_project" \
+        dotnet_publish_serial "$plugin_project" \
             -c Release \
             -r "$rid" \
             --no-self-contained \
             -p:PublishSingleFile=false \
-            -p:nodeReuse=false \
             -o "$plugin_out" >/dev/null
 
         if [ ! -f "$plugin_out/plugin.json" ] && [ -f "$plugin_dir/plugin.json" ]; then
@@ -230,6 +239,8 @@ publish_and_package() {
         echo "Error: No plugin manifests found under $plugins_dir after publish."
         exit 1
     fi
+
+    dotnet build-server shutdown >/dev/null 2>&1 || true
 
     echo "Published $plugin_count plugins to startup Plugins folder: $plugins_dir"
 
