@@ -4,72 +4,89 @@
              x:Class="ShareX.Dropbox.Plugin.Views.DropboxConfigView"
              x:DataType="vm:DropboxConfigViewModel">
 
-    <StackPanel Spacing="15">
+    <StackPanel Spacing="14">
         <TextBlock Text="Dropbox Configuration"
                    FontSize="18"
                    FontWeight="SemiBold"
                    Margin="0,0,0,10"/>
 
-        <StackPanel Spacing="5">
-            <TextBlock Text="Client ID *" FontWeight="Medium"/>
-            <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}"
-                     Watermark="Enter Dropbox app key"
-                     Width="420"
-                     HorizontalAlignment="Left"/>
-        </StackPanel>
+        <TextBlock Text="Recommended flow: configure your Dropbox app, then use browser login. Manual code entry is only a fallback."
+                   FontSize="12"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
 
-        <StackPanel Spacing="5">
-            <TextBlock Text="Client Secret" FontWeight="Medium"/>
-            <TextBox Text="{Binding ClientSecret, UpdateSourceTrigger=PropertyChanged}"
-                     Watermark="Optional for PKCE-enabled Dropbox apps"
-                     PasswordChar="*"
-                     Width="420"
-                     HorizontalAlignment="Left"/>
-            <TextBlock Text="Desktop OAuth with PKCE can work without storing a client secret."
-                       FontSize="11"
-                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
-        </StackPanel>
-
-        <StackPanel Spacing="5">
-            <TextBlock Text="OAuth Redirect URI *" FontWeight="Medium"/>
-            <TextBox Text="{Binding RedirectUri, UpdateSourceTrigger=PropertyChanged}"
-                     Watermark="http://127.0.0.1:52475/oauth2/callback"
-                     Width="420"
-                     HorizontalAlignment="Left"/>
-            <StackPanel Orientation="Horizontal" Spacing="10">
+        <Border Background="{DynamicResource SystemFillColorSecondaryBackground}"
+                Padding="12"
+                CornerRadius="4">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Step 1 - Configure your Dropbox app"
+                           FontWeight="SemiBold"/>
+                <TextBlock Text="Create/select your app in Dropbox and add the Redirect URI you will use below."
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
                 <Button Content="Open Dropbox App Console"
                         Command="{Binding OpenDropboxAppConsoleCommand}"
                         HorizontalAlignment="Left"/>
-                <TextBlock Text="Add this exact URI to your Dropbox app redirect URIs."
-                           FontSize="11"
-                           VerticalAlignment="Center"
-                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
             </StackPanel>
-        </StackPanel>
-
-        <StackPanel Spacing="5">
-            <TextBlock Text="Upload Path" FontWeight="Medium"/>
-            <TextBox Text="{Binding UploadPath, UpdateSourceTrigger=PropertyChanged}"
-                     Watermark="ShareX/%y/%mo"
-                     Width="420"
-                     HorizontalAlignment="Left"/>
-            <TextBlock Text="Supports ShareX pattern variables such as %y and %mo."
-                       FontSize="11"
-                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
-        </StackPanel>
-
-        <StackPanel Spacing="5">
-            <CheckBox Content="Automatically create shareable link after upload"
-                      IsChecked="{Binding AutoCreateShareableLink}"/>
-            <CheckBox Content="Use direct link format when available"
-                      IsChecked="{Binding UseDirectLink}"/>
-        </StackPanel>
+        </Border>
 
         <Border Background="{DynamicResource SystemFillColorSecondaryBackground}"
-                Padding="15"
+                Padding="12"
                 CornerRadius="4">
-            <StackPanel Spacing="10">
-                <TextBlock Text="Account Login" FontWeight="SemiBold"/>
+            <StackPanel Spacing="8">
+                <TextBlock Text="Step 2 - App credentials"
+                           FontWeight="SemiBold"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Client ID (App Key) *" FontWeight="Medium"/>
+                    <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}"
+                             Watermark="Enter Dropbox app key"
+                             Width="420"
+                             HorizontalAlignment="Left"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="OAuth Redirect URI *" FontWeight="Medium"/>
+                    <TextBox Text="{Binding RedirectUri, UpdateSourceTrigger=PropertyChanged}"
+                             Watermark="http://127.0.0.1:52475/oauth2/callback"
+                             Width="420"
+                             HorizontalAlignment="Left"/>
+                    <TextBlock Text="This value must exactly match one Redirect URI in your Dropbox app settings."
+                               FontSize="11"
+                               TextWrapping="Wrap"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+
+                <Expander Header="Advanced: Client Secret (optional)">
+                    <StackPanel Spacing="4" Margin="0,8,0,0">
+                        <TextBlock Text="Use this only if your Dropbox app requires a client secret."
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                        <TextBox Text="{Binding ClientSecret, UpdateSourceTrigger=PropertyChanged}"
+                                 Watermark="Enter Dropbox app secret"
+                                 PasswordChar="*"
+                                 Width="420"
+                                 HorizontalAlignment="Left"/>
+                    </StackPanel>
+                </Expander>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SystemFillColorSecondaryBackground}"
+                Padding="12"
+                CornerRadius="4">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Step 3 - Sign in to Dropbox"
+                           FontWeight="SemiBold"/>
+
+                <TextBlock Text="Not connected yet."
+                           IsVisible="{Binding !IsLoggedIn}"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                <TextBlock Text="Connected."
+                           IsVisible="{Binding IsLoggedIn}"
+                           Foreground="Green"/>
 
                 <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsLoggedIn}">
                     <Button Content="Login with Browser"
@@ -85,29 +102,37 @@
                              Height="6"
                              IsVisible="{Binding IsLoginInProgress}"/>
 
-                <TextBlock Text="Primary flow: click Login with Browser, approve Dropbox in your browser, and return to app."
+                <TextBlock Text="Click Login with Browser, approve access in Dropbox, then return to XerahS."
                            FontSize="12"
                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                            TextWrapping="Wrap"/>
 
-                <StackPanel Spacing="5" IsVisible="{Binding !IsLoggedIn}">
-                    <TextBlock Text="Manual fallback (if callback capture fails)" FontSize="12" FontWeight="SemiBold"/>
-                    <StackPanel Orientation="Horizontal" Spacing="10">
+                <TextBlock Text="{Binding AccountSummary}"
+                           FontSize="12"
+                           IsVisible="{Binding !!AccountSummary}"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+                <Expander Header="Troubleshooting: manual code exchange" IsVisible="{Binding !IsLoggedIn}">
+                    <StackPanel Spacing="6" Margin="0,8,0,0">
+                        <TextBlock Text="Use this only if automatic callback capture fails."
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
                         <Button Content="Open Login URL"
-                                Command="{Binding OpenLoginUrlCommand}"/>
+                                Command="{Binding OpenLoginUrlCommand}"
+                                HorizontalAlignment="Left"/>
+                        <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBox Text="{Binding AuthorizationCode}"
+                                     Watermark="Paste code from callback URL"
+                                     Width="280"/>
+                            <Button Content="Exchange Code"
+                                    Command="{Binding CompleteLoginCommand}"
+                                    Classes="accent"/>
+                        </StackPanel>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal" Spacing="10">
-                        <TextBox Text="{Binding AuthorizationCode}"
-                                 Watermark="Paste code"
-                                 Width="280"/>
-                        <Button Content="Exchange Code"
-                                Command="{Binding CompleteLoginCommand}"
-                                Classes="accent"/>
-                    </StackPanel>
-                </StackPanel>
+                </Expander>
 
                 <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsLoggedIn}">
-                    <TextBlock Text="Logged in" Foreground="Green" VerticalAlignment="Center"/>
                     <Button Content="Re-login in Browser"
                             Command="{Binding StartBrowserLoginCommand}"
                             IsEnabled="{Binding !IsLoginInProgress}"/>
@@ -116,11 +141,31 @@
                     <Button Content="Clear Login"
                             Command="{Binding ClearLoginCommand}"/>
                 </StackPanel>
+            </StackPanel>
+        </Border>
 
-                <TextBlock Text="{Binding AccountSummary}"
-                           FontSize="12"
-                           IsVisible="{Binding !!AccountSummary}"
-                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        <Border Background="{DynamicResource SystemFillColorSecondaryBackground}"
+                Padding="12"
+                CornerRadius="4">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Step 4 - Upload behavior"
+                           FontWeight="SemiBold"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Upload Path" FontWeight="Medium"/>
+                    <TextBox Text="{Binding UploadPath, UpdateSourceTrigger=PropertyChanged}"
+                             Watermark="ShareX/%y/%mo"
+                             Width="420"
+                             HorizontalAlignment="Left"/>
+                    <TextBlock Text="Supports ShareX pattern variables such as %y and %mo."
+                               FontSize="11"
+                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                </StackPanel>
+
+                <CheckBox Content="Automatically create shareable link after upload"
+                          IsChecked="{Binding AutoCreateShareableLink}"/>
+                <CheckBox Content="Use direct link format when available"
+                          IsChecked="{Binding UseDirectLink}"/>
             </StackPanel>
         </Border>
 
