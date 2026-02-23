@@ -1,0 +1,3 @@
+interface:
+  display_name: "XerahS Release Bump Tag"
+  short_description: "Bump version, commit/push, and create matching tag"
