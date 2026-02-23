@@ -68,6 +68,9 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
     private bool _isLoginInProgress;
 
     [ObservableProperty]
+    private string _activeAuthorizationUrl = string.Empty;
+
+    [ObservableProperty]
     private string? _accountSummary;
 
     [ObservableProperty]
@@ -121,6 +124,7 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
             listener.Start();
 
             string url = uploader.GetAuthorizationURL(redirectUri.AbsoluteUri, state, proofKey);
+            ActiveAuthorizationUrl = url;
             OpenUrl(url);
 
             StatusMessage = "Complete login in your browser. Waiting for callback...";
@@ -165,6 +169,7 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
         finally
         {
             IsLoginInProgress = false;
+            ActiveAuthorizationUrl = string.Empty;
             _browserLoginCts?.Dispose();
             _browserLoginCts = null;
         }
@@ -174,6 +179,27 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
     private void CancelLogin()
     {
         _browserLoginCts?.Cancel();
+        ActiveAuthorizationUrl = string.Empty;
+    }
+
+    [RelayCommand]
+    private void OpenBrowserAgain()
+    {
+        if (string.IsNullOrWhiteSpace(ActiveAuthorizationUrl))
+        {
+            StatusMessage = "No active Dropbox login URL. Click Login with Browser again.";
+            return;
+        }
+
+        try
+        {
+            OpenUrl(ActiveAuthorizationUrl);
+            StatusMessage = "Re-opened Dropbox login in browser.";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = "Failed to re-open browser: " + ex.Message;
+        }
     }
 
     [RelayCommand]
@@ -257,6 +283,7 @@ public partial class DropboxConfigViewModel : ObservableObject, IUploaderConfigV
         _browserLoginCts?.Cancel();
         _browserLoginCts?.Dispose();
         _browserLoginCts = null;
+        ActiveAuthorizationUrl = string.Empty;
         _secrets?.DeleteSecret("dropbox", _secretKey, "oauthToken");
         _pendingCodeVerifier = null;
         _pendingRedirectUri = null;

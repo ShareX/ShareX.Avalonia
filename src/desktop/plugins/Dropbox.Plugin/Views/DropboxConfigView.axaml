@@ -96,6 +96,9 @@
                     <Button Content="Cancel"
                             Command="{Binding CancelLoginCommand}"
                             IsVisible="{Binding IsLoginInProgress}"/>
+                    <Button Content="Open Browser Again"
+                            Command="{Binding OpenBrowserAgainCommand}"
+                            IsVisible="{Binding IsLoginInProgress}"/>
                 </StackPanel>
 
                 <ProgressBar IsIndeterminate="True"
@@ -104,6 +107,11 @@
 
                 <TextBlock Text="Click Login with Browser, approve access in Dropbox, then return to XerahS."
                            FontSize="12"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           TextWrapping="Wrap"/>
+                <TextBlock Text="If your browser opens a blank tab, click Open Browser Again while login is in progress."
+                           FontSize="11"
+                           IsVisible="{Binding IsLoginInProgress}"
                            Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                            TextWrapping="Wrap"/>
 

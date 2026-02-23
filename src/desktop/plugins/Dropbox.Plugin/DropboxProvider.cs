@@ -154,7 +154,16 @@ public class DropboxProvider : UploaderProviderBase, IUploaderExplorer
         DropboxListFolderResult? rawPage;
         if (string.IsNullOrWhiteSpace(query.ContinuationToken))
         {
-            rawPage = await ListFolderAsync(accessToken, query.FolderPath, query.PageSize, cancellation);
+            string initialFolderPath = ResolveInitialFolderPath(query.FolderPath, config);
+
+            try
+            {
+                rawPage = await ListFolderAsync(accessToken, initialFolderPath, query.PageSize, cancellation);
+            }
+            catch (InvalidOperationException ex) when (ShouldFallbackToRoot(initialFolderPath, ex))
+            {
+                rawPage = await ListFolderAsync(accessToken, string.Empty, query.PageSize, cancellation);
+            }
         }
         else
         {
@@ -453,6 +462,33 @@ public class DropboxProvider : UploaderProviderBase, IUploaderExplorer
         }
 
         return DropboxUploader.VerifyPath($"{safeParent}/{safeFolderName}");
+    }
+
+    private static string ResolveInitialFolderPath(string? folderPathFromQuery, DropboxConfigModel config)
+    {
+        if (!string.IsNullOrWhiteSpace(folderPathFromQuery))
+        {
+            return folderPathFromQuery;
+        }
+
+        if (string.IsNullOrWhiteSpace(config.UploadPath))
+        {
+            return string.Empty;
+        }
+
+        string normalizedUploadPath = DropboxUploader.VerifyPath(config.UploadPath);
+        string parsedUploadPath = NameParser.Parse(NameParserType.Default, normalizedUploadPath);
+        return DropboxUploader.VerifyPath(parsedUploadPath);
+    }
+
+    private static bool ShouldFallbackToRoot(string attemptedPath, InvalidOperationException ex)
+    {
+        if (string.IsNullOrWhiteSpace(attemptedPath))
+        {
+            return false;
+        }
+
+        return ex.Message.Contains("path/not_found", StringComparison.OrdinalIgnoreCase);
     }
 
     private static async Task<DropboxListFolderResult?> ListFolderAsync(string accessToken, string? folderPath, int pageSize, CancellationToken cancellation)

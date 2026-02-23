@@ -222,8 +222,13 @@ internal sealed class DropboxOAuthLoopbackListener : IDisposable
         byte[] bytes = Encoding.UTF8.GetBytes(html);
         response.StatusCode = 200;
         response.ContentType = "text/html; charset=utf-8";
+        response.KeepAlive = false;
+        response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+        response.Headers["Pragma"] = "no-cache";
+        response.Headers["Expires"] = "0";
         response.ContentLength64 = bytes.LongLength;
         await response.OutputStream.WriteAsync(bytes, cancellation).ConfigureAwait(false);
-        response.OutputStream.Close();
+        await response.OutputStream.FlushAsync(cancellation).ConfigureAwait(false);
+        response.Close();
     }
 }
