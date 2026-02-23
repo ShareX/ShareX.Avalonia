@@ -123,7 +123,7 @@ namespace XerahS.Bootstrap
             if (dh == null) return;
             dh.AsyncWrite = false; // Synchronous for startup
 
-            dh.WriteLine($"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - ShareX starting.");
+            dh.WriteLine("ShareX starting.");
 
             var version = Assembly.GetEntryAssembly()?.GetName().Version;
             dh.WriteLine($"Version: {version} Dev");

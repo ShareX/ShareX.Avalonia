@@ -47,20 +47,4 @@
     <PackageVersion Include="Vortice.DXGI" Version="3.8.2" />
     <PackageVersion Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.9" />
   </ItemGroup>
-  <ItemGroup>
-    <!-- Keep plugin/abstraction projects on their current Avalonia minor version -->
-    <PackageVersion Update="Avalonia" Version="11.3.9"
-                    Condition="'$(MSBuildProjectName)' == 'XerahS.AmazonS3.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Dropbox.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.GitHubGist.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Imgur.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Paste2.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Platform.Abstractions'" />
-    <PackageVersion Update="Avalonia.Themes.Fluent" Version="11.3.9"
-                    Condition="'$(MSBuildProjectName)' == 'XerahS.AmazonS3.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Dropbox.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.GitHubGist.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Imgur.Plugin' Or
-                               '$(MSBuildProjectName)' == 'XerahS.Paste2.Plugin'" />
-  </ItemGroup>
 </Project>
