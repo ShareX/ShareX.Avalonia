@@ -266,6 +266,145 @@ Guardrail to add:
 
 ---
 
+## Cross-Repo Public Interface Impact (XerahS + ShareX)
+
+Consumer roots covered in this scan:
+- `C:\Users\liveu\source\repos\ShareX Team\XerahS`
+- `C:\Users\liveu\source\repos\ShareX Team\ShareX`
+
+### API Surface: `EditorCore` (public)
+
+External consumer: `XerahS` region capture host.
+
+Call sites:
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:47`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:48`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:49`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:50`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:135`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:246`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:295`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:334`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:336`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:343`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:345`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:390`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:398`
+- `src/desktop/app/XerahS.RegionCapture/ViewModels/RegionCaptureAnnotationViewModel.cs:427`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.axaml.cs:331`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.axaml.cs:459`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.axaml.cs:476`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.axaml.cs:545`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.InlineText.cs:159`
+
+Public members currently depended on:
+- `EditorCore` ctor (`ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:161`)
+- events: `InvalidateRequested`, `ImageChanged`, `EditAnnotationRequested`, `AnnotationsRestored`, `HistoryChanged` (`ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:63`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:70`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:71`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:76`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:81`)
+- properties: `SourceImage`, `ActiveTool`, `StrokeColor`, `StrokeWidth`, `Annotations`, `SelectedAnnotation`, `CanUndo`, `CanRedo` (`ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:90`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:95`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:100`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:105`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:147`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:152`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:1127`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:1128`)
+- methods: `LoadImage(SKBitmap)`, `OnPointerPressed`, `OnPointerMoved`, `OnPointerReleased`, `GetSnapshot`, `Undo`, `Redo`, `DeleteSelected`, `RemoveAnnotation`, `ClearAll` (`ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:169`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:529`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:641`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:736`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:1218`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:1130`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:1136`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:985`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:1068`, `ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorCore.cs:462`)
+
+Compatibility decision:
+- `MUST STAY SOURCE-COMPATIBLE` in XIP0039. Do not rename/remove these public members in this phase.
+
+### API Surface: `EditorView` and host coupling
+
+External consumer: `XerahS` desktop host.
+
+Call sites:
+- `src/desktop/app/XerahS.UI/Services/AvaloniaUIService.cs:120`
+- `src/desktop/app/XerahS.UI/Services/AvaloniaUIService.cs:123`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.Navigation.cs:136`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.Input.cs:47`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.axaml.cs:244`
+
+Public methods currently depended on:
+- `EditorView.GetSnapshot()` (`ImageEditor/src/ShareX.ImageEditor/UI/Views/EditorView.axaml.cs:821`)
+- `EditorView.PerformCrop()` (`ImageEditor/src/ShareX.ImageEditor/UI/Views/EditorView.axaml.cs:1133`)
+
+Non-public but externally consumed (reflection):
+- `EditorView.InsertImageAnnotation(SKBitmap, Point?)` via `BindingFlags.NonPublic` (`src/desktop/app/XerahS.UI/Views/MainWindow.axaml.cs:244`)
+
+Compatibility decision:
+- `GetSnapshot` and `PerformCrop` must remain callable through XIP0039.
+- Reflection dependency is a hidden external contract and is the highest API fragility in XerahS.
+- XIP0039 must introduce a formal public host API for image insertion and then migrate XerahS off reflection.
+
+### API Surface: `MainViewModel` host-facing members
+
+External consumer: `XerahS` application shell and services.
+
+Call sites:
+- `src/desktop/app/XerahS.UI/App.axaml.cs:72`
+- `src/desktop/app/XerahS.UI/App.axaml.cs:73`
+- `src/desktop/app/XerahS.UI/Services/AvaloniaUIService.cs:99`
+- `src/desktop/app/XerahS.UI/Services/AvaloniaUIService.cs:100`
+- `src/desktop/app/XerahS.UI/Services/AvaloniaUIService.cs:101`
+- `src/desktop/app/XerahS.UI/Services/AvaloniaUIService.cs:113`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.axaml.cs:223`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.axaml.cs:478`
+- `src/desktop/app/XerahS.UI/Services/WorkflowOrchestrator.cs:267`
+- `src/desktop/app/XerahS.UI/Services/MainViewModelHelper.cs:42`
+- `src/desktop/app/XerahS.UI/Services/MainViewModelHelper.cs:53`
+
+Public members currently depended on:
+- ctor `MainViewModel(EditorOptions? options = null)` (`ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:968`)
+- `UpdatePreview(SKBitmap image, bool clearAnnotations = true)` (`ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:1693`)
+- `PreviewImage` (`ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:190`)
+- events: `CopyRequested`, `UploadRequested` (`ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:150`, `ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:182`)
+- host-configured UI members: `ShowCaptureToolbar`, `ApplicationName` (`ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:73`, `ImageEditor/src/ShareX.ImageEditor/UI/ViewModels/MainViewModel.cs:962`)
+
+Compatibility decision:
+- `MUST STAY SOURCE-COMPATIBLE` for host wiring in XIP0039.
+- Internal decomposition of `MainViewModel` is allowed only behind the existing public/events surface.
+
+### API Surface: `AvaloniaIntegration` + `EditorEvents` (ShareX repo)
+
+External consumer: `ShareX` WinForms host.
+
+Call site:
+- `..\ShareX\ShareX\TaskHelpers.cs:1342`
+
+Public members currently depended on:
+- `EditorEvents` delegate properties (`ImageEditor/src/ShareX.ImageEditor/AvaloniaIntegration.cs:55`)
+- `AvaloniaIntegration.ShowEditorDialog(Stream, EditorEvents?, bool)` (`ImageEditor/src/ShareX.ImageEditor/AvaloniaIntegration.cs:119`)
+
+Compatibility decision:
+- `MUST STAY SOURCE/BINARY-COMPATIBLE` in XIP0039 for `C:\Users\liveu\source\repos\ShareX Team\ShareX`.
+
+### API Surface: supporting shared helpers
+
+External consumers: mostly `XerahS`.
+
+Call sites:
+- `src/desktop/app/XerahS.UI/App.axaml.cs:144`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.axaml.cs:71`
+- `src/desktop/app/XerahS.UI/Views/MainWindow.axaml.cs:72`
+- `src/desktop/app/XerahS.UI/Views/EditorWindow.axaml.cs:37`
+- `src/desktop/app/XerahS.UI/Views/EditorWindow.axaml.cs:38`
+- `src/desktop/app/XerahS.UI/Services/ThemeService.cs:55`
+- `src/desktop/app/XerahS.UI/Services/MainViewModelHelper.cs:72`
+- `src/desktop/app/XerahS.UI/Services/MainViewModelHelper.cs:133`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.axaml.cs:656`
+- `src/desktop/app/XerahS.RegionCapture/UI/OverlayWindow.axaml.cs:674`
+
+Public members currently depended on:
+- `EditorServices.Clipboard` and `IClipboardService` (`ImageEditor/src/ShareX.ImageEditor/UI/Adapters/IClipboardService.cs:33`, `ImageEditor/src/ShareX.ImageEditor/UI/Adapters/IClipboardService.cs:55`)
+- `ThemeManager.GetCurrentTheme`, `ThemeManager.SetTheme`, `ThemeManager.ThemeChanged`, `ThemeManager.ShareXDark`, `ThemeManager.ShareXLight` (`ImageEditor/src/ShareX.ImageEditor/Helpers/ThemeManager.cs:9`, `ImageEditor/src/ShareX.ImageEditor/Helpers/ThemeManager.cs:10`, `ImageEditor/src/ShareX.ImageEditor/Helpers/ThemeManager.cs:12`, `ImageEditor/src/ShareX.ImageEditor/Helpers/ThemeManager.cs:14`, `ImageEditor/src/ShareX.ImageEditor/Helpers/ThemeManager.cs:36`)
+- `BitmapConversionHelpers.ToSKBitmap`, `BitmapConversionHelpers.ToAvaloniBitmap` (`ImageEditor/src/ShareX.ImageEditor/UI/Adapters/BitmapConversionHelpers.cs:18`, `ImageEditor/src/ShareX.ImageEditor/UI/Adapters/BitmapConversionHelpers.cs:81`)
+- `AnnotationVisualFactory.CreateVisualControl`, `AnnotationVisualFactory.UpdateVisualControl` (`ImageEditor/src/ShareX.ImageEditor/UI/Adapters/AnnotationVisuals/AnnotationVisualFactory.cs:53`, `ImageEditor/src/ShareX.ImageEditor/UI/Adapters/AnnotationVisuals/AnnotationVisualFactory.cs:78`)
+- `EditorTool` enum (`ImageEditor/src/ShareX.ImageEditor/Core/Editor/EditorTool.cs:31`)
+
+Compatibility decision:
+- Keep these APIs and namespaces stable for XIP0039, or provide compatibility wrappers if classes are moved.
+
+### Interface impact policy for XIP0039
+
+1. No breaking signature changes for externally consumed public APIs above.
+2. If internals are moved/split, keep type names and namespaces (or add forwarding shims) until both host repos migrate.
+3. Replace reflection-based `InsertImageAnnotation` usage with a formal public host API in a compatibility-first way.
+
+---
+
 ## Pain Point 3: Effect dialog duplication and non-scalable effect wiring (P1)
 
 ### Evidence
