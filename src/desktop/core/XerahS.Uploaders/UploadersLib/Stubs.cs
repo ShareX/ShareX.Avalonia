@@ -39,15 +39,24 @@ namespace ShareX.UploadersLib.FileUploaders
     {
     }
 
-    public class PomfUploader : XerahS.Uploaders.FileUploaders.PomfUploader
+    public class PomfUploader
     {
+        public string UploadURL { get; set; } = string.Empty;
+        public string? ResultURL { get; set; }
+
         public PomfUploader()
         {
         }
 
         public PomfUploader(string uploadURL, string? resultURL = null)
-            : base(uploadURL, resultURL)
         {
+            UploadURL = uploadURL;
+            ResultURL = resultURL;
+        }
+
+        public override string ToString()
+        {
+            return URLHelpers.GetHostName(UploadURL);
         }
     }
 
@@ -338,6 +347,18 @@ namespace ShareX.UploadersLib.FileUploaders
             id = "0",
             name = "Root folder"
         };
+    }
+}
+
+namespace XerahS.Uploaders
+{
+    public class MegaAuthInfos
+    {
+        public string Email { get; set; } = string.Empty;
+        [JsonEncrypt]
+        public string Hash { get; set; } = string.Empty;
+        [JsonEncrypt]
+        public string PasswordAesKey { get; set; } = string.Empty;
     }
 }
 

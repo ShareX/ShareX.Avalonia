@@ -191,8 +191,9 @@ public class WorkflowTask : IDisposable
                 Data.Position = 0;
             }
 
-            // Perform upload using async wrapper
-            var url = await uploader.UploadAsync(Data!, FileName);
+            // Perform upload on a worker thread since GenericUploader.Upload is synchronous.
+            var uploadResult = await Task.Run(() => uploader.Upload(Data!, FileName));
+            var url = uploadResult.URL;
 
             if (string.IsNullOrEmpty(url))
             {

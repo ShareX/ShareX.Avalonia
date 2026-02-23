@@ -532,16 +532,7 @@ namespace XerahS.Uploaders
         protected string? GetAuthorizationURL(string requestTokenURL, string authorizeURL, OAuthInfo authInfo,
             Dictionary<string, string>? customParameters = null, HttpMethod httpMethod = HttpMethod.GET)
         {
-            string url = OAuthManager.GenerateQuery(requestTokenURL, customParameters, httpMethod, authInfo);
-
-            string? response = SendRequest(httpMethod, url);
-
-            if (!string.IsNullOrEmpty(response))
-            {
-                return OAuthManager.GetAuthorizationURL(response, authInfo, authorizeURL);
-            }
-
-            return null;
+            throw new NotSupportedException("Legacy OAuth1 upload flow has been removed.");
         }
 
         protected bool GetAccessToken(string accessTokenURL, OAuthInfo authInfo, HttpMethod httpMethod = HttpMethod.GET)
@@ -551,21 +542,7 @@ namespace XerahS.Uploaders
 
         protected NameValueCollection? GetAccessTokenEx(string accessTokenURL, OAuthInfo authInfo, HttpMethod httpMethod = HttpMethod.GET)
         {
-            if (string.IsNullOrEmpty(authInfo.AuthToken) || string.IsNullOrEmpty(authInfo.AuthSecret))
-            {
-                throw new Exception("Auth infos missing. Open Authorization URL first.");
-            }
-
-            string url = OAuthManager.GenerateQuery(accessTokenURL, null, httpMethod, authInfo);
-
-            string? response = SendRequest(httpMethod, url);
-
-            if (!string.IsNullOrEmpty(response))
-            {
-                return OAuthManager.ParseAccessTokenResponse(response, authInfo);
-            }
-
-            return null;
+            throw new NotSupportedException("Legacy OAuth1 upload flow has been removed.");
         }
 
         #endregion OAuth methods
