@@ -147,7 +147,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update
-          sudo apt-get install -y rpm
+          sudo apt-get install -y rpm desktop-file-utils
 
       - name: Build Linux packages
         shell: bash
