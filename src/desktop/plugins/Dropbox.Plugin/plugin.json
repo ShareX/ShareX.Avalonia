@@ -1,0 +1,16 @@
+{
+  "pluginId": "dropbox",
+  "name": "Dropbox Uploader",
+  "version": "1.0.0",
+  "author": "ShareX Team",
+  "description": "Upload files to Dropbox with OAuth and explorer support",
+  "apiVersion": "1.0",
+  "entryPoint": "ShareX.Dropbox.Plugin.DropboxProvider",
+  "assemblyFileName": "XerahS.Dropbox.Plugin.dll",
+  "supportedCategories": ["Image", "Text", "File"],
+  "supportsExplorer": true,
+  "configViewId": "dropbox",
+  "dependencies": [],
+  "homepageUrl": "https://www.dropbox.com/"
+}
+

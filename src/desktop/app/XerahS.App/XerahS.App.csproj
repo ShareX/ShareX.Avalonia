@@ -120,6 +120,7 @@
   <!-- Bundle Default Plugins -->
   <ItemGroup>
     <_DefaultPlugins Include="..\..\plugins\AmazonS3.Plugin\XerahS.AmazonS3.Plugin.csproj" PluginId="amazons3" />
+    <_DefaultPlugins Include="..\..\plugins\Dropbox.Plugin\XerahS.Dropbox.Plugin.csproj" PluginId="dropbox" />
     <_DefaultPlugins Include="..\..\plugins\Imgur.Plugin\XerahS.Imgur.Plugin.csproj" PluginId="imgur" />
     <_DefaultPlugins Include="..\..\plugins\Paste2.Plugin\XerahS.Paste2.Plugin.csproj" PluginId="paste2" />
     <_DefaultPlugins Include="..\..\plugins\GitHubGist.Plugin\XerahS.GitHubGist.Plugin.csproj" PluginId="gist" />

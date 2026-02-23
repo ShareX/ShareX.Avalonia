@@ -1,0 +1,96 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ShareX.Dropbox.Plugin.ViewModels"
+             x:Class="ShareX.Dropbox.Plugin.Views.DropboxConfigView"
+             x:DataType="vm:DropboxConfigViewModel">
+
+    <StackPanel Spacing="15">
+        <TextBlock Text="Dropbox Configuration"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Client ID *" FontWeight="Medium"/>
+            <TextBox Text="{Binding ClientId, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="Enter Dropbox app key"
+                     Width="420"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Client Secret *" FontWeight="Medium"/>
+            <TextBox Text="{Binding ClientSecret, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="Enter Dropbox app secret"
+                     PasswordChar="*"
+                     Width="420"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Upload Path" FontWeight="Medium"/>
+            <TextBox Text="{Binding UploadPath, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="ShareX/%y/%mo"
+                     Width="420"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Supports ShareX pattern variables such as %y and %mo."
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <CheckBox Content="Automatically create shareable link after upload"
+                      IsChecked="{Binding AutoCreateShareableLink}"/>
+            <CheckBox Content="Use direct link format when available"
+                      IsChecked="{Binding UseDirectLink}"/>
+        </StackPanel>
+
+        <Border Background="{DynamicResource SystemFillColorSecondaryBackground}"
+                Padding="15"
+                CornerRadius="4">
+            <StackPanel Spacing="10">
+                <TextBlock Text="Account Login" FontWeight="SemiBold"/>
+
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding !IsLoggedIn}">
+                    <Button Content="Step 1: Open Login URL"
+                            Command="{Binding OpenLoginUrlCommand}"/>
+                </StackPanel>
+
+                <StackPanel Spacing="5" IsVisible="{Binding !IsLoggedIn}">
+                    <TextBlock Text="Step 2: Paste 'code' from Dropbox callback URL" FontSize="12"/>
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBox Text="{Binding AuthorizationCode}"
+                                 Watermark="Paste code"
+                                 Width="280"/>
+                        <Button Content="Complete Login"
+                                Command="{Binding CompleteLoginCommand}"
+                                Classes="accent"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="10" IsVisible="{Binding IsLoggedIn}">
+                    <TextBlock Text="Logged in" Foreground="Green" VerticalAlignment="Center"/>
+                    <Button Content="Refresh Account"
+                            Command="{Binding RefreshAccountInfoCommand}"/>
+                    <Button Content="Clear Login"
+                            Command="{Binding ClearLoginCommand}"/>
+                </StackPanel>
+
+                <TextBlock Text="{Binding AccountSummary}"
+                           FontSize="12"
+                           IsVisible="{Binding !!AccountSummary}"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
+        </Border>
+
+        <Border Background="{DynamicResource SystemFillColorAttentionBackground}"
+                Padding="10"
+                CornerRadius="4"
+                IsVisible="{Binding !!StatusMessage}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SystemFillColorAttention}"/>
+        </Border>
+    </StackPanel>
+</UserControl>
+
