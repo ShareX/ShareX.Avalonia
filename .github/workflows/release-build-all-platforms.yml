@@ -168,7 +168,6 @@ jobs:
             dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.rpm
             dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.tar.gz
             dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.deb
-            dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.rpm
 
       - name: Upload Linux build log
         if: always()
@@ -206,7 +205,6 @@ jobs:
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.rpm
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.tar.gz
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.deb
-            release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.rpm
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
