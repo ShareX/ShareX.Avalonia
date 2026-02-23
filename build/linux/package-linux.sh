@@ -25,7 +25,15 @@ dotnet_publish_serial() {
 }
 
 # Define Architectures to Build
-ARCHITECTURES=("linux-x64" "linux-arm64")
+# Override with XERAHS_ARCHITECTURES, e.g. "linux-x64" or "linux-arm64".
+if [ -n "${XERAHS_ARCHITECTURES:-}" ]; then
+    IFS=',' read -r -a ARCHITECTURES <<< "$XERAHS_ARCHITECTURES"
+    for i in "${!ARCHITECTURES[@]}"; do
+        ARCHITECTURES[$i]="${ARCHITECTURES[$i]//[[:space:]]/}"
+    done
+else
+    ARCHITECTURES=("linux-x64" "linux-arm64")
+fi
 
 for ARCH in "${ARCHITECTURES[@]}"; do
     echo ""

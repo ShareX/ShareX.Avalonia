@@ -131,7 +131,17 @@ jobs:
 
   build-linux:
     needs: validate-version
-    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - rid: linux-x64
+            runner: ubuntu-24.04
+            artifact_name: linux-release-x64
+          - rid: linux-arm64
+            runner: ubuntu-24.04-arm
+            artifact_name: linux-release-arm64
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -155,27 +165,25 @@ jobs:
           set -o pipefail
           mkdir -p build/logs
           chmod +x ./build/linux/package-linux.sh
-          ./build/linux/package-linux.sh 2>&1 | tee build/logs/linux-build.log
+          XERAHS_ARCHITECTURES="${{ matrix.rid }}" ./build/linux/package-linux.sh 2>&1 | tee "build/logs/linux-${{ matrix.rid }}-build.log"
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-release
+          name: ${{ matrix.artifact_name }}
           if-no-files-found: error
           path: |
-            dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.tar.gz
-            dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.deb
-            dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.rpm
-            dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.tar.gz
-            dist/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.deb
+            dist/XerahS-${{ needs.validate-version.outputs.version }}-${{ matrix.rid }}.tar.gz
+            dist/XerahS-${{ needs.validate-version.outputs.version }}-${{ matrix.rid }}.deb
+            dist/XerahS-${{ needs.validate-version.outputs.version }}-${{ matrix.rid }}.rpm
 
       - name: Upload Linux build log
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: linux-build-log
+          name: linux-build-log-${{ matrix.rid }}
           if-no-files-found: warn
-          path: build/logs/linux-build.log
+          path: build/logs/linux-${{ matrix.rid }}-build.log
 
   release:
     if: github.ref_type == 'tag'
@@ -195,6 +203,7 @@ jobs:
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          name: XerahS ${{ needs.validate-version.outputs.version }}
           files: |
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-x64.exe
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64.exe
@@ -205,6 +214,7 @@ jobs:
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.rpm
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.tar.gz
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.deb
+            release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-arm64.rpm
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
