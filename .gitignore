@@ -1,6 +1,22 @@
-# Build
+# Build (explicit at any depth so IDEs and git both ignore ~1800+ bin/obj files)
+**/bin/
+**/obj/
 bin/
 obj/
+[Bb]uild/
+[Bb]uildOutput/
+TestResults/
+[Tt]est[Rr]esults/
+*.VisualState.xml
+*.csproj.user
+project.lock.json
+project.fragment.lock.json
+
+# NuGet / .NET
+.nuget/
+packages/
+**/packages/
+*.nupkg
 
 # User-specific
 *.user
@@ -11,6 +27,8 @@ obj/
 # IDE
 .vs/
 .vscode/
+.cursor/
+*.rsuser
 
 # OS
 .DS_Store
