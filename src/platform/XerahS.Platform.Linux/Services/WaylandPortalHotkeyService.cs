@@ -81,8 +81,8 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
             _connection = new Connection(Address.Session);
             _connection.ConnectAsync().GetAwaiter().GetResult();
             _portal = _connection.CreateProxy<IGlobalShortcuts>(PortalBusName, PortalObjectPath);
-            _activatedSubscription = _portal.WatchActivatedAsync(OnActivated).GetAwaiter().GetResult();
-            _deactivatedSubscription = _portal.WatchDeactivatedAsync(OnDeactivated).GetAwaiter().GetResult();
+            _activatedSubscription = _portal.WatchActivatedAsync(OnActivated, OnPortalWatchError).GetAwaiter().GetResult();
+            _deactivatedSubscription = _portal.WatchDeactivatedAsync(OnDeactivated, OnPortalWatchError).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
@@ -422,6 +422,11 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
     private void OnDeactivated((ObjectPath sessionHandle, string shortcutId, ulong timestamp, IDictionary<string, object> options) data)
     {
         // Portal currently only triggers once per activation; no action needed.
+    }
+
+    private static void OnPortalWatchError(Exception ex)
+    {
+        DebugHelper.WriteException(ex, "WaylandPortalHotkeyService: Portal watch error (e.g. service gone); hotkeys may use X11 fallback.");
     }
 
     private void OnFallbackHotkeyTriggered(object? sender, HotkeyTriggeredEventArgs e)
