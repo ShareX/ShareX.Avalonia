@@ -31,6 +31,7 @@ using XerahS.Platform.Abstractions;
 using XerahS.RegionCapture.ScreenRecording;
 using SkiaSharp;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using XerahS.History;
 using Avalonia.Threading;
@@ -843,13 +844,27 @@ namespace XerahS.Core.Tasks
         /// Select a region using slurp (Linux Wayland native tool).
         /// Returns the selected region, or empty if cancelled/failed.
         /// </summary>
+        private static string GetSlurpExecutablePath()
+        {
+            if (OperatingSystem.IsLinux())
+            {
+                var candidates = new[] { "/usr/bin/slurp", "/usr/local/bin/slurp" };
+                foreach (var path in candidates)
+                {
+                    if (File.Exists(path))
+                        return path;
+                }
+            }
+            return "slurp";
+        }
+
         private static async Task<(SKRectI Region, bool WasCancelled)> SelectRegionWithSlurpAsync()
         {
             try
             {
                 var slurpStartInfo = new ProcessStartInfo
                 {
-                    FileName = "slurp",
+                    FileName = GetSlurpExecutablePath(),
                     Arguments = "-f \"%x %y %w %h\"",  // Output format: x y width height
                     CreateNoWindow = true,
                     UseShellExecute = false,
