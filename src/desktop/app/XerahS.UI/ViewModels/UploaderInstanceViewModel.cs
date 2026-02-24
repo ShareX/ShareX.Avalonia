@@ -245,9 +245,10 @@ public partial class UploaderInstanceViewModel : ViewModelBase
                 Common.DebugHelper.WriteLine($"[UploaderInstanceVM] WARNING: ConfigView is not an Avalonia Control");
             }
         }
-        else
+        else if (provider != null)
         {
-            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] WARNING: ConfigViewModel is null for {ProviderId}");
+            // Some providers (e.g. "auto") intentionally have no config UI.
+            Common.DebugHelper.WriteLine($"[UploaderInstanceVM] No config UI for provider: {ProviderId}");
         }
     }
 
