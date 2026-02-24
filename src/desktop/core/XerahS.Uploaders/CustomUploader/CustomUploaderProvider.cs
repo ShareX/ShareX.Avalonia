@@ -199,6 +199,8 @@ public class CustomUploaderProvider : IUploaderProvider
         return new CustomUploaderExecutor(effectiveItem);
     }
 
+    object IUploaderProvider.CreateInstance(string settingsJson) => CreateInstance(settingsJson);
+
     /// <inheritdoc/>
     public Dictionary<UploaderCategory, string[]> GetSupportedFileTypes()
     {
