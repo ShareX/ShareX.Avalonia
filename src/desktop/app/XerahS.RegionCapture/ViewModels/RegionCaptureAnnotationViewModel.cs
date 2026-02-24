@@ -61,7 +61,7 @@ public partial class RegionCaptureAnnotationViewModel : ObservableObject
         SelectedColor = ColorToHex(options.BorderColor);
         FillColor = ColorToHex(options.FillColor);
         StrokeWidth = options.Thickness;
-        FontSize = options.FontSize;
+        FontSize = (int)options.TextFontSize;
         ShadowEnabled = options.Shadow;
     }
 
@@ -76,7 +76,7 @@ public partial class RegionCaptureAnnotationViewModel : ObservableObject
         _options.BorderColor = HexToColor(SelectedColor);
         _options.FillColor = HexToColor(FillColor);
         _options.Thickness = StrokeWidth;
-        _options.FontSize = FontSize;
+        _options.TextFontSize = FontSize;
         _options.Shadow = ShadowEnabled;
     }
 
