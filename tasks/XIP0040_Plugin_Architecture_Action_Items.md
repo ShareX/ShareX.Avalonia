@@ -1,75 +1,65 @@
-# XIP0040: Plugin and Uploaders Architecture - Implementation Action Items
+# XIP0040: Plugin Architecture Action Items (Implementation-Ready)
 
-## Objective
-Implement the next step of plugin/runtime separation while keeping legacy ShareX import and mobile compatibility intact.
+## Purpose
+Execute the architecture decision in [docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md](../docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md) with no ambiguity.
 
-This XIP now has three mandatory outcomes:
-1. Move all legacy-support code into `UploadersLib/LegacySupport` (physical consolidation).
-2. Remove provider-ID secret migration logic from `InstanceManager` by introducing provider capability contracts.
-3. Make Amazon S3 runtime enum ownership plugin-local.
+## Definition of Done (Top Level)
+1. Legacy and mobile compatibility code is physically consolidated under `UploadersLib/LegacySupport`.
+2. Core secret migration no longer hard-codes provider IDs.
+3. Amazon S3 plugin runtime config no longer depends on core `AmazonS3StorageClass`.
+4. Build and targeted tests pass.
 
-Architecture source: [docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md](../docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md)
+## Fixed Decisions
+1. Runtime plugin model remains `ProviderId + SettingsJson`.
+2. Legacy/mobile compatibility behavior remains supported.
+3. Consolidation is structural only; no namespace or JSON behavior changes.
+4. `UploadersConfig` redesign and global `UploaderType -> ProviderId` migration are out of scope.
 
-## Non-Negotiable Scope Decisions
-1. Runtime plugin flow remains `ProviderId + SettingsJson`.
-2. Legacy import/mobile behavior remains supported with current DTO shapes.
-3. Consolidation is organizational only. No namespace/type rename and no JSON schema change.
-4. `UploadersConfig` redesign and `UploaderType` replacement are not part of this XIP.
+## Phase 1: LegacySupport consolidation
 
-## Work Item 1: Consolidate legacy support code into `UploadersLib/LegacySupport`
-
-### Goal
-Make compatibility-only code explicit and centralized so duplicate-looking types are clearly marked as legacy/mobile support.
-
-### Target root
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport`
-
-### Required file moves
-Move these files under `UploadersLib/LegacySupport` (you may keep subfolders, but all must live under this root):
-
-- `src/desktop/core/XerahS.Uploaders/UploadersConfig.cs`
-- `src/desktop/core/XerahS.Uploaders/UploadersConfigImporter.cs`
-- `src/desktop/core/XerahS.Uploaders/Abstractions/IUploaderConfig.cs`
-- `src/desktop/core/XerahS.Uploaders/Configuration/UploaderType.cs`
-- `src/desktop/core/XerahS.Uploaders/Configuration/ImgurConfig.cs`
-- `src/desktop/core/XerahS.Uploaders/Configuration/DropboxConfig.cs`
-- `src/desktop/core/XerahS.Uploaders/Configuration/FtpConfig.cs`
-- `src/desktop/core/XerahS.Uploaders/Configuration/S3Config.cs`
-- `src/desktop/core/XerahS.Uploaders/Configuration/CustomUploaderConfig.cs`
-- `src/desktop/core/XerahS.Uploaders/FileUploaders/AmazonS3Settings.cs`
-- `src/desktop/core/XerahS.Uploaders/FileUploaders/AmazonS3StorageClass.cs`
-- `src/desktop/core/XerahS.Uploaders/FileUploaders/FTPAccount.cs`
-- `src/desktop/core/XerahS.Uploaders/Compatibility/UploaderFilter.cs`
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/Stubs.cs`
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/Properties/Resources.cs`
-
-### Required docs in the folder
-Add:
+### 1.1 Create folder and docs
+Create:
 - `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport/README.md`
 
-Required README content:
-- State this folder exists for ShareX legacy import compatibility and mobile compatibility.
-- State duplicate-looking DTOs are intentional.
-- State runtime plugin code must not add new dependencies on types in this folder unless for legacy/mobile compatibility.
+README required points:
+- This folder exists for ShareX legacy import compatibility and mobile compatibility.
+- Duplicate-looking DTOs are intentional and required.
+- Runtime plugin code should not add new dependencies here unless specifically required for legacy/mobile compatibility.
 
-### Rules
-1. Keep existing namespaces unchanged.
-2. Keep public type names unchanged.
-3. Keep serializer behavior unchanged.
-4. Keep references/build behavior unchanged.
+### 1.2 Move files (exact)
+Move the following files under `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport` while keeping namespaces unchanged:
 
-### Acceptance criteria
-- All listed files are located under `UploadersLib/LegacySupport`.
-- No listed file remains outside that root.
-- Project builds without code behavior changes.
+- `UploadersConfig.cs`
+- `UploadersConfigImporter.cs`
+- `Abstractions/IUploaderConfig.cs`
+- `Configuration/UploaderType.cs`
+- `Configuration/ImgurConfig.cs`
+- `Configuration/DropboxConfig.cs`
+- `Configuration/FtpConfig.cs`
+- `Configuration/S3Config.cs`
+- `Configuration/CustomUploaderConfig.cs`
+- `FileUploaders/AmazonS3Settings.cs`
+- `FileUploaders/AmazonS3StorageClass.cs`
+- `FileUploaders/FTPAccount.cs`
+- `Compatibility/UploaderFilter.cs`
+- `UploadersLib/Stubs.cs`
+- `UploadersLib/Properties/Resources.cs`
 
-## Work Item 2: Introduce `IInstanceSecretMigrator` and refactor `InstanceManager`
+### 1.3 Update references
+- Fix `using` statements and file path references if needed.
+- Do not change public API names or namespaces.
 
-### Goal
-Remove hard-coded provider IDs from core secret migration logic.
+### 1.4 Acceptance checks
+- `rg --files src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport` includes all moved files.
+- Old paths no longer contain those files.
 
-### Core contract (exact)
-Add in `src/desktop/core/XerahS.Uploaders/PluginSystem/IInstanceSecretMigrator.cs`:
+## Phase 2: Provider-owned secret migration
+
+### 2.1 Add contract in core
+Add file:
+- `src/desktop/core/XerahS.Uploaders/PluginSystem/IInstanceSecretMigrator.cs`
+
+Contract:
 
 ```csharp
 namespace XerahS.Uploaders.PluginSystem;
@@ -84,55 +74,61 @@ public interface IInstanceSecretMigrator
 }
 ```
 
-### Core refactor requirements
-Update `src/desktop/core/XerahS.Uploaders/PluginSystem/InstanceManager.cs`:
-1. Remove `RequiresSecretKey` and all provider-specific branches (`amazons3`, `imgur`, `gist`).
-2. Resolve provider by `ProviderCatalog.GetProvider(instance.ProviderId)`.
-3. If provider implements `IInstanceSecretMigrator`, call it.
-4. Replace `instance.SettingsJson` with returned JSON when migration reports update.
-5. Keep one save pass at end (`SaveConfiguration`) only if any instance changed.
+### 2.2 Refactor core migration orchestrator
+Modify:
+- `src/desktop/core/XerahS.Uploaders/PluginSystem/InstanceManager.cs`
 
-### Provider implementations required in this XIP
+Required changes:
+1. Remove `RequiresSecretKey`.
+2. Remove hard-coded provider branches (`amazons3`, `imgur`, `gist`).
+3. For each instance:
+- resolve provider via `ProviderCatalog.GetProvider(instance.ProviderId)`
+- if provider implements `IInstanceSecretMigrator`, call migrator
+- if migration returns updated JSON, update `instance.SettingsJson`
+4. Keep one save at end only if at least one instance changed.
+5. Keep logging equivalent (migrated instances, migrated secrets).
+
+### 2.3 Implement migrators in providers
+Modify:
 - `src/desktop/plugins/AmazonS3.Plugin/AmazonS3Provider.cs`
 - `src/desktop/plugins/Imgur.Plugin/ImgurProvider.cs`
 - `src/desktop/plugins/GitHubGist.Plugin/GitHubGistProvider.cs`
 
-### Required migration behavior parity
-- `amazons3`: migrate `AccessKeyId`, `SecretAccessKey` into secret store (`accessKeyId`, `secretAccessKey`), ensure `SecretKey`, remove plaintext fields after successful secret write.
-- `imgur`: migrate `OAuth2Info.Client_Secret` and `OAuth2Info.Token`, ensure `SecretKey`, copy `OAuth2Info.Client_ID` to `ClientId` when missing, remove `OAuth2Info` only when secrets moved.
-- `gist`: migrate `OAuth2Info.Client_ID`, `OAuth2Info.Client_Secret`, `OAuth2Info.Token`, ensure `SecretKey`, remove `OAuth2Info` only when secrets moved.
+Each provider should implement `IInstanceSecretMigrator` and migrate its own legacy plaintext settings JSON.
 
-### Acceptance criteria
-- `InstanceManager.cs` contains no provider-ID special-casing for migration.
-- Migration remains idempotent and non-destructive.
-- Existing secrets migration behavior is preserved.
+Required parity:
+- `amazons3`: migrate `AccessKeyId`, `SecretAccessKey` to secret store keys `accessKeyId`, `secretAccessKey`; ensure `SecretKey`; remove plaintext fields only after successful write.
+- `imgur`: read/migrate `OAuth2Info.Client_Secret`, `OAuth2Info.Token`; ensure `SecretKey`; copy `OAuth2Info.Client_ID` to `ClientId` if missing; remove `OAuth2Info` only when secret migration happened.
+- `gist`: read/migrate `OAuth2Info.Client_ID`, `OAuth2Info.Client_Secret`, `OAuth2Info.Token`; ensure `SecretKey`; remove `OAuth2Info` only when secret migration happened.
 
-## Work Item 3: Make Amazon S3 runtime enum plugin-local
+### 2.4 Acceptance checks
+- `InstanceManager.cs` has no provider-ID migration branches.
+- Migration is idempotent.
+- Migration does not remove plaintext fields if secret write fails.
 
-### Goal
-Remove runtime dependency on core `AmazonS3StorageClass` while preserving settings compatibility.
+## Phase 3: Amazon S3 runtime enum ownership
 
-### Required changes
-1. Add plugin-local enum in `src/desktop/plugins/AmazonS3.Plugin` (new file).
-2. Update `src/desktop/plugins/AmazonS3.Plugin/S3ConfigModel.cs` to use plugin enum.
-3. Update `src/desktop/plugins/AmazonS3.Plugin/ViewModels/AmazonS3ConfigViewModel.cs` to use plugin enum.
-4. Remove runtime references to `XerahS.Uploaders.FileUploaders.AmazonS3StorageClass` from Amazon S3 plugin.
+### 3.1 Add plugin-local enum
+Add new file under:
+- `src/desktop/plugins/AmazonS3.Plugin` (for example `S3StorageClass.cs`)
 
-### Compatibility requirement
-- Keep numeric enum values aligned with existing persisted JSON values (`0..4`).
+### 3.2 Update runtime model and viewmodel
+Modify:
+- `src/desktop/plugins/AmazonS3.Plugin/S3ConfigModel.cs`
+- `src/desktop/plugins/AmazonS3.Plugin/ViewModels/AmazonS3ConfigViewModel.cs`
+- any additional Amazon S3 plugin runtime files referencing core enum
 
-### Acceptance criteria
-- `rg -n "AmazonS3StorageClass" src/desktop/plugins/AmazonS3.Plugin` returns no core-type usage in runtime config path.
-- S3 provider compiles and runtime settings serialize/deserialize without migration break.
+Required behavior:
+- `S3ConfigModel.StorageClass` uses plugin-local enum.
+- `StorageClassIndex` conversions use plugin-local enum.
+- Numeric values remain aligned with existing persisted JSON (`0..4`) to avoid breaking existing settings.
 
-## Implementation Order
-1. Work Item 1 (LegacySupport consolidation).
-2. Work Item 2 (secret migrator contract and provider implementations).
-3. Work Item 3 (S3 runtime enum ownership).
-4. Final docs pass and verification.
+### 3.3 Acceptance checks
+- `rg -n "XerahS\.Uploaders\.FileUploaders\.AmazonS3StorageClass" src/desktop/plugins/AmazonS3.Plugin` returns no runtime references.
 
-## Verification Commands
-Run from repo root:
+## Phase 4: Validation and regression checks
+
+Run these commands from repo root:
 
 ```powershell
 rg --files src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport
@@ -143,9 +139,23 @@ dotnet test tests/XerahS.Tests/XerahS.Tests.csproj --filter UploadersConfigPolym
 dotnet build src/desktop/XerahS.sln -m:1
 ```
 
-Build timeout rule: if a build hangs beyond 5 minutes, stop it, fix the lock/process issue, and rerun.
+### Required outcome
+- All checks pass.
+- Build has 0 errors.
+- No regression in import/mobile behavior.
 
-## Out of Scope
-- `UploadersConfig` opaque/slim redesign.
-- Global replacement of `UploaderType` with `ProviderId`.
-- Extracting legacy support into a separate assembly.
+## Risk Notes and Mitigations
+
+1. Risk: file moves can break references.
+- Mitigation: preserve namespaces, update only path-based references/usings, run full solution build.
+
+2. Risk: migrator behavior drift from current implicit logic.
+- Mitigation: preserve existing field names and secret key names exactly.
+
+3. Risk: enum migration breaks old JSON values.
+- Mitigation: keep enum order/value mapping unchanged.
+
+## Explicitly Out of Scope
+- Opaque `UploadersConfig` redesign.
+- Replacing `UploaderType` globally.
+- Moving legacy support into a separate assembly.
