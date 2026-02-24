@@ -65,7 +65,7 @@ public sealed class AutoUploader : GenericUploader
         Uploader uploader;
         try
         {
-            uploader = provider.CreateInstance(targetInstance.SettingsJson);
+            uploader = (Uploader)provider.CreateInstance(targetInstance.SettingsJson);
         }
         catch (Exception ex)
         {

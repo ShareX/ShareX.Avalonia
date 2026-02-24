@@ -347,7 +347,7 @@ namespace XerahS.Core.Tasks.Processors
             Uploader uploader;
             try
             {
-                uploader = provider.CreateInstance(instance.SettingsJson);
+                uploader = (Uploader)provider.CreateInstance(instance.SettingsJson);
             }
             catch (Exception ex)
             {
