@@ -18,7 +18,7 @@
 | **Development** | **Agentic Coding** (AI-First) | Traditional Manual Coding |
 | **Architecture** | **Plugin-based** (Destinations) | Monolithic |
 | **UI Framework** | **Avalonia UI** (Modern XAML) | **Windows Forms** (Legacy) |
-| **Core Framework** | **.NET 10** | .NET Framework 4.8 |
+| **Core Framework** | **.NET 10** | .NET 9.0 |
 | **Rendering** | GPU Accelerated (SkiaSharp) | CPU Based (GDI+) |
 | **Workflows** | Zero-Inheritance (Isolated) | Inheritance-based (Profiles) |
 | **Philosophy** | Modern, Experimental, Community-Driven | Feature-Rich, Battle-Tested, Stable |
