@@ -1,0 +1,14 @@
+{
+  "pluginId": "myplugin",
+  "name": "My Plugin",
+  "version": "1.0.0",
+  "author": "Your Name",
+  "description": "Short description of your destination",
+  "apiVersion": "1.0",
+  "entryPoint": "MyPlugin.Provider.MyProvider",
+  "assemblyFileName": "MyPlugin.Plugin.dll",
+  "supportedCategories": ["Image"],
+  "configViewId": "myplugin",
+  "dependencies": [],
+  "supportsExplorer": false
+}

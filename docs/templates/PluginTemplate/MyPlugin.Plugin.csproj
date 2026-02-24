@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>MyPlugin.Provider</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PluginId>myplugin</PluginId>
+    <PluginName>My Plugin</PluginName>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- When copying to src/desktop/plugins/YourName.Plugin/, use ../../core/... -->
+    <ProjectReference Include="..\..\..\src\desktop\core\XerahS.DestinationsPluginSdk\XerahS.DestinationsPluginSdk.csproj" />
+    <ProjectReference Include="..\..\..\src\desktop\core\XerahS.Uploaders\XerahS.Uploaders.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" ExcludeAssets="runtime" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="plugin.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
