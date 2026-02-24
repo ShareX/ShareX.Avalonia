@@ -47,12 +47,13 @@ public static class MainViewModelHelper
 
     /// <summary>
     /// Wires up the CopyRequested event to copy the image to the system clipboard.
+    /// When getEditedSnapshot is provided, uses the rendered image (with annotations) instead of the base preview.
     /// </summary>
-    public static void WireCopyRequested(MainViewModel viewModel)
+    public static void WireCopyRequested(MainViewModel viewModel, Func<SkiaSharp.SKBitmap?>? getEditedSnapshot = null)
     {
         viewModel.CopyRequested += () =>
         {
-            HandleCopyRequested(viewModel);
+            HandleCopyRequested(viewModel, getEditedSnapshot);
         };
     }
 
@@ -117,26 +118,38 @@ public static class MainViewModelHelper
         }
     }
 
-    private static void HandleCopyRequested(MainViewModel viewModel)
+    private static void HandleCopyRequested(MainViewModel viewModel, Func<SkiaSharp.SKBitmap?>? getEditedSnapshot = null)
     {
         DebugHelper.WriteLine("MainViewModelHelper: CopyRequested received");
 
         try
         {
-            if (viewModel.PreviewImage == null)
+            // Prefer edited snapshot (with annotations) over base preview image
+            SkiaSharp.SKBitmap? imageToCopy = null;
+            if (getEditedSnapshot != null)
             {
-                DebugHelper.WriteLine("MainViewModelHelper: CopyRequested ignored because PreviewImage is null.");
-                return;
+                imageToCopy = getEditedSnapshot();
+                if (imageToCopy != null)
+                    DebugHelper.WriteLine($"MainViewModelHelper: Using edited snapshot {imageToCopy.Width}x{imageToCopy.Height} for clipboard");
             }
 
-            // Convert Avalonia Bitmap to SKBitmap for clipboard.
-            using var skBitmap = ShareX.ImageEditor.Helpers.BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
-            DebugHelper.WriteLine($"MainViewModelHelper: Converted bitmap {skBitmap.Width}x{skBitmap.Height} for clipboard");
+            if (imageToCopy == null && viewModel.PreviewImage != null)
+            {
+                imageToCopy = ShareX.ImageEditor.Helpers.BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
+                if (imageToCopy != null)
+                    DebugHelper.WriteLine($"MainViewModelHelper: Using preview image {imageToCopy.Width}x{imageToCopy.Height} for clipboard");
+            }
+
+            if (imageToCopy == null)
+            {
+                DebugHelper.WriteLine("MainViewModelHelper: CopyRequested ignored because no image available.");
+                return;
+            }
 
             // Use the platform clipboard service (set up via EditorClipboardAdapter).
             if (Platform.Abstractions.PlatformServices.IsInitialized)
             {
-                Platform.Abstractions.PlatformServices.Clipboard.SetImage(skBitmap.Copy());
+                Platform.Abstractions.PlatformServices.Clipboard.SetImage(imageToCopy.Copy());
                 DebugHelper.WriteLine("MainViewModelHelper: Image copied to clipboard");
             }
             else

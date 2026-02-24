@@ -75,8 +75,17 @@ public partial class App : Application
             // Wire up UploadRequested for embedded editor in MainWindow
             Services.MainViewModelHelper.WireUploadRequested(mainViewModel);
 
-            // Wire up CopyRequested for embedded editor in MainWindow
-            Services.MainViewModelHelper.WireCopyRequested(mainViewModel);
+            // Wire up CopyRequested for embedded editor in MainWindow (use edited snapshot when on Editor tab)
+            Services.MainViewModelHelper.WireCopyRequested(mainViewModel, () =>
+            {
+                if (desktop.MainWindow is Views.MainWindow mw)
+                {
+                    var contentFrame = mw.FindControl<ContentControl>("ContentFrame");
+                    if (contentFrame?.Content is ShareX.ImageEditor.Views.EditorView ev)
+                        return ev.GetSnapshot();
+                }
+                return null;
+            });
 
             // Prepare for Silent Run
             bool silentRun = XerahS.Core.SettingsManager.Settings.SilentRun;

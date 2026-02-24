@@ -103,8 +103,12 @@ namespace XerahS.UI.Services
                 // Wire up UploadRequested to trigger host app upload workflow
                 MainViewModelHelper.WireUploadRequested(editorViewModel);
 
-                // Wire up CopyRequested to copy image to clipboard
-                MainViewModelHelper.WireCopyRequested(editorViewModel);
+                // Wire up CopyRequested to copy edited image (with annotations) to clipboard
+                MainViewModelHelper.WireCopyRequested(editorViewModel, () =>
+                {
+                    var editorView = editorWindow.FindControl<ShareX.ImageEditor.Views.EditorView>("EditorViewControl");
+                    return editorView?.GetSnapshot();
+                });
 
                 // Set DataContext BEFORE initializing preview so bindings update correctly
                 editorWindow.DataContext = editorViewModel;
