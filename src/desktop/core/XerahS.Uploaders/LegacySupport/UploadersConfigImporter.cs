@@ -138,13 +138,6 @@ namespace XerahS.Uploaders
                 result.AddImported("Photobucket");
             }
 
-            if (!string.IsNullOrEmpty(source.CheveretoUploader?.UploadURL))
-            {
-                target.CheveretoUploader = source.CheveretoUploader;
-                target.CheveretoDirectURL = source.CheveretoDirectURL;
-                result.AddImported("Chevereto");
-            }
-
             if (!string.IsNullOrEmpty(source.VgymeUserKey))
             {
                 target.VgymeUserKey = source.VgymeUserKey;

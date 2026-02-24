@@ -12,6 +12,11 @@
     <PublishSingleFile>false</PublishSingleFile>
   </PropertyGroup>
 
+  <!-- When published via the host app's BundlePlugins target, place output in Plugins/<PluginId>/ -->
+  <PropertyGroup Condition="'$(PluginPublishBaseDir)' != ''">
+    <PublishDir>$(PluginPublishBaseDir)$(PluginId)/</PublishDir>
+  </PropertyGroup>
+
   <!-- Copy plugin to main app's Plugins directory (only when built standalone, not during Publish) -->
   <Target Name="CopyToPluginsDir" AfterTargets="Build" Condition="!$(OutputPath.Contains('Plugins'))">
     <PropertyGroup>

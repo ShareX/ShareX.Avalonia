@@ -143,9 +143,17 @@ public class ApplicationConfig : SettingsBase<ApplicationConfig>
     public List<ClipboardFormat> ClipboardContentFormats = new List<ClipboardFormat>();
 
     public int MaxUploadFailRetry = 1;
+    /// <summary>Legacy; not used by runtime. Kept for config serialization.</summary>
+    [Obsolete("Legacy; runtime uses plugin instances. Kept for config serialization.")]
     public bool UseSecondaryUploaders = false;
+    /// <summary>Legacy; not used by runtime. Kept for config serialization.</summary>
+    [Obsolete("Legacy; use plugin instances per category. Kept for config serialization.")]
     public List<ImageDestination> SecondaryImageUploaders = new List<ImageDestination>();
+    /// <summary>Legacy; not used by runtime. Kept for config serialization.</summary>
+    [Obsolete("Legacy; use plugin instances per category. Kept for config serialization.")]
     public List<TextDestination> SecondaryTextUploaders = new List<TextDestination>();
+    /// <summary>Legacy; not used by runtime. Kept for config serialization.</summary>
+    [Obsolete("Legacy; use plugin instances per category. Kept for config serialization.")]
     public List<FileDestination> SecondaryFileUploaders = new List<FileDestination>();
 
     #endregion Settings - Upload

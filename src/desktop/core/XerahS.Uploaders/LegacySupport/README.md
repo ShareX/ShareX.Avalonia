@@ -7,6 +7,11 @@ This folder exists for **ShareX legacy import compatibility** and **mobile compa
 Files here support deserializing `UploadersConfig.json` produced by ShareX WinForms and
 importing credentials/settings into the XerahS plugin system.
 
+`LegacyDestinationEnums.cs` contains the deprecated destination enums (ImageDestination,
+TextDestination, FileDestination, UrlShortenerType, URLSharingServices). The runtime uses
+the plugin model (ProviderId); these enums are kept only for config serialization and
+should not be used for new code.
+
 ## Rules
 
 - **Duplicate-looking DTOs are intentional and required.** The classes here mirror the

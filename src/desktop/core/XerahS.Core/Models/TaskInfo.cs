@@ -103,13 +103,15 @@ public class TaskInfo
                 return instanceId;
             }
 
-            // URL shortener remains enum-based
+            // Legacy: URL shortener / sharing still read from deprecated enum for display
+#pragma warning disable CS0618
             if (DataType == EDataType.URL)
             {
                 return Job == TaskJob.ShareURL
                     ? EnumExtensions.GetDescription(TaskSettings.URLSharingServiceDestination)
                     : EnumExtensions.GetDescription(TaskSettings.URLShortenerDestination);
             }
+#pragma warning restore CS0618
 
             return null;
         }

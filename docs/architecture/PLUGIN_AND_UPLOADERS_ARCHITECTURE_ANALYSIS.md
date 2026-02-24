@@ -70,7 +70,7 @@ Conclusion: legacy and mobile compatibility are intentionally core-owned and sti
 
 All code used primarily for ShareX legacy compatibility and mobile fallback must be physically consolidated under:
 
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport`
+- `src/desktop/core/XerahS.Uploaders/LegacySupport`
 
 This is an organization and discoverability boundary. It does not change runtime behavior.
 
@@ -81,7 +81,7 @@ This is an organization and discoverability boundary. It does not change runtime
 
 ## LegacySupport File Boundary
 
-### Files that must be moved under `UploadersLib/LegacySupport`
+### Files that must be moved under `LegacySupport`
 
 - `src/desktop/core/XerahS.Uploaders/UploadersConfig.cs`
 - `src/desktop/core/XerahS.Uploaders/UploadersConfigImporter.cs`
@@ -96,8 +96,8 @@ This is an organization and discoverability boundary. It does not change runtime
 - `src/desktop/core/XerahS.Uploaders/FileUploaders/AmazonS3StorageClass.cs`
 - `src/desktop/core/XerahS.Uploaders/FileUploaders/FTPAccount.cs`
 - `src/desktop/core/XerahS.Uploaders/Compatibility/UploaderFilter.cs`
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/Stubs.cs`
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/Properties/Resources.cs`
+- `src/desktop/core/XerahS.Uploaders/LegacySupport/Stubs.cs`
+- `src/desktop/core/XerahS.Uploaders/LegacySupport/Properties/Resources.cs`
 
 ### Files that must remain outside `LegacySupport`
 
@@ -153,7 +153,7 @@ Behavior rules:
 ## Documentation Requirements
 
 Add:
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport/README.md`
+- `src/desktop/core/XerahS.Uploaders/LegacySupport/README.md`
 
 README must state:
 - folder purpose (legacy ShareX import + mobile compatibility)
@@ -165,8 +165,8 @@ README must state:
 Run from repo root:
 
 ```powershell
-rg --files src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport
-rg -n "class UploadersConfig|class UploadersConfigImporter|interface IUploaderConfig|enum UploaderType|class AmazonS3Settings|enum AmazonS3StorageClass|namespace ShareX.UploadersLib" src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport
+rg --files src/desktop/core/XerahS.Uploaders/LegacySupport
+rg -n "class UploadersConfig|class UploadersConfigImporter|interface IUploaderConfig|enum UploaderType|class AmazonS3Settings|enum AmazonS3StorageClass|namespace ShareX.UploadersLib" src/desktop/core/XerahS.Uploaders/LegacySupport
 rg -n "providerId == \"amazons3\"|providerId is \"imgur\" or \"gist\"|RequiresSecretKey" src/desktop/core/XerahS.Uploaders/PluginSystem/InstanceManager.cs
 rg -n "XerahS\.Uploaders\.FileUploaders\.AmazonS3StorageClass" src/desktop/plugins/AmazonS3.Plugin
 dotnet test tests/XerahS.Tests/XerahS.Tests.csproj --filter UploadersConfigPolymorphicTests -m:1
