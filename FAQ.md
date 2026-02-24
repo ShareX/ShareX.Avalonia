@@ -2,7 +2,7 @@
 
 **Q: How to pronounce XerahS?**
 
-**A:** XerahS is a pronounced **zeh raks** with *xe* as in Xerox and *rax* as in the ending sound of relax.
+**A:** XerahS is pronounced **ZERR-ahs** with IPA **/ˈzɛr.ɑːs/** and sounds like *Zer* from Xerox plus *ahs* as in glass or class.
 
 ---
 
