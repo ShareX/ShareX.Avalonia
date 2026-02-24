@@ -28,7 +28,6 @@ using CommunityToolkit.Mvvm.Input;
 using Newtonsoft.Json;
 using ShareX.AmazonS3.Plugin;
 using XerahS.Common;
-using XerahS.Uploaders.FileUploaders;
 using XerahS.Uploaders.PluginSystem;
 using System;
 using System.Collections.Generic;
@@ -841,7 +840,7 @@ public partial class AmazonS3ConfigViewModel : ObservableObject, IUploaderConfig
             ObjectPrefix = string.IsNullOrWhiteSpace(ObjectPrefix) ? null! : ObjectPrefix,
             CustomDomain = string.IsNullOrWhiteSpace(CustomDomain) ? null! : CustomDomain,
             UseCustomCNAME = UseCustomCNAME,
-            StorageClass = (AmazonS3StorageClass)StorageClassIndex,
+            StorageClass = (S3StorageClass)StorageClassIndex,
             SetPublicACL = SetPublicACL,
             SetPublicPolicy = SetPublicPolicy,
             SignedPayload = SignedPayload,

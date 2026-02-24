@@ -69,133 +69,23 @@ public class InstanceManager
 
             foreach (var instance in _configuration.Instances)
             {
-                bool instanceUpdated = false;
-                bool instanceSecretsMigrated = false;
-                if (!RequiresSecretKey(instance.ProviderId))
-                {
-                    continue;
-                }
-
                 if (string.IsNullOrWhiteSpace(instance.SettingsJson))
                 {
                     continue;
                 }
 
-                JObject? json;
-                try
-                {
-                    json = JObject.Parse(instance.SettingsJson);
-                }
-                catch
+                var provider = ProviderCatalog.GetProvider(instance.ProviderId);
+                if (provider is not IInstanceSecretMigrator migrator)
                 {
                     continue;
                 }
 
-                var secretKey = json.Value<string>("SecretKey");
-                if (string.IsNullOrWhiteSpace(secretKey))
+                if (migrator.TryMigrateSecrets(instance.SettingsJson, secrets, out string updatedJson, out int count))
                 {
-                    secretKey = Guid.NewGuid().ToString("N");
-                    json["SecretKey"] = secretKey;
-                    instanceUpdated = true;
-                }
-
-                if (instance.ProviderId == "amazons3")
-                {
-                    var accessKeyId = json.Value<string>("AccessKeyId");
-                    var secretAccessKey = json.Value<string>("SecretAccessKey");
-
-                    if (!string.IsNullOrWhiteSpace(accessKeyId))
-                    {
-                        if (TrySetSecret(secrets, instance.ProviderId, secretKey, "accessKeyId", accessKeyId))
-                        {
-                            json.Remove("AccessKeyId");
-                            instanceUpdated = true;
-                            migratedSecrets++;
-                            instanceSecretsMigrated = true;
-                        }
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(secretAccessKey))
-                    {
-                        if (TrySetSecret(secrets, instance.ProviderId, secretKey, "secretAccessKey", secretAccessKey))
-                        {
-                            json.Remove("SecretAccessKey");
-                            instanceUpdated = true;
-                            migratedSecrets++;
-                            instanceSecretsMigrated = true;
-                        }
-                    }
-                }
-
-                if (instance.ProviderId is "imgur" or "gist")
-                {
-                    var oauthInfo = json["OAuth2Info"] as JObject;
-                    if (oauthInfo != null)
-                    {
-                        var clientId = oauthInfo.Value<string>("Client_ID");
-                        var clientSecret = oauthInfo.Value<string>("Client_Secret");
-                        var token = oauthInfo["Token"] as JObject;
-
-                        if (instance.ProviderId == "gist")
-                        {
-                            if (!string.IsNullOrWhiteSpace(clientId))
-                            {
-                                if (TrySetSecret(secrets, instance.ProviderId, secretKey, "clientId", clientId))
-                                {
-                                    migratedSecrets++;
-                                    instanceSecretsMigrated = true;
-                                }
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(clientSecret))
-                            {
-                                if (TrySetSecret(secrets, instance.ProviderId, secretKey, "clientSecret", clientSecret))
-                                {
-                                    migratedSecrets++;
-                                    instanceSecretsMigrated = true;
-                                }
-                            }
-                        }
-                        else if (instance.ProviderId == "imgur")
-                        {
-                            if (!string.IsNullOrWhiteSpace(clientSecret))
-                            {
-                                if (TrySetSecret(secrets, instance.ProviderId, secretKey, "clientSecret", clientSecret))
-                                {
-                                    migratedSecrets++;
-                                    instanceSecretsMigrated = true;
-                                }
-                            }
-
-                            if (string.IsNullOrWhiteSpace(json.Value<string>("ClientId")) && !string.IsNullOrWhiteSpace(clientId))
-                            {
-                                json["ClientId"] = clientId;
-                                instanceUpdated = true;
-                            }
-                        }
-
-                        if (token != null)
-                        {
-                            if (TrySetSecret(secrets, instance.ProviderId, secretKey, "oauthToken", token.ToString(Formatting.None)))
-                            {
-                                migratedSecrets++;
-                                instanceSecretsMigrated = true;
-                            }
-                        }
-
-                        if (instanceSecretsMigrated)
-                        {
-                            json.Remove("OAuth2Info");
-                            instanceUpdated = true;
-                        }
-                    }
-                }
-
-                if (instanceUpdated)
-                {
-                    instance.SettingsJson = json.ToString(Formatting.Indented);
+                    instance.SettingsJson = updatedJson;
                     updated = true;
                     migratedInstances++;
+                    migratedSecrets += count;
                 }
             }
 
@@ -205,11 +95,6 @@ public class InstanceManager
                 DebugHelper.WriteLine($"[Secrets] Migration completed: {migratedInstances} instance(s), {migratedSecrets} secret(s).");
             }
         }
-    }
-
-    private static bool RequiresSecretKey(string providerId)
-    {
-        return providerId is "amazons3" or "imgur" or "gist";
     }
 
     private static bool TrySetSecret(ISecretStore secrets, string providerId, string secretKey, string name, string value)

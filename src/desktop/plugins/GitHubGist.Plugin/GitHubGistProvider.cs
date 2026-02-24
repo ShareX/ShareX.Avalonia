@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using XerahS.Uploaders;
 using XerahS.Uploaders.PluginSystem;
 
@@ -32,7 +33,7 @@ namespace ShareX.GitHubGist.Plugin;
 /// <summary>
 /// GitHub Gist text uploader provider (supports Text category only)
 /// </summary>
-public class GitHubGistProvider : UploaderProviderBase
+public class GitHubGistProvider : UploaderProviderBase, IInstanceSecretMigrator
 {
     public override string ProviderId => "gist";
     public override string Name => "GitHub Gist";
@@ -40,6 +41,92 @@ public class GitHubGistProvider : UploaderProviderBase
     public override Version Version => new Version(1, 0, 0);
     public override UploaderCategory[] SupportedCategories => new[] { UploaderCategory.Text };
     public override Type ConfigModelType => typeof(GitHubGistConfigModel);
+
+    public bool TryMigrateSecrets(string settingsJson, ISecretStore secrets,
+        out string updatedSettingsJson, out int migratedSecretCount)
+    {
+        updatedSettingsJson = settingsJson;
+        migratedSecretCount = 0;
+
+        JObject? json;
+        try { json = JObject.Parse(settingsJson); }
+        catch { return false; }
+
+        var secretKey = json.Value<string>("SecretKey");
+        bool jsonChanged = false;
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            secretKey = Guid.NewGuid().ToString("N");
+            json["SecretKey"] = secretKey;
+            jsonChanged = true;
+        }
+
+        var oauthInfo = json["OAuth2Info"] as JObject;
+        if (oauthInfo != null)
+        {
+            bool secretsMigrated = false;
+
+            var clientId = oauthInfo.Value<string>("Client_ID");
+            var clientSecret = oauthInfo.Value<string>("Client_Secret");
+            var token = oauthInfo["Token"] as JObject;
+
+            if (!string.IsNullOrWhiteSpace(clientId))
+            {
+                try
+                {
+                    secrets.SetSecret(ProviderId, secretKey, "clientId", clientId);
+                    if (secrets.HasSecret(ProviderId, secretKey, "clientId"))
+                    {
+                        migratedSecretCount++;
+                        secretsMigrated = true;
+                    }
+                }
+                catch { }
+            }
+
+            if (!string.IsNullOrWhiteSpace(clientSecret))
+            {
+                try
+                {
+                    secrets.SetSecret(ProviderId, secretKey, "clientSecret", clientSecret);
+                    if (secrets.HasSecret(ProviderId, secretKey, "clientSecret"))
+                    {
+                        migratedSecretCount++;
+                        secretsMigrated = true;
+                    }
+                }
+                catch { }
+            }
+
+            if (token != null)
+            {
+                try
+                {
+                    secrets.SetSecret(ProviderId, secretKey, "oauthToken", token.ToString(Formatting.None));
+                    if (secrets.HasSecret(ProviderId, secretKey, "oauthToken"))
+                    {
+                        migratedSecretCount++;
+                        secretsMigrated = true;
+                    }
+                }
+                catch { }
+            }
+
+            if (secretsMigrated)
+            {
+                json.Remove("OAuth2Info");
+                jsonChanged = true;
+            }
+        }
+
+        if (jsonChanged)
+        {
+            updatedSettingsJson = json.ToString(Formatting.Indented);
+        }
+
+        return jsonChanged;
+    }
 
     public override Uploader CreateInstance(string settingsJson)
     {

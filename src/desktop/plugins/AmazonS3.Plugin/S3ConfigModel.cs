@@ -24,7 +24,6 @@
 #endregion License Information (GPL v3)
 
 using System;
-using XerahS.Uploaders.FileUploaders;
 
 namespace ShareX.AmazonS3.Plugin;
 
@@ -47,7 +46,7 @@ public class S3ConfigModel
 
     public string CustomDomain { get; set; } = string.Empty;
 
-    public AmazonS3StorageClass StorageClass { get; set; } = AmazonS3StorageClass.Standard;
+    public S3StorageClass StorageClass { get; set; } = S3StorageClass.Standard;
 
     public bool SetPublicACL { get; set; } = false;
 

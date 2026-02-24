@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Collections.Specialized;
 using System.Xml.Linq;
 using XerahS.Common;
@@ -39,7 +40,7 @@ namespace ShareX.AmazonS3.Plugin;
 /// Amazon S3 file uploader provider (supports Image, Text, and File categories).
 /// Also implements <see cref="IUploaderExplorer"/> for the Media Explorer.
 /// </summary>
-public class AmazonS3Provider : UploaderProviderBase, IUploaderExplorer
+public class AmazonS3Provider : UploaderProviderBase, IUploaderExplorer, IInstanceSecretMigrator
 {
     public override string ProviderId => "amazons3";
     public override string Name => "Amazon S3";
@@ -53,6 +54,66 @@ public class AmazonS3Provider : UploaderProviderBase, IUploaderExplorer
         // For plugins, we don't self-register as they are loaded via PluginLoader
         // But for internal ones we might still want it. 
         // In the external plugin assembly, this ctor will still run if activated.
+    }
+
+    public bool TryMigrateSecrets(string settingsJson, ISecretStore secrets,
+        out string updatedSettingsJson, out int migratedSecretCount)
+    {
+        updatedSettingsJson = settingsJson;
+        migratedSecretCount = 0;
+
+        JObject? json;
+        try { json = JObject.Parse(settingsJson); }
+        catch { return false; }
+
+        var secretKey = json.Value<string>("SecretKey");
+        bool jsonChanged = false;
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            secretKey = Guid.NewGuid().ToString("N");
+            json["SecretKey"] = secretKey;
+            jsonChanged = true;
+        }
+
+        var accessKeyId = json.Value<string>("AccessKeyId");
+        if (!string.IsNullOrWhiteSpace(accessKeyId))
+        {
+            try
+            {
+                secrets.SetSecret(ProviderId, secretKey, "accessKeyId", accessKeyId);
+                if (secrets.HasSecret(ProviderId, secretKey, "accessKeyId"))
+                {
+                    json.Remove("AccessKeyId");
+                    jsonChanged = true;
+                    migratedSecretCount++;
+                }
+            }
+            catch { }
+        }
+
+        var secretAccessKey = json.Value<string>("SecretAccessKey");
+        if (!string.IsNullOrWhiteSpace(secretAccessKey))
+        {
+            try
+            {
+                secrets.SetSecret(ProviderId, secretKey, "secretAccessKey", secretAccessKey);
+                if (secrets.HasSecret(ProviderId, secretKey, "secretAccessKey"))
+                {
+                    json.Remove("SecretAccessKey");
+                    jsonChanged = true;
+                    migratedSecretCount++;
+                }
+            }
+            catch { }
+        }
+
+        if (jsonChanged)
+        {
+            updatedSettingsJson = json.ToString(Formatting.Indented);
+        }
+
+        return jsonChanged;
     }
 
     public override Uploader CreateInstance(string settingsJson)

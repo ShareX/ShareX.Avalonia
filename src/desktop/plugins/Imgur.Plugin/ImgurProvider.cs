@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using XerahS.Uploaders;
 using XerahS.Uploaders.PluginSystem;
 using SysHttpClient = System.Net.Http.HttpClient;
@@ -37,7 +38,7 @@ namespace ShareX.Imgur.Plugin;
 /// Also implements <see cref="IUploaderExplorer"/> — albums are treated as folders,
 /// images within albums as files.
 /// </summary>
-public class ImgurProvider : UploaderProviderBase, IUploaderExplorer
+public class ImgurProvider : UploaderProviderBase, IUploaderExplorer, IInstanceSecretMigrator
 {
     public override string ProviderId => "imgur";
     public override string Name => "Imgur";
@@ -48,6 +49,84 @@ public class ImgurProvider : UploaderProviderBase, IUploaderExplorer
 
     public ImgurProvider()
     {
+    }
+
+    public bool TryMigrateSecrets(string settingsJson, ISecretStore secrets,
+        out string updatedSettingsJson, out int migratedSecretCount)
+    {
+        updatedSettingsJson = settingsJson;
+        migratedSecretCount = 0;
+
+        JObject? json;
+        try { json = JObject.Parse(settingsJson); }
+        catch { return false; }
+
+        var secretKey = json.Value<string>("SecretKey");
+        bool jsonChanged = false;
+
+        if (string.IsNullOrWhiteSpace(secretKey))
+        {
+            secretKey = Guid.NewGuid().ToString("N");
+            json["SecretKey"] = secretKey;
+            jsonChanged = true;
+        }
+
+        var oauthInfo = json["OAuth2Info"] as JObject;
+        if (oauthInfo != null)
+        {
+            bool secretsMigrated = false;
+
+            var clientId = oauthInfo.Value<string>("Client_ID");
+            var clientSecret = oauthInfo.Value<string>("Client_Secret");
+            var token = oauthInfo["Token"] as JObject;
+
+            if (!string.IsNullOrWhiteSpace(clientSecret))
+            {
+                try
+                {
+                    secrets.SetSecret(ProviderId, secretKey, "clientSecret", clientSecret);
+                    if (secrets.HasSecret(ProviderId, secretKey, "clientSecret"))
+                    {
+                        migratedSecretCount++;
+                        secretsMigrated = true;
+                    }
+                }
+                catch { }
+            }
+
+            if (string.IsNullOrWhiteSpace(json.Value<string>("ClientId")) && !string.IsNullOrWhiteSpace(clientId))
+            {
+                json["ClientId"] = clientId;
+                jsonChanged = true;
+            }
+
+            if (token != null)
+            {
+                try
+                {
+                    secrets.SetSecret(ProviderId, secretKey, "oauthToken", token.ToString(Formatting.None));
+                    if (secrets.HasSecret(ProviderId, secretKey, "oauthToken"))
+                    {
+                        migratedSecretCount++;
+                        secretsMigrated = true;
+                    }
+                }
+                catch { }
+            }
+
+            if (secretsMigrated)
+            {
+                json.Remove("OAuth2Info");
+                jsonChanged = true;
+            }
+        }
+
+        if (jsonChanged)
+        {
+            updatedSettingsJson = json.ToString(Formatting.Indented);
+        }
+
+        return jsonChanged;
     }
 
     public override Uploader CreateInstance(string settingsJson)
