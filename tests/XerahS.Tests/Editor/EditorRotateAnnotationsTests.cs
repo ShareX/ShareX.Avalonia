@@ -26,7 +26,6 @@
 using NUnit.Framework;
 using ShareX.ImageEditor;
 using ShareX.ImageEditor.Annotations;
-using ShareX.ImageEditor.ImageEffects.Adjustments;
 using SkiaSharp;
 
 namespace XerahS.Tests.Editor;
@@ -71,7 +70,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformRotate90CW();
+        _core.Rotate90Clockwise();
 
         // Annotations should still exist (not cleared)
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
@@ -90,7 +89,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformRotate90CCW();
+        _core.Rotate90CounterClockwise();
 
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
         Assert.That(_core.SourceImage!.Width, Is.EqualTo(100));
@@ -107,7 +106,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformRotate180();
+        _core.Rotate180();
 
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
         // 180° keeps same dimensions
@@ -125,7 +124,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformFlipHorizontal();
+        _core.FlipHorizontal();
 
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
     }
@@ -140,7 +139,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformFlipVertical();
+        _core.FlipVertical();
 
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
     }
@@ -162,7 +161,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformRotate90CW();
+        _core.Rotate90Clockwise();
 
         var ann = _core.Annotations[0];
         // After 90° CW, the full-canvas annotation should map to the full new canvas
@@ -183,7 +182,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformRotate180();
+        _core.Rotate180();
 
         var ann = _core.Annotations[0];
         Assert.That(ann.StartPoint.X, Is.EqualTo(190).Within(1f));
@@ -203,7 +202,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformFlipHorizontal();
+        _core.FlipHorizontal();
 
         var ann = _core.Annotations[0];
         Assert.That(ann.StartPoint.X, Is.EqualTo(190).Within(1f));
@@ -223,7 +222,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        _core.PerformFlipVertical();
+        _core.FlipVertical();
 
         var ann = _core.Annotations[0];
         Assert.That(ann.StartPoint.X, Is.EqualTo(10).Within(1f));
@@ -236,10 +235,15 @@ public class EditorRotateAnnotationsTests
 
     #region Issue #7 reproduction: Complex undo/redo after rotation
 
+    /// <summary>
+    /// XIP0039 Guardrail 7: Ported from the original Issue #7 reproduction.
+    /// The original test used _core.AddEffect()/_core.Effects which are managed at the
+    /// ViewModel layer in the current architecture (not EditorCore). This ported version
+    /// verifies the same annotation/rotate/undo-redo contract without the obsolete effects API.
+    /// </summary>
     [Test]
     public void Issue7_Annotations_SurviveRotateAndUndoRedoCycle()
     {
-        // Reproduction steps from issue #7:
         // 1. Draw a rectangle annotation
         var rect = new RectangleAnnotation
         {
@@ -248,10 +252,7 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(rect);
 
-        // 2. Apply an effect (invert)
-        _core.AddEffect(new InvertImageEffect());
-
-        // 3. Add ellipse annotation
+        // 2. Add ellipse annotation
         var ellipse = new EllipseAnnotation
         {
             StartPoint = new SKPoint(100, 30),
@@ -259,50 +260,33 @@ public class EditorRotateAnnotationsTests
         };
         _core.AddAnnotation(ellipse);
 
-        // 4. Apply another effect (invert again as stand-in)
-        _core.AddEffect(new InvertImageEffect());
-
         Assert.That(_core.Annotations.Count, Is.EqualTo(2));
-        Assert.That(_core.Effects.Count, Is.EqualTo(2));
 
-        // 5. Rotate 90 degrees
-        _core.PerformRotate90CW();
+        // 3. Rotate 90 degrees
+        _core.Rotate90Clockwise();
 
         // Annotations should still exist after rotation
         Assert.That(_core.Annotations.Count, Is.EqualTo(2), "Annotations should survive rotation");
         Assert.That(_core.SourceImage!.Width, Is.EqualTo(100));
         Assert.That(_core.SourceImage!.Height, Is.EqualTo(200));
 
-        // 6. Undo all edits
+        // 4. Undo all edits
         _core.Undo(); // Undo rotate
         Assert.That(_core.Annotations.Count, Is.EqualTo(2), "Annotations should be restored after undo rotate");
         Assert.That(_core.SourceImage!.Width, Is.EqualTo(200));
 
-        _core.Undo(); // Undo effect 2
-        Assert.That(_core.Annotations.Count, Is.EqualTo(2));
-        Assert.That(_core.Effects.Count, Is.EqualTo(1));
-
         _core.Undo(); // Undo ellipse
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
-
-        _core.Undo(); // Undo effect 1
-        Assert.That(_core.Effects.Count, Is.EqualTo(0));
 
         _core.Undo(); // Undo rect
         Assert.That(_core.Annotations.Count, Is.EqualTo(0));
 
-        // 7. Redo all edits
+        // 5. Redo all edits
         _core.Redo(); // Redo rect
         Assert.That(_core.Annotations.Count, Is.EqualTo(1));
 
-        _core.Redo(); // Redo effect 1
-        Assert.That(_core.Effects.Count, Is.EqualTo(1));
-
         _core.Redo(); // Redo ellipse
         Assert.That(_core.Annotations.Count, Is.EqualTo(2));
-
-        _core.Redo(); // Redo effect 2
-        Assert.That(_core.Effects.Count, Is.EqualTo(2));
 
         _core.Redo(); // Redo rotate
         Assert.That(_core.Annotations.Count, Is.EqualTo(2), "Annotations should survive redo of rotation");
@@ -328,7 +312,7 @@ public class EditorRotateAnnotationsTests
             EndPoint = new SKPoint(120, 60)
         });
 
-        _core.PerformRotate90CW();
+        _core.Rotate90Clockwise();
 
         Assert.That(_core.Annotations.Count, Is.EqualTo(2));
         // Both annotations should have valid coordinates within the new canvas (100x200)

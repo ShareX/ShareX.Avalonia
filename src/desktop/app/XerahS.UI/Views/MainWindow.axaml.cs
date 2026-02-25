@@ -35,7 +35,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Reflection;
 using System.Threading.Tasks;
 using SkiaSharp;
 using XerahS.Core;
@@ -241,19 +240,8 @@ namespace XerahS.UI.Views
                     return;
                 }
 
-                var insertMethod = typeof(EditorView).GetMethod(
-                    "InsertImageAnnotation",
-                    BindingFlags.Instance | BindingFlags.NonPublic,
-                    binder: null,
-                    types: new[] { typeof(SKBitmap), typeof(global::Avalonia.Point?) },
-                    modifiers: null);
-
-                if (insertMethod == null)
-                {
-                    XerahS.Common.DebugHelper.WriteLine("OpenImage: InsertImageAnnotation method was not found on EditorView.");
-                    return;
-                }
-
+                // XIP0039 Guardrail 6: Call the now-public InsertImageAnnotation directly
+                // instead of using reflection (BindingFlags.NonPublic).
                 var bitmap = SKBitmap.Decode(path);
                 if (bitmap == null || bitmap.Handle == IntPtr.Zero)
                 {
@@ -263,7 +251,7 @@ namespace XerahS.UI.Views
 
                 try
                 {
-                    insertMethod.Invoke(_editorView, new object?[] { bitmap, null });
+                    _editorView.InsertImageAnnotation(bitmap, dropPosition: null);
                     bitmap = null; // Ownership transferred to inserted image annotation.
                 }
                 finally
