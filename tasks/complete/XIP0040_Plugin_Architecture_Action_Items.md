@@ -1,3 +1,30 @@
+# XIP0040: Plugin Architecture Action Items — COMPLETED
+
+**Status:** Fully implemented.  
+**Verified:** LegacySupport consolidated; secret migration provider-driven; Amazon S3 plugin uses plugin-local `S3StorageClass`; solution build 0 errors.
+
+---
+
+## Completion Summary
+
+| Phase | Status | Notes |
+|-------|--------|--------|
+| **1** LegacySupport consolidation | Done | All listed files under `LegacySupport/`; README covers purpose, duplicate DTOs, no new plugin deps. |
+| **2** Provider-owned secret migration | Done | `IInstanceSecretMigrator` in `XerahS.UploaderPluginSdk`; `InstanceManager` uses `GetProvider` + interface only; Amazon S3, Imgur, GitHub Gist implement migrators. |
+| **3** Amazon S3 runtime enum ownership | Done | Plugin has `S3StorageClass.cs`; `S3ConfigModel.StorageClass` and ViewModel use plugin enum; no references to core `AmazonS3StorageClass` in plugin. |
+| **4** Validation | Done | Build succeeds (0 errors). No hard-coded provider IDs in `InstanceManager.cs`. |
+
+### Definition of Done (Top Level)
+1. **Legacy consolidated:** All legacy/mobile compatibility code under `src/desktop/core/XerahS.Uploaders/LegacySupport` (UploadersConfig, Configurations, FileUploaders, Abstractions, Compatibility, Stubs, Properties).
+2. **No hard-coded provider IDs:** `InstanceManager.MigrateSecretsIfNeeded()` uses `ProviderCatalog.GetProvider(instance.ProviderId)` and `IInstanceSecretMigrator` only.
+3. **S3 enum in plugin:** `AmazonS3.Plugin` uses its own `S3StorageClass` enum; core `AmazonS3StorageClass` not referenced by plugin.
+4. **Build:** `dotnet build src/desktop/XerahS.sln` succeeds with 0 errors.
+
+### Minor deviation from spec
+- **2.1** Spec said add `IInstanceSecretMigrator.cs` under `XerahS.Uploaders/PluginSystem/`. Implemented in `XerahS.UploaderPluginSdk/IInstanceSecretMigrator.cs` (shared contract). Same namespace `XerahS.Uploaders.PluginSystem`; behavior unchanged.
+
+---
+
 # XIP0040: Plugin Architecture Action Items (Implementation-Ready)
 
 ## Purpose
@@ -57,7 +84,8 @@ Move the following files under `src/desktop/core/XerahS.Uploaders/LegacySupport`
 
 ### 2.1 Add contract in core
 Add file:
-- `src/desktop/core/XerahS.Uploaders/PluginSystem/IInstanceSecretMigrator.cs`
+- `src/desktop/core/XerahS.Uploaders/PluginSystem/IInstanceSecretMigrator.cs`  
+  *(Implemented as `XerahS.UploaderPluginSdk/IInstanceSecretMigrator.cs` with same contract.)*
 
 Contract:
 
