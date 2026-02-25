@@ -1,0 +1,145 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ShareX.Ftp.Plugin.ViewModels"
+             x:Class="ShareX.Ftp.Plugin.Views.FtpConfigView"
+             x:DataType="vm:FtpConfigViewModel">
+
+    <ScrollViewer>
+        <StackPanel Spacing="14" Margin="0,0,0,20">
+            <TextBlock Text="FTP / FTPS / SFTP Configuration"
+                       FontSize="18"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,6"/>
+
+            <TextBlock Text="Upload files via FTP, FTPS (FTP over SSL/TLS), or SFTP (SSH). Uses FluentFTP and SSH.NET."
+                       FontSize="12"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Account name" FontWeight="Medium"/>
+                <TextBox Text="{Binding AccountName, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="FTP Account"
+                         Width="300"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Protocol *" FontWeight="Medium"/>
+                <ComboBox ItemsSource="{Binding ProtocolOptions}"
+                          SelectedItem="{Binding Protocol, Mode=TwoWay}"
+                          Width="220"
+                          HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Host *" FontWeight="Medium"/>
+                <TextBox Text="{Binding Host, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="example.com or 192.168.1.1"
+                         Width="350"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Port" FontWeight="Medium"/>
+                <TextBox Text="{Binding Port, UpdateSourceTrigger=PropertyChanged}"
+                         Width="80"
+                         HorizontalAlignment="Left"/>
+                <TextBlock Text="FTP: 21, FTPS: 990 (implicit) or 21 (explicit), SFTP: 22"
+                           FontSize="11"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Username" FontWeight="Medium"/>
+                <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="FTP / SFTP username"
+                         Width="300"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Password" FontWeight="Medium"/>
+                <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                         PasswordChar="*"
+                         Watermark="Leave empty for anonymous (FTP) or use key (SFTP)"
+                         Width="300"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <CheckBox IsChecked="{Binding IsActive, Mode=TwoWay}"
+                      Content="Use active mode (FTP/FTPS only; unchecked = passive)"
+                      HorizontalAlignment="Left"/>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Subfolder path" FontWeight="Medium"/>
+                <TextBox Text="{Binding SubFolderPath, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="e.g. uploads or %y/%mo (name parser)"
+                         Width="350"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="Browser protocol (for result URL)" FontWeight="Medium"/>
+                <ComboBox ItemsSource="{Binding BrowserProtocolOptions}"
+                          SelectedItem="{Binding BrowserProtocol, Mode=TwoWay}"
+                          Width="120"
+                          HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5">
+                <TextBlock Text="HTTP home path (optional)" FontWeight="Medium"/>
+                <TextBox Text="{Binding HttpHomePath, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="e.g. https://files.example.com or http://%host"
+                         Width="400"
+                         HorizontalAlignment="Left"/>
+                <TextBlock Text="If empty, URL is built from host + subfolder + filename. Use %host for host."
+                           FontSize="11"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                           MaxWidth="450"/>
+            </StackPanel>
+
+            <CheckBox IsChecked="{Binding HttpHomePathAutoAddSubFolderPath, Mode=TwoWay}"
+                      Content="Append subfolder path to HTTP home path"
+                      HorizontalAlignment="Left"/>
+            <CheckBox IsChecked="{Binding HttpHomePathNoExtension, Mode=TwoWay}"
+                      Content="Omit file extension in URL"
+                      HorizontalAlignment="Left"/>
+
+            <StackPanel Spacing="5" IsVisible="{Binding ShowFtpsOptions}">
+                <TextBlock Text="FTPS encryption" FontWeight="Medium"/>
+                <ComboBox ItemsSource="{Binding FtpsEncryptionOptions}"
+                          SelectedItem="{Binding FtpsEncryptionMode, Mode=TwoWay}"
+                          Width="180"
+                          HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5" IsVisible="{Binding ShowSftpKeyOptions}">
+                <TextBlock Text="SFTP key path (optional)" FontWeight="Medium"/>
+                <TextBox Text="{Binding Keypath, UpdateSourceTrigger=PropertyChanged}"
+                         Watermark="Path to OpenSSH private key file"
+                         Width="400"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <StackPanel Spacing="5" IsVisible="{Binding ShowSftpKeyOptions}">
+                <TextBlock Text="SFTP key passphrase (optional)" FontWeight="Medium"/>
+                <TextBox Text="{Binding Passphrase, UpdateSourceTrigger=PropertyChanged}"
+                         PasswordChar="*"
+                         Watermark="Passphrase for private key"
+                         Width="300"
+                         HorizontalAlignment="Left"/>
+            </StackPanel>
+
+            <Border Background="{DynamicResource SystemFillColorAttentionBackground}"
+                    Padding="10"
+                    CornerRadius="4"
+                    IsVisible="{Binding !!StatusMessage}">
+                <TextBlock Text="{Binding StatusMessage}"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource SystemFillColorAttention}"/>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
