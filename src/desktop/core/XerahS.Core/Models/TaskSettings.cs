@@ -58,11 +58,15 @@ public class TaskSettings
 
     public WorkflowType Job = WorkflowType.None;
 
-    public AfterCaptureTasks AfterCaptureJob = AfterCaptureTasks.CopyImageToClipboard | AfterCaptureTasks.SaveImageToFile;
+    public AfterCaptureTasks AfterCaptureJob = AfterCaptureTasks.AnnotateImage | AfterCaptureTasks.CopyImageToClipboard | AfterCaptureTasks.SaveImageToFile;
 
     public AfterUploadTasks AfterUploadJob = AfterUploadTasks.CopyURLToClipboard;
 
+    /// <summary>Legacy; not used by runtime. Use UrlShortenerDestinationInstanceId (plugin system). Kept for config serialization.</summary>
+    [Obsolete("Legacy; use UrlShortenerDestinationInstanceId (plugin system). Kept for config serialization.")]
     public UrlShortenerType URLShortenerDestination = UrlShortenerType.BITLY;
+    /// <summary>Legacy; not used by runtime. Kept for config serialization.</summary>
+    [Obsolete("Legacy; runtime uses plugin system. Kept for config serialization.")]
     public URLSharingServices URLSharingServiceDestination = URLSharingServices.Email;
 
     /// <summary>

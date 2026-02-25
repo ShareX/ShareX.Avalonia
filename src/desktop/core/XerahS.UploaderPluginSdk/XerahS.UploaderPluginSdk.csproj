@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>XerahS.Uploaders.PluginSystem</RootNamespace>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <PackageId>XerahS.UploaderPluginSdk</PackageId>
+    <Title>XerahS Uploader Plugin SDK</Title>
+    <Description>Lightweight contracts (interfaces and DTOs) for building XerahS uploader plugins. No implementation; use with XerahS.Uploaders for base classes.</Description>
+    <Version>1.0.0</Version>
+    <Authors>ShareX Team</Authors>
+    <PackageTags>XerahS;ShareX;plugin;uploader;destinations</PackageTags>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+</Project>

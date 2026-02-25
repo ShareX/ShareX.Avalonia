@@ -879,12 +879,12 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         // Add crop filter for region capture using FFmpeg-style crop filter
         if (options.Mode == CaptureMode.Region && options.Region.Width > 0 && options.Region.Height > 0)
         {
-            // Use videocrop with correct parameters (pixels to remove from each edge)
-            // For a region at (X,Y) with size WxH on a larger source, we crop:
-            // - left: X pixels, top: Y pixels
-            // - right and bottom are set to 0, then we scale to exact size
+            // Use videocrop with correct parameters (pixels to remove from each edge).
+            // GStreamer videocrop requires left/top >= 0; clamp to avoid invalid pipeline (e.g. portal giving negative Y).
+            int cropLeft = Math.Max(0, options.Region.X);
+            int cropTop = Math.Max(0, options.Region.Y);
             pipeline.Add("!");
-            pipeline.Add($"videocrop left={options.Region.X} top={options.Region.Y}");
+            pipeline.Add($"videocrop left={cropLeft} top={cropTop}");
             pipeline.Add("!");
             pipeline.Add("videoconvert");
             pipeline.Add("!");

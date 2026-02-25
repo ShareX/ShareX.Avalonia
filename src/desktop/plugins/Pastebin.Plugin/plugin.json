@@ -1,0 +1,1 @@
+{"pluginId":"pastebin","name":"Pastebin Text Uploader","version":"1.0.0","author":"ShareX Team","description":"Upload text to Pastebin","apiVersion":"1.0","entryPoint":"ShareX.Pastebin.Plugin.PastebinProvider","assemblyFileName":"XerahS.Pastebin.Plugin.dll","supportedCategories":["Text"],"configViewId":"pastebin","dependencies":[],"homepageUrl":"https://pastebin.com/"}

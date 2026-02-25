@@ -376,13 +376,21 @@ namespace XerahS.UI.Views
 
         protected override void OnClosing(WindowClosingEventArgs e)
         {
-            // If SilentRun is enabled and we are not explicitly exiting via Tray/Menu,
-            // we should hide the window to tray instead of closing it.
+            // If SilentRun ("Start minimized to tray") is enabled and we are not explicitly
+            // exiting via Tray → Exit, hide the window to tray instead of closing the app.
+            // This works on all platforms (Windows, Linux, macOS); no OS-specific logic.
             bool silentRun = SettingsManager.Settings.SilentRun;
-            
+
             if (silentRun && !App.IsExiting)
             {
                 e.Cancel = true;
+                // Ensure tray icon is visible so user can restore or exit (handles edge case
+                // where config had SilentRun true but ShowTray false, e.g. from another machine).
+                if (!SettingsManager.Settings.ShowTray)
+                {
+                    SettingsManager.Settings.ShowTray = true;
+                    TrayIconHelper.Instance.RefreshFromSettings();
+                }
                 this.Hide();
                 this.ShowInTaskbar = false;
                 return;

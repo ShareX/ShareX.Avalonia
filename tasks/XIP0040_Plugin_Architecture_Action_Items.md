@@ -4,7 +4,7 @@
 Execute the architecture decision in [docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md](../docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md) with no ambiguity.
 
 ## Definition of Done (Top Level)
-1. Legacy and mobile compatibility code is physically consolidated under `UploadersLib/LegacySupport`.
+1. Legacy and mobile compatibility code is physically consolidated under `LegacySupport`.
 2. Core secret migration no longer hard-codes provider IDs.
 3. Amazon S3 plugin runtime config no longer depends on core `AmazonS3StorageClass`.
 4. Build and targeted tests pass.
@@ -19,7 +19,7 @@ Execute the architecture decision in [docs/architecture/PLUGIN_AND_UPLOADERS_ARC
 
 ### 1.1 Create folder and docs
 Create:
-- `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport/README.md`
+- `src/desktop/core/XerahS.Uploaders/LegacySupport/README.md`
 
 README required points:
 - This folder exists for ShareX legacy import compatibility and mobile compatibility.
@@ -27,7 +27,7 @@ README required points:
 - Runtime plugin code should not add new dependencies here unless specifically required for legacy/mobile compatibility.
 
 ### 1.2 Move files (exact)
-Move the following files under `src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport` while keeping namespaces unchanged:
+Move the following files under `src/desktop/core/XerahS.Uploaders/LegacySupport` while keeping namespaces unchanged:
 
 - `UploadersConfig.cs`
 - `UploadersConfigImporter.cs`
@@ -42,15 +42,15 @@ Move the following files under `src/desktop/core/XerahS.Uploaders/UploadersLib/L
 - `FileUploaders/AmazonS3StorageClass.cs`
 - `FileUploaders/FTPAccount.cs`
 - `Compatibility/UploaderFilter.cs`
-- `UploadersLib/Stubs.cs`
-- `UploadersLib/Properties/Resources.cs`
+- `LegacySupport/Stubs.cs`
+- `LegacySupport/Properties/Resources.cs`
 
 ### 1.3 Update references
 - Fix `using` statements and file path references if needed.
 - Do not change public API names or namespaces.
 
 ### 1.4 Acceptance checks
-- `rg --files src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport` includes all moved files.
+- `rg --files src/desktop/core/XerahS.Uploaders/LegacySupport` includes all moved files.
 - Old paths no longer contain those files.
 
 ## Phase 2: Provider-owned secret migration
@@ -131,8 +131,8 @@ Required behavior:
 Run these commands from repo root:
 
 ```powershell
-rg --files src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport
-rg -n "class UploadersConfig|class UploadersConfigImporter|interface IUploaderConfig|enum UploaderType|class AmazonS3Settings|enum AmazonS3StorageClass|namespace ShareX.UploadersLib" src/desktop/core/XerahS.Uploaders/UploadersLib/LegacySupport
+rg --files src/desktop/core/XerahS.Uploaders/LegacySupport
+rg -n "class UploadersConfig|class UploadersConfigImporter|interface IUploaderConfig|enum UploaderType|class AmazonS3Settings|enum AmazonS3StorageClass|namespace ShareX.UploadersLib" src/desktop/core/XerahS.Uploaders/LegacySupport
 rg -n "providerId == \"amazons3\"|providerId is \"imgur\" or \"gist\"|RequiresSecretKey" src/desktop/core/XerahS.Uploaders/PluginSystem/InstanceManager.cs
 rg -n "XerahS\.Uploaders\.FileUploaders\.AmazonS3StorageClass" src/desktop/plugins/AmazonS3.Plugin
 dotnet test tests/XerahS.Tests/XerahS.Tests.csproj --filter UploadersConfigPolymorphicTests -m:1

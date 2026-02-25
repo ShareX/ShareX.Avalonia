@@ -54,9 +54,11 @@ public abstract class UploaderProviderBase : IUploaderProvider, IProviderContext
     public abstract Dictionary<UploaderCategory, string[]> GetSupportedFileTypes();
 
     /// <summary>
-    /// Create an uploader instance from serialized JSON settings
+    /// Create an uploader instance from serialized JSON settings. Override in derived classes.
     /// </summary>
     public abstract Uploader CreateInstance(string settingsJson);
+
+    object IUploaderProvider.CreateInstance(string settingsJson) => CreateInstance(settingsJson);
 
     /// <summary>
     /// Override to provide custom config view, return null for property grid

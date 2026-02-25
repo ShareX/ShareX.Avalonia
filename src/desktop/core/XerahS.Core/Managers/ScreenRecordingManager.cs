@@ -177,12 +177,17 @@ public class ScreenRecordingManager
         // This ensures factories are set up before we try to create recording services
         await EnsureRecordingInitialized();
 
-        // Verify recording services are available after initialization
-        if (ScreenRecorderService.NativeRecordingServiceFactory == null &&
-            ScreenRecorderService.FallbackServiceFactory == null)
+        // Verify recording services are available after initialization.
+        // Windows uses CaptureSourceFactory + EncoderFactory (ScreenRecorderService); Linux/macOS may use NativeRecordingServiceFactory or FallbackServiceFactory.
+        bool hasNativeFactory = ScreenRecorderService.NativeRecordingServiceFactory != null;
+        bool hasFallbackFactory = ScreenRecorderService.FallbackServiceFactory != null;
+        bool hasCaptureSourceFactory = ScreenRecorderService.CaptureSourceFactory != null;
+        if (!hasNativeFactory && !hasFallbackFactory && !hasCaptureSourceFactory)
         {
-            throw new InvalidOperationException(
-                "Screen recording is not available. On Linux Wayland, ensure xdg-desktop-portal with ScreenCast support and PipeWire are installed and running.");
+            string message = RuntimeInformation.IsOSPlatform(OSPlatform.Linux)
+                ? "Screen recording is not available. On Linux Wayland, ensure xdg-desktop-portal with ScreenCast support and PipeWire are installed and running."
+                : "Screen recording is not available. Ensure platform recording has been initialized.";
+            throw new InvalidOperationException(message);
         }
 
         if (string.IsNullOrEmpty(options.OutputPath))

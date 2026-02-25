@@ -117,23 +117,21 @@
           Condition="'@(_WatchFolderDaemonBuildFiles)' != ''" />
   </Target>
 
-  <!-- Bundle Default Plugins -->
+  <!-- Auto-discover all plugin csproj files under src/desktop/plugins/*/            -->
+  <!-- Each plugin csproj must define <PluginId> (e.g. <PluginId>imgur</PluginId>).  -->
+  <!-- To add a new bundled plugin: create its folder, csproj, and plugin.json.      -->
+  <!-- No edits to this file or to XerahS.sln are needed.                            -->
   <ItemGroup>
-    <_DefaultPlugins Include="..\..\plugins\AmazonS3.Plugin\XerahS.AmazonS3.Plugin.csproj" PluginId="amazons3" />
-    <_DefaultPlugins Include="..\..\plugins\Dropbox.Plugin\XerahS.Dropbox.Plugin.csproj" PluginId="dropbox" />
-    <_DefaultPlugins Include="..\..\plugins\Imgur.Plugin\XerahS.Imgur.Plugin.csproj" PluginId="imgur" />
-    <_DefaultPlugins Include="..\..\plugins\Paste2.Plugin\XerahS.Paste2.Plugin.csproj" PluginId="paste2" />
-    <_DefaultPlugins Include="..\..\plugins\GitHubGist.Plugin\XerahS.GitHubGist.Plugin.csproj" PluginId="gist" />
-    <_DefaultPlugins Include="..\..\plugins\Auto.Plugin\XerahS.Auto.Plugin.csproj" PluginId="auto" />
+    <_DiscoveredPluginProjects Include="..\..\plugins\*\*.csproj" />
   </ItemGroup>
 
-  <Target Name="BundlePlugins" AfterTargets="Publish" Condition="'$(SkipBundlePlugins)' != 'true'">
-    <Message Text="Bundling default plugin: %(_DefaultPlugins.PluginId)" Importance="High" />
-    <MSBuild Projects="%(_DefaultPlugins.Identity)" Targets="Restore;Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false;PublishSingleFile=false;PublishDir=$(PublishDir)Plugins/%(_DefaultPlugins.PluginId)/" />
+  <Target Name="BuildPlugins" AfterTargets="Build" Condition="'$(SkipBundlePlugins)' != 'true'">
+    <Message Text="[Plugins] Auto-building discovered plugins: @(_DiscoveredPluginProjects->'%(Filename)', ', ')" Importance="High" />
+    <MSBuild Projects="@(_DiscoveredPluginProjects)" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);HostTargetFramework=$(TargetFramework)" />
   </Target>
 
-  <Target Name="BuildPlugins" AfterTargets="Build" Condition="'$(SkipBundlePlugins)' != 'true'">
-    <Message Text="Building default plugin for dev: %(_DefaultPlugins.PluginId)" Importance="High" />
-    <MSBuild Projects="%(_DefaultPlugins.Identity)" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);HostTargetFramework=$(TargetFramework)" />
+  <Target Name="BundlePlugins" AfterTargets="Publish" Condition="'$(SkipBundlePlugins)' != 'true'">
+    <Message Text="[Plugins] Auto-publishing discovered plugins: @(_DiscoveredPluginProjects->'%(Filename)', ', ')" Importance="High" />
+    <MSBuild Projects="@(_DiscoveredPluginProjects)" Targets="Restore;Publish" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=false;PublishSingleFile=false;PluginPublishBaseDir=$(PublishDir)Plugins/" />
   </Target>
 </Project>
