@@ -1,0 +1,103 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ShareX.Pastebin.Plugin.ViewModels"
+             x:Class="ShareX.Pastebin.Plugin.Views.PastebinConfigView"
+             x:DataType="vm:PastebinConfigViewModel">
+
+    <StackPanel Spacing="15">
+        <TextBlock Text="Pastebin Configuration"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <!-- API Key -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="API Key *" FontWeight="Medium"/>
+            <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                     PasswordChar="*"
+                     Watermark="Your Pastebin API developer key"
+                     Width="400"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Get a free key at https://pastebin.com/doc_api"
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       TextWrapping="Wrap"
+                       MaxWidth="450"
+                       HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Optional: Username / Password (for user key / private pastes) -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Username (optional)" FontWeight="Medium"/>
+            <TextBox Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="Pastebin account username"
+                     Width="300"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+        <StackPanel Spacing="5">
+            <TextBlock Text="Password (optional)" FontWeight="Medium"/>
+            <TextBox Text="{Binding Password, UpdateSourceTrigger=PropertyChanged}"
+                     PasswordChar="*"
+                     Watermark="Pastebin account password"
+                     Width="300"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Title -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Paste Title (optional)" FontWeight="Medium"/>
+            <TextBox Text="{Binding Title, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="Title for the paste"
+                     Width="400"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Syntax / Text Format -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Syntax / Text Format" FontWeight="Medium"/>
+            <TextBox Text="{Binding TextFormat, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="text"
+                     Width="200"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Examples: text, csharp, json, xml, python, javascript"
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       TextWrapping="Wrap"
+                       MaxWidth="450"
+                       HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Exposure -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Visibility" FontWeight="Medium"/>
+            <ComboBox ItemsSource="{Binding ExposureOptions}"
+                      SelectedItem="{Binding Exposure, Mode=TwoWay}"
+                      Width="200"
+                      HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Expiration -->
+        <StackPanel Spacing="5">
+            <TextBlock Text="Expiration" FontWeight="Medium"/>
+            <ComboBox ItemsSource="{Binding ExpirationOptions}"
+                      SelectedItem="{Binding Expiration, Mode=TwoWay}"
+                      Width="200"
+                      HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <!-- Raw URL -->
+        <CheckBox IsChecked="{Binding RawURL, Mode=TwoWay}"
+                  Content="Use raw paste URL (e.g. pastebin.com/raw/xxx)"
+                  HorizontalAlignment="Left"/>
+
+        <!-- Status Message -->
+        <Border Background="{DynamicResource SystemFillColorAttentionBackground}"
+                Padding="10"
+                CornerRadius="4"
+                IsVisible="{Binding !!StatusMessage}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SystemFillColorAttention}"/>
+        </Border>
+    </StackPanel>
+</UserControl>
