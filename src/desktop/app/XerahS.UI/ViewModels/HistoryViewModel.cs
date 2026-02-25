@@ -416,6 +416,30 @@ namespace XerahS.UI.ViewModels
         }
 
         [RelayCommand]
+        private async Task CopyMarkdownImage(HistoryItem? item)
+        {
+            if (item == null || string.IsNullOrEmpty(item.URL)) return;
+
+            var markdownImage = $"[img]{item.URL}[/img]";
+            try
+            {
+                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop
+                    && desktop.MainWindow != null)
+                {
+                    var clipboard = desktop.MainWindow.Clipboard;
+                    if (clipboard != null)
+                    {
+                        await clipboard.SetTextAsync(markdownImage);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteLine($"Failed to copy markdown image: {ex.Message}");
+            }
+        }
+
+        [RelayCommand]
         private async Task CopyErrors(HistoryItem? item)
         {
             if (item == null || string.IsNullOrEmpty(item.Errors)) return;

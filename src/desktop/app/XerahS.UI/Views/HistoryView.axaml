@@ -38,6 +38,10 @@
                       Command="{Binding $parent[UserControl].DataContext.CopyURLCommand}"
                       CommandParameter="{Binding}"
                       IsVisible="{Binding URL, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
+            <MenuItem Header="Copy markdown image" 
+                      Command="{Binding $parent[UserControl].DataContext.CopyMarkdownImageCommand}"
+                      CommandParameter="{Binding}"
+                      IsVisible="{Binding URL, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"/>
             <MenuItem Header="Copy Errors"
                       Command="{Binding $parent[UserControl].DataContext.CopyErrorsCommand}"
                       CommandParameter="{Binding}"

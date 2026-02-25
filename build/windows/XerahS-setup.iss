@@ -88,6 +88,9 @@ Name: "{userstartup}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; WorkingDi
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#MyAppName}}"; Flags: nowait postinstall; Check: not IsNoRun
 
 [Code]
+var
+  DaemonWasRunning: Boolean;
+
 function CmdLineParamExists(const value: string): Boolean;
 var
   i: Integer;
@@ -116,4 +119,35 @@ begin
   Result := FileExists(ExpandConstant('{userdesktop}\{#MyAppName}.lnk'));
 end;
 
+procedure StopWatchFolderDaemon();
+var
+  ResultCode: Integer;
+begin
+  DaemonWasRunning := False;
+  if Exec('taskkill.exe', '/F /IM xerahs-watchfolder-daemon.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+    DaemonWasRunning := (ResultCode = 0);
+  { Ignore exit codes: 0 = killed, 1/128 = not found; wait briefly for handle release }
+  if DaemonWasRunning then
+    Sleep(500);
+end;
+
+procedure StartWatchFolderDaemon();
+var
+  ResultCode: Integer;
+begin
+  if FileExists(ExpandConstant('{app}\xerahs-watchfolder-daemon.exe')) then
+    Exec(ExpandConstant('{app}\xerahs-watchfolder-daemon.exe'), '', ExpandConstant('{app}'), SW_HIDE, ewNoWait, ResultCode);
+end;
+
+function PrepareToInstall(NeedsRestart: Boolean): String;
+begin
+  Result := '';
+  StopWatchFolderDaemon();
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    StartWatchFolderDaemon();
+end;
 
