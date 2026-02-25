@@ -80,6 +80,7 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     // Tray icon paths for different recording states
     private const string DefaultIconPath = "avares://XerahS.UI/Assets/ShareX.iconset/icon_16x16.png";
+    private const string MacOSMonochromeIconPath = "avares://XerahS.UI/Assets/tray-default-white.png";
     private const string RecordingIconPath = "avares://XerahS.UI/Assets/tray-recording.png";
     private const string PausedIconPath = "avares://XerahS.UI/Assets/tray-recording-paused.png";
 
@@ -98,11 +99,12 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         get
         {
+            string idleIconPath = GetIdleIconPath();
             string iconPath = _currentRecordingStatus switch
             {
                 RecordingStatus.Recording or RecordingStatus.Initializing => RecordingIconPath,
                 RecordingStatus.Paused or RecordingStatus.Finalizing => PausedIconPath,
-                _ => DefaultIconPath
+                _ => idleIconPath
             };
 
             try
@@ -117,7 +119,7 @@ public class TrayIconHelper : INotifyPropertyChanged
                 // Fallback to default icon
                 try
                 {
-                    var uri = new Uri(DefaultIconPath);
+                    var uri = new Uri(idleIconPath);
                     var assets = Avalonia.Platform.AssetLoader.Open(uri);
                     return new WindowIcon(assets);
                 }
@@ -127,6 +129,13 @@ public class TrayIconHelper : INotifyPropertyChanged
                 }
             }
         }
+    }
+
+    private static string GetIdleIconPath()
+    {
+        return OperatingSystem.IsMacOS() && SettingsManager.Settings.UseWhiteShareXIcon
+            ? MacOSMonochromeIconPath
+            : DefaultIconPath;
     }
 
     /// <summary>
@@ -401,6 +410,7 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         // Update ShowTray when settings change
         ShowTray = SettingsManager.Settings.ShowTray;
+        OnPropertyChanged(nameof(CurrentTrayIcon));
         // Rebuild menu on settings change (e.g. workflows changed)
         BuildTrayMenu();
     }

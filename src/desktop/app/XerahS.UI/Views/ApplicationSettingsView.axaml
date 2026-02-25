@@ -67,6 +67,10 @@
                                     CornerRadius="4" Padding="16">
                                 <StackPanel Spacing="16">
                                     <CheckBox IsChecked="{Binding TrayIconProgressEnabled}" Content="Show progress on tray icon" AutomationProperties.Name="Show Tray Progress"/>
+                                    <CheckBox IsChecked="{Binding UseWhiteShareXIcon}"
+                                              Content="Use single-color white tray icon on macOS"
+                                              IsVisible="{Binding IsMacOS}"
+                                              AutomationProperties.Name="Use White macOS Tray Icon"/>
                                     
                                     <TextBlock Text="Click Actions" FontWeight="SemiBold" FontSize="12" Margin="0,8,0,0"/>
 
