@@ -14,7 +14,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- When copying to src/desktop/plugins/YourName.Plugin/, use ../../core/... -->
-    <ProjectReference Include="..\..\..\src\desktop\core\XerahS.DestinationsPluginSdk\XerahS.DestinationsPluginSdk.csproj" />
+    <ProjectReference Include="..\..\..\src\desktop\core\XerahS.UploaderPluginSdk\XerahS.UploaderPluginSdk.csproj" />
     <ProjectReference Include="..\..\..\src\desktop\core\XerahS.Uploaders\XerahS.Uploaders.csproj">
       <Private>false</Private>
       <ExcludeAssets>runtime</ExcludeAssets>

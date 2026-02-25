@@ -3,7 +3,7 @@
 Copy this folder to `src/desktop/plugins/YourPluginName.Plugin/`. In the `.csproj`, replace the `ProjectReference` paths so they are relative to the plugin folder (e.g. when the plugin is at `src/desktop/plugins/MyService.Plugin/`, use `../../core/...`):
 
 ```xml
-<ProjectReference Include="..\..\core\XerahS.DestinationsPluginSdk\XerahS.DestinationsPluginSdk.csproj" />
+<ProjectReference Include="..\..\core\XerahS.UploaderPluginSdk\XerahS.UploaderPluginSdk.csproj" />
 <ProjectReference Include="..\..\core\XerahS.Uploaders\XerahS.Uploaders.csproj" Private="false" ExcludeAssets="runtime" />
 ```
 
@@ -19,7 +19,7 @@ Then add your plugin project to the solution and to the app's plugin discovery (
 
 Requirements:
 
-- Reference **XerahS.DestinationsPluginSdk** (contracts). Optionally reference **XerahS.Uploaders** for `UploaderProviderBase`, `Uploader`, `GenericUploader`.
+- Reference **XerahS.UploaderPluginSdk** (contracts). Optionally reference **XerahS.Uploaders** for `UploaderProviderBase`, `Uploader`, `GenericUploader`.
 - Provide a type that implements `IUploaderProvider` and expose its full name in `plugin.json` → `entryPoint`.
 - Build as a library; the host loads the assembly and instantiates the entry point type.
 

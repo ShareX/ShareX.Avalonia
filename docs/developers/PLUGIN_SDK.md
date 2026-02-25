@@ -1,10 +1,10 @@
-# XerahS Destinations Plugin SDK – Developer Guide
+# XerahS Uploader Plugin SDK – Developer Guide
 
-This guide explains how to build an **uploader destination plugin** for XerahS using the **XerahS.DestinationsPluginSdk** package and optional **XerahS.Uploaders** for base classes.
+This guide explains how to build an **uploader destination plugin** for XerahS using the **XerahS.UploaderPluginSdk** package and optional **XerahS.Uploaders** for base classes.
 
 ## Overview
 
-- **XerahS.DestinationsPluginSdk** (NuGet or project reference): interfaces and DTOs only — `IUploaderProvider`, `PluginManifest`, `UploaderInstance`, `UploaderCategory`, etc. No implementation.
+- **XerahS.UploaderPluginSdk** (NuGet or project reference): interfaces and DTOs only — `IUploaderProvider`, `PluginManifest`, `UploaderInstance`, `UploaderCategory`, etc. No implementation.
 - **XerahS.Uploaders** (optional): base classes and runtime types — `UploaderProviderBase`, `Uploader`, `GenericUploader`, etc. Plugins that run inside the desktop app typically reference both.
 
 Your plugin is a .NET class library. The host discovers plugins (e.g. by scanning `Plugins/*/` or a list of projects), loads the assembly, reads `plugin.json`, and instantiates the type specified in `entryPoint` (must implement `IUploaderProvider`).
@@ -12,14 +12,14 @@ Your plugin is a .NET class library. The host discovers plugins (e.g. by scannin
 ## 1. Project setup
 
 - Target **net10.0** (or the same TFM as the host).
-- Add a reference to **XerahS.DestinationsPluginSdk**.
+- Add a reference to **XerahS.UploaderPluginSdk**.
 - Optionally add a reference to **XerahS.Uploaders** (with `Private=false`, `ExcludeAssets=runtime` if you want to use the host's copy at runtime).
 - Set `CopyLocalLockFileAssemblies` and `EnableDynamicLoading` if the host loads the plugin from a separate folder.
 
 Example (when the plugin is under `src/desktop/plugins/MyName.Plugin/`):
 
 ```xml
-<ProjectReference Include="..\..\core\XerahS.DestinationsPluginSdk\XerahS.DestinationsPluginSdk.csproj" />
+<ProjectReference Include="..\..\core\XerahS.UploaderPluginSdk\XerahS.UploaderPluginSdk.csproj" />
 <ProjectReference Include="..\..\core\XerahS.Uploaders\XerahS.Uploaders.csproj" Private="false" ExcludeAssets="runtime" />
 ```
 
@@ -83,6 +83,6 @@ A minimal copyable template is in **docs/templates/PluginTemplate/** (README, .c
 
 ## References
 
-- **XerahS.DestinationsPluginSdk** package README (or repo `src/desktop/core/XerahS.DestinationsPluginSdk/README.md`) for the full contract list.
+- **XerahS.UploaderPluginSdk** package README (or repo `src/desktop/core/XerahS.UploaderPluginSdk/README.md`) for the full contract list.
 - **docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md** for architecture context.
 - **tasks/XIP0040_Plugin_Architecture_Action_Items.md** for the plugin/SDK roadmap.

@@ -1,4 +1,4 @@
-# XerahS.DestinationsPluginSdk
+# XerahS.UploaderPluginSdk
 
 Lightweight **contracts only** (interfaces and DTOs) for building XerahS uploader destination plugins. This package has **no implementation** and no dependency on uploader types (e.g. `Uploader`), so plugins can depend on the SDK alone for the contract and optionally reference **XerahS.Uploaders** for base classes and runtime types.
 
@@ -32,7 +32,7 @@ Implement **IInstanceSecretMigrator** so the host can migrate legacy plaintext c
 
 ## plugin.json
 
-Each plugin ships a `plugin.json` next to its assembly. Required fields include: `pluginId`, `name`, `apiVersion`, `entryPoint` (full type name of the class implementing `IUploaderProvider`), and `supportedCategories`. See the plugin developer guide in the repository (`docs/developers/PLUGIN_SDK.md`) and the template in `docs/templates/PluginTemplate/`.
+Each plugin ships a `plugin.json` next to its assembly. Required fields include: `pluginId`, `name`, `apiVersion`, `entryPoint` (full type name of the class implementing `IUploaderProvider`), and `supportedCategories`. See the plugin developer guide (`docs/developers/PLUGIN_SDK.md`) and the template in `docs/templates/PluginTemplate/`.
 
 ## Versioning
 

@@ -7,7 +7,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\XerahS.Common\XerahS.Common.csproj" />
-    <ProjectReference Include="..\XerahS.DestinationsPluginSdk\XerahS.DestinationsPluginSdk.csproj" />
+    <ProjectReference Include="..\XerahS.UploaderPluginSdk\XerahS.UploaderPluginSdk.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="FluentFTP" />

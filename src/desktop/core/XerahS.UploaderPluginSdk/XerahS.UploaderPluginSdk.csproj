@@ -5,9 +5,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
-    <PackageId>XerahS.DestinationsPluginSdk</PackageId>
-    <Title>XerahS Destinations Plugin SDK</Title>
-    <Description>Lightweight contracts (interfaces and DTOs) for building XerahS uploader destination plugins. No implementation; use with XerahS.Uploaders for base classes.</Description>
+    <PackageId>XerahS.UploaderPluginSdk</PackageId>
+    <Title>XerahS Uploader Plugin SDK</Title>
+    <Description>Lightweight contracts (interfaces and DTOs) for building XerahS uploader plugins. No implementation; use with XerahS.Uploaders for base classes.</Description>
     <Version>1.0.0</Version>
     <Authors>ShareX Team</Authors>
     <PackageTags>XerahS;ShareX;plugin;uploader;destinations</PackageTags>

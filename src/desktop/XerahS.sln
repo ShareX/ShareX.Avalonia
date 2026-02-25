@@ -23,7 +23,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.Indexer", "core\Xera
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.Uploaders", "core\XerahS.Uploaders\XerahS.Uploaders.csproj", "{EE2C5D43-DAFA-42A1-AB21-35B0D175CABD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.DestinationsPluginSdk", "core\XerahS.DestinationsPluginSdk\XerahS.DestinationsPluginSdk.csproj", "{B1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.UploaderPluginSdk", "core\XerahS.UploaderPluginSdk\XerahS.UploaderPluginSdk.csproj", "{B1C2D3E4-F5A6-47B8-9C0D-1E2F3A4B5C6D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.Media", "core\XerahS.Media\XerahS.Media.csproj", "{AD3064B1-3E03-48CA-BF35-9F0633C53A37}"
 EndProject
