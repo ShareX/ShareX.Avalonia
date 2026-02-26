@@ -30,7 +30,7 @@ namespace XerahS.Common
         public const string GitHub = "https://github.com/ShareX/XerahS";
         public const string GitHubIssues = GitHub + "/issues?q=is%3Aissue";
         public const string Contributors = GitHub + "/graphs/contributors";
-        public const string Changelog = GitHub + "/blob/develop/docs/CHANGELOG.md";
+        public const string Changelog = "https://xerahs.com/changelog.html";
 
         public const string ShareXWebsite = "https://getsharex.com";
         public const string Callback = ShareXWebsite + "/callback/";
