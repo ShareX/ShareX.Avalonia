@@ -9,10 +9,14 @@ Run release flow in strict order:
 1) maintenance-chores skill
 2) update-changelog skill
 3) bump-version-commit-tag.sh
+4) optional: monitor tag release workflow until complete
 
 Sequence options:
   --assume-maintenance-done   Skip interactive confirmation for step 1
   --assume-changelog-done     Skip interactive confirmation for step 2
+  --monitor                   Monitor tag release workflow after step 3
+  --monitor-interval <sec>    Poll interval in seconds (default: 120)
+  --set-prerelease            Mark successful tag release as pre-release
   -h, --help                  Show this help
 
 All other options are passed through to:
@@ -20,8 +24,128 @@ All other options are passed through to:
 USAGE
 }
 
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Error: required command not found: $1" >&2
+    exit 1
+  fi
+}
+
+resolve_version_from_props() {
+  local version_file="$1"
+  local version
+  version="$(grep -oPm1 '(?<=<Version>)[^<]+' "$version_file" | tr -d '[:space:]' || true)"
+  if [[ -z "$version" ]]; then
+    echo "Error: failed to resolve <Version> from $version_file" >&2
+    exit 1
+  fi
+  echo "$version"
+}
+
+passthrough_has_flag() {
+  local flag="$1"
+  local arg
+  for arg in "${PASSTHROUGH_ARGS[@]}"; do
+    if [[ "$arg" == "$flag" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+find_tag_run_id() {
+  local workflow_name="$1"
+  local tag_name="$2"
+  local attempt=1
+  local max_attempts=30
+  local run_id=""
+
+  while [[ $attempt -le $max_attempts ]]; do
+    run_id="$(gh run list \
+      --workflow "$workflow_name" \
+      --limit 50 \
+      --json databaseId,headBranch \
+      --jq "map(select(.headBranch==\"$tag_name\"))[0].databaseId // empty" 2>/dev/null || true)"
+
+    if [[ -n "$run_id" ]]; then
+      echo "$run_id"
+      return 0
+    fi
+
+    echo "Waiting for workflow run for $tag_name (attempt $attempt/$max_attempts)..."
+    sleep 10
+    attempt=$((attempt + 1))
+  done
+
+  return 1
+}
+
+monitor_release_run() {
+  local run_id="$1"
+  local interval="$2"
+  local line
+  local status=""
+  local conclusion=""
+  local run_url=""
+  local failed_job_id=""
+  local failed_job_name=""
+  local log_file=""
+
+  while true; do
+    line="$(gh run view "$run_id" --json status,conclusion,url --jq '[.status, (.conclusion // ""), .url] | @tsv')"
+    IFS=$'\t' read -r status conclusion run_url <<< "$line"
+
+    echo "Run $run_id: status=$status conclusion=${conclusion:-n/a} url=$run_url"
+
+    if [[ "$status" == "completed" ]]; then
+      if [[ "$conclusion" == "success" ]]; then
+        echo "Release workflow succeeded."
+        return 0
+      fi
+
+      echo "Release workflow failed with conclusion '$conclusion'." >&2
+      failed_job_id="$(gh run view "$run_id" --json jobs --jq '.jobs[] | select(.conclusion=="failure") | .databaseId' | head -n 1 || true)"
+      failed_job_name="$(gh run view "$run_id" --json jobs --jq '.jobs[] | select(.conclusion=="failure") | .name' | head -n 1 || true)"
+
+      if [[ -n "$failed_job_id" ]]; then
+        log_file="release-run-${run_id}-job-${failed_job_id}.log"
+        echo "First failing job: ${failed_job_name:-unknown} ($failed_job_id)"
+        gh run view "$run_id" --job "$failed_job_id" --log > "$log_file" 2>&1 || true
+        echo "Saved failing job log to: $log_file"
+      fi
+
+      return 1
+    fi
+
+    sleep "$interval"
+  done
+}
+
+set_release_prerelease() {
+  local tag_name="$1"
+  local is_prerelease=""
+  local release_url=""
+
+  echo "Setting release $tag_name as pre-release..."
+  gh release edit "$tag_name" --prerelease >/dev/null
+
+  is_prerelease="$(gh release view "$tag_name" --json isPrerelease --jq '.isPrerelease')"
+  release_url="$(gh release view "$tag_name" --json url --jq '.url')"
+
+  if [[ "$is_prerelease" != "true" ]]; then
+    echo "Error: release $tag_name was not marked as pre-release." >&2
+    exit 1
+  fi
+
+  echo "Release marked as pre-release: $release_url"
+}
+
 ASSUME_MAINTENANCE_DONE=0
 ASSUME_CHANGELOG_DONE=0
+MONITOR=0
+MONITOR_INTERVAL=120
+SET_PRERELEASE=0
+WORKFLOW_NAME="Release Build (All Platforms)"
 
 PASSTHROUGH_ARGS=()
 while [[ $# -gt 0 ]]; do
@@ -32,6 +156,23 @@ while [[ $# -gt 0 ]]; do
       ;;
     --assume-changelog-done)
       ASSUME_CHANGELOG_DONE=1
+      shift
+      ;;
+    --monitor)
+      MONITOR=1
+      shift
+      ;;
+    --monitor-interval)
+      if [[ $# -lt 2 ]]; then
+        echo "Error: --monitor-interval requires a value." >&2
+        exit 1
+      fi
+      MONITOR_INTERVAL="$2"
+      shift 2
+      ;;
+    --set-prerelease)
+      SET_PRERELEASE=1
+      MONITOR=1
       shift
       ;;
     -h|--help)
@@ -49,6 +190,11 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+if [[ ! "$MONITOR_INTERVAL" =~ ^[0-9]+$ ]] || [[ "$MONITOR_INTERVAL" -le 0 ]]; then
+  echo "Error: --monitor-interval must be a positive integer." >&2
+  exit 1
+fi
 
 repo_root="$(git rev-parse --show-toplevel 2>/dev/null || true)"
 if [[ -z "$repo_root" ]]; then
@@ -95,4 +241,47 @@ if [[ $ASSUME_CHANGELOG_DONE -eq 0 ]]; then
 fi
 
 echo "Step 3: running bump/tag automation..."
-exec "$bump_script" "${PASSTHROUGH_ARGS[@]}"
+"$bump_script" "${PASSTHROUGH_ARGS[@]}"
+
+if passthrough_has_flag "--dry-run"; then
+  if [[ $MONITOR -eq 1 || $SET_PRERELEASE -eq 1 ]]; then
+    echo "Skipping monitor/prerelease because bump step used --dry-run."
+  fi
+  exit 0
+fi
+
+if passthrough_has_flag "--no-tag" || passthrough_has_flag "--no-push"; then
+  if [[ $MONITOR -eq 1 || $SET_PRERELEASE -eq 1 ]]; then
+    echo "Error: --monitor/--set-prerelease requires tag creation and push." >&2
+    exit 1
+  fi
+  echo "Done: bump step completed without remote tag push."
+  exit 0
+fi
+
+version_file="Directory.Build.props"
+new_version="$(resolve_version_from_props "$version_file")"
+tag_name="v${new_version}"
+
+if [[ $MONITOR -eq 1 ]]; then
+  require_cmd gh
+
+  echo "Step 4: monitoring workflow '$WORKFLOW_NAME' for tag $tag_name every ${MONITOR_INTERVAL}s..."
+  run_id="$(find_tag_run_id "$WORKFLOW_NAME" "$tag_name" || true)"
+  if [[ -z "$run_id" ]]; then
+    echo "Error: could not find workflow run for tag $tag_name." >&2
+    exit 1
+  fi
+
+  echo "Found run id: $run_id"
+  if ! monitor_release_run "$run_id" "$MONITOR_INTERVAL"; then
+    echo "Release run failed. Fix the issue, then retry with the next patch release." >&2
+    exit 1
+  fi
+fi
+
+if [[ $SET_PRERELEASE -eq 1 ]]; then
+  set_release_prerelease "$tag_name"
+fi
+
+echo "Release sequence completed for $tag_name."

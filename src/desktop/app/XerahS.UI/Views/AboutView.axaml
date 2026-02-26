@@ -181,41 +181,6 @@
                  </ui:SettingsExpander.Items>
             </ui:SettingsExpander>
 
-            <ui:SettingsExpander Header="ShareX Team" IsExpanded="True" IconSource="Contact">
-                 <ui:SettingsExpander.Items>
-                     <ui:SettingsExpanderItem HorizontalContentAlignment="Stretch" MinWidth="720" IsClickEnabled="True" Cursor="Hand" Click="OnLinkClick" Tag="{x:Static common:Links.Jaex}">
-                         <ui:SettingsExpanderItem.Content>
-                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,0,8,0">
-                                 <TextBlock Text="Jaex | Co-Founder" VerticalAlignment="Center" />
-                                 <TextBlock Grid.Column="1"
-                                            Text="{Binding Tag, RelativeSource={RelativeSource AncestorType=ui:SettingsExpanderItem}}"
-                                            VerticalAlignment="Center"
-                                            TextAlignment="Right"
-                                            Opacity="0.75" />
-                             </Grid>
-                         </ui:SettingsExpanderItem.Content>
-                         <ui:SettingsExpanderItem.ActionIconSource>
-                             <ui:SymbolIconSource Symbol="Link"/>
-                         </ui:SettingsExpanderItem.ActionIconSource>
-                     </ui:SettingsExpanderItem>
-                     <ui:SettingsExpanderItem HorizontalContentAlignment="Stretch" MinWidth="720" IsClickEnabled="True" Cursor="Hand" Click="OnLinkClick" Tag="{x:Static common:Links.McoreD}">
-                         <ui:SettingsExpanderItem.Content>
-                             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="16" Margin="0,0,8,0">
-                                 <TextBlock Text="McoreD | Co-Founder" VerticalAlignment="Center" />
-                                 <TextBlock Grid.Column="1"
-                                            Text="{Binding Tag, RelativeSource={RelativeSource AncestorType=ui:SettingsExpanderItem}}"
-                                            VerticalAlignment="Center"
-                                            TextAlignment="Right"
-                                            Opacity="0.75" />
-                             </Grid>
-                         </ui:SettingsExpanderItem.Content>
-                         <ui:SettingsExpanderItem.ActionIconSource>
-                             <ui:SymbolIconSource Symbol="Link"/>
-                         </ui:SettingsExpanderItem.ActionIconSource>
-                     </ui:SettingsExpanderItem>
-                 </ui:SettingsExpander.Items>
-            </ui:SettingsExpander>
-
         </StackPanel>
     </ScrollViewer>
 </UserControl>

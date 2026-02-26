@@ -106,6 +106,11 @@ public partial class App : Application
             };
             _baseTitle = desktop.MainWindow.Title ?? AppResources.ProductNameWithVersion;
 
+            // Use Avalonia's built-in clipboard (replaces Windows Forms clipboard for desktop app)
+            PlatformServices.Clipboard = new Services.AvaloniaClipboardService(
+                desktop.MainWindow.Clipboard!,
+                desktop.MainWindow.StorageProvider);
+
             // Apply window state based on SilentRun.
             // We avoid starting minimized because some Windows setups can leave a minimized
             // thumbnail/button at the bottom-left instead of staying tray-only.

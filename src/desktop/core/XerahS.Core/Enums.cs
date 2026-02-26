@@ -40,8 +40,7 @@ public enum ShareXBuild
 public enum UpdateChannel // Localized
 {
     Release,
-    PreRelease,
-    Dev
+    PreRelease
 }
 
 public enum SupportedLanguage

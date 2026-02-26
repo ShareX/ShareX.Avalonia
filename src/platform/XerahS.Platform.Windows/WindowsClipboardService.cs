@@ -23,379 +23,479 @@
 
 #endregion License Information (GPL v3)
 
-using XerahS.Platform.Abstractions;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using SkiaSharp;
+using XerahS.Platform.Abstractions;
 
-namespace XerahS.Platform.Windows
+namespace XerahS.Platform.Windows;
+
+/// <summary>
+/// Windows implementation of IClipboardService using Win32 clipboard API only (no Windows Forms).
+/// Used for CLI/headless; the desktop Avalonia app replaces this with AvaloniaClipboardService.
+/// </summary>
+public class WindowsClipboardService : IClipboardService
 {
-    /// <summary>
-    /// Windows implementation of IClipboardService using System.Windows.Forms.Clipboard
-    /// </summary>
-    public class WindowsClipboardService : IClipboardService
+    private static class Native
     {
-        public void Clear()
+        public const uint GMEM_MOVEABLE = 0x0002;
+        public const uint CF_TEXT = 1;
+        public const uint CF_BITMAP = 2;
+        public const uint CF_DIB = 8;
+        public const uint CF_UNICODETEXT = 13;
+        public const uint CF_HDROP = 15;
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GlobalLock(IntPtr hMem);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GlobalUnlock(IntPtr hMem);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GlobalFree(IntPtr hMem);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern nuint GlobalSize(IntPtr hMem);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool OpenClipboard(IntPtr hWndNewOwner);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool CloseClipboard();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EmptyClipboard();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetClipboardData(uint uFormat);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool IsClipboardFormatAvailable(uint format);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern uint RegisterClipboardFormat(string lpszFormat);
+    }
+
+    private static uint? _cfPng;
+
+    private static uint CfPng
+    {
+        get
         {
-            try
-            {
-                Clipboard.Clear();
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to clear clipboard: {ex.Message}");
-            }
+            if (_cfPng == null)
+                _cfPng = Native.RegisterClipboardFormat("PNG");
+            return _cfPng.Value;
         }
+    }
 
-        public bool ContainsText()
+    public void Clear()
+    {
+        try
         {
-            try
+            RunInStaThread(() =>
             {
-                return RunInStaThread(() => Clipboard.ContainsText());
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public bool ContainsImage()
-        {
-            try
-            {
-                return RunInStaThread(() => Clipboard.ContainsImage());
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public bool ContainsFileDropList()
-        {
-            try
-            {
-                return RunInStaThread(() => Clipboard.ContainsFileDropList());
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public string? GetText()
-        {
-            try
-            {
-                return RunInStaThread(() => Clipboard.GetText());
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public void SetText(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return;
-
-            try
-            {
-                RunInStaThread(() => Clipboard.SetText(text));
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to set clipboard text: {ex.Message}");
-            }
-        }
-
-        public SKBitmap? GetImage()
-        {
-            try
-            {
-                return RunInStaThread(() =>
+                if (Native.OpenClipboard(IntPtr.Zero))
                 {
-                    using (var image = Clipboard.GetImage())
-                    {
-                        if (image == null) return null;
-
-                        using (var ms = new MemoryStream())
-                        {
-                            image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
-                            ms.Position = 0;
-                            return SKBitmap.Decode(ms);
-                        }
-                    }
-                });
-            }
-            catch
-            {
-                return null;
-            }
+                    try { Native.EmptyClipboard(); }
+                    finally { Native.CloseClipboard(); }
+                }
+            });
         }
-
-        public void SetImage(SKBitmap image)
+        catch (Exception ex)
         {
-            if (image == null)
-                return;
+            System.Diagnostics.Debug.WriteLine($"Failed to clear clipboard: {ex.Message}");
+        }
+    }
 
-            try
+    public bool ContainsText()
+    {
+        try
+        {
+            return RunInStaThread(() => Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT));
+        }
+        catch { return false; }
+    }
+
+    public bool ContainsImage()
+    {
+        try
+        {
+            return RunInStaThread(() =>
+                Native.IsClipboardFormatAvailable(CfPng) ||
+                Native.IsClipboardFormatAvailable(Native.CF_DIB));
+        }
+        catch { return false; }
+    }
+
+    public bool ContainsFileDropList()
+    {
+        try
+        {
+            return RunInStaThread(() => Native.IsClipboardFormatAvailable(Native.CF_HDROP));
+        }
+        catch { return false; }
+    }
+
+    public string? GetText()
+    {
+        try
+        {
+            return RunInStaThread(() =>
             {
-                // Optimized Clipboard set:
-                // Create System.Drawing.Bitmap and copy pixels directly instead of encoding/decoding PNG.
-                
-                int width = image.Width;
-                int height = image.Height;
-
-                // Format32bppArgb in System.Drawing corresponds to BGRA8888 in SkiaSharp (on Windows/LittleEndian)
-                using (var bmp = new System.Drawing.Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb))
+                if (!Native.OpenClipboard(IntPtr.Zero)) return null;
+                try
                 {
-                    var bounds = new System.Drawing.Rectangle(0, 0, width, height);
-                    var bmpData = bmp.LockBits(bounds, System.Drawing.Imaging.ImageLockMode.WriteOnly, bmp.PixelFormat);
-
+                    var h = Native.GetClipboardData(Native.CF_UNICODETEXT);
+                    if (h == IntPtr.Zero) return null;
+                    var ptr = Native.GlobalLock(h);
+                    if (ptr == IntPtr.Zero) return null;
                     try
                     {
-                        // Define the expected format in the destination (System.Drawing.Bitmap)
-                        // This ensures that if the source SKBitmap is different, ReadPixels will convert it.
-                        // Format32bppArgb implies Unpremultiplied alpha. 
-                        // We must request Unpremul so Skia converts the Premul source to Unpremul destination bytes.
-                        var info = new SKImageInfo(width, height, SKColorType.Bgra8888, SKAlphaType.Unpremul);
-                        
-                        // Copy pixels directly into the locked bitmap memory
-                        var pixmap = image.PeekPixels();
-                        if (pixmap != null)
+                        var size = (long)(ulong)Native.GlobalSize(h);
+                        if (size <= 0) return null;
+                        return Marshal.PtrToStringUni(ptr, (int)(size / 2) - 1);
+                    }
+                    finally { Native.GlobalUnlock(h); }
+                }
+                finally { Native.CloseClipboard(); }
+            });
+        }
+        catch { return null; }
+    }
+
+    public void SetText(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        try
+        {
+            RunInStaThread(() =>
+            {
+                var bytes = Encoding.Unicode.GetBytes(text + "\0");
+                var hMem = Native.GlobalAlloc(Native.GMEM_MOVEABLE, (UIntPtr)bytes.Length);
+                if (hMem == IntPtr.Zero) return;
+                var ptr = Native.GlobalLock(hMem);
+                if (ptr == IntPtr.Zero) { Native.GlobalFree(hMem); return; }
+                try { Marshal.Copy(bytes, 0, ptr, bytes.Length); }
+                finally { Native.GlobalUnlock(hMem); }
+                if (!Native.OpenClipboard(IntPtr.Zero)) { Native.GlobalFree(hMem); return; }
+                try
+                {
+                    Native.EmptyClipboard();
+                    Native.SetClipboardData(Native.CF_UNICODETEXT, hMem);
+                }
+                finally { Native.CloseClipboard(); }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to set clipboard text: {ex.Message}");
+        }
+    }
+
+    public SKBitmap? GetImage()
+    {
+        try
+        {
+            return RunInStaThread(() =>
+            {
+                if (!Native.OpenClipboard(IntPtr.Zero)) return null;
+                try
+                {
+                    // Prefer PNG (preserves alpha)
+                    var hPng = Native.GetClipboardData(CfPng);
+                    if (hPng != IntPtr.Zero)
+                    {
+                        var ptr = Native.GlobalLock(hPng);
+                        if (ptr != IntPtr.Zero)
                         {
-                            if (!pixmap.ReadPixels(info, bmpData.Scan0, bmpData.Stride, 0, 0))
+                            try
                             {
-                                throw new Exception("Failed to read pixels from SKBitmap into System.Drawing.Bitmap buffer");
+                                var size = (int)(ulong)Native.GlobalSize(hPng);
+                                var bytes = new byte[size];
+                                Marshal.Copy(ptr, bytes, 0, size);
+                                return SKBitmap.Decode(bytes);
                             }
+                            finally { Native.GlobalUnlock(hPng); }
                         }
-                        else
+                    }
+                    // Fallback: CF_DIB
+                    var hDib = Native.GetClipboardData(Native.CF_DIB);
+                    if (hDib == IntPtr.Zero) return null;
+                    var dibPtr = Native.GlobalLock(hDib);
+                    if (dibPtr == IntPtr.Zero) return null;
+                    try
+                    {
+                        var dibSize = (int)(ulong)Native.GlobalSize(hDib);
+                        var dibBytes = new byte[dibSize];
+                        Marshal.Copy(dibPtr, dibBytes, 0, dibSize);
+                        return DecodeDib(dibBytes);
+                    }
+                    finally { Native.GlobalUnlock(hDib); }
+                }
+                finally { Native.CloseClipboard(); }
+            });
+        }
+        catch { return null; }
+    }
+
+    public void SetImage(SKBitmap image)
+    {
+        if (image == null) return;
+        try
+        {
+            RunInStaThread(() =>
+            {
+                using var stream = new MemoryStream();
+                image.Encode(stream, SKEncodedImageFormat.Png, 100);
+                var bytes = stream.ToArray();
+                var hMem = Native.GlobalAlloc(Native.GMEM_MOVEABLE, (UIntPtr)bytes.Length);
+                if (hMem == IntPtr.Zero) return;
+                var ptr = Native.GlobalLock(hMem);
+                if (ptr == IntPtr.Zero) { Native.GlobalFree(hMem); return; }
+                try { Marshal.Copy(bytes, 0, ptr, bytes.Length); }
+                finally { Native.GlobalUnlock(hMem); }
+                if (!Native.OpenClipboard(IntPtr.Zero)) { Native.GlobalFree(hMem); return; }
+                try
+                {
+                    Native.EmptyClipboard();
+                    Native.SetClipboardData(CfPng, hMem);
+                }
+                finally { Native.CloseClipboard(); }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to set clipboard image: {ex.Message}");
+        }
+    }
+
+    public string[]? GetFileDropList()
+    {
+        try
+        {
+            return RunInStaThread(() =>
+            {
+                if (!Native.OpenClipboard(IntPtr.Zero)) return null;
+                try
+                {
+                    var h = Native.GetClipboardData(Native.CF_HDROP);
+                    if (h == IntPtr.Zero) return null;
+                    var ptr = Native.GlobalLock(h);
+                    if (ptr == IntPtr.Zero) return null;
+                    try
+                    {
+                        var count = DragQueryFile(h, 0xFFFFFFFF, null, 0);
+                        if (count == 0) return null;
+                        var list = new string[count];
+                        var sb = new StringBuilder(260);
+                        for (uint i = 0; i < count; i++)
                         {
-                           // Force pixel allocation if needed (unlikely for valid image)
-                           image.GetPixels();
-                           if (!image.PeekPixels()?.ReadPixels(info, bmpData.Scan0, bmpData.Stride, 0, 0) ?? false)
-                           {
-                                throw new Exception("Failed to read pixels from SKBitmap into System.Drawing.Bitmap buffer (fallback)");
-                           }
+                            if (DragQueryFile(h, i, sb, sb.Capacity) > 0)
+                                list[i] = sb.ToString();
                         }
+                        return list;
                     }
-                    finally
-                    {
-                        bmp.UnlockBits(bmpData);
-                    }
-
-                    RunInStaThread(() => Clipboard.SetImage(bmp));
+                    finally { Native.GlobalUnlock(h); }
                 }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to set clipboard image: {ex.Message}");
-                throw;
-            }
+                finally { Native.CloseClipboard(); }
+            });
         }
+        catch { return null; }
+    }
 
-        // Native methods for direct clipboard access
-        private static class NativeMethods
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern uint DragQueryFile(IntPtr hDrop, uint iFile, [Out] StringBuilder? lpszFile, int cch);
+
+    public void SetFileDropList(string[] files)
+    {
+        if (files == null || files.Length == 0) return;
+        try
         {
-            public const uint GMEM_MOVEABLE = 0x0002;
-            public const uint CF_DIB = 8;
-
-            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
-            public static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
-
-            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
-            public static extern IntPtr GlobalLock(IntPtr hMem);
-
-            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
-            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
-            public static extern bool GlobalUnlock(IntPtr hMem);
-
-            [System.Runtime.InteropServices.DllImport("kernel32.dll", SetLastError = true)]
-            public static extern IntPtr GlobalFree(IntPtr hMem);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
-            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
-            public static extern bool OpenClipboard(IntPtr hWndNewOwner);
-
-            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
-            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
-            public static extern bool CloseClipboard();
-
-            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
-            [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
-            public static extern bool EmptyClipboard();
-
-            [System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
-            public static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
-        }
-
-        public string[]? GetFileDropList()
-        {
-            try
+            RunInStaThread(() =>
             {
-                return RunInStaThread(() =>
-                {
-                    var files = Clipboard.GetFileDropList();
-                    if (files != null && files.Count > 0)
-                    {
-                        string[] result = new string[files.Count];
-                        files.CopyTo(result, 0);
-                        return result;
-                    }
-
-                    return null;
-                });
-            }
-            catch
-            {
-                // Ignore
-            }
-
-            return null;
-        }
-
-        public void SetFileDropList(string[] files)
-        {
-            if (files == null || files.Length == 0)
-                return;
-
-            try
-            {
-                var fileCollection = new System.Collections.Specialized.StringCollection();
-                fileCollection.AddRange(files);
-                Clipboard.SetFileDropList(fileCollection);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to set clipboard file drop list: {ex.Message}");
-            }
-        }
-
-        public object? GetData(string format)
-        {
-            try
-            {
-                return RunInStaThread(() =>
-                {
-                    if (Clipboard.TryGetData(format, out object? data))
-                    {
-                        return data;
-                    }
-
-                    return null;
-                });
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        public void SetData(string format, object data)
-        {
-            if (string.IsNullOrEmpty(format) || data == null)
-                return;
-
-            try
-            {
-                Clipboard.SetData(format, data);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Failed to set clipboard data: {ex.Message}");
-            }
-        }
-
-        public bool ContainsData(string format)
-        {
-            if (string.IsNullOrEmpty(format))
-                return false;
-
-            try
-            {
-                return RunInStaThread(() => Clipboard.ContainsData(format));
-            }
-            catch
-            {
-                return false;
-            }
-        }
-
-        public Task<string?> GetTextAsync()
-        {
-            // Windows Forms Clipboard is synchronous, but we provide async wrapper for consistency
-            return Task.FromResult(GetText());
-        }
-
-        public Task SetTextAsync(string text)
-        {
-            return Task.Run(() => SetText(text));
-        }
-
-        private static void RunInStaThread(Action action)
-        {
-            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-            {
-                action();
-                return;
-            }
-
-            Exception? captured = null;
-            var thread = new Thread(() =>
-            {
+                // DROPFILES: pFiles=20, pt=(0,0), fNC=0, fWide=1; then double-null-terminated Unicode paths
+                using var ms = new MemoryStream();
+                var bw = new BinaryWriter(ms);
+                bw.Write(20);   // pFiles offset
+                bw.Write(0L);   // pt.x, pt.y
+                bw.Write(0);    // fNC
+                bw.Write(1);    // fWide (Unicode)
+                bw.Flush();
+                var pathBytes = Encoding.Unicode.GetBytes(string.Join("\0", files.Where(f => !string.IsNullOrEmpty(f))) + "\0\0");
+                ms.Write(pathBytes, 0, pathBytes.Length);
+                var bytes = ms.ToArray();
+                var hMem = Native.GlobalAlloc(Native.GMEM_MOVEABLE, (UIntPtr)bytes.Length);
+                if (hMem == IntPtr.Zero) return;
+                var ptr = Native.GlobalLock(hMem);
+                if (ptr == IntPtr.Zero) { Native.GlobalFree(hMem); return; }
+                try { Marshal.Copy(bytes, 0, ptr, bytes.Length); }
+                finally { Native.GlobalUnlock(hMem); }
+                if (!Native.OpenClipboard(IntPtr.Zero)) { Native.GlobalFree(hMem); return; }
                 try
                 {
-                    action();
+                    Native.EmptyClipboard();
+                    Native.SetClipboardData(Native.CF_HDROP, hMem);
                 }
-                catch (Exception ex)
-                {
-                    captured = ex;
-                }
+                finally { Native.CloseClipboard(); }
             });
-
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.IsBackground = true;
-            thread.Start();
-            thread.Join();
-
-            if (captured != null)
-            {
-                throw captured;
-            }
         }
-
-        private static T RunInStaThread<T>(Func<T> func)
+        catch (Exception ex)
         {
-            if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
-            {
-                return func();
-            }
+            System.Diagnostics.Debug.WriteLine($"Failed to set clipboard file drop list: {ex.Message}");
+        }
+    }
 
-            Exception? captured = null;
-            T? result = default;
-            var thread = new Thread(() =>
+    public object? GetData(string format)
+    {
+        try
+        {
+            return RunInStaThread<object?>(() =>
             {
+                uint fmt = uint.TryParse(format, out var n) ? n : Native.RegisterClipboardFormat(format);
+                if (!Native.IsClipboardFormatAvailable(fmt)) return null;
+                if (!Native.OpenClipboard(IntPtr.Zero)) return null;
                 try
                 {
-                    result = func();
+                    var h = Native.GetClipboardData(fmt);
+                    if (h == IntPtr.Zero) return null;
+                    var ptr = Native.GlobalLock(h);
+                    if (ptr == IntPtr.Zero) return null;
+                    try
+                    {
+                        var size = (int)(ulong)Native.GlobalSize(h);
+                        if (fmt == Native.CF_UNICODETEXT)
+                            return Marshal.PtrToStringUni(ptr, (size / 2) - 1);
+                        var bytes = new byte[size];
+                        Marshal.Copy(ptr, bytes, 0, size);
+                        return bytes;
+                    }
+                    finally { Native.GlobalUnlock(h); }
                 }
-                catch (Exception ex)
-                {
-                    captured = ex;
-                }
+                finally { Native.CloseClipboard(); }
             });
-
-            thread.SetApartmentState(ApartmentState.STA);
-            thread.IsBackground = true;
-            thread.Start();
-            thread.Join();
-
-            if (captured != null)
-            {
-                throw captured;
-            }
-
-            return result!;
         }
+        catch { return null; }
+    }
+
+    public void SetData(string format, object data)
+    {
+        if (string.IsNullOrEmpty(format) || data == null) return;
+        try
+        {
+            RunInStaThread(() =>
+            {
+                byte[]? bytes = data is string s
+                    ? Encoding.Unicode.GetBytes(s + "\0")
+                    : data is byte[] b ? b : null;
+                if (bytes == null || bytes.Length == 0) return;
+                var fmt = uint.TryParse(format, out var n) ? n : Native.RegisterClipboardFormat(format);
+                var hMem = Native.GlobalAlloc(Native.GMEM_MOVEABLE, (UIntPtr)bytes.Length);
+                if (hMem == IntPtr.Zero) return;
+                var ptr = Native.GlobalLock(hMem);
+                if (ptr == IntPtr.Zero) { Native.GlobalFree(hMem); return; }
+                try { Marshal.Copy(bytes, 0, ptr, bytes.Length); }
+                finally { Native.GlobalUnlock(hMem); }
+                if (!Native.OpenClipboard(IntPtr.Zero)) { Native.GlobalFree(hMem); return; }
+                try
+                {
+                    Native.EmptyClipboard();
+                    Native.SetClipboardData(fmt, hMem);
+                }
+                finally { Native.CloseClipboard(); }
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to set clipboard data: {ex.Message}");
+        }
+    }
+
+    public bool ContainsData(string format)
+    {
+        if (string.IsNullOrEmpty(format)) return false;
+        try
+        {
+            var fmt = uint.TryParse(format, out var n) ? n : Native.RegisterClipboardFormat(format);
+            return RunInStaThread(() => Native.IsClipboardFormatAvailable(fmt));
+        }
+        catch { return false; }
+    }
+
+    public Task<string?> GetTextAsync() => Task.FromResult(GetText());
+    public Task SetTextAsync(string text) => Task.Run(() => SetText(text));
+
+    private static void RunInStaThread(Action action)
+    {
+        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+        {
+            action();
+            return;
+        }
+        Exception? captured = null;
+        var t = new Thread(() => { try { action(); } catch (Exception ex) { captured = ex; } });
+        t.SetApartmentState(ApartmentState.STA);
+        t.IsBackground = true;
+        t.Start();
+        t.Join();
+        if (captured != null) throw captured;
+    }
+
+    private static T? RunInStaThread<T>(Func<T?> func)
+    {
+        if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+            return func();
+        Exception? captured = null;
+        T? result = default;
+        var t = new Thread(() => { try { result = func(); } catch (Exception ex) { captured = ex; } });
+        t.SetApartmentState(ApartmentState.STA);
+        t.IsBackground = true;
+        t.Start();
+        t.Join();
+        if (captured != null) throw captured;
+        return result;
+    }
+
+    private static SKBitmap? DecodeDib(byte[] dib)
+    {
+        if (dib == null || dib.Length < 40) return null;
+        try
+        {
+            int headerSize = BitConverter.ToInt32(dib, 0);
+            int width = BitConverter.ToInt32(dib, 4);
+            int height = BitConverter.ToInt32(dib, 8);
+            short bitCount = BitConverter.ToInt16(dib, 14);
+            if (width <= 0 || Math.Abs(height) <= 0 || bitCount != 32) return null;
+            int rowBytes = (width * 4 + 3) & ~3;
+            int rows = Math.Abs(height);
+            int pixelDataSize = rowBytes * rows;
+            int pixelsOffset = headerSize + (bitCount <= 8 ? (1 << bitCount) * 4 : 0);
+            if (pixelsOffset + (long)pixelDataSize > dib.Length) return null;
+            // Build a BMP file (DIB + 14-byte file header) for SKBitmap.Decode
+            int fileSize = 14 + dib.Length;
+            int offsetToPixels = 14 + pixelsOffset;
+            using var ms = new MemoryStream(14 + dib.Length);
+            var w = new BinaryWriter(ms);
+            w.Write((byte)'B'); w.Write((byte)'M');
+            w.Write(fileSize);
+            w.Write(0);
+            w.Write(offsetToPixels);
+            w.Write(dib, 0, dib.Length);
+            w.Flush();
+            ms.Position = 0;
+            return SKBitmap.Decode(ms);
+        }
+        catch { return null; }
     }
 }

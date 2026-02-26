@@ -81,8 +81,7 @@ public class UpdateService : IDisposable
         {
             IsPortable = IsPortableBuild(),
             CheckPreReleaseUpdates = settings.CheckPreReleaseUpdates ||
-                                     settings.UpdateChannel == UpdateChannel.PreRelease ||
-                                     settings.UpdateChannel == UpdateChannel.Dev,
+                                     settings.UpdateChannel == UpdateChannel.PreRelease,
             AllowAutoUpdate = settings.AutoCheckUpdate
         };
 
