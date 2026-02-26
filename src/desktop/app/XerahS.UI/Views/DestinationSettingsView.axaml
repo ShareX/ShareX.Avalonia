@@ -8,7 +8,7 @@
              x:Class="XerahS.UI.Views.DestinationSettingsView"
              x:DataType="vm:DestinationSettingsViewModel">
 
-    <Grid ColumnDefinitions="240, *">
+    <Grid ColumnDefinitions="240, *" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <!-- Category Sidebar -->
         <Border Grid.Column="0" Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
                 BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}"

@@ -13,8 +13,8 @@
         <vm:SettingsViewModel/>
     </Design.DataContext>
 
-    <Grid>
-        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24">
+    <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="24" MaxWidth="420">
             <ui:SymbolIcon Symbol="Settings" FontSize="64" Foreground="{DynamicResource AccentFillColorDefaultBrush}"/>
             
             <StackPanel Spacing="8">

@@ -235,7 +235,7 @@
             </ui:NavigationView.MenuItems>
             
             <ui:NavigationView.Content>
-                 <ContentControl Name="ContentFrame" />
+                 <ContentControl Name="ContentFrame" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch"/>
             </ui:NavigationView.Content>
         </ui:NavigationView>
 

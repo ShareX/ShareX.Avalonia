@@ -128,8 +128,8 @@
         </Border>
       </Grid>
 
-      <!-- Tasks Column -->
-      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+      <!-- Tasks Column: MaxWidth keeps checklist compact so preview gets more space on wide windows -->
+      <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" MaxWidth="380">
         <StackPanel Spacing="{StaticResource SpaceL}">
           <StackPanel Spacing="{StaticResource SpaceXS}">
             <TextBlock Text="After capture" Classes="section-header" AutomationProperties.Name="After Capture Heading"/>

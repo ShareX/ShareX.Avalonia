@@ -16,7 +16,7 @@
                 <Border BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}" BorderThickness="1" CornerRadius="4" Padding="16">
                     <Grid ColumnDefinitions="Auto, 16, *" RowDefinitions="Auto, Auto, Auto, Auto, Auto" RowSpacing="16">
                         <TextBlock Grid.Row="0" Grid.Column="0" Text="FPS:" VerticalAlignment="Center"/>
-                        <NumericUpDown Grid.Row="0" Grid.Column="2" Value="{Binding ScreenRecordFPS}" Minimum="1" Maximum="144" Increment="1" Width="120" HorizontalAlignment="Left" AutomationProperties.Name="FPS"/>
+                        <NumericUpDown Grid.Row="0" Grid.Column="2" Value="{Binding ScreenRecordFPS}" Minimum="1" Maximum="144" Increment="1" MinWidth="120" HorizontalAlignment="Stretch" AutomationProperties.Name="FPS"/>
 
                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Duration:" VerticalAlignment="Center"/>
                         <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8">
@@ -31,11 +31,11 @@
                         </StackPanel>
 
                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Recording intent:" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Row="3" Grid.Column="2" ItemsSource="{Binding RecordingIntents}" SelectedItem="{Binding RecordingIntent}" HorizontalAlignment="Left" Width="200" AutomationProperties.Name="Recording Intent"/>
+                        <ComboBox Grid.Row="3" Grid.Column="2" ItemsSource="{Binding RecordingIntents}" SelectedItem="{Binding RecordingIntent}" HorizontalAlignment="Stretch" MinWidth="200" AutomationProperties.Name="Recording Intent"/>
                         
                         <!-- Video Codec Selector -->
                         <TextBlock Grid.Row="4" Grid.Column="0" Text="Video Codec:" VerticalAlignment="Center"/>
-                        <ComboBox Grid.Row="4" Grid.Column="2" ItemsSource="{Binding VideoCodecs}" SelectedItem="{Binding ScreenRecordVideoCodec}" HorizontalAlignment="Left" Width="200" AutomationProperties.Name="Video Codec"/>
+                        <ComboBox Grid.Row="4" Grid.Column="2" ItemsSource="{Binding VideoCodecs}" SelectedItem="{Binding ScreenRecordVideoCodec}" HorizontalAlignment="Stretch" MinWidth="200" AutomationProperties.Name="Video Codec"/>
                     </Grid>
                 </Border>
             </StackPanel>

@@ -12,10 +12,10 @@
         Width="850" Height="650"
         WindowStartupLocation="CenterOwner">
 
-    <Grid RowDefinitions="*,Auto" Margin="12">
+    <Grid RowDefinitions="*,Auto" Margin="12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         
         <!-- Main Tabs -->
-        <TabControl Grid.Row="0" Margin="0,0,0,12">
+        <TabControl Grid.Row="0" Margin="0,0,0,12" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
             
             <!-- Tab 1: Task (Trigger & Job) -->
             <TabItem Header="Task">

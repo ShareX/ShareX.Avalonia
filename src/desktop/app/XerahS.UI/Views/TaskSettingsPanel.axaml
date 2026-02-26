@@ -32,7 +32,7 @@
                                         <!-- Screenshot Delay -->
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Screenshot delay:" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                            <NumericUpDown Value="{Binding ScreenshotDelay}" Minimum="0" Maximum="60" Increment="0.1" FormatString="0.0" Width="120" AutomationProperties.Name="Screenshot Delay"/>
+                                            <NumericUpDown Value="{Binding ScreenshotDelay}" Minimum="0" Maximum="60" Increment="0.1" FormatString="0.0" MinWidth="120" HorizontalAlignment="Stretch" AutomationProperties.Name="Screenshot Delay"/>
                                             <TextBlock Text="seconds" VerticalAlignment="Center"/>
                                         </StackPanel>
 
@@ -90,12 +90,12 @@
 
                                 <Grid ColumnDefinitions="Auto, 16, *">
                                     <TextBlock Grid.Column="0" Text="Output:" VerticalAlignment="Center"/>
-                                    <ComboBox Grid.Column="2" ItemsSource="{Binding IndexerOutputs}" SelectedItem="{Binding IndexerOutput}" Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Indexer Output Format"/>
+                                    <ComboBox Grid.Column="2" ItemsSource="{Binding IndexerOutputs}" SelectedItem="{Binding IndexerOutput}" MinWidth="200" HorizontalAlignment="Stretch" AutomationProperties.Name="Indexer Output Format"/>
                                 </Grid>
 
                                 <Grid ColumnDefinitions="Auto, 16, *">
                                     <TextBlock Grid.Column="0" Text="Max depth:" VerticalAlignment="Center"/>
-                                    <NumericUpDown Grid.Column="2" Value="{Binding IndexerMaxDepthLevel}" Minimum="0" Maximum="50" Width="120" HorizontalAlignment="Left" AutomationProperties.Name="Max Depth Level"/>
+                                    <NumericUpDown Grid.Column="2" Value="{Binding IndexerMaxDepthLevel}" Minimum="0" Maximum="50" MinWidth="120" HorizontalAlignment="Stretch" AutomationProperties.Name="Max Depth Level"/>
                                 </Grid>
 
                                 <StackPanel Spacing="10">
@@ -108,7 +108,7 @@
 
                                 <Grid ColumnDefinitions="Auto, 16, *">
                                     <TextBlock Grid.Column="0" Text="Indentation:" VerticalAlignment="Center"/>
-                                    <TextBox Grid.Column="2" Text="{Binding IndexerIndentationText}" Width="200" HorizontalAlignment="Left" AutomationProperties.Name="Indentation Text"/>
+                                    <TextBox Grid.Column="2" Text="{Binding IndexerIndentationText}" MinWidth="200" HorizontalAlignment="Stretch" AutomationProperties.Name="Indentation Text"/>
                                 </Grid>
 
                                 <CheckBox IsChecked="{Binding IndexerAddEmptyLineAfterFolders}" Content="Add empty line after folders"/>
@@ -265,27 +265,27 @@
                                         <!-- Duration -->
                                         <TextBlock Grid.Row="0" Grid.Column="0" Text="Duration:" VerticalAlignment="Center"/>
                                         <StackPanel Grid.Row="0" Grid.Column="2" Orientation="Horizontal" Spacing="8">
-                                            <NumericUpDown Value="{Binding ToastWindowDuration}" Minimum="0.5" Maximum="30" Increment="0.5" FormatString="0.0" Width="120" AutomationProperties.Name="Toast Duration"/>
+                                            <NumericUpDown Value="{Binding ToastWindowDuration}" Minimum="0.5" Maximum="30" Increment="0.5" FormatString="0.0" MinWidth="120" AutomationProperties.Name="Toast Duration"/>
                                             <TextBlock Text="seconds" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <!-- Fade Duration -->
                                         <TextBlock Grid.Row="1" Grid.Column="0" Text="Fade duration:" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                         <StackPanel Grid.Row="1" Grid.Column="2" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                                            <NumericUpDown Value="{Binding ToastWindowFadeDuration}" Minimum="0" Maximum="5" Increment="0.1" FormatString="0.0" Width="120" AutomationProperties.Name="Toast Fade Duration"/>
+                                            <NumericUpDown Value="{Binding ToastWindowFadeDuration}" Minimum="0" Maximum="5" Increment="0.1" FormatString="0.0" MinWidth="120" AutomationProperties.Name="Toast Fade Duration"/>
                                             <TextBlock Text="seconds" VerticalAlignment="Center"/>
                                         </StackPanel>
 
                                         <!-- Placement -->
                                         <TextBlock Grid.Row="2" Grid.Column="0" Text="Placement:" VerticalAlignment="Center" Margin="0,8,0,0"/>
-                                        <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{Binding ContentAlignments}" SelectedItem="{Binding ToastWindowPlacement}" HorizontalAlignment="Left" Width="200" Margin="0,8,0,0" AutomationProperties.Name="Toast Placement"/>
+                                        <ComboBox Grid.Row="2" Grid.Column="2" ItemsSource="{Binding ContentAlignments}" SelectedItem="{Binding ToastWindowPlacement}" HorizontalAlignment="Stretch" MinWidth="200" Margin="0,8,0,0" AutomationProperties.Name="Toast Placement"/>
 
                                         <!-- Size -->
                                         <TextBlock Grid.Row="3" Grid.Column="0" Text="Size:" VerticalAlignment="Center" Margin="0,8,0,0"/>
                                         <StackPanel Grid.Row="3" Grid.Column="2" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
-                                            <NumericUpDown Value="{Binding ToastWindowWidth}" Minimum="100" Maximum="2000" Increment="10" Width="120" AutomationProperties.Name="Toast Width"/>
+                                            <NumericUpDown Value="{Binding ToastWindowWidth}" Minimum="100" Maximum="2000" Increment="10" MinWidth="120" AutomationProperties.Name="Toast Width"/>
                                             <TextBlock Text="x" VerticalAlignment="Center"/>
-                                            <NumericUpDown Value="{Binding ToastWindowHeight}" Minimum="50" Maximum="1000" Increment="10" Width="120" AutomationProperties.Name="Toast Height"/>
+                                            <NumericUpDown Value="{Binding ToastWindowHeight}" Minimum="50" Maximum="1000" Increment="10" MinWidth="120" AutomationProperties.Name="Toast Height"/>
                                         </StackPanel>
                                         
                                         <!-- Auto Hide -->

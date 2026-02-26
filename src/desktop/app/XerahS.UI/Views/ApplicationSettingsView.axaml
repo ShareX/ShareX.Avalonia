@@ -13,7 +13,7 @@
         <vm:SettingsViewModel/>
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto, *" Margin="0">
+    <Grid RowDefinitions="Auto, *" Margin="0" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
         <TabControl Grid.Row="1">
             <!-- General Tab -->
             <TabItem Header="General">
@@ -51,7 +51,7 @@
                                                   ItemsSource="{Binding UpdateChannels}"
                                                   SelectedItem="{Binding UpdateChannel}"
                                                   IsEnabled="{Binding AutoCheckUpdate}"
-                                                  HorizontalAlignment="Left" Width="200"
+                                                  HorizontalAlignment="Stretch" MinWidth="200"
                                                   AutomationProperties.Name="Update Channel"/>
                                     </Grid>
                                 </StackPanel>
@@ -133,8 +133,8 @@
                                         <ComboBox Grid.Column="2"
                                                   ItemsSource="{Binding ThemeModes}"
                                                   SelectedItem="{Binding ThemeMode}"
-                                                  Width="200"
-                                                  HorizontalAlignment="Left"
+                                                  MinWidth="200"
+                                                  HorizontalAlignment="Stretch"
                                                   AutomationProperties.Name="Application Theme"/>
                                     </Grid>
                                     <TextBlock Text="'System default' follows your operating system's light/dark mode preference."
@@ -268,8 +268,8 @@
                                         <ComboBox Grid.Column="2"
                                                   ItemsSource="{Binding WatchFolderDaemonScopes}"
                                                   SelectedItem="{Binding WatchFolderDaemonScope}"
-                                                  Width="180"
-                                                  HorizontalAlignment="Left"
+                                                  MinWidth="180"
+                                                  HorizontalAlignment="Stretch"
                                                   AutomationProperties.Name="Watch Folder Daemon Scope"/>
                                     </Grid>
 
@@ -379,7 +379,7 @@
                                         <NumericUpDown Grid.Column="2" 
                                                        Value="{Binding RecentTasksMaxCount}" 
                                                        Minimum="1" Maximum="100" 
-                                                       Width="120" HorizontalAlignment="Left"
+                                                       MinWidth="120" HorizontalAlignment="Stretch"
                                                        AutomationProperties.Name="Max Recent Tasks"/>
                                     </Grid>
                                     
@@ -416,7 +416,7 @@
                                         <ComboBox Grid.Column="2"
                                                   ItemsSource="{Binding ProxyMethods}"
                                                   SelectedItem="{Binding ProxyMethod}"
-                                                  HorizontalAlignment="Left" Width="200"
+                                                  HorizontalAlignment="Stretch" MinWidth="200"
                                                   AutomationProperties.Name="Proxy Method"/>
                                     </Grid>
                                     <TextBlock Text="Configure how network requests should be proxied. Changes apply immediately to all uploads."
@@ -446,7 +446,7 @@
                                         <NumericUpDown Grid.Column="2"
                                                        Value="{Binding ProxyPort}"
                                                        Minimum="1" Maximum="65535"
-                                                       Width="120" HorizontalAlignment="Left"
+                                                       MinWidth="120" HorizontalAlignment="Stretch"
                                                        AutomationProperties.Name="Proxy Port"/>
                                     </Grid>
                                 </StackPanel>
