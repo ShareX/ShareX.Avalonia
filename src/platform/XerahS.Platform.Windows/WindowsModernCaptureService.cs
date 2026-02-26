@@ -286,7 +286,7 @@ namespace XerahS.Platform.Windows
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
 
-            foreach (var (output, adapter, bounds) in outputs)
+            foreach (var (output, adapter, bounds, _) in outputs)
             {
                 minX = Math.Min(minX, bounds.Left);
                 minY = Math.Min(minY, bounds.Top);
@@ -308,7 +308,7 @@ namespace XerahS.Platform.Windows
             var outputsByAdapter = outputs.GroupBy(x => x.Adapter).ToList();
 
             // Track resources for batch processing
-            var activeDuplications = new List<(IDXGIOutputDuplication Duplication, ID3D11Device Device, ID3D11Texture2D Staging, System.Drawing.Rectangle Bounds)>();
+            var activeDuplications = new List<(IDXGIOutputDuplication Duplication, ID3D11Device Device, System.Drawing.Rectangle Bounds, ModeRotation Rotation)>();
             var devicesToDispose = new List<ID3D11Device>();
 
             try
@@ -328,30 +328,13 @@ namespace XerahS.Platform.Windows
 
                     // using var deviceContext = device.ImmediateContext; // REMOVED: Premature disposal causes NRE later
 
-                    foreach (var (output, _, bounds) in group)
+                    foreach (var (output, _, bounds, rotation) in group)
                     {
                         try
                         {
                             // Duplicate output
                             var duplication = output.DuplicateOutput(device);
-
-                            // Create staging texture for CPU access
-                            var textureDesc = new Texture2DDescription
-                            {
-                                Width = (uint)bounds.Width,
-                                Height = (uint)bounds.Height,
-                                MipLevels = 1,
-                                ArraySize = 1,
-                                Format = Format.B8G8R8A8_UNorm,
-                                SampleDescription = new SampleDescription(1, 0),
-                                Usage = ResourceUsage.Staging,
-                                BindFlags = BindFlags.None,
-                                CPUAccessFlags = CpuAccessFlags.Read,
-                                MiscFlags = ResourceOptionFlags.None
-                            };
-                            var staging = device.CreateTexture2D(textureDesc);
-
-                            activeDuplications.Add((duplication, device, staging, bounds));
+                            activeDuplications.Add((duplication, device, bounds, rotation));
                         }
                         catch (Exception ex)
                         {
@@ -373,8 +356,9 @@ namespace XerahS.Platform.Windows
                 }
 
                 // 3. Acquire & Process Frames
-                foreach (var (duplication, device, staging, bounds) in activeDuplications)
+                foreach (var (duplication, device, bounds, rotation) in activeDuplications)
                 {
+                    bool frameAcquired = false;
                     try
                     {
                         // Acquire frame
@@ -382,23 +366,53 @@ namespace XerahS.Platform.Windows
 
                         if (acquireResult.Success && desktopResource != null)
                         {
+                            frameAcquired = true;
                             using (desktopResource)
                             {
                                 using var desktopTex = desktopResource.QueryInterface<ID3D11Texture2D>();
-                                device.ImmediateContext.CopyResource(staging, desktopTex);
-                            }
-                            duplication.ReleaseFrame();
+                                var sourceDesc = desktopTex.Description;
+                                XerahS.Common.DebugHelper.WriteLine(
+                                    $"CaptureFullScreenDxgi: Output frame source={sourceDesc.Width}x{sourceDesc.Height}, target={bounds.Width}x{bounds.Height}, rotation={rotation}");
 
-                            // Map staging texture
-                            var dataBox = device.ImmediateContext.Map(staging, 0, MapMode.Read);
-                            try
-                            {
-                                // Draw to combined bitmap
-                                DrawMappedTextureToCanvas(dataBox, bounds.Width, bounds.Height, bounds.Left - minX, bounds.Top - minY, canvas);
-                            }
-                            finally
-                            {
-                                device.ImmediateContext.Unmap(staging, 0);
+                                // For rotated outputs, Desktop Duplication can return an unrotated surface
+                                // whose dimensions differ from desktop bounds. Always match staging to source.
+                                var stagingDesc = new Texture2DDescription
+                                {
+                                    Width = sourceDesc.Width,
+                                    Height = sourceDesc.Height,
+                                    MipLevels = 1,
+                                    ArraySize = 1,
+                                    Format = sourceDesc.Format,
+                                    SampleDescription = new SampleDescription(1, 0),
+                                    Usage = ResourceUsage.Staging,
+                                    BindFlags = BindFlags.None,
+                                    CPUAccessFlags = CpuAccessFlags.Read,
+                                    MiscFlags = ResourceOptionFlags.None
+                                };
+
+                                using var staging = device.CreateTexture2D(stagingDesc);
+                                device.ImmediateContext.CopyResource(staging, desktopTex);
+
+                                // Map staging texture
+                                var dataBox = device.ImmediateContext.Map(staging, 0, MapMode.Read);
+                                try
+                                {
+                                    // Draw to combined bitmap, applying output rotation correction.
+                                    DrawMappedTextureToCanvas(
+                                        dataBox,
+                                        (int)sourceDesc.Width,
+                                        (int)sourceDesc.Height,
+                                        bounds.Left - minX,
+                                        bounds.Top - minY,
+                                        bounds.Width,
+                                        bounds.Height,
+                                        rotation,
+                                        canvas);
+                                }
+                                finally
+                                {
+                                    device.ImmediateContext.Unmap(staging, 0);
+                                }
                             }
                         }
                         else
@@ -412,8 +426,19 @@ namespace XerahS.Platform.Windows
                     }
                     finally
                     {
+                        if (frameAcquired)
+                        {
+                            try
+                            {
+                                duplication.ReleaseFrame();
+                            }
+                            catch
+                            {
+                                // Ignore frame release failures during cleanup.
+                            }
+                        }
+
                         duplication.Dispose();
-                        staging.Dispose();
                     }
                 }
             }
@@ -483,38 +508,95 @@ namespace XerahS.Platform.Windows
             }
         }
 
-        private void DrawMappedTextureToCanvas(MappedSubresource dataBox, int width, int height, int destX, int destY, SKCanvas canvas)
+        private void DrawMappedTextureToCanvas(
+            MappedSubresource dataBox,
+            int sourceWidth,
+            int sourceHeight,
+            int destX,
+            int destY,
+            int destWidth,
+            int destHeight,
+            ModeRotation rotation,
+            SKCanvas canvas)
         {
             // Create a temporary SKBitmap wrapping the data
             // Note: We cannot wrap directly because SKBitmap doesn't support strided data easily without copy or specialized installPixels
             // For simplicity and safety (handling pitch), we copy row by row to a temp bitmap
 
-            using var tempBitmap = new SKBitmap(width, height, SKColorType.Bgra8888, SKAlphaType.Premul);
-            var destPixels = tempBitmap.GetPixels();
+            using var sourceBitmap = new SKBitmap(sourceWidth, sourceHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+            var destPixels = sourceBitmap.GetPixels();
             int srcPitch = (int)dataBox.RowPitch;
-            int destPitch = width * 4;
+            int sourcePitch = sourceWidth * 4;
 
             unsafe
             {
-                for (int y = 0; y < height; y++)
+                for (int y = 0; y < sourceHeight; y++)
                 {
                     IntPtr srcRow = IntPtr.Add(dataBox.DataPointer, y * srcPitch);
-                    IntPtr destRow = IntPtr.Add(destPixels, y * destPitch);
+                    IntPtr destRow = IntPtr.Add(destPixels, y * sourcePitch);
 
-                    Buffer.MemoryCopy((void*)srcRow, (void*)destRow, destPitch, destPitch);
+                    Buffer.MemoryCopy((void*)srcRow, (void*)destRow, sourcePitch, sourcePitch);
                 }
             }
 
-            canvas.DrawBitmap(tempBitmap, destX, destY);
+            using SKBitmap bitmapToDraw = RotateBitmapForDesktop(sourceBitmap, rotation);
+            var destRect = new SKRect(destX, destY, destX + destWidth, destY + destHeight);
+            canvas.DrawBitmap(bitmapToDraw, destRect);
+        }
+
+        /// <summary>
+        /// Rotates an output frame back into desktop orientation when DXGI provides unrotated output.
+        /// </summary>
+        private static SKBitmap RotateBitmapForDesktop(SKBitmap sourceBitmap, ModeRotation rotation)
+        {
+            if (rotation is ModeRotation.Identity or ModeRotation.Unspecified)
+            {
+                return sourceBitmap.Copy();
+            }
+
+            int targetWidth = sourceBitmap.Width;
+            int targetHeight = sourceBitmap.Height;
+
+            if (rotation is ModeRotation.Rotate90 or ModeRotation.Rotate270)
+            {
+                targetWidth = sourceBitmap.Height;
+                targetHeight = sourceBitmap.Width;
+            }
+
+            var rotatedBitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
+
+            using var canvas = new SKCanvas(rotatedBitmap);
+            canvas.Clear(SKColors.Black);
+
+            // DXGI rotation describes how the display is rotated from identity.
+            // The duplicated frame must be inverse-rotated to match desktop coordinates.
+            switch (rotation)
+            {
+                case ModeRotation.Rotate90:
+                    canvas.Translate(0, targetHeight);
+                    canvas.RotateDegrees(-90);
+                    break;
+                case ModeRotation.Rotate180:
+                    canvas.Translate(targetWidth, targetHeight);
+                    canvas.RotateDegrees(180);
+                    break;
+                case ModeRotation.Rotate270:
+                    canvas.Translate(targetWidth, 0);
+                    canvas.RotateDegrees(90);
+                    break;
+            }
+
+            canvas.DrawBitmap(sourceBitmap, 0, 0);
+            return rotatedBitmap;
         }
 
         /// <summary>
         /// Enumerates all DXGI outputs from all adapters
         /// </summary>
-        private System.Collections.Generic.List<(IDXGIOutput1 Output, IDXGIAdapter1 Adapter, System.Drawing.Rectangle Bounds)>
+        private System.Collections.Generic.List<(IDXGIOutput1 Output, IDXGIAdapter1 Adapter, System.Drawing.Rectangle Bounds, ModeRotation Rotation)>
             EnumerateOutputs(IDXGIFactory1 factory)
         {
-            var outputs = new System.Collections.Generic.List<(IDXGIOutput1, IDXGIAdapter1, System.Drawing.Rectangle)>();
+            var outputs = new System.Collections.Generic.List<(IDXGIOutput1, IDXGIAdapter1, System.Drawing.Rectangle, ModeRotation)>();
 
             for (uint adapterIndex = 0; factory.EnumAdapters1(adapterIndex, out var adapter).Success; adapterIndex++)
             {
@@ -541,7 +623,7 @@ namespace XerahS.Platform.Windows
                         rect.Bottom - rect.Top
                     );
 
-                    outputs.Add((output1, adapter, bounds));
+                    outputs.Add((output1, adapter, bounds, outputDesc.Rotation));
                     output.Dispose();
                 }
 
