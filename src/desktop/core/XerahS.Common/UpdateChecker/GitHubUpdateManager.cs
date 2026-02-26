@@ -77,7 +77,14 @@ namespace XerahS.Common
 
         private async void TimerCallback(object? state)
         {
-            await CheckUpdate();
+            try
+            {
+                await CheckUpdate();
+            }
+            catch (Exception ex)
+            {
+                DebugHelper.WriteException(ex, "Auto-update timer callback failed");
+            }
         }
 
         private async Task CheckUpdate()

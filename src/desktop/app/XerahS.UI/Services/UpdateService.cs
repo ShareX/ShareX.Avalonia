@@ -39,6 +39,8 @@ public class UpdateService : IDisposable
 {
     private static UpdateService? _instance;
     private static readonly object _lock = new();
+    private static readonly TimeSpan DialogOwnerRetryInterval = TimeSpan.FromMilliseconds(200);
+    private const int DialogOwnerRetryCount = 25;
 
     public static UpdateService Instance
     {
@@ -123,15 +125,26 @@ public class UpdateService : IDisposable
         {
             return await Dispatcher.UIThread.InvokeAsync(async () =>
             {
-                var owner = GetMainWindow();
-                if (owner == null)
+                var owner = await WaitForDialogOwnerAsync();
+                if (!CanUseDialogOwner(owner))
                 {
-                    DebugHelper.WriteLine("Cannot show update dialog: Main window not available.");
-                    return false;
+                    // Skip this prompt if the main window is not ready/visible yet.
+                    // Returning true prevents auto-update from being disabled as if user declined.
+                    DebugHelper.WriteLine("Cannot show update dialog: Main window is not visible yet.");
+                    return true;
                 }
 
                 var dialog = new UpdateMessageBox(updateChecker);
-                var result = await dialog.ShowDialog<bool?>(owner);
+                bool? result;
+                try
+                {
+                    result = await dialog.ShowDialog<bool?>(owner!);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    DebugHelper.WriteException(ex, "Failed to show update dialog");
+                    return true;
+                }
 
                 if (result == true)
                 {
@@ -149,6 +162,11 @@ public class UpdateService : IDisposable
                     return false;
                 }
             });
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteException(ex, "Update dialog flow failed");
+            return true;
         }
         finally
         {
@@ -178,10 +196,10 @@ public class UpdateService : IDisposable
     {
         await Dispatcher.UIThread.InvokeAsync(async () =>
         {
-            var owner = GetMainWindow();
-            if (owner == null)
+            var owner = await WaitForDialogOwnerAsync();
+            if (!CanUseDialogOwner(owner))
             {
-                DebugHelper.WriteLine("Cannot show downloader: Main window not available.");
+                DebugHelper.WriteLine("Cannot show downloader: Main window is not visible.");
                 // Fallback to opening URL in browser
                 if (!string.IsNullOrEmpty(updateChecker.DownloadURL))
                 {
@@ -191,7 +209,20 @@ public class UpdateService : IDisposable
             }
 
             var dialog = new DownloaderWindow(updateChecker);
-            var result = await dialog.ShowDialog<bool?>(owner);
+            bool? result;
+            try
+            {
+                result = await dialog.ShowDialog<bool?>(owner!);
+            }
+            catch (InvalidOperationException ex)
+            {
+                DebugHelper.WriteException(ex, "Failed to show downloader window");
+                if (!string.IsNullOrEmpty(updateChecker.DownloadURL))
+                {
+                    URLHelpers.OpenURL(updateChecker.DownloadURL);
+                }
+                return;
+            }
 
             if (result == true)
             {
@@ -216,6 +247,30 @@ public class UpdateService : IDisposable
         return Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop
             ? desktop.MainWindow
             : null;
+    }
+
+    private static bool CanUseDialogOwner(Window? owner)
+    {
+        return owner != null &&
+               owner.IsVisible &&
+               owner.WindowState != Avalonia.Controls.WindowState.Minimized &&
+               owner.ShowInTaskbar;
+    }
+
+    private static async Task<Window?> WaitForDialogOwnerAsync()
+    {
+        for (int i = 0; i < DialogOwnerRetryCount; i++)
+        {
+            var owner = GetMainWindow();
+            if (CanUseDialogOwner(owner))
+            {
+                return owner;
+            }
+
+            await Task.Delay(DialogOwnerRetryInterval);
+        }
+
+        return null;
     }
 
     private static bool IsPortableBuild()
