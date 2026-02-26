@@ -26,10 +26,10 @@ using System;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using ShareX.Avalonia.Platform.Abstractions.Capture;
 using SkiaSharp;
+using XerahS.Platform.Windows;
 
 namespace ShareX.Avalonia.Platform.Windows.Capture;
 
@@ -46,46 +46,25 @@ internal sealed class GdiCaptureStrategy : ICaptureStrategy
 
     public MonitorInfo[] GetMonitors()
     {
-        var monitors = Screen.AllScreens.Select((screen, index) =>
+        var monitors = WindowsDisplayEnumeration.GetMonitors().Select((monitor, index) =>
         {
-            // Get DPI for this monitor
-            uint dpiX = 96, dpiY = 96;
-            try
-            {
-                var hMonitor = GetMonitorHandle(screen);
-                if (hMonitor != IntPtr.Zero)
-                {
-                    NativeMethods.GetDpiForMonitor(
-                        hMonitor,
-                        MonitorDpiType.MDT_EFFECTIVE_DPI,
-                        out dpiX,
-                        out dpiY);
-                }
-            }
-            catch
-            {
-                // Fallback to 96 DPI
-            }
-
-            var scaleFactor = dpiX / 96.0;
-
             return new MonitorInfo
             {
-                Id = screen.DeviceName,
-                Name = screen.DeviceName.Replace("\\\\.\\", "") ?? $"Monitor {index + 1}",
-                IsPrimary = screen.Primary,
+                Id = monitor.DeviceName,
+                Name = monitor.DeviceName.Replace("\\\\.\\", "") ?? $"Monitor {index + 1}",
+                IsPrimary = monitor.IsPrimary,
                 Bounds = new PhysicalRectangle(
-                    screen.Bounds.X,
-                    screen.Bounds.Y,
-                    screen.Bounds.Width,
-                    screen.Bounds.Height),
+                    monitor.Bounds.X,
+                    monitor.Bounds.Y,
+                    monitor.Bounds.Width,
+                    monitor.Bounds.Height),
                 WorkingArea = new PhysicalRectangle(
-                    screen.WorkingArea.X,
-                    screen.WorkingArea.Y,
-                    screen.WorkingArea.Width,
-                    screen.WorkingArea.Height),
-                ScaleFactor = scaleFactor,
-                BitsPerPixel = screen.BitsPerPixel
+                    monitor.WorkingArea.X,
+                    monitor.WorkingArea.Y,
+                    monitor.WorkingArea.Width,
+                    monitor.WorkingArea.Height),
+                ScaleFactor = monitor.ScaleFactor,
+                BitsPerPixel = monitor.BitsPerPixel
             };
         }).ToArray();
 
@@ -188,13 +167,6 @@ internal sealed class GdiCaptureStrategy : ICaptureStrategy
         {
             gdiBitmap.UnlockBits(bitmapData);
         }
-    }
-
-    private static IntPtr GetMonitorHandle(Screen screen)
-    {
-        // Try to get monitor handle from screen bounds
-        // This is a simplified approach; a full implementation would use EnumDisplayMonitors
-        return IntPtr.Zero;
     }
 
     public void Dispose()

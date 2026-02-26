@@ -23,36 +23,16 @@
 
 #endregion License Information (GPL v3)
 
-using System.Runtime.InteropServices;
+using System.Drawing;
 using XerahS.Platform.Abstractions;
 
 namespace XerahS.Platform.Windows
 {
     /// <summary>
-    /// Windows implementation of IScreenService using System.Windows.Forms.Screen
+    /// Windows implementation of IScreenService using Win32 display APIs.
     /// </summary>
     public class WindowsScreenService : IScreenService
     {
-        #region Native Methods for DPI Detection
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
-
-        [DllImport("shcore.dll")]
-        private static extern int GetDpiForMonitor(IntPtr hMonitor, int dpiType, out uint dpiX, out uint dpiY);
-
-        [StructLayout(LayoutKind.Sequential)]
-        private struct POINT
-        {
-            public int X;
-            public int Y;
-        }
-
-        private const uint MONITOR_DEFAULTTONEAREST = 2;
-        private const int MDT_EFFECTIVE_DPI = 0;
-
-        #endregion
-
         public bool UsePerScreenScalingForRegionCaptureLayout => false;
 
         public bool UseWindowPositionForRegionCaptureFallback => false;
@@ -61,106 +41,71 @@ namespace XerahS.Platform.Windows
 
         public Rectangle GetVirtualScreenBounds()
         {
-            return SystemInformation.VirtualScreen;
+            return WindowsDisplayEnumeration.GetVirtualScreenBounds();
         }
 
         public Rectangle GetWorkingArea()
         {
-            return CombineRectangles(Screen.AllScreens.Select(s => s.WorkingArea));
+            WindowsDisplayEnumeration.MonitorData[] monitors = WindowsDisplayEnumeration.GetMonitors();
+            return CombineRectangles(monitors.Select(m => m.WorkingArea));
         }
 
         public Rectangle GetActiveScreenBounds()
         {
-            Point cursorPos = Cursor.Position;
-            return Screen.FromPoint(cursorPos).Bounds;
+            Point cursorPos = WindowsDisplayEnumeration.GetCursorPosition();
+            return WindowsDisplayEnumeration.GetMonitorFromPoint(cursorPos).Bounds;
         }
 
         public Rectangle GetActiveScreenWorkingArea()
         {
-            Point cursorPos = Cursor.Position;
-            return Screen.FromPoint(cursorPos).WorkingArea;
+            Point cursorPos = WindowsDisplayEnumeration.GetCursorPosition();
+            return WindowsDisplayEnumeration.GetMonitorFromPoint(cursorPos).WorkingArea;
         }
 
         public Rectangle GetPrimaryScreenBounds()
         {
-            return Screen.PrimaryScreen?.Bounds ?? Rectangle.Empty;
+            WindowsDisplayEnumeration.MonitorData[] monitors = WindowsDisplayEnumeration.GetMonitors();
+            return monitors.FirstOrDefault(m => m.IsPrimary)?.Bounds ?? Rectangle.Empty;
         }
 
         public Rectangle GetPrimaryScreenWorkingArea()
         {
-            return Screen.PrimaryScreen?.WorkingArea ?? Rectangle.Empty;
+            WindowsDisplayEnumeration.MonitorData[] monitors = WindowsDisplayEnumeration.GetMonitors();
+            return monitors.FirstOrDefault(m => m.IsPrimary)?.WorkingArea ?? Rectangle.Empty;
         }
 
         public ScreenInfo[] GetAllScreens()
         {
-            return Screen.AllScreens.Select(s => new ScreenInfo
-            {
-                Bounds = s.Bounds,
-                WorkingArea = s.WorkingArea,
-                IsPrimary = s.Primary,
-                DeviceName = s.DeviceName,
-                BitsPerPixel = s.BitsPerPixel,
-                ScaleFactor = GetScaleFactorForScreen(s)
-            }).ToArray();
-        }
-
-        private double GetScaleFactorForScreen(Screen screen)
-        {
-            try
-            {
-                // Get center point of the screen
-                var centerPoint = new POINT
-                {
-                    X = screen.Bounds.Left + screen.Bounds.Width / 2,
-                    Y = screen.Bounds.Top + screen.Bounds.Height / 2
-                };
-
-                var hMonitor = MonitorFromPoint(centerPoint, MONITOR_DEFAULTTONEAREST);
-                if (hMonitor != IntPtr.Zero)
-                {
-                    int result = GetDpiForMonitor(hMonitor, MDT_EFFECTIVE_DPI, out uint dpiX, out uint dpiY);
-                    if (result == 0) // S_OK
-                    {
-                        return dpiX / 96.0;
-                    }
-                }
-            }
-            catch
-            {
-                // Fallback to 100% if DPI detection fails
-            }
-            return 1.0;
+            WindowsDisplayEnumeration.MonitorData[] monitors = WindowsDisplayEnumeration.GetMonitors();
+            return monitors.Select(ToScreenInfo).ToArray();
         }
 
         public ScreenInfo GetScreenFromPoint(Point point)
         {
-            var screen = Screen.FromPoint(point);
-            return new ScreenInfo
-            {
-                Bounds = screen.Bounds,
-                WorkingArea = screen.WorkingArea,
-                IsPrimary = screen.Primary,
-                DeviceName = screen.DeviceName,
-                BitsPerPixel = screen.BitsPerPixel,
-                ScaleFactor = GetScaleFactorForScreen(screen)
-            };
+            WindowsDisplayEnumeration.MonitorData monitor = WindowsDisplayEnumeration.GetMonitorFromPoint(point);
+            return ToScreenInfo(monitor);
         }
 
         public ScreenInfo GetScreenFromRectangle(Rectangle rectangle)
         {
-            var screen = Screen.FromRectangle(rectangle);
+            WindowsDisplayEnumeration.MonitorData monitor = WindowsDisplayEnumeration.GetMonitorFromRectangle(rectangle);
+            return ToScreenInfo(monitor);
+        }
+
+        private static ScreenInfo ToScreenInfo(WindowsDisplayEnumeration.MonitorData monitor)
+        {
             return new ScreenInfo
             {
-                Bounds = screen.Bounds,
-                WorkingArea = screen.WorkingArea,
-                IsPrimary = screen.Primary,
-                DeviceName = screen.DeviceName,
-                BitsPerPixel = screen.BitsPerPixel,
-                ScaleFactor = GetScaleFactorForScreen(screen)
+                Bounds = monitor.Bounds,
+                WorkingArea = monitor.WorkingArea,
+                IsPrimary = monitor.IsPrimary,
+                DeviceName = monitor.DeviceName,
+                BitsPerPixel = monitor.BitsPerPixel,
+                ScaleFactor = monitor.ScaleFactor
             };
         }
 
-        private Rectangle CombineRectangles(System.Collections.Generic.IEnumerable<Rectangle> rectangles)
+        private static Rectangle CombineRectangles(IEnumerable<Rectangle> rectangles)
         {
             if (!rectangles.Any())
                 return Rectangle.Empty;

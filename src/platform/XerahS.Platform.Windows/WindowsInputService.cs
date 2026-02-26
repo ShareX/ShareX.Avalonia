@@ -23,6 +23,7 @@
 
 #endregion License Information (GPL v3)
 
+using System.Drawing;
 using XerahS.Platform.Abstractions;
 using System.Runtime.InteropServices;
 

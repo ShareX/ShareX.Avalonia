@@ -26,6 +26,7 @@
 using XerahS.Common;
 using XerahS.Platform.Abstractions;
 using SkiaSharp;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Threading;
 

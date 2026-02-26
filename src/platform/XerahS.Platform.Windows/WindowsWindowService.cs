@@ -26,6 +26,7 @@
 using XerahS.Common;
 using XerahS.Common.Helpers;
 using XerahS.Platform.Abstractions;
+using System.Drawing;
 
 namespace XerahS.Platform.Windows
 {
