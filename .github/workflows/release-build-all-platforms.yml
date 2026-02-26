@@ -126,6 +126,17 @@ jobs:
           chmod +x ./build/macos/package-mac.sh
           ./build/macos/package-mac.sh 2>&1 | tee build/logs/macos-build.log
 
+      - name: Validate macOS archives
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.validate-version.outputs.version }}"
+          for ARCH in arm64 x64; do
+            ARCHIVE="dist/XerahS-${VERSION}-mac-${ARCH}.tar.gz"
+            tar -tzf "$ARCHIVE" | grep -q "XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon"
+            tar -tzf "$ARCHIVE" | grep -q "XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json"
+          done
+
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -181,6 +192,15 @@ jobs:
           chmod +x ./build/linux/package-linux.sh
           XERAHS_ARCHITECTURES="${{ matrix.rid }}" ./build/linux/package-linux.sh 2>&1 | tee "build/logs/linux-${{ matrix.rid }}-build.log"
 
+      - name: Validate Linux archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.validate-version.outputs.version }}"
+          ARCHIVE="dist/XerahS-${VERSION}-${{ matrix.rid }}.tar.gz"
+          tar -tzf "$ARCHIVE" | grep -Eq '(^|/)xerahs-watchfolder-daemon$'
+          tar -tzf "$ARCHIVE" | grep -Eq '(^|/)xerahs-watchfolder-daemon.runtimeconfig.json$'
+
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -208,11 +228,23 @@ jobs:
       - build-linux
     runs-on: ubuntu-24.04
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
           path: release-assets
           merge-multiple: true
+
+      - name: Validate release matrix and generate metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.validate-version.outputs.version }}"
+          python3 build/ci/validate_release_assets.py \
+            --assets-dir release-assets \
+            --version "$VERSION" \
+            --metadata-output release-assets/release-metadata.json
 
       - name: Upload assets to GitHub Release
         uses: softprops/action-gh-release@v2
