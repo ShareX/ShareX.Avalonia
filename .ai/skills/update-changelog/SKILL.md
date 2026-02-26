@@ -3,6 +3,40 @@ name: Changelog Management
 description: Rules and workflows for updating CHANGELOG.md, including version grouping, consolidation, and commit handling.
 ---
 
+## Automation Script (Recommended)
+
+Use the helper script to generate a draft section from commits since the last tag, grouped into changelog categories.
+
+Script path:
+
+```powershell
+.ai/skills/update-changelog/scripts/update-changelog.ps1
+```
+
+Preview only (prints generated markdown):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .ai/skills/update-changelog/scripts/update-changelog.ps1
+```
+
+Generate draft from an explicit tag/version and save to a file:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .ai/skills/update-changelog/scripts/update-changelog.ps1 -FromTag v0.18.9 -Version 0.19.0 -OutputPath build/changelog-draft.md
+```
+
+Apply directly to `docs/CHANGELOG.md`:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .ai/skills/update-changelog/scripts/update-changelog.ps1 -FromTag v0.18.9 -Version 0.19.0 -Apply
+```
+
+Notes:
+- `-Version` defaults to root `Directory.Build.props`.
+- `-FromTag` defaults to `git describe --tags --abbrev=0`.
+- The script upserts `## vX.Y.Z` (replaces existing section for that version or inserts after `## Unreleased`).
+- Keep manual review for consolidation quality and contributor attribution rules.
+
 ## Version Grouping Strategy
 
 ### Git Tag-Based Consolidation
