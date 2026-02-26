@@ -139,7 +139,7 @@ begin
     Exec(ExpandConstant('{app}\xerahs-watchfolder-daemon.exe'), '', ExpandConstant('{app}'), SW_HIDE, ewNoWait, ResultCode);
 end;
 
-function PrepareToInstall(NeedsRestart: Boolean): String;
+function PrepareToInstall(var NeedsRestart: Boolean): String;
 begin
   Result := '';
   StopWatchFolderDaemon();
