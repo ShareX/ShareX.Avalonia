@@ -104,14 +104,16 @@ namespace XerahS.Platform.Windows
                 ? XerahS.Core.SettingsManager.GetWorkflowTaskSettings(options.WorkflowId)?.CaptureSettings 
                 : XerahS.Core.SettingsManager.DefaultTaskSettings.CaptureSettings;
 
-            bool useModern = options?.UseModernCapture ?? captureSettings?.UseModernCapture ?? false;
+            // Default true to match TaskSettingsCapture.UseModernCapture and CaptureOptions; prefer DXGI over GDI.
+            bool useModern = options?.UseModernCapture ?? captureSettings?.UseModernCapture ?? true;
 
             if (!IsSupported || !useModern)
             {
+                XerahS.Common.DebugHelper.WriteLine("Screen capture: using GDI fallback (UseModernCapture=false or DXGI unavailable)");
                 return await _fallbackService.CaptureRectAsync(rect, options);
             }
 
-            return await Task.Run(() =>
+            var result = await Task.Run(() =>
             {
                 try
                 {
@@ -151,7 +153,13 @@ namespace XerahS.Platform.Windows
                     // Fall back to GDI+ on error
                     return null;
                 }
-            }) ?? await _fallbackService.CaptureRectAsync(rect, options);
+            });
+            if (result == null)
+            {
+                XerahS.Common.DebugHelper.WriteLine("Screen capture: DXGI returned null; using GDI fallback");
+                return await _fallbackService.CaptureRectAsync(rect, options);
+            }
+            return result;
         }
 
         public async Task<SKBitmap?> CaptureFullScreenAsync(CaptureOptions? options = null)
@@ -160,14 +168,16 @@ namespace XerahS.Platform.Windows
                 ? XerahS.Core.SettingsManager.GetWorkflowTaskSettings(options.WorkflowId)?.CaptureSettings 
                 : XerahS.Core.SettingsManager.DefaultTaskSettings.CaptureSettings;
 
-            bool useModern = options?.UseModernCapture ?? captureSettings?.UseModernCapture ?? false;
+            // Default true to match TaskSettingsCapture.UseModernCapture and CaptureOptions; prefer DXGI over GDI.
+            bool useModern = options?.UseModernCapture ?? captureSettings?.UseModernCapture ?? true;
 
             if (!IsSupported || !useModern)
             {
+                XerahS.Common.DebugHelper.WriteLine("Screen capture: using GDI fallback (UseModernCapture=false or DXGI unavailable)");
                 return await _fallbackService.CaptureFullScreenAsync(options);
             }
 
-            return await Task.Run(() =>
+            var fullResult = await Task.Run(() =>
             {
                 try
                 {
@@ -177,7 +187,13 @@ namespace XerahS.Platform.Windows
                 {
                     return null;
                 }
-            }) ?? await _fallbackService.CaptureFullScreenAsync(options);
+            });
+            if (fullResult == null)
+            {
+                XerahS.Common.DebugHelper.WriteLine("Screen capture: DXGI returned null; using GDI fallback");
+                return await _fallbackService.CaptureFullScreenAsync(options);
+            }
+            return fullResult;
         }
 
         public async Task<SKBitmap?> CaptureActiveWindowAsync(IWindowService windowService, CaptureOptions? options = null)
@@ -411,6 +427,9 @@ namespace XerahS.Platform.Windows
                     group.Key.Dispose();
                 }
             }
+
+            // Log success so the log file verifies DXGI (Vortice.Direct3D11/DXGI) was actually used
+            XerahS.Common.DebugHelper.WriteLine($"Screen capture: DXGI Output Duplication succeeded ({combinedBitmap.Width}x{combinedBitmap.Height})");
 
             // Draw cursor if requested (after DXGI capture which doesn't include cursor)
             if (drawCursor)
