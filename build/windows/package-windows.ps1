@@ -67,6 +67,16 @@ foreach ($arch in $archs) {
     # /m:1 forces single-threaded build to prevent parallel TFM race conditions on ImageEditor.dll
     dotnet publish $project -c Release -p:OS=Windows_NT -r $arch -p:PublishSingleFile=false -p:SkipBundlePlugins=true -p:nodeReuse=false -p:UseSharedCompilation=false -p:BuildInParallel=false --disable-build-servers --self-contained true -o $publishOutput /m:1
 
+    $daemonExecutable = Join-Path $publishOutput "xerahs-watchfolder-daemon.exe"
+    $daemonRuntimeConfig = Join-Path $publishOutput "xerahs-watchfolder-daemon.runtimeconfig.json"
+    if (!(Test-Path $daemonExecutable)) {
+        throw "Missing watch folder daemon executable in publish output: $daemonExecutable"
+    }
+
+    if (!(Test-Path $daemonRuntimeConfig)) {
+        Write-Warning "Daemon runtimeconfig not found (single-file self-contained publish may omit it): $daemonRuntimeConfig"
+    }
+
     # 1.5 Publish Plugins
     Write-Host "Publishing Plugins..."
     $pluginsDir = Join-Path $publishOutput "Plugins"

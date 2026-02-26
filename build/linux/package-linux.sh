@@ -24,6 +24,22 @@ dotnet_publish_serial() {
         -m:1
 }
 
+validate_daemon_bundle() {
+    local publish_dir="$1"
+    local daemon_path="$publish_dir/xerahs-watchfolder-daemon"
+    local runtimeconfig_path="$publish_dir/xerahs-watchfolder-daemon.runtimeconfig.json"
+
+    if [ ! -f "$daemon_path" ]; then
+        echo "Error: Missing daemon executable in publish output: $daemon_path"
+        exit 1
+    fi
+
+    if [ ! -f "$runtimeconfig_path" ]; then
+        echo "Error: Missing daemon runtimeconfig in publish output: $runtimeconfig_path"
+        exit 1
+    fi
+}
+
 # Define Architectures to Build
 # Override with XERAHS_ARCHITECTURES, e.g. "linux-x64" or "linux-arm64".
 if [ -n "${XERAHS_ARCHITECTURES:-}" ]; then
@@ -59,6 +75,8 @@ for ARCH in "${ARCHITECTURES[@]}"; do
         --self-contained true \
         -p:EnableWindowsTargeting=true \
         -p:SkipBundlePlugins=true
+
+    validate_daemon_bundle "$PUBLISH_DIR"
 
     # 1.5 Publish Plugins
     echo "Publishing Plugins ($ARCH)..."

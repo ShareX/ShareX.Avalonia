@@ -27,6 +27,22 @@ dotnet_publish_serial() {
         -m:1
 }
 
+validate_daemon_bundle() {
+    local app_bundle_path="$1"
+    local daemon_path="$app_bundle_path/Contents/MacOS/xerahs-watchfolder-daemon"
+    local runtimeconfig_path="$app_bundle_path/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json"
+
+    if [ ! -f "$daemon_path" ]; then
+        echo "Error: Missing daemon executable in app bundle: $daemon_path"
+        exit 1
+    fi
+
+    if [ ! -f "$runtimeconfig_path" ]; then
+        echo "Error: Missing daemon runtimeconfig in app bundle: $runtimeconfig_path"
+        exit 1
+    fi
+}
+
 build_native_library() {
     if [[ "$OSTYPE" == darwin* ]]; then
         echo "Building native ScreenCaptureKit library..."
@@ -176,6 +192,8 @@ publish_and_package() {
         echo "Error: .app bundle not found at $app_bundle_path"
         exit 1
     fi
+
+    validate_daemon_bundle "$app_bundle_path"
 
     configure_macos_bundle_icon "$app_bundle_path"
 

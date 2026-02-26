@@ -70,8 +70,8 @@ Name: "CreateStartupIcon"; Description: "Run {#MyAppName} when Windows starts"; 
 [Files]
 Source: "{#MyAppReleaseDirectory}\{#MyAppExeName}"; DestDir: {app}; Flags: ignoreversion
 Source: "{#MyAppReleaseDirectory}\xerahs-watchfolder-daemon.exe"; DestDir: {app}; Flags: ignoreversion
-Source: "{#MyAppReleaseDirectory}\xerahs-watchfolder-daemon.deps.json"; DestDir: {app}; Flags: ignoreversion
-Source: "{#MyAppReleaseDirectory}\xerahs-watchfolder-daemon.runtimeconfig.json"; DestDir: {app}; Flags: ignoreversion
+Source: "{#MyAppReleaseDirectory}\xerahs-watchfolder-daemon.deps.json"; DestDir: {app}; Flags: ignoreversion skipifsourcedoesntexist
+Source: "{#MyAppReleaseDirectory}\xerahs-watchfolder-daemon.runtimeconfig.json"; DestDir: {app}; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#MyAppReleaseDirectory}\*.dll"; DestDir: {app}; Flags: ignoreversion
 Source: "{#MyAppReleaseDirectory}\*.json"; DestDir: {app}; Flags: ignoreversion
 Source: "{#MyAppReleaseDirectory}\runtimes\win-x64\*"; DestDir: "{app}\runtimes\win-x64"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist

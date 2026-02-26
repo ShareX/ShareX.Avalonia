@@ -92,10 +92,46 @@
 
   <Target Name="PublishWatchFolderDaemon" AfterTargets="Publish">
     <Message Text="Publishing watch folder daemon..." Importance="High" />
+    <PropertyGroup>
+      <_WatchFolderDaemonPublishDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(IntermediateOutputPath)watchfolder-daemon-publish/'))</_WatchFolderDaemonPublishDir>
+      <_WatchFolderDaemonPublishDir Condition="'$(RuntimeIdentifier)' != ''">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(IntermediateOutputPath)watchfolder-daemon-publish/$(RuntimeIdentifier)/'))</_WatchFolderDaemonPublishDir>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(_WatchFolderDaemonPublishDir)" />
+    <MakeDir Directories="$(_WatchFolderDaemonPublishDir)" />
+
     <MSBuild Projects="..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj"
              Targets="Restore;Publish"
              BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;PublishDir=$(PublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;PublishDir=$(_WatchFolderDaemonPublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+
+    <ItemGroup>
+      <_WatchFolderDaemonPublishedFiles Include="$(_WatchFolderDaemonPublishDir)**/xerahs-watchfolder-daemon*"
+                                        Exclude="$(_WatchFolderDaemonPublishDir)**/*.pdb;$(_WatchFolderDaemonPublishDir)**/*.xml" />
+    </ItemGroup>
+
+    <Error Condition="'@(_WatchFolderDaemonPublishedFiles)' == ''"
+           Text="Watch folder daemon publish output is empty: $(_WatchFolderDaemonPublishDir)" />
+
+    <Copy SourceFiles="@(_WatchFolderDaemonPublishedFiles)"
+          DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
+  </Target>
+
+  <Target Name="ValidatePublishedWatchFolderDaemon" AfterTargets="PublishWatchFolderDaemon">
+    <PropertyGroup>
+      <_WatchFolderDaemonExecutableName>xerahs-watchfolder-daemon</_WatchFolderDaemonExecutableName>
+      <_WatchFolderDaemonExecutableName Condition="$(RuntimeIdentifier.StartsWith('win'))">xerahs-watchfolder-daemon.exe</_WatchFolderDaemonExecutableName>
+      <_WatchFolderDaemonExecutableName Condition="'$(RuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">xerahs-watchfolder-daemon.exe</_WatchFolderDaemonExecutableName>
+      <_WatchFolderDaemonRequireRuntimeConfig>true</_WatchFolderDaemonRequireRuntimeConfig>
+      <_WatchFolderDaemonRequireRuntimeConfig Condition="$(RuntimeIdentifier.StartsWith('win'))">false</_WatchFolderDaemonRequireRuntimeConfig>
+      <_WatchFolderDaemonRequireRuntimeConfig Condition="'$(RuntimeIdentifier)' == '' and '$(OS)' == 'Windows_NT'">false</_WatchFolderDaemonRequireRuntimeConfig>
+    </PropertyGroup>
+
+    <Error Condition="!Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
+           Text="Missing watch folder daemon executable in publish output: $(PublishDir)$(_WatchFolderDaemonExecutableName)" />
+    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
+           Text="Missing watch folder daemon runtimeconfig in publish output: $(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json" />
   </Target>
 
   <Target Name="BuildWatchFolderDaemonForDev" AfterTargets="Build">
