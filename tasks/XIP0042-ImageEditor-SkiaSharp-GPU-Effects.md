@@ -5,16 +5,19 @@
 **Goal:** Use SkiaSharp’s GPU backend for image effects where possible, and speed up remaining CPU paths.
 
 **Scope:** ShareX.ImageEditor (ImageEditor) — adjustment/filter effects and their application pipeline. **ImageEditor is shared and used by two hosts:**
+
 - **XerahS** — Avalonia desktop app; embeds EditorView and can obtain `GRContext` from the Avalonia Skia renderer.
 - **ShareX** — WinForms app; opens the modern ImageEditor via `AvaloniaIntegration.ShowEditorDialog` (Avalonia window). Same ImageEditor codebase, different host process.
 
 Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remain compatible with both hosts**. The host provides an optional `GRContext` when applying effects; when not provided, the software path is always used (no breaking change for either host).
 
 **Current state:**
+
 - **Color-matrix / filter effects** (Brightness, Contrast, Hue, Saturation, Invert, Sepia, Grayscale, Polaroid, Alpha, Gamma, etc.) use `ApplyColorFilter` → `new SKCanvas(result)` where `result` is an `SKBitmap`. That creates a **software (raster) surface**, so they run on CPU.
 - **Per-pixel effects** (BlackAndWhite, ReplaceColor, SelectiveColor) use `ApplyPixelOperation` with `GetPixel`/`SetPixel` in a double loop → always CPU and slow on large images.
 
 **References:**
+
 - [docs/planning/IMAGEEDITOR_SKIA_GPU_PLAN.md](../docs/planning/IMAGEEDITOR_SKIA_GPU_PLAN.md)
 - [Avalonia Skia TryGetGrContext](https://api-docs.avaloniaui.net/docs/M_Avalonia_Skia_ISkiaGpuWithPlatformGraphicsContext_TryGetGrContext)
 - [SkiaSharp GRContext](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.grcontext)
@@ -25,13 +28,15 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Both use the same Avalonia-based EditorWindow/EditorView when the modern editor is enabled (ShareX: `UseModernImageEditor` → `AvaloniaIntegration.ShowEditorDialog`). Compatibility rules:
 
-| Rule | Rationale |
-|------|-----------|
-| **No host-specific APIs in ImageEditor core/effects** | ImageEditor must not reference XerahS-only or ShareX-only assemblies. Effect pipeline and `ApplyColorFilter` helper stay in `ShareX.ImageEditor` with no dependency on host. |
-| **GRContext is optional and provided by the host** | The effect library accepts an optional `GRContext` (or delegate). When `null` or not set, the existing software path runs. No requirement for either host to provide it. |
-| **Host wiring is each host’s responsibility** | XerahS may obtain `GRContext` from its main Avalonia renderer and pass it when applying effects. ShareX may do the same from the Avalonia editor window’s renderer if feasible; if not wired, ShareX simply does not set a context and effects use the software path. Both get correct, identical effect results. |
-| **Phase 2 (BlackAndWhite, ReplaceColor, SelectiveColor)** | Pure ImageEditor code; no host dependency. Behaves identically in both hosts. |
-| **Validation** | When implementing, ensure ImageEditor builds and effect behavior is unchanged in both repo configurations (XerahS and ShareX). Optionally validate GPU path in XerahS and software fallback in both. |
+
+| Rule                                                      | Rationale                                                                                                                                                                                                                                                                                                         |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **No host-specific APIs in ImageEditor core/effects**     | ImageEditor must not reference XerahS-only or ShareX-only assemblies. Effect pipeline and `ApplyColorFilter` helper stay in `ShareX.ImageEditor` with no dependency on host.                                                                                                                                      |
+| **GRContext is optional and provided by the host**        | The effect library accepts an optional `GRContext` (or delegate). When `null` or not set, the existing software path runs. No requirement for either host to provide it.                                                                                                                                          |
+| **Host wiring is each host’s responsibility**             | XerahS may obtain `GRContext` from its main Avalonia renderer and pass it when applying effects. ShareX may do the same from the Avalonia editor window’s renderer if feasible; if not wired, ShareX simply does not set a context and effects use the software path. Both get correct, identical effect results. |
+| **Phase 2 (BlackAndWhite, ReplaceColor, SelectiveColor)** | Pure ImageEditor code; no host dependency. Behaves identically in both hosts.                                                                                                                                                                                                                                     |
+| **Validation**                                            | When implementing, ensure ImageEditor builds and effect behavior is unchanged in both repo configurations (XerahS and ShareX). Optionally validate GPU path in XerahS and software fallback in both.                                                                                                              |
+
 
 ---
 
@@ -69,11 +74,12 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 - Each host that wants GPU: obtain `GRContext` (e.g. in a render callback or when opening the editor), store it in a thread-safe way or pass it via a closure to the effect runner. The runner calls existing `Effect.Apply(source)`; the implementation of `ApplyColorFilter` inside the effect library uses the injected context when available. If no context is provided (e.g. ShareX not yet wired), the software path runs—identical behavior for both hosts.
 
 **Deliverables (Phase 1):**
-- [ ] Helper that applies a color filter (or matrix) using an optional `GRContext`; fallback to current software path.
-- [ ] All existing `ApplyColorMatrix` / `ApplyColorFilter` call sites use this helper.
-- [ ] XerahS: obtain Avalonia’s `GRContext` and provide it to the effect pipeline when applying effects (e.g. on UI thread). ShareX: optionally wire `GRContext` from the editor window’s Avalonia renderer when feasible; otherwise leave unset (software path).
-- [ ] Document that GPU is used only when context is available and effect runs on the correct thread.
-- [ ] Ensure ImageEditor builds and effect behavior is unchanged in both XerahS and ShareX (validate in both repo configurations).
+
+- Helper that applies a color filter (or matrix) using an optional `GRContext`; fallback to current software path.
+- All existing `ApplyColorMatrix` / `ApplyColorFilter` call sites use this helper.
+- XerahS: obtain Avalonia’s `GRContext` and provide it to the effect pipeline when applying effects (e.g. on UI thread). ShareX: optionally wire `GRContext` from the editor window’s Avalonia renderer when feasible; otherwise leave unset (software path).
+- Document that GPU is used only when context is available and effect runs on the correct thread.
+- Ensure ImageEditor builds and effect behavior is unchanged in both XerahS and ShareX (validate in both repo configurations).
 
 ---
 
@@ -91,9 +97,10 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 - Add a shared helper, e.g. `ApplyPixelOperationFast(source, (ref byte r, ref byte g, ref byte b, ref byte a) => { ... })` or similar, used only by ReplaceColor and SelectiveColor. This gives a large speedup on large images without GPU.
 
 **Deliverables (Phase 2):**
-- [ ] BlackAndWhite implemented via color matrix (and thus GPU-accelerated when Phase 1 is active).
-- [ ] ReplaceColor and SelectiveColor use a fast, single-pass pixel loop (no GetPixel/SetPixel).
-- [ ] No host-specific code; validate effect behavior in both XerahS and ShareX.
+
+- BlackAndWhite implemented via color matrix (and thus GPU-accelerated when Phase 1 is active).
+- ReplaceColor and SelectiveColor use a fast, single-pass pixel loop (no GetPixel/SetPixel).
+- No host-specific code; validate effect behavior in both XerahS and ShareX.
 
 ---
 
@@ -107,12 +114,14 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 
 ## 4. Summary table
 
-| Phase | What | Outcome |
-|-------|------|--------|
-| **1** | Use Avalonia’s `GRContext` for `ApplyColorFilter` / `ApplyColorMatrix` | All matrix/filter effects (Brightness, Contrast, Hue, Saturation, Invert, Sepia, Grayscale, Polaroid, Alpha, etc.) run on GPU when context is available. |
-| **2a** | BlackAndWhite via color matrix | No per-pixel loop; uses same GPU path as above. |
-| **2b** | ReplaceColor / SelectiveColor: unsafe Span pixel loop | Same behavior, much faster on CPU; no GPU change. |
-| **3** | Software path tuning, optional GPU threshold | Fewer allocations; avoid GPU read-back overhead for tiny images. |
+
+| Phase  | What                                                                   | Outcome                                                                                                                                                  |
+| ------ | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **1**  | Use Avalonia’s `GRContext` for `ApplyColorFilter` / `ApplyColorMatrix` | All matrix/filter effects (Brightness, Contrast, Hue, Saturation, Invert, Sepia, Grayscale, Polaroid, Alpha, etc.) run on GPU when context is available. |
+| **2a** | BlackAndWhite via color matrix                                         | No per-pixel loop; uses same GPU path as above.                                                                                                          |
+| **2b** | ReplaceColor / SelectiveColor: unsafe Span pixel loop                  | Same behavior, much faster on CPU; no GPU change.                                                                                                        |
+| **3**  | Software path tuning, optional GPU threshold                           | Fewer allocations; avoid GPU read-back overhead for tiny images.                                                                                         |
+
 
 **Dependency:** Phase 1 GPU path is used only when a host runs on Avalonia’s Skia rendering backend and passes an acquired `GRContext` into the effect pipeline when applying effects on the UI/render thread. **Both XerahS and ShareX** can optionally do this (ShareX when the modern editor is shown via Avalonia). If a host does not provide a context or uses a non-Skia backend, the fallback is the current software path—no breaking change for either host.
 
@@ -125,3 +134,4 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 - [SkiaSharp GRContext](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.grcontext)
 - ImageEditor (shared): `ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ImageEffect.cs` (ApplyColorFilter, ApplyColorMatrix, ApplyPixelOperation)
 - ShareX host: `ShareX/TaskHelpers.cs` (`OpenImageEditor`, `UseModernImageEditor` → `AvaloniaIntegration.ShowEditorDialog`); `ShareX.ImageEditor/Helpers/AvaloniaIntegration.cs`
+
