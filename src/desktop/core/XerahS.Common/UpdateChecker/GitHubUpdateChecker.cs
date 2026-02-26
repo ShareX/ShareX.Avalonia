@@ -23,12 +23,21 @@
 
 #endregion License Information (GPL v3)
 
+using System.Runtime.InteropServices;
 using Newtonsoft.Json;
 
 namespace XerahS.Common
 {
     public class GitHubUpdateChecker : UpdateChecker
     {
+        protected enum RuntimePlatform
+        {
+            Unknown,
+            Windows,
+            MacOS,
+            Linux
+        }
+
         public string Owner { get; private set; }
         public string Repo { get; private set; }
         public bool IncludePreRelease { get; set; }
@@ -178,81 +187,116 @@ namespace XerahS.Common
 
                 if (release.assets != null && release.assets.Length > 0)
                 {
-                    string endsWith = "";
-                    string arch = System.Runtime.InteropServices.RuntimeInformation.ProcessArchitecture == System.Runtime.InteropServices.Architecture.Arm64 ? "arm64" : "x64";
-                    
-                    if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Windows))
+                    RuntimePlatform runtimePlatform = GetRuntimePlatform();
+                    string archToken = GetArchitectureToken(GetProcessArchitecture());
+                    string[] preferredSuffixes = GetPreferredAssetSuffixes(runtimePlatform, archToken, isPortable);
+
+                    GitHubAsset? asset = FindAssetBySuffixes(release.assets, preferredSuffixes);
+
+                    if (asset == null)
                     {
-                         endsWith = isPortable ? $"-win-{arch}.zip" : $"-win-{arch}.exe";
-                    }
-                    else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX))
-                    {
-                         endsWith = isPortable ? $"-osx-{arch}.zip" : $"-osx-{arch}.dmg";
-                    }
-                    else if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux))
-                    {
-                         // Linux naming: XerahS-0.6.2-linux-arm64.tar.gz or .deb
-                         endsWith = isPortable ? $"-linux-{arch}.tar.gz" : $"-linux-{arch}.deb";
+                        // Keep legacy fallback intentionally platform-scoped to prevent cross-platform picks.
+                        asset = FindLegacyFallbackAsset(release.assets, runtimePlatform, isPortable);
                     }
 
-                    if (!string.IsNullOrEmpty(endsWith))
+                    if (asset != null)
                     {
-                        foreach (GitHubAsset? asset in release.assets)
-                        {
-                            if (asset != null && !string.IsNullOrEmpty(asset.name) && asset.name.EndsWith(endsWith, StringComparison.OrdinalIgnoreCase))
-                            {
-                                FileName = asset.name;
-
-                                if (isBrowserDownloadURL)
-                                {
-                                    DownloadURL = asset.browser_download_url;
-                                }
-                                else
-                                {
-                                    DownloadURL = asset.url;
-                                }
-
-                                IsPreRelease = release.prerelease;
-
-                                return true;
-                            }
-                        }
-                    }
-
-                    // Fallback to legacy naming for backward compatibility if new naming scheme not found
-                    if (isPortable)
-                    {
-                        endsWith = "portable.zip";
-                    }
-                    else
-                    {
-                        endsWith = ".exe";
-                    }
-
-                    foreach (GitHubAsset? asset in release.assets)
-                    {
-                        if (asset != null && !string.IsNullOrEmpty(asset.name) && asset.name.EndsWith(endsWith, StringComparison.OrdinalIgnoreCase))
-                        {
-                            FileName = asset.name;
-
-                            if (isBrowserDownloadURL)
-                            {
-                                DownloadURL = asset.browser_download_url;
-                            }
-                            else
-                            {
-                                DownloadURL = asset.url;
-                            }
-
-                            IsPreRelease = release.prerelease;
-
-                            return true;
-                        }
+                        FileName = asset.name ?? string.Empty;
+                        DownloadURL = isBrowserDownloadURL ? asset.browser_download_url : asset.url;
+                        IsPreRelease = release.prerelease;
+                        return true;
                     }
                 }
             }
 
             return false;
+        }
+
+        protected virtual Architecture GetProcessArchitecture()
+        {
+            return RuntimeInformation.ProcessArchitecture;
+        }
+
+        protected virtual RuntimePlatform GetRuntimePlatform()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return RuntimePlatform.Windows;
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return RuntimePlatform.MacOS;
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return RuntimePlatform.Linux;
+            }
+
+            return RuntimePlatform.Unknown;
+        }
+
+        private static string GetArchitectureToken(Architecture architecture)
+        {
+            return architecture switch
+            {
+                Architecture.Arm64 => "arm64",
+                Architecture.X64 => "x64",
+                _ => "x64"
+            };
+        }
+
+        private static string[] GetPreferredAssetSuffixes(RuntimePlatform runtimePlatform, string archToken, bool isPortable)
+        {
+            return runtimePlatform switch
+            {
+                RuntimePlatform.Windows => isPortable
+                    ? [ $"-win-{archToken}.zip" ]
+                    : [ $"-win-{archToken}.exe" ],
+                RuntimePlatform.MacOS =>
+                [
+                    $"-mac-{archToken}.tar.gz",
+                    $"-osx-{archToken}.dmg",
+                    $"-osx-{archToken}.zip",
+                    $"-mac-{archToken}.zip",
+                    $"-macos-{archToken}.zip"
+                ],
+                RuntimePlatform.Linux => isPortable
+                    ? [ $"-linux-{archToken}.tar.gz" ]
+                    : [ $"-linux-{archToken}.deb", $"-linux-{archToken}.tar.gz", $"-linux-{archToken}.rpm" ],
+                _ => []
+            };
+        }
+
+        private static GitHubAsset? FindAssetBySuffixes(GitHubAsset[] assets, string[] suffixes)
+        {
+            foreach (string suffix in suffixes)
+            {
+                foreach (GitHubAsset? asset in assets)
+                {
+                    if (asset != null && !string.IsNullOrEmpty(asset.name) && asset.name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return asset;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static GitHubAsset? FindLegacyFallbackAsset(GitHubAsset[] assets, RuntimePlatform runtimePlatform, bool isPortable)
+        {
+            if (runtimePlatform != RuntimePlatform.Windows)
+            {
+                return null;
+            }
+
+            string[] legacySuffixes = isPortable
+                ? [ "portable.zip" ]
+                : [ "-setup.exe", "setup.exe", ".exe" ];
+
+            return FindAssetBySuffixes(assets, legacySuffixes);
         }
 
         protected class GitHubRelease
