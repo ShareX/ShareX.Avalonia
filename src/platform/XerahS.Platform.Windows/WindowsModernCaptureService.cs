@@ -286,7 +286,7 @@ namespace XerahS.Platform.Windows
             int minX = int.MaxValue, minY = int.MaxValue;
             int maxX = int.MinValue, maxY = int.MinValue;
 
-            foreach (var (output, adapter, bounds, _) in outputs)
+            foreach (var (output, adapter, bounds, _, _, _) in outputs)
             {
                 minX = Math.Min(minX, bounds.Left);
                 minY = Math.Min(minY, bounds.Top);
@@ -308,7 +308,13 @@ namespace XerahS.Platform.Windows
             var outputsByAdapter = outputs.GroupBy(x => x.Adapter).ToList();
 
             // Track resources for batch processing
-            var activeDuplications = new List<(IDXGIOutputDuplication Duplication, ID3D11Device Device, System.Drawing.Rectangle Bounds, ModeRotation Rotation)>();
+            var activeDuplications = new List<(
+                IDXGIOutputDuplication Duplication,
+                ID3D11Device Device,
+                System.Drawing.Rectangle Bounds,
+                ModeRotation Rotation,
+                string DeviceName,
+                ModeRotation DxgiRotation)>();
             var devicesToDispose = new List<ID3D11Device>();
 
             try
@@ -328,13 +334,13 @@ namespace XerahS.Platform.Windows
 
                     // using var deviceContext = device.ImmediateContext; // REMOVED: Premature disposal causes NRE later
 
-                    foreach (var (output, _, bounds, rotation) in group)
+                    foreach (var (output, _, bounds, rotation, deviceName, dxgiRotation) in group)
                     {
                         try
                         {
                             // Duplicate output
                             var duplication = output.DuplicateOutput(device);
-                            activeDuplications.Add((duplication, device, bounds, rotation));
+                            activeDuplications.Add((duplication, device, bounds, rotation, deviceName, dxgiRotation));
                         }
                         catch (Exception ex)
                         {
@@ -356,7 +362,7 @@ namespace XerahS.Platform.Windows
                 }
 
                 // 3. Acquire & Process Frames
-                foreach (var (duplication, device, bounds, rotation) in activeDuplications)
+                foreach (var (duplication, device, bounds, rotation, deviceName, dxgiRotation) in activeDuplications)
                 {
                     bool frameAcquired = false;
                     try
@@ -372,7 +378,7 @@ namespace XerahS.Platform.Windows
                                 using var desktopTex = desktopResource.QueryInterface<ID3D11Texture2D>();
                                 var sourceDesc = desktopTex.Description;
                                 XerahS.Common.DebugHelper.WriteLine(
-                                    $"CaptureFullScreenDxgi: Output frame source={sourceDesc.Width}x{sourceDesc.Height}, target={bounds.Width}x{bounds.Height}, rotation={rotation}");
+                                    $"CaptureFullScreenDxgi: Output {deviceName} frame source={sourceDesc.Width}x{sourceDesc.Height}, target={bounds.Width}x{bounds.Height}, rotation={rotation}, dxgiRotation={dxgiRotation}");
 
                                 // For rotated outputs, Desktop Duplication can return an unrotated surface
                                 // whose dimensions differ from desktop bounds. Always match staging to source.
@@ -593,10 +599,22 @@ namespace XerahS.Platform.Windows
         /// <summary>
         /// Enumerates all DXGI outputs from all adapters
         /// </summary>
-        private System.Collections.Generic.List<(IDXGIOutput1 Output, IDXGIAdapter1 Adapter, System.Drawing.Rectangle Bounds, ModeRotation Rotation)>
+        private System.Collections.Generic.List<(
+            IDXGIOutput1 Output,
+            IDXGIAdapter1 Adapter,
+            System.Drawing.Rectangle Bounds,
+            ModeRotation Rotation,
+            string DeviceName,
+            ModeRotation DxgiRotation)>
             EnumerateOutputs(IDXGIFactory1 factory)
         {
-            var outputs = new System.Collections.Generic.List<(IDXGIOutput1, IDXGIAdapter1, System.Drawing.Rectangle, ModeRotation)>();
+            var outputs = new System.Collections.Generic.List<(
+                IDXGIOutput1,
+                IDXGIAdapter1,
+                System.Drawing.Rectangle,
+                ModeRotation,
+                string,
+                ModeRotation)>();
 
             for (uint adapterIndex = 0; factory.EnumAdapters1(adapterIndex, out var adapter).Success; adapterIndex++)
             {
@@ -623,7 +641,18 @@ namespace XerahS.Platform.Windows
                         rect.Bottom - rect.Top
                     );
 
-                    outputs.Add((output1, adapter, bounds, outputDesc.Rotation));
+                    var dxgiRotation = outputDesc.Rotation;
+                    var effectiveRotation = TryGetDisplaySettingsRotation(outputDesc.DeviceName, out var displayRotation)
+                        ? displayRotation
+                        : dxgiRotation;
+
+                    if (effectiveRotation != dxgiRotation)
+                    {
+                        XerahS.Common.DebugHelper.WriteLine(
+                            $"CaptureFullScreenDxgi: Rotation override for {outputDesc.DeviceName}. DisplaySettings={effectiveRotation}, DXGI={dxgiRotation}");
+                    }
+
+                    outputs.Add((output1, adapter, bounds, effectiveRotation, outputDesc.DeviceName, dxgiRotation));
                     output.Dispose();
                 }
 
@@ -635,6 +664,82 @@ namespace XerahS.Platform.Windows
             }
 
             return outputs;
+        }
+
+        private static bool TryGetDisplaySettingsRotation(string deviceName, out ModeRotation rotation)
+        {
+            rotation = ModeRotation.Unspecified;
+
+            var devMode = new NativeMethods.DEVMODE
+            {
+                dmSize = (short)Marshal.SizeOf(typeof(NativeMethods.DEVMODE))
+            };
+
+            if (!NativeMethods.EnumDisplaySettings(deviceName, NativeMethods.ENUM_CURRENT_SETTINGS, ref devMode))
+            {
+                return false;
+            }
+
+            rotation = devMode.dmDisplayOrientation switch
+            {
+                NativeMethods.DMDO_DEFAULT => ModeRotation.Identity,
+                NativeMethods.DMDO_90 => ModeRotation.Rotate90,
+                NativeMethods.DMDO_180 => ModeRotation.Rotate180,
+                NativeMethods.DMDO_270 => ModeRotation.Rotate270,
+                _ => ModeRotation.Unspecified
+            };
+
+            return true;
+        }
+
+        private static class NativeMethods
+        {
+            public const int ENUM_CURRENT_SETTINGS = -1;
+
+            public const int DMDO_DEFAULT = 0;
+            public const int DMDO_90 = 1;
+            public const int DMDO_180 = 2;
+            public const int DMDO_270 = 3;
+
+            [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+            public struct DEVMODE
+            {
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+                public string dmDeviceName;
+                public short dmSpecVersion;
+                public short dmDriverVersion;
+                public short dmSize;
+                public short dmDriverExtra;
+                public int dmFields;
+                public int dmPositionX;
+                public int dmPositionY;
+                public int dmDisplayOrientation;
+                public int dmDisplayFixedOutput;
+                public short dmColor;
+                public short dmDuplex;
+                public short dmYResolution;
+                public short dmTTOption;
+                public short dmCollate;
+                [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)]
+                public string dmFormName;
+                public short dmLogPixels;
+                public int dmBitsPerPel;
+                public int dmPelsWidth;
+                public int dmPelsHeight;
+                public int dmDisplayFlags;
+                public int dmDisplayFrequency;
+                public int dmICMMethod;
+                public int dmICMIntent;
+                public int dmMediaType;
+                public int dmDitherType;
+                public int dmReserved1;
+                public int dmReserved2;
+                public int dmPanningWidth;
+                public int dmPanningHeight;
+            }
+
+            [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+            public static extern bool EnumDisplaySettings(string lpszDeviceName, int iModeNum, ref DEVMODE lpDevMode);
         }
     }
 #pragma warning restore CA1416
