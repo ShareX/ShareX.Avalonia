@@ -236,7 +236,7 @@ function Build-ChangelogSection([string]$Version, [object[]]$CommitRows) {
             continue
         }
 
-        $entries = $byCategory[$category] | Sort-Object Component, Description
+        $entries = @($byCategory[$category] | Sort-Object Component, Description)
         if ($entries.Count -eq 0) {
             continue
         }
