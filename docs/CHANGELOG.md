@@ -11,6 +11,30 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 ## Unreleased
 
 
+
+## v0.18.10
+
+### Fixes
+- **Core**: Correct flipped monitor orientation in DXGI capture (106a497d)
+- **Core**: Fail fast for Linux publish and validate package payload (78f93344)
+- **Core**: Harden daemon bundling across desktop RIDs (d3052258)
+- **Core**: Marshal Avalonia clipboard access to UI thread (6d24889e)
+- **Core**: Remove WinForms dependency from Windows platform (0ced3438)
+- **Update Changelog Script**: ensure entries array has Count for single-category (22b5cbb3)
+
+### Build
+- **Core**: Add changelog update automation script (18d58b73)
+- **Core**: Validate release assets and RID metadata (571e383c)
+
+### Performance
+- **Core**: Skip app-driven plugin build in solution builds (57fb31f6)
+- **Core**: Update ImageEditor submodule for TFM simplification (619dddda)
+
+### Changed
+- **Core**: Create XIP0043-Remove-WinForms-and-Harden-CrossRID-Daemon-Bundling.md (63895920)
+- **Core**: Update CHANGELOG.md (43b0cbdb)
+- **Core**: Update ImageEditor (6fc22242)
+
 ## v0.18.9
 
 ### Features
