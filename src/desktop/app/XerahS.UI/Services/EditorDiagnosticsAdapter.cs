@@ -1,0 +1,71 @@
+#region License Information (GPL v3)
+
+/*
+    XerahS - The Avalonia UI implementation of ShareX
+    Copyright (c) 2007-2026 ShareX Team
+
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+    Optionally you can also view the license at <http://www.gnu.org/licenses/>.
+*/
+
+#endregion License Information (GPL v3)
+
+using ShareX.ImageEditor.Services;
+using XerahS.Common;
+
+namespace XerahS.UI.Services;
+
+/// <summary>
+/// Routes ImageEditor diagnostics to host-level debug logging.
+/// </summary>
+public sealed class EditorDiagnosticsAdapter : IEditorDiagnosticsSink
+{
+    public void Report(EditorDiagnosticEvent diagnosticEvent)
+    {
+        string context = $"ImageEditor/{diagnosticEvent.Source}";
+        string message = $"[{context}] {diagnosticEvent.Message}";
+
+        switch (diagnosticEvent.Level)
+        {
+            case EditorDiagnosticLevel.Error:
+                if (!string.IsNullOrWhiteSpace(diagnosticEvent.ExceptionText))
+                {
+                    DebugHelper.WriteException(diagnosticEvent.ExceptionText, message);
+                }
+                else
+                {
+                    DebugHelper.WriteLine($"ERROR {message}");
+                }
+                break;
+
+            case EditorDiagnosticLevel.Warning:
+                DebugHelper.WriteLine($"WARN {message}");
+                if (!string.IsNullOrWhiteSpace(diagnosticEvent.ExceptionText))
+                {
+                    DebugHelper.WriteLine(diagnosticEvent.ExceptionText);
+                }
+                break;
+
+            default:
+                DebugHelper.WriteLine(message);
+                if (!string.IsNullOrWhiteSpace(diagnosticEvent.ExceptionText))
+                {
+                    DebugHelper.WriteLine(diagnosticEvent.ExceptionText);
+                }
+                break;
+        }
+    }
+}

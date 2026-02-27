@@ -156,6 +156,7 @@ public partial class App : Application
 
             // Wire up Editor clipboard to platform implementation
             ShareX.ImageEditor.Services.EditorServices.Clipboard = new Services.EditorClipboardAdapter();
+            ShareX.ImageEditor.Services.EditorServices.Diagnostics = new Services.EditorDiagnosticsAdapter();
 
             // Build DI container from platform and app services (single composition root)
             Services.CompositionRoot.BuildAndSetRootProvider();
@@ -214,4 +215,3 @@ public partial class App : Application
     }
 
 }
-
