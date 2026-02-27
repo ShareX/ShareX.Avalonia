@@ -13,21 +13,36 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 ---
 
-## Current State (as of Feb 2026)
+## Current State (as of Feb 2026 — second audit)
 
-> **Jaex has already landed significant CPU optimisations. Read this section before implementing anything.**
+> **Jaex has landed two rounds of optimisations/fixes. Read this section before implementing anything.**
 
-### What is already done
+### Round 1 (prior audit)
+- ✅ `ApplyPixelOperation` rewritten with `unsafe` pointer arithmetic for `Bgra8888` — no `GetPixel`/`SetPixel`.
 
-| Area | Status | Detail |
-|---|---|---|
-| **Phase 2b** — `ApplyPixelOperation` unsafe pixel loop | **DONE** | `Adjustments/ImageEffect.cs`: Bgra8888 path uses `unsafe` pointer arithmetic (`SKColor*`) over the raw pixel buffer. No `GetPixel`/`SetPixel`. Falls back to `source.Pixels` managed array for other color types. Both `ReplaceColorImageEffect` and `SelectiveColorImageEffect` already benefit. |
-| All `ApplyColorMatrix`/`ApplyColorFilter` effects | CPU (software canvas) | Still use `new SKCanvas(result)` on an `SKBitmap`, so they run on the CPU. GPU path not yet wired. |
-| **Phase 1** — GRContext / GPU surface path | **NOT STARTED** | No `GRContext` anywhere in ImageEditor. |
-| **Phase 2a** — BlackAndWhite via color matrix | **NOT DONE** | `BlackAndWhiteImageEffect` still calls `ApplyPixelOperation`. |
-| **Phase 3** — software path tuning | **NOT DONE** | No buffer reuse, no GPU-size threshold, no deprecation fixes yet. |
+### Round 2 (this audit)
+- ✅ `GlowImageEffect` — `AutoResize` param added; asymmetric canvas expansion (only expands on the side the glow/offset extends to).
+- ✅ `ShadowImageEffect` — Removed `Darkness`, added `Color` property; same asymmetric expansion pattern as Glow.
+- ✅ `ReflectionImageEffect` — Fixed flip matrix (proper `Translate + Scale` instead of pivot-based scale); canvas width now accounts for skew displacement.
+- ✅ `OutlineImageEffect` — `OutlineOnly` mode added (DstOut erase of inner area).
+- ✅ `SliceImageEffect` — Robust `minSliceHeight`/`maxSliceHeight`/`minSliceShift`/`maxSliceShift` bounds checking.
 
-### Effect map (all effects, current implementation strategy)
+### What is still pending
+
+| Area | Status |
+|---|---|
+| **Phase 1** — GRContext / GPU surface path | ❌ NOT STARTED |
+| **Phase 2a** — BlackAndWhite via color matrix | ❌ NOT DONE |
+| **§3.2** — `ColorizeImageEffect` refactor | ❌ NOT DONE |
+| **§3.5** — `SKFilterQuality` deprecation | ❌ NOT DONE |
+| **§3.6** — Redundant `Category` overrides in 7 filter effects | ❌ NOT DONE |
+| **§3.8** — `new Random()` per call in Slice/TornEdge | ❌ NOT DONE |
+| Phase 3.1 (GPU threshold) | ❌ Pending Phase 1 |
+| §3.3 GammaImageEffect LUT caching | ⚠️ Low priority |
+| §3.4 BlurImageEffect allocation reduction | ⚠️ Low priority |
+| §3.7 SelectiveColor `ToHsl` short-circuit | ⚠️ Profile first |
+
+### Effect map
 
 | Effect | Method | GPU-ready? | Notes |
 |---|---|---|---|
@@ -40,23 +55,23 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 | Sepia | `ApplyColorMatrix` | After Phase 1 | |
 | Polaroid | `ApplyColorMatrix` | After Phase 1 | |
 | Alpha | `ApplyColorMatrix` | After Phase 1 | |
-| Gamma | `ApplyColorFilter` (table) | After Phase 1 | Rebuilds 256-byte LUT on every call; see §3.3 |
-| Colorize | Custom canvas (not using helper) | After Phase 1 | See §3.2 for inconsistency note |
-| **BlackAndWhite** | `ApplyPixelOperation` | ❌ not until Phase 2a | Should become color matrix + table filter |
-| **ReplaceColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel color matching; no matrix equivalent |
-| **SelectiveColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel HSL; no matrix equivalent |
-| Blur | `SKImageFilter.CreateBlur` | N/A (image filter) | 3-bitmap chain; see §3.4 |
+| Gamma | `ApplyColorFilter` (table LUT) | After Phase 1 | Rebuilds LUT every call — §3.3 |
+| Colorize | Custom canvas (bypasses helper) | After §3.2 + Phase 1 | §3.2 |
+| **BlackAndWhite** | `ApplyPixelOperation` | ❌ until Phase 2a | §2a |
+| **ReplaceColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel; no matrix equivalent |
+| **SelectiveColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel HSL; §3.7 |
+| Blur | `SKImageFilter.CreateBlur` | N/A | 3-bitmap chain — §3.4 |
 | Sharpen | `SKImageFilter.CreateMatrixConvolution` | N/A | Clean |
-| Pixelate | Downscale/upscale | N/A | Uses deprecated `SKFilterQuality`; see §3.5 |
-| Border | Canvas drawing | N/A | Clean |
-| Glow | `SKColorFilter` + blur filter | N/A | Doesn't inherit `Filters.ImageEffect`; see §3.6 |
-| Reflection | Canvas + gradient | N/A | Doesn't inherit `Filters.ImageEffect`; see §3.6 |
-| Shadow | `SKColorFilter` + blur filter | N/A | Clean |
-| Outline | `SKImageFilter.CreateDilate` | N/A | Clean |
-| TornEdge | Path generation | N/A | Clean |
-| Slice | Canvas drawing | N/A | Clean |
-| Resize | `SKBitmap.Resize(…, SKFilterQuality.High)` | N/A | Uses deprecated `SKFilterQuality`; see §3.5 |
-| Rotate (orthogonal) | `SKBitmap.ExtractSubset` / canvas | N/A | Optimised for 90°/180° |
+| Pixelate | Downscale/upscale | N/A | Deprecated `SKFilterQuality` — §3.5 |
+| Border | Canvas drawing | N/A | Redundant `Category` override — §3.6 |
+| Glow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | Redundant `Category` override — §3.6 |
+| Reflection ✅ | Canvas + gradient; correct flip + skew width | N/A | Redundant `Category` override — §3.6 |
+| Shadow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | Redundant `Category` override — §3.6 |
+| Outline ✅ | `SKImageFilter.CreateDilate` + DstOut | N/A | Redundant `Category` override — §3.6 |
+| TornEdge | Path generation | N/A | `new Random()` per call — §3.6, §3.8 |
+| Slice ✅ | Canvas drawing; robust bounds | N/A | `new Random()` per call — §3.6, §3.8 |
+| Resize | `SKBitmap.Resize` | N/A | Deprecated `SKFilterQuality` — §3.5 |
+| Rotate (orthogonal) | `ExtractSubset` / canvas transform | N/A | Optimised |
 | Rotate (custom) | Canvas transform | N/A | Clean |
 | Rotate3D | `SKMatrix44` | N/A | Clean |
 | Rotate3DBox | `SKMatrix44` + shading | N/A | Clean |
@@ -157,13 +172,12 @@ return ApplyPixelOperation(source, (color) =>
        0.2126f, 0.7152f, 0.0722f, 0, 0,
        0,       0,       0,       1, 0
    };
-   using var step1 = ApplyColorMatrix(source, grayscale);   // or thread grContext when Phase 1 done
+   using var step1 = ApplyColorMatrix(source, grayscale);   // thread grContext when Phase 1 done
    ```
 2. **Pass 2 — hard threshold** via `SKColorFilter.CreateTable` with a step function:
    ```csharp
    byte[] table = new byte[256];
    for (int i = 0; i < 256; i++) table[i] = i < 128 ? (byte)0 : (byte)255;
-   // Keep alpha as-is (all 255 after grayscale) — preserve transparency-to-black behaviour via alpha table
    byte[] alphaTable = new byte[256];
    for (int i = 0; i < 256; i++) alphaTable[i] = 255; // force fully opaque (matches old behaviour)
    using var filter = SKColorFilter.CreateTable(alphaTable, table, table, table);
@@ -177,15 +191,9 @@ return ApplyPixelOperation(source, (color) =>
 - No `ApplyPixelOperation` call remains in `BlackAndWhiteImageEffect`.
 - Behaviour is pixel-for-pixel identical to the existing implementation (validate with test images including transparent regions).
 
-### 2b. ReplaceColor and SelectiveColor: fast pixel loop ✅ DONE (by Jaex)
+### 2b. ReplaceColor and SelectiveColor: fast pixel loop ✅ DONE (by Jaex, Round 1)
 
-**Jaex has already implemented this.** `Adjustments/ImageEffect.cs::ApplyPixelOperation` now uses:
-- **Fast path (`Bgra8888`):** `unsafe` pointer arithmetic over `source.GetPixels()` / `result.GetPixels()` — single loop, no `GetPixel`/`SetPixel`.
-- **Fallback:** `source.Pixels` managed array for other color types.
-
-`ReplaceColorImageEffect` and `SelectiveColorImageEffect` both delegate to this helper and therefore already benefit.
-
-**No further work required for Phase 2b.**
+`Adjustments/ImageEffect.cs::ApplyPixelOperation` uses `unsafe` pointer arithmetic (`SKColor*`) for `Bgra8888` format; falls back to `source.Pixels` managed array for other color types. No `GetPixel`/`SetPixel`. **No further work required.**
 
 ---
 
@@ -213,71 +221,92 @@ Tune the threshold empirically on real hardware. Document the chosen value.
 
 `ColorizeImageEffect.Apply` currently bypasses the base class helpers and manages its own `SKCanvas` / `SKBitmap`. This means it will **not** benefit from the GPU path after Phase 1 unless refactored.
 
-**Required change:** Rewrite `ColorizeImageEffect` to use `ApplyColorFilter`. The current logic:
+**Current logic:**
 - Full-strength: apply `SKColorFilter.CreateCompose(tint, grayscale)` in a single draw.
-- Partial-strength: draw original, then draw source again with the composed filter at alpha = `(byte)(255 * strength / 100f)`.
+- Partial-strength (`strength < 100`): draw original, then draw source again with the composed filter at `paint.Color = (255,255,255, blendAlpha)`.
 
-The partial-strength blending cannot be expressed purely as a single color filter. Consider:
-- Use `ApplyColorFilter(source, composedFilter)` to get the fully-colorized bitmap, then blend the two bitmaps by alpha-compositing on a new canvas (draw original, draw colorized with `SKPaint { Color = new SKColor(255,255,255,blendAlpha) }`). This keeps both draws on the same surface.
-- Or: express the partial-strength as a composed filter that linearly mixes the original and colorized channels — possible via a `5×4` matrix that blends each channel with its greyscale-colorized version weighted by `strength`.
+The partial-strength blending cannot be expressed as a single color filter (it requires two composited draws). The cleanest refactor:
+1. `using var colorized = ApplyColorFilter(source, composedFilter);` — GPU-eligible, gets the fully-colorized bitmap.
+2. Create a new bitmap at source size; draw `source` first (as baseline), then draw `colorized` with `SKPaint { Color = new SKColor(255,255,255,blendAlpha) }` on top.
+
+This keeps the visual result identical and gives the GPU path to the expensive color-filter step (step 1).
 
 Once refactored, `ColorizeImageEffect` gains the GPU path automatically.
 
-### 3.3 `GammaImageEffect` — optional LUT caching ⚠️ MINOR
+### 3.3 `GammaImageEffect` — optional LUT caching ⚠️ LOW PRIORITY
 
 `GammaImageEffect.Apply` builds a 256-byte lookup table on every call:
 ```csharp
 byte[] table = new byte[256];
 for (int i = 0; i < 256; i++) { ... Math.Pow(val, 1.0 / Amount) ... }
 ```
+For live preview (slider drag), this rebuilds on every frame. Cache `(Amount, table)` as a field; only rebuild when `Amount` changes. **Profile before implementing.**
 
-For live preview (slider drag), this rebuilds on every frame. The cost is small (256 × `Math.Pow`) but can be cached:
-- Cache `(Amount, table)` as a field; only rebuild when `Amount` changes.
+### 3.4 `BlurImageEffect` — intermediate bitmap reduction ⚠️ LOW PRIORITY
 
-**Priority:** Low — profile before implementing.
-
-### 3.4 `BlurImageEffect` — intermediate bitmap reduction ⚠️ MINOR
-
-Current chain allocates **3 intermediate bitmaps**: `expanded` → `blurred` → `result` (crop). The final crop step:
-```csharp
-resultCanvas.DrawBitmap(blurred,
-    new SKRect(padding, padding, padding + source.Width, padding + source.Height),
-    new SKRect(0, 0, source.Width, source.Height));
-```
-
-Could be avoided by drawing with a negative translation + clip rect directly on the `blurred` bitmap, returning it after size adjustment. But the current approach is clear and the gain is one SKBitmap allocation per call. **Do only if profiling shows allocation pressure.**
+Current chain allocates **3 intermediate bitmaps**: `expanded` → `blurred` → `result` (crop). The crop step could be avoided by drawing with a negative translation + clip rect on `blurred`, saving one allocation per call. **Do only if profiling shows allocation pressure.**
 
 ### 3.5 `SKFilterQuality` deprecation ❌ NOT DONE
 
-SkiaSharp ≥ 2.88 deprecated `SKFilterQuality` in favour of `SKSamplingOptions`. Two call sites are affected:
+SkiaSharp ≥ 2.88 deprecated `SKFilterQuality` in favour of `SKSamplingOptions`. Two call sites remain:
 
 | File | Current | Replacement |
 |---|---|---|
 | `PixelateImageEffect.Apply` | `new SKPaint { FilterQuality = SKFilterQuality.None }` | `new SKPaint { SamplingOptions = new SKSamplingOptions(SKFilterMode.Nearest) }` |
 | `ResizeImageEffect.Apply` | `source.Resize(info, SKFilterQuality.High)` | `source.Resize(info, new SKSamplingOptions(SKCubicResampler.Mitchell))` |
 
-**No behaviour change** — the mapping is 1:1. Fixes compiler warnings and future-proofs against removal.
+**No behaviour change.** Fixes compiler warnings and future-proofs against removal.
 
-> **Regression risk:** None. The pixelation effect relies on nearest-neighbour (no interpolation) and the resize uses high-quality cubic; the replacements preserve both.
+> **Regression risk:** None. Pixelation relies on nearest-neighbour (no interpolation) and resize uses high-quality cubic; the replacements preserve both.
 
-### 3.6 `GlowImageEffect` and `ReflectionImageEffect` — base class inconsistency ⚠️ MINOR
+### 3.6 Redundant `Category` overrides in Filter effects ❌ NOT DONE
 
-Both `GlowImageEffect` and `ReflectionImageEffect` override `Category` directly:
+`Filters.ImageEffect` (the abstract base in `ShareX.ImageEditor.ImageEffects.Filters`) already sets:
 ```csharp
 public override ImageEffectCategory Category => ImageEffectCategory.Filters;
 ```
-…instead of inheriting from `ShareX.ImageEditor.ImageEffects.Filters.ImageEffect` (which already provides this). Inspect both class declarations; if they inherit the base `ImageEffect` directly (root abstract class), change them to inherit from `Filters.ImageEffect` and drop the redundant override.
 
-**No functional impact.** Do as cleanup alongside any other edit to these files.
+Seven concrete filter effects redundantly re-declare this override when they could simply inherit it:
 
-### 3.7 `SelectiveColorImageEffect` — per-pixel `ToHsl` cost ⚠️ CONSIDER
+| File | Action |
+|---|---|
+| `GlowImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
+| `ReflectionImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
+| `ShadowImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
+| `OutlineImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
+| `BorderImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
+| `SliceImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
+| `TornEdgeImageEffect.cs` | Remove `public override ImageEffectCategory Category => ...` |
 
-Every pixel calls `c.ToHsl()` regardless of whether it ends up in an adjusted range. For large images (e.g. 4K), this is ~8M HSL decompositions per apply. A micro-optimisation:
+**Clean effects** (already inheriting without override): `BlurImageEffect`, `SharpenImageEffect`, `PixelateImageEffect`.
 
-- **Whites/Blacks/Neutrals** ranges are determined purely by lightness `L` and saturation `S`. Lightness can be approximated from RGB without a full HSL decomposition: `L ≈ (max(R,G,B) + min(R,G,B)) / 510f * 100`. Only fall back to `c.ToHsl()` for chromatic pixels (those not classified as Whites/Blacks/Neutrals).
-- This avoids `ToHsl` for desaturated pixels but adds branch complexity. **Profile first** — the existing unsafe pointer loop is already fast; `ToHsl` may not be the bottleneck.
+**No functional impact.** Do as cleanup alongside any other edit to these files. All seven concrete classes are in `namespace ShareX.ImageEditor.ImageEffects.Filters` so the base class resolves unambiguously.
 
-Do not implement without profiling data.
+### 3.7 `SelectiveColorImageEffect` — per-pixel `ToHsl` cost ⚠️ PROFILE FIRST
+
+Every pixel calls `c.ToHsl()` before range detection, even for pixels that end up unmodified. For large images (e.g. 4K ≈ 8M pixels), this is ~8M HSL decompositions per apply. A micro-optimisation:
+
+- **Whites/Blacks/Neutrals** ranges depend only on `L` and `S`. Approximate lightness from raw RGB without full HSL decomposition: `L ≈ (max(R,G,B) + min(R,G,B)) / 510f * 100`. Skip `c.ToHsl()` for desaturated/near-white/near-black pixels; only call it for chromatic pixels. Adds branch complexity. **Profile first** — the unsafe pointer loop is already fast; `ToHsl` may not be the bottleneck.
+
+### 3.8 `SliceImageEffect` and `TornEdgeImageEffect` — `new Random()` per call ❌ NOT DONE
+
+Both `SliceImageEffect.Apply` and `TornEdgeImageEffect.Apply` create `new Random()` at the start of every call:
+```csharp
+Random rand = new Random();
+```
+
+**Two problems:**
+1. **Determinism during rapid calls:** if `Apply` is triggered multiple times within the same OS timer tick (e.g. live-preview slider), both instances may be seeded identically and produce the same sequence — visually identical "random" output on consecutive calls.
+2. **Unnecessary allocation:** small but avoidable.
+
+**Fix:** Use `Random.Shared` (.NET 6+, thread-safe, no allocation):
+```csharp
+var rand = Random.Shared;
+```
+
+Drop the local `Random` variable; replace all `rand.Next(...)` calls in the method body with `Random.Shared.Next(...)`.
+
+> **Regression risk:** None. The fix produces statistically equivalent randomness. The visual output of Slice and TornEdge will differ between calls as intended (no determinism loss).
 
 ---
 
@@ -285,24 +314,30 @@ Do not implement without profiling data.
 
 | Phase | What | Status | Outcome |
 |---|---|---|---|
-| **2b** | `ApplyPixelOperation` unsafe pointer loop | ✅ **DONE** | ReplaceColor/SelectiveColor run at native speed; no GetPixel/SetPixel. |
-| **2a** | BlackAndWhite via two-pass color filter | ❌ Pending | No per-pixel loop; effect eligible for GPU path after Phase 1. |
-| **1** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ❌ Pending | All matrix/filter effects run on GPU when context is available (after threshold check). |
-| **3.1** | GPU read-back threshold | ❌ Pending (after Phase 1) | Skip GPU for tiny images to avoid read-back overhead dominating. |
+| **2b** | `ApplyPixelOperation` unsafe pointer loop | ✅ **DONE** (Round 1) | ReplaceColor/SelectiveColor at native speed. |
+| **Glow** | AutoResize + asymmetric expansion | ✅ **DONE** (Round 2) | Glow canvas grows only toward the offset. |
+| **Shadow** | Color property + asymmetric expansion | ✅ **DONE** (Round 2) | Consistent with Glow. |
+| **Reflection** | Fixed flip matrix; skew width expansion | ✅ **DONE** (Round 2) | Correct visual output with skew. |
+| **Outline** | OutlineOnly DstOut mode | ✅ **DONE** (Round 2) | Ring-only outline render. |
+| **Slice** | Robust bounds | ✅ **DONE** (Round 2) | No crash on edge-case slider values. |
+| **2a** | BlackAndWhite via two-pass color filter | ❌ Pending | No per-pixel loop; GPU-eligible after Phase 1. |
+| **3.8** | `Random.Shared` in Slice/TornEdge | ❌ Pending (quick fix) | No determinism issue on rapid calls; no allocation. |
+| **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ❌ Pending (quick fix) | Removes deprecated-API warnings. |
+| **3.6** | Remove redundant `Category` overrides (7 files) | ❌ Pending (quick fix) | Code consistency. |
 | **3.2** | `ColorizeImageEffect` refactor to use helper | ❌ Pending (prerequisite for GPU) | Colorize gains GPU path. |
-| **3.3** | `GammaImageEffect` LUT caching | ⚠️ Low priority | Minor speedup for live preview slider. |
+| **1** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ❌ Pending | All matrix/filter effects on GPU when context available. |
+| **3.1** | GPU read-back threshold | ❌ Pending (part of Phase 1) | Skip GPU for tiny images. |
+| **3.3** | `GammaImageEffect` LUT caching | ⚠️ Low priority | Minor live-preview speedup. |
 | **3.4** | `BlurImageEffect` allocation reduction | ⚠️ Low priority | One fewer SKBitmap per blur call. |
-| **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ❌ Pending (quick fix) | Removes deprecated-API warnings; no behaviour change. |
-| **3.6** | `GlowImageEffect`/`ReflectionImageEffect` base class | ⚠️ Cosmetic | Code consistency; no functional impact. |
-| **3.7** | `SelectiveColor` `ToHsl` short-circuit | ⚠️ Profile first | Potential speedup for desaturated pixels at scale. |
+| **3.7** | `SelectiveColor` `ToHsl` short-circuit | ⚠️ Profile first | Potential speedup at 4K scale. |
 
 **Implementation order recommendation:**
-1. **3.5** — trivial, no risk, removes warnings (do now).
-2. **2a** — straightforward, no GPU dependency (do now, before Phase 1).
-3. **3.2** — prerequisite for Phase 1 GPU to cover Colorize.
-4. **1** — main GPU work; wire GRContext into `ApplyColorFilter`/`ApplyColorMatrix`, host wiring.
-5. **3.1** — size threshold (part of Phase 1 implementation, add at the same time).
-6. **3.6** — cosmetic, do alongside any other edit to Glow/Reflection files.
+1. **3.8** — two lines changed, no risk, solves determinism bug.
+2. **3.5** — trivial, no risk, removes warnings.
+3. **3.6** — trivial, no risk, 7 one-line deletions.
+4. **2a** — straightforward, no GPU dependency.
+5. **3.2** — prerequisite for Phase 1 GPU to cover Colorize.
+6. **1 + 3.1** — main GPU work: wire GRContext, size threshold.
 7. **3.3, 3.4, 3.7** — only if profiling shows need.
 
 ---
@@ -313,8 +348,11 @@ Do not implement without profiling data.
 - [Avalonia Skia – TryGetGrContext](https://api-docs.avaloniaui.net/docs/M_Avalonia_Skia_ISkiaGpuWithPlatformGraphicsContext_TryGetGrContext)
 - [SkiaSharp GRContext](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.grcontext)
 - [SkiaSharp SKSamplingOptions migration](https://github.com/mono/SkiaSharp/wiki/API-Changes-2.88)
-- ImageEditor base helpers: [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ImageEffect.cs) — `ApplyColorFilter`, `ApplyColorMatrix`, `ApplyPixelOperation`
-- BlackAndWhite (to be changed): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/BlackAndWhiteImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/BlackAndWhiteImageEffect.cs)
-- Colorize (to be refactored): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ColorizeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ColorizeImageEffect.cs)
-- Pixelate/Resize (FilterQuality): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/PixelateImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/PixelateImageEffect.cs), [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Manipulations/ResizeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Manipulations/ResizeImageEffect.cs)
+- Base helpers: [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ImageEffect.cs)
+- BlackAndWhite (§2a): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/BlackAndWhiteImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/BlackAndWhiteImageEffect.cs)
+- Colorize (§3.2): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ColorizeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Adjustments/ColorizeImageEffect.cs)
+- Pixelate (§3.5): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/PixelateImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/PixelateImageEffect.cs)
+- Resize (§3.5): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Manipulations/ResizeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Manipulations/ResizeImageEffect.cs)
+- Slice (§3.8): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/SliceImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/SliceImageEffect.cs)
+- TornEdge (§3.8): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/TornEdgeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/TornEdgeImageEffect.cs)
 - ShareX host: `ShareX/TaskHelpers.cs` (`OpenImageEditor`, `UseModernImageEditor` → `AvaloniaIntegration.ShowEditorDialog`); `ShareX.ImageEditor/Helpers/AvaloniaIntegration.cs`
