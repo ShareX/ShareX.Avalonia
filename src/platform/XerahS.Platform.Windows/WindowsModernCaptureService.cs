@@ -579,16 +579,18 @@ namespace XerahS.Platform.Windows
             switch (rotation)
             {
                 case ModeRotation.Rotate90:
-                    canvas.Translate(0, targetHeight);
-                    canvas.RotateDegrees(-90);
+                    // DXGI rotation values are clockwise. To unrotate a CW 90 frame, apply CCW 90.
+                    canvas.Translate(targetWidth, 0);
+                    canvas.RotateDegrees(90);
                     break;
                 case ModeRotation.Rotate180:
                     canvas.Translate(targetWidth, targetHeight);
                     canvas.RotateDegrees(180);
                     break;
                 case ModeRotation.Rotate270:
-                    canvas.Translate(targetWidth, 0);
-                    canvas.RotateDegrees(90);
+                    // DXGI rotation values are clockwise. To unrotate a CW 270 frame, apply CCW 270 (CW 90).
+                    canvas.Translate(0, targetHeight);
+                    canvas.RotateDegrees(-90);
                     break;
             }
 
@@ -683,11 +685,16 @@ namespace XerahS.Platform.Windows
             rotation = devMode.dmDisplayOrientation switch
             {
                 NativeMethods.DMDO_DEFAULT => ModeRotation.Identity,
-                NativeMethods.DMDO_90 => ModeRotation.Rotate90,
+                // DEVMODE defines 90/270 as counter-clockwise from natural orientation,
+                // while DXGI rotation values are clockwise.
+                NativeMethods.DMDO_90 => ModeRotation.Rotate270,
                 NativeMethods.DMDO_180 => ModeRotation.Rotate180,
-                NativeMethods.DMDO_270 => ModeRotation.Rotate270,
+                NativeMethods.DMDO_270 => ModeRotation.Rotate90,
                 _ => ModeRotation.Unspecified
             };
+
+            XerahS.Common.DebugHelper.WriteLine(
+                $"CaptureFullScreenDxgi: EnumDisplaySettings orientation for {deviceName} => dmDisplayOrientation={devMode.dmDisplayOrientation}, mappedRotation={rotation}");
 
             return true;
         }
