@@ -12,6 +12,12 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 
 
+
+## v0.18.11
+
+### Fixes
+- **Core**: Avoid SIGPIPE in archive validation checks (93287f30)
+
 ## v0.18.10
 
 ### Fixes
