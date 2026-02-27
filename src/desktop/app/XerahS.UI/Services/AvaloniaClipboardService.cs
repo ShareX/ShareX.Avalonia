@@ -28,6 +28,7 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using SkiaSharp;
 using XerahS.Platform.Abstractions;
 
@@ -50,7 +51,10 @@ public sealed class AvaloniaClipboardService : IClipboardService
 
     public void Clear()
     {
-        _clipboard.ClearAsync().GetAwaiter().GetResult();
+        RunOnUIThread(() =>
+        {
+            _clipboard.ClearAsync().GetAwaiter().GetResult();
+        });
     }
 
     public bool ContainsText()
@@ -71,26 +75,33 @@ public sealed class AvaloniaClipboardService : IClipboardService
 
     public string? GetText()
     {
-        return GetTextAsync().GetAwaiter().GetResult();
+        return RunOnUIThread(() => _clipboard.TryGetTextAsync().GetAwaiter().GetResult());
     }
 
     public void SetText(string text)
     {
         if (string.IsNullOrEmpty(text))
             return;
-        SetTextAsync(text).GetAwaiter().GetResult();
+
+        RunOnUIThread(() =>
+        {
+            _clipboard.SetTextAsync(text).GetAwaiter().GetResult();
+        });
     }
 
     public SKBitmap? GetImage()
     {
-        var bitmap = _clipboard.TryGetBitmapAsync().GetAwaiter().GetResult();
-        if (bitmap == null)
-            return null;
+        return RunOnUIThread(() =>
+        {
+            var bitmap = _clipboard.TryGetBitmapAsync().GetAwaiter().GetResult();
+            if (bitmap == null)
+                return null;
 
-        using var stream = new MemoryStream();
-        bitmap.Save(stream);
-        stream.Position = 0;
-        return SKBitmap.Decode(stream);
+            using var stream = new MemoryStream();
+            bitmap.Save(stream);
+            stream.Position = 0;
+            return SKBitmap.Decode(stream);
+        });
     }
 
     public void SetImage(SKBitmap image)
@@ -101,7 +112,10 @@ public sealed class AvaloniaClipboardService : IClipboardService
         using var stream = new MemoryStream();
         image.Encode(stream, SKEncodedImageFormat.Png, 100);
         byte[] bytes = stream.ToArray();
-        SetImageBytesAsync(_clipboard, bytes).GetAwaiter().GetResult();
+        RunOnUIThread(() =>
+        {
+            SetImageBytesAsync(_clipboard, bytes).GetAwaiter().GetResult();
+        });
     }
 
     /// <summary>
@@ -158,53 +172,68 @@ public sealed class AvaloniaClipboardService : IClipboardService
 
     public async Task<string?> GetTextAsync()
     {
-        return await _clipboard.TryGetTextAsync();
+        return await RunOnUIThreadAsync(() => _clipboard.TryGetTextAsync());
     }
 
     public async Task SetTextAsync(string text)
     {
         if (string.IsNullOrEmpty(text))
             return;
-        await _clipboard.SetTextAsync(text);
+
+        await RunOnUIThreadAsync(() => _clipboard.SetTextAsync(text));
     }
 
     private async Task<string[]?> GetFileDropListAsync()
     {
-        var items = await _clipboard.TryGetFilesAsync();
-        if (items == null || items.Length == 0)
-            return null;
-        var paths = new List<string>();
-        foreach (var item in items)
+        return await RunOnUIThreadAsync(async () =>
         {
-            var path = item?.TryGetLocalPath();
-            if (!string.IsNullOrEmpty(path))
-                paths.Add(path);
-        }
-        return paths.Count > 0 ? paths.ToArray() : null;
+            var items = await _clipboard.TryGetFilesAsync();
+            if (items == null || items.Length == 0)
+                return null;
+
+            var paths = new List<string>();
+            foreach (var item in items)
+            {
+                var path = item?.TryGetLocalPath();
+                if (!string.IsNullOrEmpty(path))
+                    paths.Add(path);
+            }
+
+            return paths.Count > 0 ? paths.ToArray() : null;
+        });
     }
 
     private async Task SetFileDropListAsync(string[] files)
     {
         if (_storageProvider == null)
             return;
-        var items = new List<IStorageItem?>();
-        foreach (var path in files)
+
+        await RunOnUIThreadAsync(async () =>
         {
-            if (string.IsNullOrEmpty(path))
-                continue;
-            var file = await _storageProvider.TryGetFileFromPathAsync(path);
-            if (file != null)
-                items.Add(file);
-        }
-        if (items.Count > 0)
-            await _clipboard.SetFilesAsync(items!);
+            var items = new List<IStorageItem?>();
+            foreach (var path in files)
+            {
+                if (string.IsNullOrEmpty(path))
+                    continue;
+
+                var file = await _storageProvider.TryGetFileFromPathAsync(path);
+                if (file != null)
+                    items.Add(file);
+            }
+
+            if (items.Count > 0)
+                await _clipboard.SetFilesAsync(items!);
+        });
     }
 
     private async Task<object?> GetDataAsync(string format)
     {
         if (string.Equals(format, "text/plain", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(format, "Text", StringComparison.OrdinalIgnoreCase))
-            return await _clipboard.TryGetTextAsync();
+        {
+            return await RunOnUIThreadAsync(() => _clipboard.TryGetTextAsync());
+        }
+
         return null;
     }
 
@@ -212,17 +241,91 @@ public sealed class AvaloniaClipboardService : IClipboardService
     {
         if (data is string text)
         {
-            await _clipboard.SetTextAsync(text);
+            await RunOnUIThreadAsync(() => _clipboard.SetTextAsync(text));
             return;
         }
-        await _clipboard.SetTextAsync(data.ToString() ?? string.Empty);
+
+        await RunOnUIThreadAsync(() => _clipboard.SetTextAsync(data.ToString() ?? string.Empty));
     }
 
     private async Task<bool> ContainsDataAsync(string format)
     {
         if (string.Equals(format, "text/plain", StringComparison.OrdinalIgnoreCase) ||
             string.Equals(format, "Text", StringComparison.OrdinalIgnoreCase))
-            return !string.IsNullOrEmpty(await _clipboard.TryGetTextAsync());
+        {
+            return !string.IsNullOrEmpty(await RunOnUIThreadAsync(() => _clipboard.TryGetTextAsync()));
+        }
+
         return false;
+    }
+
+    private static void RunOnUIThread(Action action)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            action();
+            return;
+        }
+
+        Dispatcher.UIThread.InvokeAsync(action).GetAwaiter().GetResult();
+    }
+
+    private static T RunOnUIThread<T>(Func<T> func)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            return func();
+        }
+
+        return Dispatcher.UIThread.InvokeAsync(func).GetAwaiter().GetResult();
+    }
+
+    private static async Task RunOnUIThreadAsync(Func<Task> func)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            await func();
+            return;
+        }
+
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                await func();
+                tcs.SetResult(true);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+
+        await tcs.Task;
+    }
+
+    private static async Task<T> RunOnUIThreadAsync<T>(Func<Task<T>> func)
+    {
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            return await func();
+        }
+
+        var tcs = new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                T value = await func();
+                tcs.SetResult(value);
+            }
+            catch (Exception ex)
+            {
+                tcs.SetException(ex);
+            }
+        });
+
+        return await tcs.Task;
     }
 }
