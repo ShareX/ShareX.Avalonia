@@ -13,9 +13,9 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 ---
 
-## Current State (as of Feb 2026 — second audit)
+## Current State (as of Feb 2026 — fully implemented)
 
-> **Jaex has landed two rounds of optimisations/fixes. Read this section before implementing anything.**
+> **Jaex landed two rounds of optimisations/fixes; all remaining items were then implemented in `feature/XIP0042-optimizations`.**
 
 ### Round 1 (prior audit)
 - ✅ `ApplyPixelOperation` rewritten with `unsafe` pointer arithmetic for `Bgra8888` — no `GetPixel`/`SetPixel`.
@@ -27,19 +27,19 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 - ✅ `OutlineImageEffect` — `OutlineOnly` mode added (DstOut erase of inner area).
 - ✅ `SliceImageEffect` — Robust `minSliceHeight`/`maxSliceHeight`/`minSliceShift`/`maxSliceShift` bounds checking.
 
-### What is still pending
+### Implementation status
 
 | Area | Status |
 |---|---|
-| **Phase 1** — GRContext / GPU surface path | ❌ NOT STARTED |
-| **Phase 2a** — BlackAndWhite via color matrix | ❌ NOT DONE |
-| **§3.2** — `ColorizeImageEffect` refactor | ❌ NOT DONE |
-| **§3.5** — `SKFilterQuality` deprecation | ❌ NOT DONE |
-| **§3.6** — Redundant `Category` overrides in 7 filter effects | ❌ NOT DONE |
-| **§3.8** — `new Random()` per call in Slice/TornEdge | ❌ NOT DONE |
-| Phase 3.1 (GPU threshold) | ❌ Pending Phase 1 |
-| §3.3 GammaImageEffect LUT caching | ⚠️ Low priority |
-| §3.4 BlurImageEffect allocation reduction | ⚠️ Low priority |
+| **Phase 1** — GRContext / GPU surface path | ✅ DONE (Commit 4) |
+| **Phase 2a** — BlackAndWhite via color matrix | ✅ DONE (Commit 2) |
+| **§3.1** — GPU pixel threshold | ✅ DONE (Commit 4, 160 000 px) |
+| **§3.2** — `ColorizeImageEffect` refactor | ✅ DONE (Commit 3) |
+| **§3.5** — `SKFilterQuality` deprecation | ✅ DONE (Commit 1) |
+| **§3.6** — Redundant `Category` overrides in 7 filter effects | ✅ DONE (Commit 1) |
+| **§3.8** — `new Random()` per call in Slice/TornEdge | ✅ DONE (Commit 1) |
+| §3.3 GammaImageEffect LUT caching | ⚠️ Low priority — profile first |
+| §3.4 BlurImageEffect allocation reduction | ⚠️ Low priority — profile first |
 | §3.7 SelectiveColor `ToHsl` short-circuit | ⚠️ Profile first |
 
 ### Effect map
@@ -56,21 +56,21 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 | Polaroid | `ApplyColorMatrix` | After Phase 1 | |
 | Alpha | `ApplyColorMatrix` | After Phase 1 | |
 | Gamma | `ApplyColorFilter` (table LUT) | After Phase 1 | Rebuilds LUT every call — §3.3 |
-| Colorize | Custom canvas (bypasses helper) | After §3.2 + Phase 1 | §3.2 |
-| **BlackAndWhite** | `ApplyPixelOperation` | ❌ until Phase 2a | §2a |
+| Colorize ✅ | `ApplyColorFilter` helper | After Phase 1 ✅ | §3.2 done |
+| **BlackAndWhite** ✅ | Two-pass color filter | GPU-eligible ✅ | §2a done |
 | **ReplaceColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel; no matrix equivalent |
 | **SelectiveColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel HSL; §3.7 |
 | Blur | `SKImageFilter.CreateBlur` | N/A | 3-bitmap chain — §3.4 |
 | Sharpen | `SKImageFilter.CreateMatrixConvolution` | N/A | Clean |
-| Pixelate | Downscale/upscale | N/A | Deprecated `SKFilterQuality` — §3.5 |
-| Border | Canvas drawing | N/A | Redundant `Category` override — §3.6 |
-| Glow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | Redundant `Category` override — §3.6 |
-| Reflection ✅ | Canvas + gradient; correct flip + skew width | N/A | Redundant `Category` override — §3.6 |
-| Shadow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | Redundant `Category` override — §3.6 |
-| Outline ✅ | `SKImageFilter.CreateDilate` + DstOut | N/A | Redundant `Category` override — §3.6 |
-| TornEdge | Path generation | N/A | `new Random()` per call — §3.6, §3.8 |
-| Slice ✅ | Canvas drawing; robust bounds | N/A | `new Random()` per call — §3.6, §3.8 |
-| Resize | `SKBitmap.Resize` | N/A | Deprecated `SKFilterQuality` — §3.5 |
+| Pixelate ✅ | Downscale/upscale | N/A | `SKSamplingOptions` — §3.5 done |
+| Border ✅ | Canvas drawing | N/A | `Category` override removed — §3.6 done |
+| Glow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | `Category` override removed — §3.6 done |
+| Reflection ✅ | Canvas + gradient; correct flip + skew width | N/A | `Category` override removed — §3.6 done |
+| Shadow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | `Category` override removed — §3.6 done |
+| Outline ✅ | `SKImageFilter.CreateDilate` + DstOut | N/A | `Category` override removed — §3.6 done |
+| TornEdge ✅ | Path generation | N/A | `Random.Shared`; `Category` removed — §3.6, §3.8 done |
+| Slice ✅ | Canvas drawing; robust bounds | N/A | `Random.Shared`; `Category` removed — §3.6, §3.8 done |
+| Resize ✅ | `SKBitmap.Resize` | N/A | `SKSamplingOptions` — §3.5 done |
 | Rotate (orthogonal) | `ExtractSubset` / canvas transform | N/A | Optimised |
 | Rotate (custom) | Canvas transform | N/A | Clean |
 | Rotate3D | `SKMatrix44` | N/A | Clean |
@@ -96,7 +96,7 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 
 ---
 
-## 1. Phase 1: Use GPU for color-matrix / color-filter effects ❌ NOT STARTED
+## 1. Phase 1: Use GPU for color-matrix / color-filter effects ✅ DONE
 
 ### 1.1 Obtain GRContext from Avalonia (host-specific)
 
@@ -150,7 +150,7 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 
 ## 2. Phase 2: Per-pixel effects
 
-### 2a. BlackAndWhite → color matrix ❌ NOT DONE
+### 2a. BlackAndWhite → color matrix ✅ DONE
 
 **Current code** (`BlackAndWhiteImageEffect.Apply`):
 ```csharp
@@ -199,7 +199,7 @@ return ApplyPixelOperation(source, (color) =>
 
 ## 3. Phase 3: Additional optimisations and code health
 
-### 3.1 GPU read-back threshold (after Phase 1) ❌ NOT DONE
+### 3.1 GPU read-back threshold ✅ DONE
 
 GPU read-back (`surface.Snapshot().ToRasterImage()` or `PeekPixels`) has fixed overhead that dominates for small images. After Phase 1 lands, add a heuristic in `ApplyColorFilter`:
 
@@ -217,7 +217,7 @@ else
 
 Tune the threshold empirically on real hardware. Document the chosen value.
 
-### 3.2 `ColorizeImageEffect` — refactor to use helper ❌ NOT DONE
+### 3.2 `ColorizeImageEffect` — refactor to use helper ✅ DONE
 
 `ColorizeImageEffect.Apply` currently bypasses the base class helpers and manages its own `SKCanvas` / `SKBitmap`. This means it will **not** benefit from the GPU path after Phase 1 unless refactored.
 
@@ -246,7 +246,7 @@ For live preview (slider drag), this rebuilds on every frame. Cache `(Amount, ta
 
 Current chain allocates **3 intermediate bitmaps**: `expanded` → `blurred` → `result` (crop). The crop step could be avoided by drawing with a negative translation + clip rect on `blurred`, saving one allocation per call. **Do only if profiling shows allocation pressure.**
 
-### 3.5 `SKFilterQuality` deprecation ❌ NOT DONE
+### 3.5 `SKFilterQuality` deprecation ✅ DONE
 
 SkiaSharp ≥ 2.88 deprecated `SKFilterQuality` in favour of `SKSamplingOptions`. Two call sites remain:
 
@@ -259,7 +259,7 @@ SkiaSharp ≥ 2.88 deprecated `SKFilterQuality` in favour of `SKSamplingOptions`
 
 > **Regression risk:** None. Pixelation relies on nearest-neighbour (no interpolation) and resize uses high-quality cubic; the replacements preserve both.
 
-### 3.6 Redundant `Category` overrides in Filter effects ❌ NOT DONE
+### 3.6 Redundant `Category` overrides in Filter effects ✅ DONE
 
 `Filters.ImageEffect` (the abstract base in `ShareX.ImageEditor.ImageEffects.Filters`) already sets:
 ```csharp
@@ -288,7 +288,7 @@ Every pixel calls `c.ToHsl()` before range detection, even for pixels that end u
 
 - **Whites/Blacks/Neutrals** ranges depend only on `L` and `S`. Approximate lightness from raw RGB without full HSL decomposition: `L ≈ (max(R,G,B) + min(R,G,B)) / 510f * 100`. Skip `c.ToHsl()` for desaturated/near-white/near-black pixels; only call it for chromatic pixels. Adds branch complexity. **Profile first** — the unsafe pointer loop is already fast; `ToHsl` may not be the bottleneck.
 
-### 3.8 `SliceImageEffect` and `TornEdgeImageEffect` — `new Random()` per call ❌ NOT DONE
+### 3.8 `SliceImageEffect` and `TornEdgeImageEffect` — `new Random()` per call ✅ DONE
 
 Both `SliceImageEffect.Apply` and `TornEdgeImageEffect.Apply` create `new Random()` at the start of every call:
 ```csharp
@@ -320,13 +320,13 @@ Drop the local `Random` variable; replace all `rand.Next(...)` calls in the meth
 | **Reflection** | Fixed flip matrix; skew width expansion | ✅ **DONE** (Round 2) | Correct visual output with skew. |
 | **Outline** | OutlineOnly DstOut mode | ✅ **DONE** (Round 2) | Ring-only outline render. |
 | **Slice** | Robust bounds | ✅ **DONE** (Round 2) | No crash on edge-case slider values. |
-| **2a** | BlackAndWhite via two-pass color filter | ❌ Pending | No per-pixel loop; GPU-eligible after Phase 1. |
-| **3.8** | `Random.Shared` in Slice/TornEdge | ❌ Pending (quick fix) | No determinism issue on rapid calls; no allocation. |
-| **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ❌ Pending (quick fix) | Removes deprecated-API warnings. |
-| **3.6** | Remove redundant `Category` overrides (7 files) | ❌ Pending (quick fix) | Code consistency. |
-| **3.2** | `ColorizeImageEffect` refactor to use helper | ❌ Pending (prerequisite for GPU) | Colorize gains GPU path. |
-| **1** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ❌ Pending | All matrix/filter effects on GPU when context available. |
-| **3.1** | GPU read-back threshold | ❌ Pending (part of Phase 1) | Skip GPU for tiny images. |
+| **2a** | BlackAndWhite via two-pass color filter | ✅ **DONE** | No per-pixel loop; GPU-eligible. |
+| **3.8** | `Random.Shared` in Slice/TornEdge | ✅ **DONE** | No determinism issue on rapid calls; no allocation. |
+| **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ✅ **DONE** | Removes deprecated-API warnings. |
+| **3.6** | Remove redundant `Category` overrides (7 files) | ✅ **DONE** | Code consistency. |
+| **3.2** | `ColorizeImageEffect` refactor to use helper | ✅ **DONE** | Colorize gains GPU path. |
+| **1** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ✅ **DONE** | All matrix/filter effects on GPU when context available. |
+| **3.1** | GPU read-back threshold | ✅ **DONE** | 160 000 px threshold; CPU for small images. |
 | **3.3** | `GammaImageEffect` LUT caching | ⚠️ Low priority | Minor live-preview speedup. |
 | **3.4** | `BlurImageEffect` allocation reduction | ⚠️ Low priority | One fewer SKBitmap per blur call. |
 | **3.7** | `SelectiveColor` `ToHsl` short-circuit | ⚠️ Profile first | Potential speedup at 4K scale. |
