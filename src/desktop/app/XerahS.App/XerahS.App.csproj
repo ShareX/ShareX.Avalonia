@@ -161,7 +161,12 @@
     <_DiscoveredPluginProjects Include="..\..\plugins\*\*.csproj" />
   </ItemGroup>
 
-  <Target Name="BuildPlugins" AfterTargets="Build" Condition="'$(SkipBundlePlugins)' != 'true'">
+  <PropertyGroup>
+    <EnableAppDrivenPluginBuild Condition="'$(EnableAppDrivenPluginBuild)' == '' And '$(BuildingSolutionFile)' == 'true'">false</EnableAppDrivenPluginBuild>
+    <EnableAppDrivenPluginBuild Condition="'$(EnableAppDrivenPluginBuild)' == ''">true</EnableAppDrivenPluginBuild>
+  </PropertyGroup>
+
+  <Target Name="BuildPlugins" AfterTargets="Build" Condition="'$(SkipBundlePlugins)' != 'true' And '$(EnableAppDrivenPluginBuild)' == 'true'">
     <Message Text="[Plugins] Auto-building discovered plugins: @(_DiscoveredPluginProjects->'%(Filename)', ', ')" Importance="High" />
     <MSBuild Projects="@(_DiscoveredPluginProjects)" Targets="Restore;Build" Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);HostTargetFramework=$(TargetFramework)" />
   </Target>
