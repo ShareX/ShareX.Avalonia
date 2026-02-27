@@ -133,8 +133,11 @@ jobs:
           VERSION="${{ needs.validate-version.outputs.version }}"
           for ARCH in arm64 x64; do
             ARCHIVE="dist/XerahS-${VERSION}-mac-${ARCH}.tar.gz"
-            tar -tzf "$ARCHIVE" | grep -q "XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon"
-            tar -tzf "$ARCHIVE" | grep -q "XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json"
+            ARCHIVE_LIST="$(mktemp)"
+            tar -tzf "$ARCHIVE" > "$ARCHIVE_LIST"
+            grep -q "XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon" "$ARCHIVE_LIST"
+            grep -q "XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json" "$ARCHIVE_LIST"
+            rm -f "$ARCHIVE_LIST"
           done
 
       - name: Upload macOS artifacts
@@ -198,8 +201,11 @@ jobs:
           set -euo pipefail
           VERSION="${{ needs.validate-version.outputs.version }}"
           ARCHIVE="dist/XerahS-${VERSION}-${{ matrix.rid }}.tar.gz"
-          tar -tzf "$ARCHIVE" | grep -Eq '(^|/)xerahs-watchfolder-daemon$'
-          tar -tzf "$ARCHIVE" | grep -Eq '(^|/)xerahs-watchfolder-daemon.runtimeconfig.json$'
+          ARCHIVE_LIST="$(mktemp)"
+          tar -tzf "$ARCHIVE" > "$ARCHIVE_LIST"
+          grep -Eq '(^|/)xerahs-watchfolder-daemon$' "$ARCHIVE_LIST"
+          grep -Eq '(^|/)xerahs-watchfolder-daemon.runtimeconfig.json$' "$ARCHIVE_LIST"
+          rm -f "$ARCHIVE_LIST"
 
       - name: Upload Linux artifacts
         uses: actions/upload-artifact@v4
