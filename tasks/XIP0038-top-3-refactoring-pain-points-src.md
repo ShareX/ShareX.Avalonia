@@ -1,4 +1,4 @@
-# XIP0038 Top 3 Refactoring Pain Points (src) - Completed
+# XIP0038 Top 3 Refactoring Pain Points (src)
 ## Summary
 
 Comprehensive audit of `src/` identified three structural pain points with the highest impact on delivery speed, change safety, and long-term maintainability. All three refactor tracks are now complete and documented in this XIP.

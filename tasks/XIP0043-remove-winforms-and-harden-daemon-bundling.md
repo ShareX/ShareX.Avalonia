@@ -1,4 +1,4 @@
-# XIP0043 Remove Windows Forms dependency and harden cross-RID daemon bundling
+# XIP0043 Remove WinForms and harden daemon bundling
 ## Summary
 
 This plan removes the `System.Windows.Forms` dependency from the Windows platform layer and makes daemon packaging deterministic across all six desktop release combinations:
