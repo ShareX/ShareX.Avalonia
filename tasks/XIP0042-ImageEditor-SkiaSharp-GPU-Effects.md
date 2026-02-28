@@ -15,7 +15,7 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 ## Current State (as of Feb 2026 — fully implemented)
 
-> **Jaex landed two rounds of optimisations/fixes; all remaining items were then implemented in `feature/XIP0042-optimizations`.**
+> **Jaex landed two rounds of optimisations/fixes; all remaining items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries.**
 
 ### Round 1 (prior audit)
 - ✅ `ApplyPixelOperation` rewritten with `unsafe` pointer arithmetic for `Bgra8888` — no `GetPixel`/`SetPixel`.
@@ -27,17 +27,28 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 - ✅ `OutlineImageEffect` — `OutlineOnly` mode added (DstOut erase of inner area).
 - ✅ `SliceImageEffect` — Robust `minSliceHeight`/`maxSliceHeight`/`minSliceShift`/`maxSliceShift` bounds checking.
 
+### Round 3 (post-implementation: diagnostics + build fixes)
+- ⚠️ `SKSamplingOptions` (§3.5) **reverted** — specific overloads (`SKCubicResampler.Mitchell`, `SKBitmap.Resize(info, SKSamplingOptions)`) absent in SkiaSharp 2.88.9; code remains on `SKFilterQuality` pending a SkiaSharp upgrade.
+- ✅ `ReadPixels` corrected to the **5-arg overload** in the GPU surface read-back path (Phase 1 build fix).
+- ✅ `SKCanvasControl` rewritten to use `ICustomDrawOperation` + `ISkiaSharpApiLeaseFeature` — correct Avalonia 11 pattern for obtaining `GRContext` during custom Skia rendering.
+- ✅ `IEditorDiagnosticsSink` / `EditorDiagnosticEvent` / `EditorDiagnosticLevel` added to `ShareX.ImageEditor.Services` — host-agnostic interface for observability.
+- ✅ `EditorServices.Diagnostics` property wired in ImageEditor; GPU path decision points (`SetGpuContext`, `ApplyColorFilter` GPU/CPU branch) emit structured diagnostic events.
+- ✅ `EditorDiagnosticsAdapter` added to XerahS (`XerahS.UI.Services`) — routes `IEditorDiagnosticsSink` events to `DebugHelper.WriteLine` / `WriteException`.
+- ✅ Wired in `App.axaml.cs`: `EditorServices.Diagnostics = new EditorDiagnosticsAdapter()`.
+- ✅ `src/desktop/app/run-debug-app.sh` added — convenience script to launch the desktop app in Debug configuration for GPU path verification.
+
 ### Implementation status
 
 | Area | Status |
 |---|---|
-| **Phase 1** — GRContext / GPU surface path | ✅ DONE (Commit 4) |
-| **Phase 2a** — BlackAndWhite via color matrix | ✅ DONE (Commit 2) |
-| **§3.1** — GPU pixel threshold | ✅ DONE (Commit 4, 160 000 px) |
-| **§3.2** — `ColorizeImageEffect` refactor | ✅ DONE (Commit 3) |
-| **§3.5** — `SKFilterQuality` deprecation | ✅ DONE (Commit 1) |
-| **§3.6** — Redundant `Category` overrides in 7 filter effects | ✅ DONE (Commit 1) |
-| **§3.8** — `new Random()` per call in Slice/TornEdge | ✅ DONE (Commit 1) |
+| **Phase 1** — GRContext / GPU surface path | ✅ DONE |
+| **Phase 2a** — BlackAndWhite via color matrix | ✅ DONE |
+| **§3.1** — GPU pixel threshold (160 000 px) | ✅ DONE |
+| **§3.2** — `ColorizeImageEffect` refactor | ✅ DONE |
+| **§3.5** — `SKFilterQuality` → `SKSamplingOptions` | ⚠️ Reverted — SkiaSharp 2.88.9 missing overloads; revisit after upgrade |
+| **§3.6** — Redundant `Category` overrides in 7 filter effects | ✅ DONE |
+| **§3.8** — `new Random()` per call in Slice/TornEdge | ✅ DONE |
+| **§3.9** — Diagnostics / observability infrastructure | ✅ DONE |
 | §3.3 GammaImageEffect LUT caching | ⚠️ Low priority — profile first |
 | §3.4 BlurImageEffect allocation reduction | ⚠️ Low priority — profile first |
 | §3.7 SelectiveColor `ToHsl` short-circuit | ⚠️ Profile first |
@@ -62,7 +73,7 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 | **SelectiveColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel HSL; §3.7 |
 | Blur | `SKImageFilter.CreateBlur` | N/A | 3-bitmap chain — §3.4 |
 | Sharpen | `SKImageFilter.CreateMatrixConvolution` | N/A | Clean |
-| Pixelate ✅ | Downscale/upscale | N/A | `SKSamplingOptions` — §3.5 done |
+| Pixelate | Downscale/upscale | N/A | `SKFilterQuality` — §3.5 reverted (SkiaSharp 2.88.9) |
 | Border ✅ | Canvas drawing | N/A | `Category` override removed — §3.6 done |
 | Glow ✅ | `SKColorFilter` + blur; asymmetric resize | N/A | `Category` override removed — §3.6 done |
 | Reflection ✅ | Canvas + gradient; correct flip + skew width | N/A | `Category` override removed — §3.6 done |
@@ -70,7 +81,7 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 | Outline ✅ | `SKImageFilter.CreateDilate` + DstOut | N/A | `Category` override removed — §3.6 done |
 | TornEdge ✅ | Path generation | N/A | `Random.Shared`; `Category` removed — §3.6, §3.8 done |
 | Slice ✅ | Canvas drawing; robust bounds | N/A | `Random.Shared`; `Category` removed — §3.6, §3.8 done |
-| Resize ✅ | `SKBitmap.Resize` | N/A | `SKSamplingOptions` — §3.5 done |
+| Resize | `SKBitmap.Resize` | N/A | `SKFilterQuality` — §3.5 reverted (SkiaSharp 2.88.9) |
 | Rotate (orthogonal) | `ExtractSubset` / canvas transform | N/A | Optimised |
 | Rotate (custom) | Canvas transform | N/A | Clean |
 | Rotate3D | `SKMatrix44` | N/A | Clean |
@@ -246,18 +257,20 @@ For live preview (slider drag), this rebuilds on every frame. Cache `(Amount, ta
 
 Current chain allocates **3 intermediate bitmaps**: `expanded` → `blurred` → `result` (crop). The crop step could be avoided by drawing with a negative translation + clip rect on `blurred`, saving one allocation per call. **Do only if profiling shows allocation pressure.**
 
-### 3.5 `SKFilterQuality` deprecation ✅ DONE
+### 3.5 `SKFilterQuality` → `SKSamplingOptions` ⚠️ Reverted — pending SkiaSharp upgrade
 
-SkiaSharp ≥ 2.88 deprecated `SKFilterQuality` in favour of `SKSamplingOptions`. Two call sites remain:
+SkiaSharp ≥ 2.88 deprecated `SKFilterQuality` in favour of `SKSamplingOptions`. The migration was implemented and initially marked done, but **subsequently reverted** because SkiaSharp 2.88.9 (the version in use) does not expose the required overloads: `SKCubicResampler.Mitchell` and the `SKBitmap.Resize(SKImageInfo, SKSamplingOptions)` overload are absent in that build. Code reverts to `SKFilterQuality` to maintain a clean build (0 errors, 0 warnings).
 
-| File | Current | Replacement |
+**Planned replacements** (for when SkiaSharp is upgraded):
+
+| File | Current (reverted) | Planned |
 |---|---|---|
 | `PixelateImageEffect.Apply` | `new SKPaint { FilterQuality = SKFilterQuality.None }` | `new SKPaint { SamplingOptions = new SKSamplingOptions(SKFilterMode.Nearest) }` |
 | `ResizeImageEffect.Apply` | `source.Resize(info, SKFilterQuality.High)` | `source.Resize(info, new SKSamplingOptions(SKCubicResampler.Mitchell))` |
 
-**No behaviour change.** Fixes compiler warnings and future-proofs against removal.
+**No behaviour change when applied.** Fixes compiler warnings and future-proofs against removal.
 
-> **Regression risk:** None. Pixelation relies on nearest-neighbour (no interpolation) and resize uses high-quality cubic; the replacements preserve both.
+> **Action required:** Re-apply after upgrading SkiaSharp past 2.88.9 to a build that exposes these overloads. Regression risk is none — pixelation uses nearest-neighbour and resize uses high-quality cubic; the replacements preserve both.
 
 ### 3.6 Redundant `Category` overrides in Filter effects ✅ DONE
 
@@ -308,6 +321,23 @@ Drop the local `Random` variable; replace all `rand.Next(...)` calls in the meth
 
 > **Regression risk:** None. The fix produces statistically equivalent randomness. The visual output of Slice and TornEdge will differ between calls as intended (no determinism loss).
 
+### 3.9 Diagnostics / observability infrastructure ✅ DONE
+
+Added a host-agnostic diagnostics interface to ImageEditor so GPU path decisions and errors are observable at the host level without coupling ImageEditor to any specific logging framework.
+
+**ImageEditor side (`ShareX.ImageEditor.Services`):**
+- `IEditorDiagnosticsSink` — interface with single method `Report(EditorDiagnosticEvent)`.
+- `EditorDiagnosticEvent` — struct carrying `Source`, `Message`, `Level` (`EditorDiagnosticLevel`: Info/Warning/Error), and optional `ExceptionText`.
+- `EditorServices.Diagnostics` — static nullable `IEditorDiagnosticsSink?` property; set by the host at startup.
+- Emit points: `SetGpuContext()` (context acquired / cleared), `ApplyColorFilter()` (GPU branch taken / CPU fallback reason), and `SKCanvasControl` render callbacks.
+
+**XerahS host side (`XerahS.UI.Services`):**
+- `EditorDiagnosticsAdapter : IEditorDiagnosticsSink` — routes events to `DebugHelper`: Info → `WriteLine`, Warning → `WriteLine("WARN …")`, Error → `WriteException` or `WriteLine("ERROR …")`.
+- Wired in `App.axaml.cs` (composition root): `EditorServices.Diagnostics = new EditorDiagnosticsAdapter()`.
+
+**Developer tooling:**
+- `src/desktop/app/run-debug-app.sh` — shell script that resolves `dotnet` (PATH or `~/.dotnet/dotnet`) and launches `XerahS.App.csproj` in Debug configuration, making GPU diagnostics visible on stdout/in the IDE debug output window.
+
 ---
 
 ## 4. Summary table
@@ -322,23 +352,19 @@ Drop the local `Random` variable; replace all `rand.Next(...)` calls in the meth
 | **Slice** | Robust bounds | ✅ **DONE** (Round 2) | No crash on edge-case slider values. |
 | **2a** | BlackAndWhite via two-pass color filter | ✅ **DONE** | No per-pixel loop; GPU-eligible. |
 | **3.8** | `Random.Shared` in Slice/TornEdge | ✅ **DONE** | No determinism issue on rapid calls; no allocation. |
-| **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ✅ **DONE** | Removes deprecated-API warnings. |
+| **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ⚠️ **Reverted** — SkiaSharp 2.88.9 missing overloads | Re-apply after SkiaSharp upgrade. |
 | **3.6** | Remove redundant `Category` overrides (7 files) | ✅ **DONE** | Code consistency. |
 | **3.2** | `ColorizeImageEffect` refactor to use helper | ✅ **DONE** | Colorize gains GPU path. |
 | **1** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ✅ **DONE** | All matrix/filter effects on GPU when context available. |
 | **3.1** | GPU read-back threshold | ✅ **DONE** | 160 000 px threshold; CPU for small images. |
+| **3.9** | Diagnostics / observability (`IEditorDiagnosticsSink`) | ✅ **DONE** (Round 3) | GPU path decisions visible in host debug output. |
 | **3.3** | `GammaImageEffect` LUT caching | ⚠️ Low priority | Minor live-preview speedup. |
 | **3.4** | `BlurImageEffect` allocation reduction | ⚠️ Low priority | One fewer SKBitmap per blur call. |
 | **3.7** | `SelectiveColor` `ToHsl` short-circuit | ⚠️ Profile first | Potential speedup at 4K scale. |
 
-**Implementation order recommendation:**
-1. **3.8** — two lines changed, no risk, solves determinism bug.
-2. **3.5** — trivial, no risk, removes warnings.
-3. **3.6** — trivial, no risk, 7 one-line deletions.
-4. **2a** — straightforward, no GPU dependency.
-5. **3.2** — prerequisite for Phase 1 GPU to cover Colorize.
-6. **1 + 3.1** — main GPU work: wire GRContext, size threshold.
-7. **3.3, 3.4, 3.7** — only if profiling shows need.
+**Remaining open items:**
+- **§3.5** — Re-apply `SKSamplingOptions` migration after upgrading SkiaSharp past 2.88.9.
+- **§3.3, §3.4, §3.7** — Profile-gated; only implement if profiling confirms they are bottlenecks.
 
 ---
 
@@ -355,4 +381,7 @@ Drop the local `Random` variable; replace all `rand.Next(...)` calls in the meth
 - Resize (§3.5): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Manipulations/ResizeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Manipulations/ResizeImageEffect.cs)
 - Slice (§3.8): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/SliceImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/SliceImageEffect.cs)
 - TornEdge (§3.8): [ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/TornEdgeImageEffect.cs](../ImageEditor/src/ShareX.ImageEditor/Core/ImageEffects/Filters/TornEdgeImageEffect.cs)
+- Diagnostics interface (§3.9): `ImageEditor/src/ShareX.ImageEditor/Services/IEditorDiagnosticsSink.cs`; `EditorDiagnosticEvent.cs`; `EditorServices.cs`
+- Diagnostics adapter (§3.9): [src/desktop/app/XerahS.UI/Services/EditorDiagnosticsAdapter.cs](../src/desktop/app/XerahS.UI/Services/EditorDiagnosticsAdapter.cs)
+- Debug launch script (§3.9): [src/desktop/app/run-debug-app.sh](../src/desktop/app/run-debug-app.sh)
 - ShareX host: `ShareX/TaskHelpers.cs` (`OpenImageEditor`, `UseModernImageEditor` → `AvaloniaIntegration.ShowEditorDialog`); `ShareX.ImageEditor/Helpers/AvaloniaIntegration.cs`
