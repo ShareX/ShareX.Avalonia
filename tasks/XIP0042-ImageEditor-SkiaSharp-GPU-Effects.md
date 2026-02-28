@@ -13,9 +13,9 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 ---
 
-## Current State (as of Feb 2026 — fully implemented)
+## Current State (as of Feb 2026)
 
-> **Jaex landed two rounds of optimisations/fixes; all remaining items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries.**
+> **Jaex landed two rounds of optimisations/fixes; all remaining ImageEditor-side items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries. The GPU path in the ImageEditor library is complete, but the XerahS host has never called `SetGpuContext()` — GPU acceleration is therefore inactive on both Linux and Windows. See "Remaining open items" below.**
 
 ### Round 1 (prior audit)
 - ✅ `ApplyPixelOperation` rewritten with `unsafe` pointer arithmetic for `Bgra8888` — no `GetPixel`/`SetPixel`.
@@ -41,7 +41,8 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 | Area | Status |
 |---|---|
-| **Phase 1** — GRContext / GPU surface path | ✅ DONE |
+| **Phase 1** — GRContext / GPU surface path (ImageEditor library) | ✅ DONE |
+| **Phase 1** — XerahS host wiring (`SetGpuContext` never called) | ❌ NOT DONE — GPU inactive |
 | **Phase 2a** — BlackAndWhite via color matrix | ✅ DONE |
 | **§3.1** — GPU pixel threshold (160 000 px) | ✅ DONE |
 | **§3.2** — `ColorizeImageEffect` refactor | ✅ DONE |
@@ -107,7 +108,9 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 
 ---
 
-## 1. Phase 1: Use GPU for color-matrix / color-filter effects ✅ DONE
+## 1. Phase 1: Use GPU for color-matrix / color-filter effects
+
+> **Library side ✅ DONE. Host wiring ❌ NOT DONE.** The `ApplyColorFilter`/`ApplyColorMatrix` GPU path exists and is correct in ImageEditor. However, `SetGpuContext()` is never called from XerahS — no `GRContext` is ever provided — so all effects run on the CPU path on all platforms. Sections §1.1–1.4 below describe what still needs to be implemented in the host.
 
 ### 1.1 Obtain GRContext from Avalonia (host-specific)
 
@@ -355,7 +358,8 @@ Added a host-agnostic diagnostics interface to ImageEditor so GPU path decisions
 | **3.5** | `SKFilterQuality` → `SKSamplingOptions` | ⚠️ **Reverted** — SkiaSharp 2.88.9 missing overloads | Re-apply after SkiaSharp upgrade. |
 | **3.6** | Remove redundant `Category` overrides (7 files) | ✅ **DONE** | Code consistency. |
 | **3.2** | `ColorizeImageEffect` refactor to use helper | ✅ **DONE** | Colorize gains GPU path. |
-| **1** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ✅ **DONE** | All matrix/filter effects on GPU when context available. |
+| **1 (library)** | GPU surface via `GRContext` for `ApplyColorFilter`/`ApplyColorMatrix` | ✅ **DONE** | ImageEditor GPU path ready; awaits host to call `SetGpuContext`. |
+| **1 (host wiring)** | XerahS calls `SetGpuContext(grContext)` to activate GPU path | ❌ **NOT DONE** | `SetGpuContext` never called — GPU inactive on all platforms. |
 | **3.1** | GPU read-back threshold | ✅ **DONE** | 160 000 px threshold; CPU for small images. |
 | **3.9** | Diagnostics / observability (`IEditorDiagnosticsSink`) | ✅ **DONE** (Round 3) | GPU path decisions visible in host debug output. |
 | **3.3** | `GammaImageEffect` LUT caching | ⚠️ Low priority | Minor live-preview speedup. |
@@ -363,7 +367,14 @@ Added a host-agnostic diagnostics interface to ImageEditor so GPU path decisions
 | **3.7** | `SelectiveColor` `ToHsl` short-circuit | ⚠️ Profile first | Potential speedup at 4K scale. |
 
 **Remaining open items:**
+
+- **Phase 1 host wiring (blocking — GPU currently inactive on all platforms):** XerahS must acquire a `GRContext` from Avalonia's Skia renderer and call `SetGpuContext(grContext)` before the effect pipeline runs. Zero references to `SetGpuContext`, `GRContext`, or `TryGetGrContext` exist anywhere in `src/`. Candidate wiring points:
+  - `XerahS.UI/Views/MainWindow.Navigation.cs` — after creating `EditorView` (line ~136)
+  - `XerahS.UI/Services/AvaloniaUIService.cs` — inside `ShowEditorAsync()` after obtaining the EditorView reference (lines ~109–117)
+  - The context must be obtained and set on the UI/render thread; see §1.1–1.4 for options (Avalonia render-thread dispatch vs. separate offscreen context). This is non-trivial: the `ISkiaSharpApiLease` GRContext is scoped to a single render frame and is invalid outside it, so a persistent offscreen approach (Option B in §1.3) is likely required for effect application.
+
 - **§3.5** — Re-apply `SKSamplingOptions` migration after upgrading SkiaSharp past 2.88.9.
+
 - **§3.3, §3.4, §3.7** — Profile-gated; only implement if profiling confirms they are bottlenecks.
 
 ---
