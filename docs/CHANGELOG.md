@@ -13,6 +13,26 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 
 
+
+## v0.19.0
+
+### Fixes
+- **Core**: Correct DMDO_90/DMDO_270 → ModeRotation mapping in DXGI capture (b484d197)
+
+### Documentation
+- **Core**: Fix XIP0042 markdown rendering (939f92c5)
+- **Core**: Normalize mojibake symbols in XIP0042 task doc (28c39130)
+- **Core**: Replicate XIP0042 formatting from ba3713b3 (5b418f5d)
+
+### Changed
+- **Core**: [Docs] Shorten XIP0043 title and backup filename; sync XIP0038/XIP0040 slugs (8ebe0ae8)
+- **Core**: [Docs] XIP sync: GitHub source of truth, single-folder backup, merge script (5994bb13)
+- **Core**: [XIP0042] Second audit — update task after Jaex's Round 2 fixes (4c06d5cf)
+- **Core**: [XIP0042] Sync task doc from feature/XIP0042-optimizations (latest implementation status) (b9da24b8)
+- **Core**: [XIP0042] Update GPU effects task with current codebase audit (7c70e94a)
+- **Core**: Move XIP0043 task to complete folder (2b9a95ed)
+- **Core**: Update ImageEditor (009d2201, 12c0380f, 600a1fdd, 8236ce9c, 9c2f85c4)
+
 ## v0.18.11
 
 ### Fixes
