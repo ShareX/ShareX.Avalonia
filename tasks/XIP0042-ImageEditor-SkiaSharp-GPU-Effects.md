@@ -6,16 +6,16 @@
 
 **Scope:** ShareX.ImageEditor (ImageEditor) — adjustment/filter effects and their application pipeline. **ImageEditor is shared and used by two hosts:**
 
-- **XerahS** — Avalonia desktop app; embeds EditorView and can obtain `GRContext` from the Avalonia Skia renderer.
+- **XerahS** — Avalonia desktop app; embeds EditorView. GPU wiring intentionally deferred — see §1.5.
 - **ShareX** — WinForms app; opens the modern ImageEditor via `AvaloniaIntegration.ShowEditorDialog` (Avalonia window). Same ImageEditor codebase, different host process.
 
-Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remain compatible with both hosts**. The host provides an optional `GRContext` when applying effects; when not provided, the software path is always used (no breaking change for either host).
+Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remain compatible with both hosts**. The host may provide an optional `GRContext` when applying effects; when not provided (`null`), the software path is always used (no breaking change for either host). Neither host currently provides one — this is intentional for Phase 1 effects (see §1.5).
 
 ---
 
 ## Current State (as of Feb 2026)
 
-> **Jaex landed two rounds of optimisations/fixes; all remaining ImageEditor-side items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries. The GPU path in the ImageEditor library is complete, but the XerahS host has never called `SetGpuContext()` — GPU acceleration is therefore inactive on both Linux and Windows. See "Remaining open items" below.**
+> **Jaex landed two rounds of optimisations/fixes; all remaining ImageEditor-side items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries. The GPU path in the ImageEditor library is complete, but host wiring is intentionally deferred: the Avalonia 11 frame-scoped API (`AvaloniaLocator / ISkiaGpuWithPlatformGraphicsContext`) is fragile and cannot be used outside a render callback, and a persistent offscreen `GRContext` (the only viable path) has a readback cost that negates the benefit for the color-matrix/filter operations targeted here. GPU wiring will be revisited at Phase 3 (canvas compositor). See §1.5.**
 
 ### Round 1 (prior audit)
 - ✅ `ApplyPixelOperation` rewritten with `unsafe` pointer arithmetic for `Bgra8888` — no `GetPixel`/`SetPixel`.
@@ -42,7 +42,7 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 | Area | Status |
 |---|---|
 | **Phase 1** — GRContext / GPU surface path (ImageEditor library) | ✅ DONE |
-| **Phase 1** — XerahS host wiring (`SetGpuContext` never called) | ❌ NOT DONE — GPU inactive |
+| **Phase 1** — XerahS host wiring (`SetGpuContext`) | ⏸️ DEFERRED — see §1.5; revisit at Phase 3 |
 | **Phase 2a** — BlackAndWhite via color matrix | ✅ DONE |
 | **§3.1** — GPU pixel threshold (160 000 px) | ✅ DONE |
 | **§3.2** — `ColorizeImageEffect` refactor | ✅ DONE |
@@ -58,17 +58,17 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 | Effect | Method | GPU-ready? | Notes |
 |---|---|---|---|
-| Brightness | `ApplyColorMatrix` | After Phase 1 | |
-| Contrast | `ApplyColorMatrix` | After Phase 1 | |
-| Saturation | `ApplyColorMatrix` | After Phase 1 | |
-| Hue | `ApplyColorMatrix` | After Phase 1 | |
-| Invert | `ApplyColorMatrix` | After Phase 1 | |
-| Grayscale | `ApplyColorMatrix` | After Phase 1 | |
-| Sepia | `ApplyColorMatrix` | After Phase 1 | |
-| Polaroid | `ApplyColorMatrix` | After Phase 1 | |
-| Alpha | `ApplyColorMatrix` | After Phase 1 | |
-| Gamma | `ApplyColorFilter` (table LUT) | After Phase 1 | Rebuilds LUT every call — §3.3 |
-| Colorize ✅ | `ApplyColorFilter` helper | After Phase 1 ✅ | §3.2 done |
+| Brightness | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Contrast | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Saturation | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Hue | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Invert | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Grayscale | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Sepia | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Polaroid | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Alpha | `ApplyColorMatrix` | GPU deferred (§1.5) | |
+| Gamma | `ApplyColorFilter` (table LUT) | GPU deferred (§1.5) | Rebuilds LUT every call — §3.3 |
+| Colorize ✅ | `ApplyColorFilter` helper | GPU deferred (§1.5) ✅ | §3.2 done |
 | **BlackAndWhite** ✅ | Two-pass color filter | GPU-eligible ✅ | §2a done |
 | **ReplaceColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel; no matrix equivalent |
 | **SelectiveColor** | `ApplyPixelOperation` (unsafe ✅) | CPU only | Per-pixel HSL; §3.7 |
@@ -101,8 +101,8 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 | Rule | Rationale |
 |---|---|
 | **No host-specific APIs in ImageEditor core/effects** | ImageEditor must not reference XerahS-only or ShareX-only assemblies. Effect pipeline and `ApplyColorFilter` helper stay in `ShareX.ImageEditor` with no dependency on host. |
-| **GRContext is optional and provided by the host** | The effect library accepts an optional `GRContext` (or delegate). When `null` or not set, the existing software path runs. No requirement for either host to provide it. |
-| **Host wiring is each host's responsibility** | XerahS may obtain `GRContext` from its main Avalonia renderer and pass it when applying effects. ShareX may do the same from the Avalonia editor window's renderer if feasible; if not wired, ShareX simply does not set a context and effects use the software path. Both get correct, identical effect results. |
+| **GRContext is optional and provided by the host** | The effect library accepts an optional `GRContext` (or delegate). When `null` or not set, the existing software path runs. No requirement for either host to provide it. Neither host provides it currently — intentional (§1.5). |
+| **Host GPU wiring deferred to Phase 3** | The Avalonia 11 render-lease API is frame-scoped and cannot be used at effect-application call sites. A persistent offscreen `GRContext` (Option B, §1.3) is the only correct approach but its readback cost negates the benefit for Phase 1 color-matrix/filter operations. Revisit when the canvas compositor (Phase 3) is designed — that is where GPU acceleration delivers a real, measurable win. |
 | **Phase 2 (BlackAndWhite, ReplaceColor, SelectiveColor)** | Pure ImageEditor code; no host dependency. Behaves identically in both hosts. |
 | **Validation** | When implementing, ensure ImageEditor builds and effect behavior is unchanged in both repo configurations (XerahS and ShareX). Optionally validate GPU path in XerahS and software fallback in both. |
 
@@ -110,7 +110,7 @@ ImageEditor lives in a shared codebase consumed by **XerahS** and **ShareX**. Bo
 
 ## 1. Phase 1: Use GPU for color-matrix / color-filter effects
 
-> **Library side ✅ DONE. Host wiring ❌ NOT DONE.** The `ApplyColorFilter`/`ApplyColorMatrix` GPU path exists and is correct in ImageEditor. However, `SetGpuContext()` is never called from XerahS — no `GRContext` is ever provided — so all effects run on the CPU path on all platforms. Sections §1.1–1.4 below describe what still needs to be implemented in the host.
+> **Library side ✅ DONE. Host wiring ⏸️ DEFERRED — see §1.5.** The `ApplyColorFilter`/`ApplyColorMatrix` GPU path exists and is correct in ImageEditor. Host wiring is intentionally not pursued for Phase 1: the only viable API path (persistent offscreen `GRContext`, §1.3 Option B) has a per-effect readback cost that negates the benefit for color-matrix/filter operations on screenshot-sized images, and the Avalonia 11 frame-scoped lease API cannot be used outside a render callback. The `GRContext?` parameter remains in the API as a zero-cost forward-compatibility hook. GPU wiring will be designed at Phase 3 (canvas compositor). Sections §1.1–1.4 below document the API constraints; §1.5 gives the full rationale.
 
 ### 1.1 Obtain GRContext from Avalonia (host-specific)
 
