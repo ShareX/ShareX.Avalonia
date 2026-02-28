@@ -63,3 +63,4 @@ When a bug or feature is identified or provided by user, follow this process:
 
 ### Planning
 - [Roadmap & Status Snapshot](docs/planning/ROADMAP_SNAPSHOT_JAN_2025.md)
+- [XIP Sync (create/sync XIPs; GitHub = source of truth, tasks = backup)](.ai/skills/xip-sync/SKILL.md)
