@@ -685,11 +685,11 @@ namespace XerahS.Platform.Windows
             rotation = devMode.dmDisplayOrientation switch
             {
                 NativeMethods.DMDO_DEFAULT => ModeRotation.Identity,
-                // DEVMODE defines 90/270 as counter-clockwise from natural orientation,
-                // while DXGI rotation values are clockwise.
-                NativeMethods.DMDO_90 => ModeRotation.Rotate270,
+                // DEVMODE and DXGI both define rotation in clockwise degrees from natural
+                // orientation, so DMDO_90=90° CW → Rotate90, DMDO_270=270° CW → Rotate270.
+                NativeMethods.DMDO_90 => ModeRotation.Rotate90,
                 NativeMethods.DMDO_180 => ModeRotation.Rotate180,
-                NativeMethods.DMDO_270 => ModeRotation.Rotate90,
+                NativeMethods.DMDO_270 => ModeRotation.Rotate270,
                 _ => ModeRotation.Unspecified
             };
 
