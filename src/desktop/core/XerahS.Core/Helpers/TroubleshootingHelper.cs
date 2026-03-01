@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using System.Diagnostics;
+using XerahS.Common;
 
 namespace XerahS.Core.Helpers
 {
@@ -175,7 +176,7 @@ namespace XerahS.Core.Helpers
         /// </summary>
         public static string GetTroubleshootingFolder()
         {
-            return Path.Combine(SettingsManager.PersonalFolder, "Troubleshooting");
+            return PathsManager.TroubleshootingFolder;
         }
 
         #region DPI Troubleshooting Logging

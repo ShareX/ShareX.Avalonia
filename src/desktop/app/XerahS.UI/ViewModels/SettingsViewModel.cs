@@ -326,7 +326,7 @@ namespace XerahS.UI.ViewModels
         [RelayCommand]
         private void ResetToDefaults()
         {
-            ScreenshotsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), "ShareX");
+            ScreenshotsFolder = PathsManager.ScreenshotsFolder;
             SaveImageSubFolderPattern = "%y-%mo";
             UseCustomScreenshotsPath = false;
             ShowTray = true;

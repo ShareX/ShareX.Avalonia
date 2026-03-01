@@ -27,6 +27,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using XerahS.Common;
 using XerahS.Core;
 using XerahS.Uploaders.PluginSystem;
 
@@ -125,7 +126,7 @@ public partial class PluginInstallerViewModel : ViewModelBase
 
         try
         {
-            string pluginsDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
+            string pluginsDir = Path.Combine(AppContext.BaseDirectory, AppResources.PluginsFolderName);
             Directory.CreateDirectory(pluginsDir);
 
             var metadata = PluginPackager.InstallPackage(PackageFilePath, pluginsDir);

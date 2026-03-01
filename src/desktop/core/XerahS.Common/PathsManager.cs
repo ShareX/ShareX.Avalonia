@@ -85,6 +85,10 @@ namespace XerahS.Common
         public static string HistoryFolder => Path.Combine(PersonalFolder, AppResources.HistoryFolderName);
         public static string BackupFolder => Path.Combine(SettingsFolder, AppResources.BackupFolderName);
         public static string HistoryBackupFolder => Path.Combine(HistoryFolder, AppResources.BackupFolderName);
+        /// <summary>Folder for troubleshooting / diagnostic logs (e.g. DPI, capture).</summary>
+        public static string TroubleshootingFolder => Path.Combine(PersonalFolder, "Troubleshooting");
+        /// <summary>Base folder for capture verification outputs (region/recording verify).</summary>
+        public static string CaptureTroubleshootingFolder => Path.Combine(PersonalFolder, "CaptureTroubleshooting");
         public static string ToolsFolder => Path.Combine(PersonalFolder, "Tools");
         public static string ToolsArchitectureFolder => Path.Combine(ToolsFolder, GetArchitectureFolderName());
         public static string PluginsFolder
@@ -210,10 +214,11 @@ namespace XerahS.Common
             }
 
             // 2. Check Common System Locations
+            string appToolsDir = GetAppToolsDirectory();
             string[] commonPaths = new[]
             {
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Tools", "ffmpeg.exe"),
-                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg"),
+                Path.Combine(appToolsDir, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg"),
+                Path.Combine(AppContext.BaseDirectory, OperatingSystem.IsWindows() ? "ffmpeg.exe" : "ffmpeg"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "FFmpeg", "bin", "ffmpeg.exe"),
                 Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "FFmpeg", "bin", "ffmpeg.exe"),
                 "/opt/homebrew/bin/ffmpeg",
@@ -251,6 +256,10 @@ namespace XerahS.Common
             DebugHelper.WriteLine("[FFmpeg] FFmpeg not found in any standard location.");
             return string.Empty;
         }
+
+        /// <summary>App-bundled tools directory (BaseDirectory/Tools). Used for FFmpeg lookup and path consistency.</summary>
+        private static string GetAppToolsDirectory() =>
+            Path.Combine(AppContext.BaseDirectory, "Tools");
 
         private static string GetArchitectureFolderName()
         {

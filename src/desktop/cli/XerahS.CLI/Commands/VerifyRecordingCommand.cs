@@ -136,7 +136,7 @@ public static class VerifyRecordingCommand
                 Duration = duration,
                 Iterations = iterations,
                 Debug = debug,
-                OutputDir = outputDir ?? Path.Combine(PathsManager.PersonalFolder, "CaptureTroubleshooting", "RecordingVerify"),
+                OutputDir = outputDir ?? Path.Combine(PathsManager.CaptureTroubleshootingFolder, "RecordingVerify"),
                 RegionSize = regionSize
             };
 

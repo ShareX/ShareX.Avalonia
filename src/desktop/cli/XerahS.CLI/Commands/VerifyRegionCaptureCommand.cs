@@ -138,7 +138,7 @@ namespace XerahS.CLI.Commands
                     Iterations = iterations ?? 20,
                     Tolerance = tolerance ?? 0,
                     MaxFailures = maxFailures ?? 0,
-                    OutputDir = outputDir ?? Path.Combine(PathsManager.PersonalFolder, "CaptureTroubleshooting", "RegionVerify"),
+                    OutputDir = outputDir ?? Path.Combine(PathsManager.CaptureTroubleshootingFolder, "RegionVerify"),
                     StabilizeMs = stabilizeMs ?? 250,
                     HideCursor = hideCursor,
                     HardEdgeBiasPercent = hardEdgeBias ?? 30,

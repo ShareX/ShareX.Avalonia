@@ -24,8 +24,11 @@ Defined in `src/desktop/core/XerahS.Common/PathsManager.cs`:
 | `HistoryFolder` | PersonalFolder/History |
 | `BackupFolder` | SettingsFolder/Backup |
 | `HistoryBackupFolder` | HistoryFolder/Backup |
+| `TroubleshootingFolder` | PersonalFolder/Troubleshooting |
+| `CaptureTroubleshootingFolder` | PersonalFolder/CaptureTroubleshooting |
 | `ToolsFolder` | PersonalFolder/Tools |
 | `ToolsArchitectureFolder` | ToolsFolder/win-arm64, macos64, etc. |
+| `GetAppToolsDirectory()` (private) | AppContext.BaseDirectory/Tools |
 | `PluginsFolder` | App BaseDirectory/Plugins (DEBUG) or PersonalFolder/Plugins |
 | `GetPluginDirectories()` | Returns app Plugins + user Plugins paths |
 
@@ -90,12 +93,12 @@ Defined in `src/desktop/core/XerahS.Common/PathsManager.cs`:
 | Intentional/legacy/system (no change) | 10+ |
 | Already correct | 10+ |
 
-**Recommended next steps**
+**Applied (2026-03-01)**
 
-1. **PluginInstallerViewModel.cs:** Replace hardcoded `"Plugins"` with `AppResources.PluginsFolderName` (and `AppContext.BaseDirectory`) so it matches PathsManager/GetPluginDirectories.
-2. **SettingsViewModel.cs (ResetToDefaults):** Use `PathsManager.ScreenshotsFolder` or at least `AppResources.AppName` instead of `"ShareX"`.
-3. **PathsManager GetFFmpegPath:** Optionally introduce an app-tools path helper and use it for BaseDirectory/Tools so "Tools" is not duplicated.
-4. Optionally add `TroubleshootingFolder` (and optionally CaptureTroubleshooting subfolders) to PathsManager and switch TroubleshootingHelper and CLI verify commands to use them.
+1. **PluginInstallerViewModel.cs:** Now uses `AppContext.BaseDirectory` + `AppResources.PluginsFolderName`.
+2. **SettingsViewModel.cs (ResetToDefaults):** Now uses `PathsManager.ScreenshotsFolder`.
+3. **PathsManager GetFFmpegPath:** Now uses private `GetAppToolsDirectory()` for BaseDirectory/Tools.
+4. **PathsManager:** Added `TroubleshootingFolder`, `CaptureTroubleshootingFolder`. **TroubleshootingHelper.cs** uses `PathsManager.TroubleshootingFolder`. **VerifyRegionCaptureCommand.cs** and **VerifyRecordingCommand.cs** use `Path.Combine(PathsManager.CaptureTroubleshootingFolder, "RegionVerify")` / `"RecordingVerify"`.
 
 ---
 
