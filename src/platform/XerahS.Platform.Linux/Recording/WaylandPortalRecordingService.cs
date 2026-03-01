@@ -862,8 +862,10 @@ public sealed class WaylandPortalRecordingService : IRecordingService
 
         if (HasGStreamerElement("gldownload") && HasGStreamerElement("glupload"))
         {
-            // GPU path: handles DMA-BUF / EGL frames from PipeWire
-            pipeline.AddRange(new[] { "!", "glupload", "!", "glcolorconvert", "!", "gldownload" });
+            // GPU path: force system-memory raw frames from PipeWire FIRST, then upload to GL.
+            // Without video/x-raw, pipewiresrc negotiates DMA-BUF formats that glupload cannot
+            // handle on many GNOME/Wayland systems, causing "stream error: unhandled format".
+            pipeline.AddRange(new[] { "!", "video/x-raw", "!", "glupload", "!", "glcolorconvert", "!", "gldownload" });
         }
         else
         {
