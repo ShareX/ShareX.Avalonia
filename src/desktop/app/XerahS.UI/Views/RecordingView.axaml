@@ -42,9 +42,9 @@
                                 BorderThickness="1"
                                 CornerRadius="4"
                                 Padding="12,8">
-                            <TextBlock Text="{Binding LastError}"
-                                       Foreground="{DynamicResource SystemFillColorCriticalBrush}"
-                                       TextWrapping="Wrap"/>
+                            <SelectableTextBlock Text="{Binding LastError}"
+                                               Foreground="{DynamicResource SystemFillColorCriticalBrush}"
+                                               TextWrapping="Wrap"/>
                         </Border>
                         
                         <!-- Output File Path -->
