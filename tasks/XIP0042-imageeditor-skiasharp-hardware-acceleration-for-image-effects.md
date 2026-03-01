@@ -441,7 +441,38 @@ Tune the threshold empirically on real hardware. Document the chosen value. Note
 
 ---
 
-## 5. References
+## 5. Conclusions for future readers
+
+This section summarizes Avalonia-related constraints, the impact of refactoring vs re-architecting, and performance implications so future readers can avoid repeating the same analysis.
+
+### 5.1 Avalonia limitations (TL;DR)
+
+| Limitation | Summary |
+|-----------|---------|
+| **AvaloniaLocator** | In Avalonia 11 it is deprecated / internals-hostile. It can return `null`, change between minor releases, or be removed. Do not rely on it for host wiring. |
+| **Skia GPU lease** | `ISkiaSharpApiLease` / `ISkiaSharpApiLeaseFeature` (and thus `TryGetGrContext()`) are valid **only inside an active render pass** (e.g. `Render(DrawingContext)` or `ICustomDrawOperation`). The lease is invalid as soon as the callback returns. Being on the UI thread does **not** mean a render frame is active. |
+| **Effect application** | Applying effects (e.g. on "Apply") happens at arbitrary call sites, **outside** any render callback. So you cannot acquire Avalonia's `GRContext` at effect-application time; it only works for drawing to the screen during a render pass. |
+| **Viable path today** | For GPU-accelerated effect application, **Option B** (§3.3) — a persistent offscreen `GRContext` created **independently** of Avalonia's renderer — is the only viable approach under the current architecture. Option A (Avalonia's frame-scoped lease) does not work at arbitrary call sites. |
+
+### 5.2 Would ImageEditor refactoring or re-architecting eliminate these issues?
+
+- **Refactoring alone** (cleaner types, layering, code health) does **not** eliminate the Avalonia limitations. They are constraints of the host/framework, not of ImageEditor structure.
+- **Re-architecting** so that effect application is **invoked from inside the Skia render callback** (e.g. "Apply" schedules work that runs in the next `ICustomDrawOperation` / render pass) could **work around** the frame-scoped lease: Option A (Avalonia's `GRContext`) would then become viable at the cost of:
+  - **Latency:** Result available one frame later (schedule → next render → effect runs → result).
+  - **Control flow:** More moving parts (schedule, render callback, callback to push result back).
+  - **Coupling:** Effect pipeline or host tied to "run during render" instead of "run at any time."
+
+The document's conclusion that "Option B is the only viable path" applies to the **current** architecture (effect application at arbitrary call sites). If you re-architect to run effects inside the render callback, Option A is theoretically viable; the trade-offs above should be weighed before doing so.
+
+### 5.3 Performance impact of the render-callback approach
+
+- **Latency (responsiveness):** The render-callback re-architecture adds **at least one frame of delay** (e.g. ~16 ms at 60 fps) before the effect result is ready. The user sees the result one frame later — so **responsiveness** can feel slightly worse.
+- **Throughput (compute):** The effect **computation** itself is not made slower by this design. If the GPU path is used in that callback, compute can be the same or faster than CPU for large images. The cost is the fixed wait for the next frame, not a slower algorithm.
+- **Net for XIP0042-style usage:** For typical screenshot-sized images and color-matrix–style effects, the XIP already concludes that GPU often does not win (§3, table: upload + readback cost). So with the render-callback approach you would add one frame of latency **without** a clear compute win for those cases — overall UX can be slightly slower (one-frame delay) without a compensating speedup.
+
+---
+
+## 6. References
 
 - [docs/planning/IMAGEEDITOR_SKIA_GPU_PLAN.md](../docs/planning/IMAGEEDITOR_SKIA_GPU_PLAN.md)
 - [Avalonia Skia – TryGetGrContext](https://api-docs.avaloniaui.net/docs/M_Avalonia_Skia_ISkiaGpuWithPlatformGraphicsContext_TryGetGrContext)
