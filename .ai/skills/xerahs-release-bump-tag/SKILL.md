@@ -8,7 +8,7 @@ description: "Orchestrate XerahS release flow in strict order: maintenance-chore
 ## Overview
 
 Use this skill to run release steps in strict order:
-- Step 1: Run `.ai/skills/maintenance-chores/SKILL.md` first
+- Step 1: Execute maintenance chores first (`git pull --recurse-submodules` and `git submodule update --init --recursive`)
 - Step 2: Run `.ai/skills/update-changelog/SKILL.md` second (optional if no `CHANGELOG.md` exists)
 - Step 3: Verify build, then execute bump/commit/push/tag automation
 - Step 4: Monitor the tag-triggered release workflow every 2 minutes
@@ -43,7 +43,7 @@ From repository root:
 Automated monitor + pre-release (recommended):
 
 ```bash
-./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-maintenance-done --assume-changelog-done --monitor --set-prerelease --bump z --yes
+./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-changelog-done --monitor --set-prerelease --bump z --yes
 ```
 
 Manual monitor (fallback, PowerShell example):
@@ -59,25 +59,25 @@ gh run view <run-id> --json status,conclusion,jobs,url
 Patch bump, no prompts:
 
 ```bash
-./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-maintenance-done --assume-changelog-done --bump z --yes
+./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-changelog-done --bump z --yes
 ```
 
 Patch bump with built-in 2-minute monitoring:
 
 ```bash
-./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-maintenance-done --assume-changelog-done --monitor --monitor-interval 120 --bump z --yes
+./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-changelog-done --monitor --monitor-interval 120 --bump z --yes
 ```
 
 Minor bump with custom commit token/summary:
 
 ```bash
-./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-maintenance-done --assume-changelog-done --bump y --type CI --summary "Prepare release artifacts" --yes
+./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-changelog-done --bump y --type CI --summary "Prepare release artifacts" --yes
 ```
 
 Preview only:
 
 ```bash
-./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-maintenance-done --assume-changelog-done --bump z --dry-run --yes
+./.ai/skills/xerahs-release-bump-tag/scripts/run-release-sequence.sh --assume-changelog-done --bump z --dry-run --yes
 ```
 
 ## When bash is unavailable (e.g. Windows PowerShell)
@@ -119,6 +119,7 @@ Default bump when unspecified: patch (`z`). Default commit type token: `CI`.
 ## Behavior
 
 1. Require completion of `maintenance-chores` first.
+   - Script behavior: executes maintenance commands automatically unless explicitly bypassed with `--skip-maintenance` (or legacy alias `--assume-maintenance-done`).
 2. Require completion of `update-changelog` second (skip if no `CHANGELOG.md` or user confirms).
 3. Before bump, run `dotnet build src/desktop/XerahS.sln`; abort on failure.
 4. Run `scripts/bump-version-commit-tag.sh` (or PowerShell/manual equivalent when bash unavailable).
@@ -130,6 +131,7 @@ Default bump when unspecified: patch (`z`). Default commit type token: `CI`.
 ## Guardrails
 
 - Do not skip sequence unless user explicitly requests bypass.
+- Do not skip maintenance unless user explicitly requests bypass (`--skip-maintenance`).
 - Do not commit/push during maintenance/changelog steps.
 - Always verify build before bump/tag.
 - Always monitor workflow after tag push; do not stop at tag creation.

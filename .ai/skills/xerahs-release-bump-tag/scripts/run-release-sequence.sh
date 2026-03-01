@@ -12,7 +12,8 @@ Run release flow in strict order:
 4) optional: monitor tag release workflow until complete
 
 Sequence options:
-  --assume-maintenance-done   Skip interactive confirmation for step 1
+  --skip-maintenance          Skip step 1 maintenance execution (explicit bypass)
+  --assume-maintenance-done   Backward-compatible alias for --skip-maintenance
   --assume-changelog-done     Skip interactive confirmation for step 2
   --monitor                   Monitor tag release workflow after step 3
   --monitor-interval <sec>    Poll interval in seconds (default: 120)
@@ -29,6 +30,14 @@ require_cmd() {
     echo "Error: required command not found: $1" >&2
     exit 1
   fi
+}
+
+run_maintenance_chores() {
+  echo "Step 1: running maintenance chores..."
+  echo "  - git pull --recurse-submodules"
+  git pull --recurse-submodules
+  echo "  - git submodule update --init --recursive"
+  git submodule update --init --recursive
 }
 
 resolve_version_from_props() {
@@ -140,7 +149,7 @@ set_release_prerelease() {
   echo "Release marked as pre-release: $release_url"
 }
 
-ASSUME_MAINTENANCE_DONE=0
+SKIP_MAINTENANCE=0
 ASSUME_CHANGELOG_DONE=0
 MONITOR=0
 MONITOR_INTERVAL=120
@@ -151,7 +160,11 @@ PASSTHROUGH_ARGS=()
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --assume-maintenance-done)
-      ASSUME_MAINTENANCE_DONE=1
+      SKIP_MAINTENANCE=1
+      shift
+      ;;
+    --skip-maintenance)
+      SKIP_MAINTENANCE=1
       shift
       ;;
     --assume-changelog-done)
@@ -220,14 +233,10 @@ if [[ ! -x "$bump_script" ]]; then
   exit 1
 fi
 
-if [[ $ASSUME_MAINTENANCE_DONE -eq 0 ]]; then
-  echo "Step 1 required: run maintenance chores skill first:"
-  echo "  $maintenance_skill"
-  read -r -p "Type 'done' after finishing step 1: " response
-  if [[ "$response" != "done" ]]; then
-    echo "Aborted: maintenance step not confirmed."
-    exit 1
-  fi
+if [[ $SKIP_MAINTENANCE -eq 0 ]]; then
+  run_maintenance_chores
+else
+  echo "Step 1 skipped by request (--skip-maintenance)."
 fi
 
 if [[ $ASSUME_CHANGELOG_DONE -eq 0 ]]; then
