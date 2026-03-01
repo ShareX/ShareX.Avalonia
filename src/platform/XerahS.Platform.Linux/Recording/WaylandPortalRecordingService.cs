@@ -62,6 +62,8 @@ public sealed class WaylandPortalRecordingService : IRecordingService
     private IPortalSession? _sessionProxy;
     private ObjectPath? _sessionHandle;
     private uint _pipewireNodeId;
+    private int _pipewireSourceWidth;
+    private int _pipewireSourceHeight;
 
     public event EventHandler<RecordingErrorEventArgs>? ErrorOccurred;
     public event EventHandler<RecordingStatusEventArgs>? StatusChanged;
@@ -96,7 +98,7 @@ public sealed class WaylandPortalRecordingService : IRecordingService
             // Fall back to portal + GStreamer/FFmpeg approach
             InitializePortalSession(options).GetAwaiter().GetResult();
 
-            var (executable, args, useGStreamer) = BuildRecordingCommand(options, _pipewireNodeId);
+            var (executable, args, useGStreamer) = BuildRecordingCommand(options, _pipewireNodeId, _pipewireSourceWidth, _pipewireSourceHeight);
             DebugHelper.WriteLine($"[WaylandPortalRecording] Using {(useGStreamer ? "GStreamer" : "FFmpeg")}");
             DebugHelper.WriteLine($"[WaylandPortalRecording] Command: {executable} {args}");
 
@@ -113,7 +115,7 @@ public sealed class WaylandPortalRecordingService : IRecordingService
                 {
                     // options.OutputPath was resolved (and possibly extension-adjusted) by BuildRecordingCommand above.
                     var (fallbackPipeline, _) = BuildGStreamerPipeline(options, _pipewireNodeId,
-                        options.OutputPath ?? string.Empty, useGl: false);
+                        options.OutputPath ?? string.Empty, _pipewireSourceWidth, _pipewireSourceHeight, useGl: false);
                     fallbackGstArgs = "-e " + fallbackPipeline;
                     DebugHelper.WriteLine("[WaylandPortalRecording] CPU fallback pipeline ready (will use if GL path fails)");
                 }
@@ -537,6 +539,12 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         {
             throw new PlatformNotSupportedException("ScreenCast response did not include PipeWire stream node.");
         }
+
+        TryGetPipeWireSourceSize(startResults, out _pipewireSourceWidth, out _pipewireSourceHeight);
+        if (_pipewireSourceWidth > 0)
+            DebugHelper.WriteLine($"[WaylandPortalRecording] PipeWire source size: {_pipewireSourceWidth}x{_pipewireSourceHeight}");
+        else
+            DebugHelper.WriteLine("[WaylandPortalRecording] PipeWire source size: not reported by portal");
     }
 
     private void CleanupPortalSession()
@@ -597,6 +605,54 @@ public sealed class WaylandPortalRecordingService : IRecordingService
                     nodeId = id;
                     return true;
                 }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Extracts the source stream size (width × height in screen pixels) from the portal Start response.
+    /// The XDG ScreenCast portal includes a "size" property per stream: a{sv} with key "size" → (int32, int32).
+    /// </summary>
+    private static bool TryGetPipeWireSourceSize(IDictionary<string, object> results, out int width, out int height)
+    {
+        width = 0;
+        height = 0;
+
+        if (!results.TryGetValue("streams", out var streamsRaw) || streamsRaw == null)
+            return false;
+
+        var streams = UnwrapVariant(streamsRaw) as Array;
+        if (streams == null || streams.Length == 0)
+            return false;
+
+        foreach (var entry in streams)
+        {
+            if (entry == null) continue;
+            var unwrapped = UnwrapVariant(entry);
+
+            IDictionary<string, object>? props = null;
+            if (unwrapped is ValueTuple<uint, IDictionary<string, object>> tuple)
+                props = tuple.Item2;
+            else if (unwrapped is object[] parts && parts.Length > 1)
+                props = UnwrapVariant(parts[1]) as IDictionary<string, object>;
+
+            if (props == null || !props.TryGetValue("size", out var sizeRaw))
+                continue;
+
+            var size = UnwrapVariant(sizeRaw);
+            if (size is ValueTuple<int, int> sizeTuple)
+            {
+                width = sizeTuple.Item1;
+                height = sizeTuple.Item2;
+                return width > 0 && height > 0;
+            }
+            if (size is object[] sizeArr && sizeArr.Length >= 2)
+            {
+                width = Convert.ToInt32(UnwrapVariant(sizeArr[0]));
+                height = Convert.ToInt32(UnwrapVariant(sizeArr[1]));
+                return width > 0 && height > 0;
             }
         }
 
@@ -758,7 +814,7 @@ public sealed class WaylandPortalRecordingService : IRecordingService
                desktopSession.Contains("SWAY");
     }
 
-    private static (string executable, string arguments, bool useGStreamer) BuildRecordingCommand(RecordingOptions options, uint pipeWireNodeId)
+    private static (string executable, string arguments, bool useGStreamer) BuildRecordingCommand(RecordingOptions options, uint pipeWireNodeId, int sourceWidth = 0, int sourceHeight = 0)
     {
         var settings = options.Settings ?? new ScreenRecordingSettings();
         string outputPath = options.OutputPath ?? GetDefaultOutputPath();
@@ -774,7 +830,7 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         {
             DebugHelper.WriteLine("[WaylandPortalRecording] FFmpeg lacks pipewire support, using GStreamer");
             // -e flag: send EOS on SIGINT for proper file finalization
-            var (pipeline, actualOutputPath) = BuildGStreamerPipeline(options, pipeWireNodeId, outputPath);
+            var (pipeline, actualOutputPath) = BuildGStreamerPipeline(options, pipeWireNodeId, outputPath, sourceWidth, sourceHeight);
 
             // Update options with the actual output path (may differ if muxer changed, e.g. .mp4 -> .mkv)
             if (!string.Equals(outputPath, actualOutputPath, StringComparison.Ordinal))
@@ -901,7 +957,7 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         });
     }
 
-    private static (string pipeline, string actualOutputPath) BuildGStreamerPipeline(RecordingOptions options, uint pipeWireNodeId, string outputPath, bool useGl = true)
+    private static (string pipeline, string actualOutputPath) BuildGStreamerPipeline(RecordingOptions options, uint pipeWireNodeId, string outputPath, int sourceWidth = 0, int sourceHeight = 0, bool useGl = true)
     {
         var settings = options.Settings ?? new ScreenRecordingSettings();
         bool hasAudio = settings.CaptureSystemAudio || settings.CaptureMicrophone;
@@ -929,19 +985,39 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         // videoconvert handles any format conversion needed
         pipeline.AddRange(new[] { "!", "videoconvert" });
 
-        // Add crop filter for region capture using FFmpeg-style crop filter
+        // Add crop filter for region capture.
         if (options.Mode == CaptureMode.Region && options.Region.Width > 0 && options.Region.Height > 0)
         {
-            // Use videocrop with correct parameters (pixels to remove from each edge).
-            // GStreamer videocrop requires left/top >= 0; clamp to avoid invalid pipeline (e.g. portal giving negative Y).
+            // GStreamer videocrop removes pixels from each edge (left, top, right, bottom).
+            // We MUST specify all four edges; omitting right/bottom leaves them at 0, meaning the
+            // full screen width/height minus only the left/top crop is passed to videoscale, which
+            // then squashes a wider-than-intended frame into the target dimensions.
             int cropLeft = Math.Max(0, options.Region.X);
             int cropTop = Math.Max(0, options.Region.Y);
+
+            string cropElement;
+            if (sourceWidth > 0 && sourceHeight > 0)
+            {
+                // Source size known from portal stream properties — compute exact right/bottom crops.
+                int cropRight = Math.Max(0, sourceWidth - cropLeft - options.Region.Width);
+                int cropBottom = Math.Max(0, sourceHeight - cropTop - options.Region.Height);
+                cropElement = $"videocrop left={cropLeft} top={cropTop} right={cropRight} bottom={cropBottom}";
+                DebugHelper.WriteLine($"[WaylandPortalRecording] videocrop: left={cropLeft} top={cropTop} right={cropRight} bottom={cropBottom} (source={sourceWidth}x{sourceHeight})");
+            }
+            else
+            {
+                // Source size unknown; crop left/top only. videoscale will still scale to the target
+                // dimensions, but may squash if the source is wider than the region.
+                cropElement = $"videocrop left={cropLeft} top={cropTop}";
+                DebugHelper.WriteLine($"[WaylandPortalRecording] videocrop: left={cropLeft} top={cropTop} (source size unknown, right/bottom not cropped)");
+            }
+
             pipeline.Add("!");
-            pipeline.Add($"videocrop left={cropLeft} top={cropTop}");
+            pipeline.Add(cropElement);
             pipeline.Add("!");
             pipeline.Add("videoconvert");
             pipeline.Add("!");
-            pipeline.Add($"videoscale");
+            pipeline.Add("videoscale");
             pipeline.Add("!");
             pipeline.Add($"video/x-raw,width={options.Region.Width},height={options.Region.Height}");
             // Final videoconvert to ensure encoder-compatible format
