@@ -862,16 +862,14 @@ public sealed class WaylandPortalRecordingService : IRecordingService
 
         if (HasGStreamerElement("gldownload") && HasGStreamerElement("glupload"))
         {
-            // GPU path: force system-memory raw frames from PipeWire FIRST, then upload to GL.
-            // Without video/x-raw, pipewiresrc negotiates DMA-BUF formats that glupload cannot
-            // handle on many GNOME/Wayland systems, causing "stream error: unhandled format".
-            pipeline.AddRange(new[] { "!", "video/x-raw", "!", "glupload", "!", "glcolorconvert", "!", "gldownload" });
+            // GPU path: let glupload negotiate directly with pipewiresrc.
+            // glupload is designed to handle DMA-BUF from PipeWire natively.
+            // DO NOT insert a video/x-raw caps filter here: pipewiresrc on Wayland often
+            // only offers DMA-BUF (video/x-raw(memory:DMABuf)), and the plain video/x-raw
+            // filter rejects that, causing "streaming stopped, reason not-negotiated (-4)".
+            pipeline.AddRange(new[] { "!", "glupload", "!", "glcolorconvert", "!", "gldownload" });
         }
-        else
-        {
-            // CPU path: request raw video from PipeWire
-            pipeline.AddRange(new[] { "!", "video/x-raw" });
-        }
+        // CPU path: no caps filter; the videoconvert below handles DMA-BUF and raw formats.
 
         // queue to decouple and handle buffering
         pipeline.AddRange(new[] { "!", "queue max-size-buffers=3 leaky=downstream" });
