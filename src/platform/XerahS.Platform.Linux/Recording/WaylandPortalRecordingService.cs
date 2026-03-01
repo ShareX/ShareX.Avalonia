@@ -1159,6 +1159,12 @@ public sealed class WaylandPortalRecordingService : IRecordingService
             }
 
             _ffmpeg = null;
+
+            // Clean up the portal session immediately so the DBus Connection is not
+            // left open until GC. An open Connection whose finalizer fires a close
+            // message on a dead portal session produces an unobserved task exception
+            // (org.freedesktop.DBus.Error.ServiceUnknown).
+            CleanupPortalSession();
         }
     }
 }
