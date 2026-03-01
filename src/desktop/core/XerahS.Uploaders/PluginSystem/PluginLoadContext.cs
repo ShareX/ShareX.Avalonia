@@ -46,17 +46,20 @@ public class PluginLoadContext : AssemblyLoadContext
 
     protected override Assembly? Load(AssemblyName assemblyName)
     {
-        // Try to resolve from plugin directory first
+        // Check shared dependencies FIRST so the host's version is always used,
+        // even if the resolver finds a path via the plugin's .deps.json.
+        // Loading a shared assembly in the plugin context causes type-identity
+        // mismatches (TypeLoadException: "does not have an implementation").
+        if (IsSharedDependency(assemblyName))
+        {
+            return null; // Let the default (host) context handle it
+        }
+
+        // Resolve plugin-private assemblies from the plugin directory
         var assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
         if (assemblyPath != null)
         {
             return LoadFromAssemblyPath(assemblyPath);
-        }
-
-        // Check if it's a shared dependency (don't load, use host's version)
-        if (IsSharedDependency(assemblyName))
-        {
-            return null; // Let default context handle it
         }
 
         return null;
@@ -77,9 +80,10 @@ public class PluginLoadContext : AssemblyLoadContext
     {
         var name = assemblyName.Name;
 
-        // These should come from the host app, not plugin
-        return name == "ShareX.Ava.Uploaders" ||
-               name == "ShareX.Ava.Common" ||
+        // These assemblies must come from the host, not be duplicated in the plugin context.
+        return name == "XerahS.Uploaders" ||
+               name == "XerahS.UploaderPluginSdk" ||
+               name == "XerahS.Common" ||
                name == "Newtonsoft.Json" ||
                name == "CommunityToolkit.Mvvm" ||
                name?.StartsWith("System.") == true ||
