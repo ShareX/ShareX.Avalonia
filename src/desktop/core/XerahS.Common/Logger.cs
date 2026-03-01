@@ -92,34 +92,20 @@ namespace XerahS.Common
 
         private string GetCurrentLogFilePath()
         {
-            // Check if we need to rotate to a new date (use yyyyMMdd to match Program.cs log naming)
+            // Check if we need to rotate to a new date (use yyyyMMdd to match main log naming)
             string today = DateTime.Now.ToString("yyyyMMdd");
             if (today != _currentDate)
             {
                 _currentDate = today;
 
-                // Build the path with yyyy-MM folder structure
-                string baseTemplate = LogFilePathTemplate;
-                string? directory = Path.GetDirectoryName(baseTemplate);
-                string extension = Path.GetExtension(baseTemplate);
+                string extension = Path.GetExtension(LogFilePathTemplate);
 
-                // Extract the base directory (before Logs folder)
-                string currentMonthFolder = DateTime.Now.ToString("yyyy-MM");
+                // Use PathsManager for logs folder so we never re-create Logs path elsewhere
+                string? directory = Path.GetDirectoryName(LogFilePathTemplate);
+                string logDirectory = (!string.IsNullOrEmpty(directory) && directory.Contains("Logs"))
+                    ? PathsManager.GetLogsFolderForMonth()
+                    : (directory ?? string.Empty);
 
-                // Reconstruct path: replace the date in the directory structure
-                if (!string.IsNullOrEmpty(directory) && directory.Contains("Logs"))
-                {
-                    // Find the Logs folder in the path
-                    int logsIndex = directory.LastIndexOf("Logs");
-                    if (logsIndex >= 0)
-                    {
-                        string baseDir = directory.Substring(0, logsIndex);
-                        directory = Path.Combine(baseDir, "Logs", currentMonthFolder);
-                    }
-                }
-
-                string logDirectory = directory ?? string.Empty;
-                // Use _baseFileName + yyyyMMdd to match initial log name (e.g. XerahS-20260226.log)
                 LogFilePath = Path.Combine(logDirectory, $"{_baseFileName}-{today}{extension}");
             }
 

@@ -56,7 +56,31 @@ namespace XerahS.Common
         public static string ScreenshotsFolder => Path.Combine(PersonalFolder, AppResources.ScreenshotsFolderName);
         public static string ScreencastsFolder => Path.Combine(PersonalFolder, AppResources.ScreencastsFolderName);
         public static string FrameDumpsFolder => Path.Combine(ScreencastsFolder, "FrameDumps");
-        
+
+        /// <summary>Base folder for all log files (e.g. PersonalFolder/Logs).</summary>
+        public static string LogsFolderBase => Path.Combine(PersonalFolder, "Logs");
+
+        /// <summary>Logs subfolder for the given month (e.g. Logs/yyyy-MM). Uses current date if null.</summary>
+        public static string GetLogsFolderForMonth(DateTime? date = null) =>
+            Path.Combine(LogsFolderBase, (date ?? DateTime.Now).ToString("yyyy-MM"));
+
+        /// <summary>Filename prefix for the dedicated error log (full name: XerahS-errors-yyyyMMdd.log).</summary>
+        public const string ErrorLogFileNamePrefix = "XerahS-errors";
+
+        /// <summary>Full path to the error log file for today: Logs/yyyy-MM/XerahS-errors-yyyyMMdd.log.</summary>
+        public static string GetErrorLogFilePath()
+        {
+            var date = DateTime.Now;
+            return Path.Combine(GetLogsFolderForMonth(date), $"{ErrorLogFileNamePrefix}-{date:yyyyMMdd}.log");
+        }
+
+        /// <summary>Full path to the main log file for today: Logs/yyyy-MM/AppName-yyyyMMdd.log.</summary>
+        public static string GetMainLogFilePath()
+        {
+            var date = DateTime.Now;
+            return Path.Combine(GetLogsFolderForMonth(date), $"{AppResources.AppName}-{date:yyyyMMdd}.log");
+        }
+
         public static string SettingsFolder => Path.Combine(PersonalFolder, AppResources.SettingsFolderName);
         public static string HistoryFolder => Path.Combine(PersonalFolder, AppResources.HistoryFolderName);
         public static string BackupFolder => Path.Combine(SettingsFolder, AppResources.BackupFolderName);

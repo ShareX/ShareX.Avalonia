@@ -55,10 +55,8 @@ namespace XerahS.App
                 // Subscribe to receive arguments from subsequent instances
                 _singleInstanceManager.ArgumentsReceived += OnArgumentsReceived;
 
-                // Initialize logging with datestamped file in Logs/yyyy-mm folder structure
-                var baseFolder = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), XerahS.Core.SettingsManager.AppName);
-                var logsFolder = System.IO.Path.Combine(baseFolder, "Logs", DateTime.Now.ToString("yyyy-MM"));
-                var logPath = System.IO.Path.Combine(logsFolder, $"{XerahS.Common.AppResources.AppName}-{DateTime.Now:yyyyMMdd}.log");
+                // Initialize logging (path from PathsManager: LogsFolderBase / GetMainLogFilePath)
+                var logPath = XerahS.Common.PathsManager.GetMainLogFilePath();
                 XerahS.Common.DebugHelper.Init(logPath);
                 RegisterGlobalExceptionHandlers();
 
@@ -78,7 +76,7 @@ namespace XerahS.App
 #endif
 
                 dh.WriteLine($"Command line: \"{Environment.ProcessPath}\"");
-                dh.WriteLine($"Personal path: {logsFolder}");
+                dh.WriteLine($"Personal path: {XerahS.Common.PathsManager.GetLogsFolderForMonth()}");
                 dh.WriteLine($"Operating system: {System.Runtime.InteropServices.RuntimeInformation.OSDescription} ({System.Runtime.InteropServices.RuntimeInformation.OSArchitecture})");
                 dh.WriteLine($".NET version: {System.Environment.Version}");
 

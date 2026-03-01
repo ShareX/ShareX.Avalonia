@@ -104,7 +104,7 @@ namespace XerahS.UI.ViewModels
         {
             try
             {
-                string logsFolder = System.IO.Path.Combine(SettingsManager.PersonalFolder, "Logs");
+                string logsFolder = XerahS.Common.PathsManager.LogsFolderBase;
 
                 if (System.IO.Directory.Exists(logsFolder))
                 {

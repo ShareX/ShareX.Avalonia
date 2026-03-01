@@ -25,6 +25,7 @@
 
 using System.Runtime.Loader;
 using XerahS.Bootstrap;
+using XerahS.Common;
 using XerahS.Core;
 using XerahS.Core.Managers;
 using XerahS.Platform.Abstractions;
@@ -133,8 +134,7 @@ internal static class Program
 
     private static string BuildDaemonLogPath()
     {
-        string baseFolder = SettingsManager.PersonalFolder;
-        string logsFolder = Path.Combine(baseFolder, "Logs", DateTime.Now.ToString("yyyy-MM"));
+        string logsFolder = PathsManager.GetLogsFolderForMonth();
         Directory.CreateDirectory(logsFolder);
         return Path.Combine(logsFolder, $"watchfolder-daemon-{DateTime.Now:yyyyMMdd}.log");
     }

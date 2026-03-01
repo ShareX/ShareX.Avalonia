@@ -24,11 +24,15 @@
 #endregion License Information (GPL v3)
 
 using System.Diagnostics;
+using System.IO;
+using System.Text;
 
 namespace XerahS.Common
 {
     public static class DebugHelper
     {
+        private static readonly object ErrorLogLock = new object();
+
         public static Logger? Logger { get; private set; }
 
         public static void Init(string logFilePath)
@@ -63,11 +67,37 @@ namespace XerahS.Common
             {
                 Debug.WriteLine(exception);
             }
+
+            AppendToErrorLog(message, exception);
         }
 
         public static void WriteException(Exception exception, string message = "Exception")
         {
             WriteException(exception.ToString(), message);
+        }
+
+        /// <summary>Appends an error entry to the centralized error log (XerahS-errors-yyyyMMdd.log).</summary>
+        private static void AppendToErrorLog(string message, string exception)
+        {
+            lock (ErrorLogLock)
+            {
+                try
+                {
+                    string path = PathsManager.GetErrorLogFilePath();
+                    string? directory = Path.GetDirectoryName(path);
+                    if (!string.IsNullOrEmpty(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+
+                    string line = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss.fff} - {message}:{Environment.NewLine}{exception}{Environment.NewLine}";
+                    File.AppendAllText(path, line, Encoding.UTF8);
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Failed to write to error log: {ex.Message}");
+                }
+            }
         }
 
         public static void Flush()
