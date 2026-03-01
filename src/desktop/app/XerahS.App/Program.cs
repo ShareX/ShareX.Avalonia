@@ -105,6 +105,7 @@ namespace XerahS.App
                 if (OperatingSystem.IsLinux())
                 {
                     ValidateLinuxDisplayEnvironment();
+                    ClearX11SessionManagement();
                 }
 
                 // Initialize settings first (UseModernCapture must be available for platform init)
@@ -186,6 +187,27 @@ namespace XerahS.App
             return ex.Message.Contains("XOpenDisplay", StringComparison.OrdinalIgnoreCase) ||
                    ex.Message.Contains("display", StringComparison.OrdinalIgnoreCase) ||
                    ex.ToString().Contains("Avalonia.X11", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Unsets X11 session management environment variables to prevent Avalonia from registering
+        /// with XSMP (X Session Management Protocol). Without this, ksmserver (KDE) may receive a
+        /// "cancel shutdown" signal from XerahS because Avalonia connects to the session manager but
+        /// does not implement the SaveYourself/Die callback sequence. XerahS does not support session
+        /// restore, so dropping the XSMP connection has no functional impact. Fixes issue #169.
+        /// </summary>
+        private static void ClearX11SessionManagement()
+        {
+            var sessionManager = Environment.GetEnvironmentVariable("SESSION_MANAGER");
+            var smClientId = Environment.GetEnvironmentVariable("SM_CLIENT_ID");
+
+            if (sessionManager != null || smClientId != null)
+            {
+                Environment.SetEnvironmentVariable("SESSION_MANAGER", null);
+                Environment.SetEnvironmentVariable("SM_CLIENT_ID", null);
+                XerahS.Common.DebugHelper.WriteLine(
+                    "Linux X11: Cleared SESSION_MANAGER and SM_CLIENT_ID to prevent XSMP shutdown interference (issue #169).");
+            }
         }
 
         /// <summary>
