@@ -184,6 +184,9 @@ public sealed class WaylandPortalRecordingService : IRecordingService
     /// </summary>
     private void RunGStreamerWithFallback(string executable, string primaryArgs, string? fallbackArgs)
     {
+        // Stop may have been signalled before the background thread even starts GStreamer.
+        if (_stopRequested) return;
+
         bool primaryFailed = RunGStreamerProcess(executable, primaryArgs, out string primaryOutput);
 
         if (!primaryFailed || _stopRequested)
@@ -219,6 +222,10 @@ public sealed class WaylandPortalRecordingService : IRecordingService
                 _stopwatch.Restart();
                 UpdateStatus(RecordingStatus.Recording);
             }
+
+            // Re-check after taking the lock: stop may have arrived between RunGStreamerWithFallback's
+            // early check and this point.
+            if (_stopRequested) { stderrOutput = string.Empty; return false; }
 
             var startInfo = new ProcessStartInfo
             {
@@ -368,7 +375,9 @@ public sealed class WaylandPortalRecordingService : IRecordingService
 
         lock (_lock)
         {
-            if (_status != RecordingStatus.Recording)
+            // Allow stopping from Initializing too: hotkey can arrive before the background
+            // thread advances status from Initializing to Recording.
+            if (_status == RecordingStatus.Idle || _status == RecordingStatus.Finalizing)
             {
                 return;
             }

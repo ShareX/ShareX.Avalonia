@@ -218,8 +218,10 @@ public class TrayIconHelper : INotifyPropertyChanged
             // when pause/resume changes the menu items (status category changes)
             bool stateChanged = wasActive != isNowActive;
             bool pauseToggled = (previousStatus == RecordingStatus.Paused) != (e.Status == RecordingStatus.Paused);
+            // Initializing→Recording: both are "active" so stateChanged=false, but Stop becomes available now
+            bool stopBecameAvailable = e.Status == RecordingStatus.Recording && previousStatus == RecordingStatus.Initializing;
 
-            if (stateChanged || pauseToggled)
+            if (stateChanged || pauseToggled || stopBecameAvailable)
             {
                 DebugHelper.WriteLine($"TrayIconHelper: Recording state changed from {previousStatus} to {e.Status}, rebuilding menu");
                 OnPropertyChanged(nameof(IsRecordingActive));
@@ -632,6 +634,22 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     public void OnTrayClick()
     {
+        // When recording is active, tray click honours the tooltip promise:
+        // "Recording (click tray to stop)" / "Paused (click tray to resume)"
+        if (_currentRecordingStatus == RecordingStatus.Recording)
+        {
+            DebugHelper.WriteLine("Tray click: Recording active, stopping recording");
+            _ = StopRecordingAsync();
+            return;
+        }
+
+        if (_currentRecordingStatus == RecordingStatus.Paused)
+        {
+            DebugHelper.WriteLine("Tray click: Recording paused, resuming");
+            _ = PauseResumeRecordingAsync();
+            return;
+        }
+
         // Execute the configured left-click action
         var action = SettingsManager.Settings.TrayLeftClickAction;
         DebugHelper.WriteLine($"Tray click: {action}");
