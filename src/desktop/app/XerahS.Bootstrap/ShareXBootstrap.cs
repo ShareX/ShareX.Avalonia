@@ -107,7 +107,7 @@ namespace XerahS.Bootstrap
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     SettingsManager.AppName);
                 var logsFolder = Path.Combine(baseFolder, "Logs", now.ToString("yyyy-MM"));
-                logPath = Path.Combine(logsFolder, $"ShareX-{now:yyyy-MM-dd}.log");
+                logPath = Path.Combine(logsFolder, $"{SettingsManager.AppName}-{now:yyyyMMdd}.log");
             }
 
             string? logDirectory = Path.GetDirectoryName(logPath);

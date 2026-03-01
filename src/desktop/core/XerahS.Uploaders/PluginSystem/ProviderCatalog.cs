@@ -66,8 +66,6 @@ public static class ProviderCatalog
                 return;
             }
 
-            DebugHelper.WriteLine($"[Plugins] ========================================");
-            
             var discovery = new PluginDiscovery();
             var allDiscovered = new List<PluginMetadata>();
 
@@ -86,8 +84,6 @@ public static class ProviderCatalog
                 }
             }
 
-            DebugHelper.WriteLine($"[Plugins] Total plugins discovered: {allDiscovered.Count}");
-
             // Load each plugin
             int successCount = 0;
             int failureCount = 0;
@@ -96,23 +92,19 @@ public static class ProviderCatalog
             {
                 if (_pluginMetadata.ContainsKey(metadata.Manifest.PluginId))
                 {
-                    DebugHelper.WriteLine($"[Plugins] Plugin already loaded: {metadata.Manifest.PluginId}");
                     continue;
                 }
 
                 try
                 {
-                    DebugHelper.WriteLine($"[Plugins] Attempting to load: {metadata.Manifest.Name} (id: {metadata.Manifest.PluginId})");
                     var provider = _pluginLoader.LoadPlugin(metadata);
 
                     if (provider != null && metadata.IsLoaded)
                     {
-                        // Register the provider
                         _providers[provider.ProviderId] = provider;
                         ApplyContext(provider);
                         _pluginMetadata[provider.ProviderId] = metadata;
                         successCount++;
-                        DebugHelper.WriteLine($"[Plugins] ✓ SUCCESS: {metadata.Manifest.Name} (categories: {string.Join(", ", provider.SupportedCategories)})");
                     }
                     else
                     {
@@ -129,7 +121,6 @@ public static class ProviderCatalog
             }
 
             _pluginsLoaded = true;
-            DebugHelper.WriteLine($"[Plugins] Complete: {successCount} succeeded, {failureCount} failed");
 
             // Also load custom uploaders (.sxcu files) from the same directories
             int customCount = 0;
@@ -141,9 +132,12 @@ public static class ProviderCatalog
                 }
             }
 
-            DebugHelper.WriteLine($"[Plugins] Custom uploaders loaded: {customCount}");
-            DebugHelper.WriteLine($"[Plugins] Total providers in catalog: {_providers.Count}");
-            DebugHelper.WriteLine($"[Plugins] ========================================");
+            if (failureCount > 0 || customCount > 0)
+            {
+                DebugHelper.WriteLine($"[Plugins] Loaded: {successCount} plugins" +
+                    (customCount > 0 ? $", {customCount} custom" : "") +
+                    (failureCount > 0 ? $", {failureCount} failed" : ""));
+            }
         }
     }
 

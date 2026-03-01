@@ -42,8 +42,6 @@ public class PluginLoader
     {
         try
         {
-            DebugHelper.WriteLine($"Loading plugin: {metadata.Manifest.PluginId} from {metadata.AssemblyPath}");
-
             // Create isolated load context
             var loadContext = new PluginLoadContext(metadata.AssemblyPath, metadata.PluginDirectory);
 
@@ -87,7 +85,6 @@ public class PluginLoader
             _loadedContexts[metadata.Manifest.PluginId] = loadContext;
 
             metadata.Provider = provider;
-            DebugHelper.WriteLine($"Successfully loaded plugin: {metadata}");
 
             return provider;
         }

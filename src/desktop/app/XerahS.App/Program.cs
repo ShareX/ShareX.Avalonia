@@ -488,17 +488,11 @@ namespace XerahS.App
                     // 1. Initialize Plugins (ProviderCatalog)
                     try
                     {
-                        XerahS.Common.DebugHelper.WriteLine("Initializing Plugins...");
                         XerahS.Core.Uploaders.ProviderContextManager.EnsureProviderContext();
                         XerahS.Uploaders.PluginSystem.ProviderCatalog.InitializeBuiltInProviders(); // Ensure built-ins
-                        
-                        var pluginPaths = XerahS.Common.PathsManager.GetPluginDirectories();
-                        XerahS.Common.DebugHelper.WriteLine($"Scanning for plugins in: {string.Join(", ", pluginPaths)}");
-                        
-                        XerahS.Uploaders.PluginSystem.ProviderCatalog.LoadPlugins(pluginPaths);
-                        
+                        XerahS.Uploaders.PluginSystem.ProviderCatalog.LoadPlugins(XerahS.Common.PathsManager.GetPluginDirectories());
                         int pluginCount = XerahS.Uploaders.PluginSystem.ProviderCatalog.GetAllProviders().Count;
-                        XerahS.Common.DebugHelper.WriteLine($"Plugins initialized. Total providers: {pluginCount}");
+                        XerahS.Common.DebugHelper.WriteLine($"Plugins: {pluginCount} loaded");
                     }
                     catch (Exception ex)
                     {

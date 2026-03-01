@@ -52,7 +52,7 @@ namespace XerahS.Common
         private readonly object loggerLock = new object();
         private ConcurrentQueue<string> messageQueue = new ConcurrentQueue<string>();
         private StringBuilder sbMessages = new StringBuilder();
-        private string _currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+        private string _currentDate = DateTime.Now.ToString("yyyyMMdd");
         private string _baseFileName = string.Empty;
         private bool _disposed = false;
         private int _consecutiveFileWriteFailures = 0;
@@ -70,7 +70,7 @@ namespace XerahS.Common
                 FileWrite = true;
                 LogFilePathTemplate = logFilePath;
                 LogFilePath = logFilePath;
-                _currentDate = DateTime.Now.ToString("yyyy-MM-dd");
+                _currentDate = DateTime.Now.ToString("yyyyMMdd");
 
                 // Extract base filename without date suffix (e.g., "XerahS-20260209" -> "XerahS")
                 string filename = Path.GetFileNameWithoutExtension(logFilePath);
@@ -92,8 +92,8 @@ namespace XerahS.Common
 
         private string GetCurrentLogFilePath()
         {
-            // Check if we need to rotate to a new date
-            string today = DateTime.Now.ToString("yyyy-MM-dd");
+            // Check if we need to rotate to a new date (use yyyyMMdd to match Program.cs log naming)
+            string today = DateTime.Now.ToString("yyyyMMdd");
             if (today != _currentDate)
             {
                 _currentDate = today;
@@ -119,7 +119,7 @@ namespace XerahS.Common
                 }
 
                 string logDirectory = directory ?? string.Empty;
-                // Use _baseFileName (without date suffix) to avoid duplicate dates like "XerahS-20260209-2026-02-10.log"
+                // Use _baseFileName + yyyyMMdd to match initial log name (e.g. XerahS-20260226.log)
                 LogFilePath = Path.Combine(logDirectory, $"{_baseFileName}-{today}{extension}");
             }
 

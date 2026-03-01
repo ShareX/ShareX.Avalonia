@@ -24,12 +24,19 @@
 #endregion License Information (GPL v3)
 
 using System.Runtime.InteropServices;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace XerahS.Common
 {
     public class GitHubUpdateChecker : UpdateChecker
     {
+        /// <summary>Options for GitHub API JSON. Explicit DefaultJsonTypeInfoResolver avoids "Reflection-based serialization has been disabled" when app uses trimming/source gen.</summary>
+        private static readonly JsonSerializerOptions GitHubJsonOptions = new JsonSerializerOptions
+        {
+            TypeInfoResolver = new DefaultJsonTypeInfoResolver(),
+            PropertyNameCaseInsensitive = true
+        };
         protected enum RuntimePlatform
         {
             Unknown,
@@ -118,7 +125,7 @@ namespace XerahS.Common
 
             if (!string.IsNullOrEmpty(response))
             {
-                releases = JsonConvert.DeserializeObject<List<GitHubRelease>>(response);
+                releases = JsonSerializer.Deserialize<List<GitHubRelease>>(response, GitHubJsonOptions);
 
                 if (releases != null && releases.Count > 0)
                 {
@@ -137,7 +144,7 @@ namespace XerahS.Common
 
             if (!string.IsNullOrEmpty(response))
             {
-                latestRelease = JsonConvert.DeserializeObject<GitHubRelease>(response);
+                latestRelease = JsonSerializer.Deserialize<GitHubRelease>(response, GitHubJsonOptions);
             }
 
             return latestRelease;
