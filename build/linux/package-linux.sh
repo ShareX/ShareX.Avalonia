@@ -24,6 +24,61 @@ dotnet_publish_serial() {
         -m:1
 }
 
+publish_single_plugin() {
+    local plugin_project="$1"
+    local plugins_dir="$2"
+    local publish_dir="$3"
+    local arch="$4"
+
+    local plugin_dir plugin_name plugin_id plugin_output id_match
+    plugin_dir=$(dirname "$plugin_project")
+    plugin_name=$(basename "$plugin_project" .csproj)
+    plugin_id="$plugin_name"
+
+    # Determine plugin ID from plugin.json when available.
+    if [ -f "$plugin_dir/plugin.json" ]; then
+        id_match=$(grep -o '"pluginId"[[:space:]]*:[[:space:]]*"[^"]*"' "$plugin_dir/plugin.json" | cut -d'"' -f4 || true)
+        if [ -n "${id_match:-}" ]; then
+            plugin_id="$id_match"
+        fi
+    fi
+
+    echo "  Publishing Plugin: $plugin_name ($plugin_id) for $arch"
+    plugin_output="$plugins_dir/$plugin_id"
+    rm -rf "$plugin_output"
+    mkdir -p "$plugin_output"
+
+    dotnet_publish_serial "$plugin_project" \
+        -c Release \
+        -r "$arch" \
+        -p:OS=Linux \
+        -o "$plugin_output" \
+        --no-self-contained \
+        -p:PublishSingleFile=false \
+        -p:EnableWindowsTargeting=true > /dev/null
+
+    # Ensure plugin.json exists for runtime discovery.
+    if [ ! -f "$plugin_output/plugin.json" ] && [ -f "$plugin_dir/plugin.json" ]; then
+        cp "$plugin_dir/plugin.json" "$plugin_output/plugin.json"
+    fi
+
+    # Cleanup: remove files that already exist in the main app directory.
+    local f fname
+    for f in "$plugin_output"/*; do
+        if [ -f "$f" ]; then
+            fname=$(basename "$f")
+            if [ -f "$publish_dir/$fname" ]; then
+                rm "$f"
+            fi
+        fi
+    done
+
+    if [ ! -f "$plugin_output/plugin.json" ]; then
+        echo "Error: plugin.json missing for plugin '$plugin_id' in $plugin_output" >&2
+        return 1
+    fi
+}
+
 validate_daemon_bundle() {
     local publish_dir="$1"
     local daemon_path="$publish_dir/xerahs-watchfolder-daemon"
@@ -83,61 +138,27 @@ for ARCH in "${ARCHITECTURES[@]}"; do
     PLUGINS_DIR="$PUBLISH_DIR/Plugins"
     mkdir -p "$PLUGINS_DIR"
 
-    PLUGIN_COUNT=0
-    while IFS= read -r -d '' PLUGIN_PROJECT; do
-        PLUGIN_DIR=$(dirname "$PLUGIN_PROJECT")
-        PLUGIN_NAME=$(basename "$PLUGIN_PROJECT" .csproj)
-
-        # Determine plugin ID from plugin.json when available
-        PLUGIN_ID="$PLUGIN_NAME"
-        if [ -f "$PLUGIN_DIR/plugin.json" ]; then
-            ID_MATCH=$(grep -o '"pluginId"[[:space:]]*:[[:space:]]*"[^"]*"' "$PLUGIN_DIR/plugin.json" | cut -d'"' -f4 || true)
-            if [ -n "${ID_MATCH:-}" ]; then
-                PLUGIN_ID="$ID_MATCH"
-            fi
-        fi
-
-        echo "  Publishing Plugin: $PLUGIN_NAME ($PLUGIN_ID) for $ARCH"
-        PLUGIN_OUTPUT="$PLUGINS_DIR/$PLUGIN_ID"
-        rm -rf "$PLUGIN_OUTPUT"
-        mkdir -p "$PLUGIN_OUTPUT"
-
-        dotnet_publish_serial "$PLUGIN_PROJECT" \
-            -c Release \
-            -r "$ARCH" \
-            -p:OS=Linux \
-            -o "$PLUGIN_OUTPUT" \
-            --no-self-contained \
-            -p:PublishSingleFile=false \
-            -p:EnableWindowsTargeting=true > /dev/null
-
-        # Ensure plugin.json exists for runtime discovery
-        if [ ! -f "$PLUGIN_OUTPUT/plugin.json" ] && [ -f "$PLUGIN_DIR/plugin.json" ]; then
-            cp "$PLUGIN_DIR/plugin.json" "$PLUGIN_OUTPUT/plugin.json"
-        fi
-
-        # Cleanup: Remove files that already exist in the main app directory (deduplication)
-        for f in "$PLUGIN_OUTPUT"/*; do
-            if [ -f "$f" ]; then
-                FNAME=$(basename "$f")
-                if [ -f "$PUBLISH_DIR/$FNAME" ]; then
-                    rm "$f"
-                fi
-            fi
-        done
-
-        if [ ! -f "$PLUGIN_OUTPUT/plugin.json" ]; then
-            echo "Error: plugin.json missing for plugin '$PLUGIN_ID' in $PLUGIN_OUTPUT"
-            exit 1
-        fi
-
-        PLUGIN_COUNT=$((PLUGIN_COUNT + 1))
-    done < <(find "$ROOT/src/desktop/plugins" -mindepth 2 -maxdepth 2 -name "*.csproj" -print0)
-
+    mapfile -d '' -t PLUGIN_PROJECTS < <(find "$ROOT/src/desktop/plugins" -mindepth 2 -maxdepth 2 -name "*.csproj" -print0 | sort -z)
+    PLUGIN_COUNT="${#PLUGIN_PROJECTS[@]}"
     if [ "$PLUGIN_COUNT" -eq 0 ]; then
         echo "Error: No plugins were published for $ARCH."
         exit 1
     fi
+
+    # Publish plugin projects in parallel; override with XERAHS_PLUGIN_JOBS.
+    PLUGIN_JOBS="${XERAHS_PLUGIN_JOBS:-4}"
+    if ! [[ "$PLUGIN_JOBS" =~ ^[1-9][0-9]*$ ]]; then
+        echo "Error: XERAHS_PLUGIN_JOBS must be a positive integer (received '$PLUGIN_JOBS')."
+        exit 1
+    fi
+
+    export PLUGINS_DIR PUBLISH_DIR ARCH
+    export -f dotnet_publish_serial
+    export -f publish_single_plugin
+
+    printf '%s\0' "${PLUGIN_PROJECTS[@]}" | xargs -0 -n1 -P "$PLUGIN_JOBS" bash -c '
+        publish_single_plugin "$1" "$PLUGINS_DIR" "$PUBLISH_DIR" "$ARCH"
+    ' _
 
     if ! find "$PLUGINS_DIR" -mindepth 2 -maxdepth 2 -name "plugin.json" | grep -q .; then
         echo "Error: No plugin manifests found under $PLUGINS_DIR after publish."
