@@ -24,6 +24,7 @@
 #endregion License Information (GPL v3)
 
 using XerahS.Platform.Abstractions;
+using XerahS.Common;
 using SkiaSharp;
 using Vortice.Direct3D;
 using Vortice.Direct3D11;
@@ -552,50 +553,24 @@ namespace XerahS.Platform.Windows
 
         /// <summary>
         /// Rotates an output frame back into desktop orientation when DXGI provides unrotated output.
+        /// Delegates to <see cref="BitmapRotationHelper.RotateClockwise"/> for cross-platform testability.
         /// </summary>
         private static SKBitmap RotateBitmapForDesktop(SKBitmap sourceBitmap, ModeRotation rotation)
         {
-            if (rotation is ModeRotation.Identity or ModeRotation.Unspecified)
+            // Map ModeRotation (Vortice.DXGI enum) → clockwise degrees for BitmapRotationHelper.
+            // ModeRotation.Rotate90 = display is physically rotated 90° CW → frame needs 90° CW correction.
+            // ModeRotation.Rotate270 = display is physically rotated 270° CW → frame needs 270° CW correction.
+            // Issue #148: DMDO_90/DMDO_270 were previously swapped in TryGetDisplaySettingsRotation,
+            // causing the wrong ModeRotation to reach here and producing a black/inverted image on rotated monitors.
+            int degrees = rotation switch
             {
-                return sourceBitmap.Copy();
-            }
+                ModeRotation.Rotate90 => 90,
+                ModeRotation.Rotate180 => 180,
+                ModeRotation.Rotate270 => 270,
+                _ => 0  // Identity / Unspecified
+            };
 
-            int targetWidth = sourceBitmap.Width;
-            int targetHeight = sourceBitmap.Height;
-
-            if (rotation is ModeRotation.Rotate90 or ModeRotation.Rotate270)
-            {
-                targetWidth = sourceBitmap.Height;
-                targetHeight = sourceBitmap.Width;
-            }
-
-            var rotatedBitmap = new SKBitmap(targetWidth, targetHeight, SKColorType.Bgra8888, SKAlphaType.Premul);
-
-            using var canvas = new SKCanvas(rotatedBitmap);
-            canvas.Clear(SKColors.Black);
-
-            // DXGI rotation describes how the display is rotated from identity.
-            // The duplicated frame must be inverse-rotated to match desktop coordinates.
-            switch (rotation)
-            {
-                case ModeRotation.Rotate90:
-                    // DXGI rotation values are clockwise. To unrotate a CW 90 frame, apply CCW 90.
-                    canvas.Translate(targetWidth, 0);
-                    canvas.RotateDegrees(90);
-                    break;
-                case ModeRotation.Rotate180:
-                    canvas.Translate(targetWidth, targetHeight);
-                    canvas.RotateDegrees(180);
-                    break;
-                case ModeRotation.Rotate270:
-                    // DXGI rotation values are clockwise. To unrotate a CW 270 frame, apply CCW 270 (CW 90).
-                    canvas.Translate(0, targetHeight);
-                    canvas.RotateDegrees(-90);
-                    break;
-            }
-
-            canvas.DrawBitmap(sourceBitmap, 0, 0);
-            return rotatedBitmap;
+            return BitmapRotationHelper.RotateClockwise(sourceBitmap, degrees);
         }
 
         /// <summary>
@@ -682,14 +657,17 @@ namespace XerahS.Platform.Windows
                 return false;
             }
 
+            // Issue #148 regression guard: DEVMODE and DXGI both use CLOCKWISE degrees.
+            // DMDO_90 (1) = 90° CW  → ModeRotation.Rotate90   (NOT Rotate270)
+            // DMDO_270 (3) = 270° CW → ModeRotation.Rotate270  (NOT Rotate90)
+            // Previously these were swapped, causing black screens on portrait/flipped monitors.
+            // See also: BitmapRotationHelperTests for cross-platform regression coverage.
             rotation = devMode.dmDisplayOrientation switch
             {
                 NativeMethods.DMDO_DEFAULT => ModeRotation.Identity,
-                // DEVMODE and DXGI both define rotation in clockwise degrees from natural
-                // orientation, so DMDO_90=90° CW → Rotate90, DMDO_270=270° CW → Rotate270.
-                NativeMethods.DMDO_90 => ModeRotation.Rotate90,
-                NativeMethods.DMDO_180 => ModeRotation.Rotate180,
-                NativeMethods.DMDO_270 => ModeRotation.Rotate270,
+                NativeMethods.DMDO_90 => ModeRotation.Rotate90,    // 90° CW
+                NativeMethods.DMDO_180 => ModeRotation.Rotate180,  // 180°
+                NativeMethods.DMDO_270 => ModeRotation.Rotate270,  // 270° CW
                 _ => ModeRotation.Unspecified
             };
 
