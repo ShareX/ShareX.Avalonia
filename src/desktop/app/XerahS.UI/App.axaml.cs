@@ -47,6 +47,13 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
 
+        // Set the Wayland xdg_toplevel app_id to match the installed xerahs.desktop filename.
+        // Without this, Avalonia defaults to the process name ("XerahS" with capital X), which
+        // does not match "xerahs.desktop", so xdg-desktop-portal cannot identify the app and
+        // GNOME's GlobalShortcuts portal backend returns response=2 (Failed) immediately,
+        // forcing an X11 fallback that does not work under XWayland.
+        Name = "xerahs";
+
         // Initialize theme based on user preference (System/Light/Dark)
         // This handles Linux properly where Avalonia's default detection doesn't work
         Services.ThemeService.Initialize();
