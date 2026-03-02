@@ -91,22 +91,26 @@ public override void Initialize()
 **Verification**: Portal log must show `CreateSession response=0` followed by
 `BindShortcuts response=0` and one (single) GNOME permission dialog on first run.
 
-### Fix 2 — Packaging bug: create `/usr/bin/xerahs` symlink (PENDING)
+### Fix 2 — Packaging: real symlink + correct StartupWMClass (DONE: commit `271265ca`)
 
-The `.desktop` file has `Exec=/usr/bin/xerahs` but the binary is at `/usr/lib/xerahs/XerahS`.
-This breaks portal app ID resolution via `Exec=` matching as a fallback.
+The packaging script was creating `/usr/bin/xerahs` as a shell wrapper script rather than
+a real symlink. `xdg-desktop-portal` resolves the `Exec=` path in the `.desktop` file when
+doing exe-based app ID detection; a wrapper script is opaque (`/usr/bin/xerahs` ≠
+`/usr/lib/xerahs/XerahS`), so matching failed. A real relative symlink
+(`../lib/xerahs/XerahS`) resolves to the actual binary and allows matching.
 
-**Workaround for testing** (manual, as root):
+Additionally `StartupWMClass=XerahS` (capital) was changed to `StartupWMClass=xerahs`
+(lowercase) to match the WM_CLASS / xdg_toplevel.app_id now advertised after
+`Application.Name = "xerahs"`.
+
+A `WriteTarSymlinkEntry` helper was added to the DEB packaging so the data.tar.gz
+encodes the symlink correctly rather than copying the binary content.
+
+**Note**: these packaging fixes apply to packages built from the next release onwards.
+For existing installations of v0.19.3 and earlier:
 ```bash
 sudo ln -sf /usr/lib/xerahs/XerahS /usr/bin/xerahs
 ```
-
-**Permanent fix**: update the RPM/DEB spec to install the symlink, or change the `.desktop`
-`Exec=` field to point to `/usr/lib/xerahs/XerahS` directly.
-
-Files to update:
-- `build/linux/xerahs.desktop` (or wherever the desktop file is generated)
-- RPM `.spec` / Debian `control` packaging scripts
 
 ### Fix 3 — Debounce CTS ObjectDisposedException (DONE: in-progress branch)
 
@@ -188,6 +192,8 @@ When the portal responds with `response=0` to `BindShortcuts` for the first time
 | 2026-02-28 | `151a94b3` | Fix `BuildPreferredTrigger` GLib format, parent window handle |
 | 2026-03-01 | `4413c031` | Set `Application.Name = "xerahs"` to match `xerahs.desktop` app ID |
 | 2026-03-02 | `1db0a454` | Debounce `ScheduleRebind()` — reduce 8 portal calls to 1 at startup |
-| 2026-03-02 | *(pending)* | Fix CTS `ObjectDisposedException` in `ScheduleRebind` |
-| *(future)* | — | Fix `/usr/bin/xerahs` packaging symlink |
+| 2026-03-02 | `1cb75370` | Fix CTS `ObjectDisposedException` in `ScheduleRebind` |
+| 2026-03-02 | `271265ca` | Packaging: real symlink, `StartupWMClass=xerahs`, DEB symlink tar entry |
+| 2026-03-02 | `271265ca` | Add `app_id` + `parentWindow` diagnostic log to `BindShortcutsAsync` |
+| *(future)* | — | Verify `parentWindow` is non-empty (Wayland/XWayland handle) |
 | *(future)* | — | Session persistence / `ConfigureShortcuts` for incremental rebinding |
