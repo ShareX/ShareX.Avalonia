@@ -63,6 +63,12 @@ public interface IHotkeyService : IDisposable
     /// Temporarily suspend all hotkey processing
     /// </summary>
     bool IsSuspended { get; set; }
+
+    /// <summary>
+    /// Invokes the native interactive configuration dialog for global shortcuts.
+    /// Returns true if the native configuration dialog was successfully shown and handled.
+    /// </summary>
+    Task<bool> ShowInteractiveConfigurationAsync();
 }
 
 /// <summary>

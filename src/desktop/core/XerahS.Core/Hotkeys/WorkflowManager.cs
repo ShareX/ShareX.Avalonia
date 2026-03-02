@@ -211,6 +211,14 @@ public class WorkflowManager : IDisposable
     }
 
     /// <summary>
+    /// Invokes native interactive configuration if available (e.g. for Linux Wayland).
+    /// </summary>
+    public Task<bool> ShowNativeConfigurationAsync()
+    {
+        return _hotkeyService.ShowInteractiveConfigurationAsync();
+    }
+
+    /// <summary>
     /// Get list of hotkeys that failed to register
     /// </summary>
     public List<WorkflowSettings> GetFailedHotkeys()

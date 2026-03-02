@@ -54,12 +54,14 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
     private IPortalSession? _sessionProxy;
     private IDisposable? _activatedSubscription;
     private IDisposable? _deactivatedSubscription;
+    private IDisposable? _shortcutsChangedSubscription;
     private IHotkeyService? _fallbackHotkeyService;
     private bool _portalUnavailableForSession;
     private bool _fallbackActivationLogged;
     private bool _isSuspended;
     private bool _disposed;
     private CancellationTokenSource? _rebindDebounceCts;
+    private string[] _lastBoundIds = Array.Empty<string>();
 
     public event EventHandler<HotkeyTriggeredEventArgs>? HotkeyTriggered;
     public bool IsSuspended
@@ -84,12 +86,33 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
             _portal = _connection.CreateProxy<IGlobalShortcuts>(PortalBusName, PortalObjectPath);
             _activatedSubscription = _portal.WatchActivatedAsync(OnActivated, OnPortalWatchError).GetAwaiter().GetResult();
             _deactivatedSubscription = _portal.WatchDeactivatedAsync(OnDeactivated, OnPortalWatchError).GetAwaiter().GetResult();
+            _shortcutsChangedSubscription = _portal.WatchShortcutsChangedAsync(OnShortcutsChanged, OnPortalWatchError).GetAwaiter().GetResult();
         }
         catch (Exception ex)
         {
             DebugHelper.WriteException(ex, "WaylandPortalHotkeyService: Unable to initialize portal");
             _portal = null;
             _connection?.Dispose();
+        }
+    }
+
+    public async Task<bool> ShowInteractiveConfigurationAsync()
+    {
+        if (_portal == null || _sessionHandle == null || ShouldUseFallbackHotkeys())
+            return false;
+
+        try
+        {
+            var parentWindow = PlatformServices.NativeWindowHandleProvider?.Invoke() ?? string.Empty;
+            var requestPath = await _portal.ConfigureShortcutsAsync((ObjectPath)_sessionHandle, parentWindow, new Dictionary<string, object>()).ConfigureAwait(false);
+            var request = _connection!.CreateProxy<IPortalRequest>(PortalBusName, requestPath);
+            var (response, _) = await request.WaitForResponseAsync().ConfigureAwait(false);
+            return response == 0; // Success
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteException(ex, "WaylandPortalHotkeyService: ConfigureShortcuts failed, fallback to native app UI.");
+            return false;
         }
     }
 
@@ -202,6 +225,7 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
 
         _activatedSubscription?.Dispose();
         _deactivatedSubscription?.Dispose();
+        _shortcutsChangedSubscription?.Dispose();
         CloseSessionAsync().GetAwaiter().GetResult();
         _connection?.Dispose();
         if (_fallbackHotkeyService != null)
@@ -266,10 +290,22 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
         try
         {
             var (bindings, map) = BuildShortcutBindings();
+            
+            // Fix 4: Session Persistence. Do not recreate session if the set of shortcut IDs hasn't changed.
+            // (Recreating forces a new permission dialog and loses user UI config state).
+            var currentIds = map.Keys.OrderBy(x => x).ToArray();
+            if (_sessionHandle != null && _lastBoundIds.SequenceEqual(currentIds))
+            {
+                DebugHelper.WriteLine("WaylandPortalHotkeyService: Shortcut set unchanged. Preserving session.");
+                _shortcutMap = map;
+                return;
+            }
+
             if (bindings.Length == 0)
             {
                 await CloseSessionAsync().ConfigureAwait(false);
                 _shortcutMap.Clear();
+                _lastBoundIds = Array.Empty<string>();
                 return;
             }
 
@@ -280,6 +316,7 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
             DebugHelper.WriteLine($"WaylandPortalHotkeyService: Binding {bindings.Length} shortcut(s) to portal session {sessionHandle}");
             await BindShortcutsAsync(bindings).ConfigureAwait(false);
             _shortcutMap = map;
+            _lastBoundIds = currentIds;
         }
         finally
         {
@@ -416,6 +453,16 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
     private void OnDeactivated((ObjectPath sessionHandle, string shortcutId, ulong timestamp, IDictionary<string, object> options) data)
     {
         // Portal currently only triggers once per activation; no action needed.
+    }
+
+    private void OnShortcutsChanged((ObjectPath sessionHandle, ValueTuple<string, IDictionary<string, object>>[] shortcuts) data)
+    {
+        if (_sessionHandle == null || !_sessionHandle.Equals(data.sessionHandle) || IsSuspended)
+            return;
+
+        DebugHelper.WriteLine("WaylandPortalHotkeyService: ShortcutsChanged signal received. DE updated bindings.");
+        // Synchronizing back to Avalonia Key representations is complex. We rely on the DE for now, 
+        // but UI could be notified here to refresh via ListShortcuts if needed.
     }
 
     private static void OnPortalWatchError(Exception ex)
@@ -640,9 +687,11 @@ public interface IGlobalShortcuts : IDBusObject
 
     Task<ObjectPath> ListShortcutsAsync(ObjectPath sessionHandle, IDictionary<string, object> options);
 
-    Task ConfigureShortcutsAsync(ObjectPath sessionHandle, string parentWindow, IDictionary<string, object> options);
+    Task<ObjectPath> ConfigureShortcutsAsync(ObjectPath sessionHandle, string parentWindow, IDictionary<string, object> options);
 
     Task<IDisposable> WatchActivatedAsync(Action<(ObjectPath sessionHandle, string shortcutId, ulong timestamp, IDictionary<string, object> options)> handler, Action<Exception>? error = null);
 
     Task<IDisposable> WatchDeactivatedAsync(Action<(ObjectPath sessionHandle, string shortcutId, ulong timestamp, IDictionary<string, object> options)> handler, Action<Exception>? error = null);
+
+    Task<IDisposable> WatchShortcutsChangedAsync(Action<(ObjectPath sessionHandle, ValueTuple<string, IDictionary<string, object>>[] shortcuts)> handler, Action<Exception>? error = null);
 }

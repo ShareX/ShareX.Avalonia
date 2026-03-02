@@ -51,6 +51,7 @@ public sealed class LinuxHotkeyService : IHotkeyService
 
     public event EventHandler<HotkeyTriggeredEventArgs>? HotkeyTriggered;
     public bool IsSuspended { get; set; }
+    public Task<bool> ShowInteractiveConfigurationAsync() => Task.FromResult(false);
 
     public LinuxHotkeyService()
     {

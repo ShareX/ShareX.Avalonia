@@ -385,7 +385,7 @@ public partial class HotkeySelectionControl : UserControl
 
     #region Event Handlers
 
-    private void HotkeyButton_Click(object? sender, RoutedEventArgs e)
+    private async void HotkeyButton_Click(object? sender, RoutedEventArgs e)
     {
         Log($"HotkeyButton_Click: FIRED - current mode={_mode}");
 
@@ -396,6 +396,16 @@ public partial class HotkeySelectionControl : UserControl
         }
         else
         {
+            if (global::Avalonia.Application.Current is App app && app.WorkflowManager != null)
+            {
+                bool shownNative = await app.WorkflowManager.ShowNativeConfigurationAsync();
+                if (shownNative)
+                {
+                    Log("HotkeyButton_Click: Intercepted by native portal UI for shortcuts.");
+                    return;
+                }
+            }
+
             Log("HotkeyButton_Click: Starting recording");
             StartRecording();
         }

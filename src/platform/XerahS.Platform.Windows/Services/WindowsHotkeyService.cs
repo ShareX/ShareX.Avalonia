@@ -54,6 +54,7 @@ public class WindowsHotkeyService : IHotkeyService
 
     public event EventHandler<HotkeyTriggeredEventArgs>? HotkeyTriggered;
     public bool IsSuspended { get; set; }
+    public Task<bool> ShowInteractiveConfigurationAsync() => Task.FromResult(false);
 
     #region P/Invoke
 

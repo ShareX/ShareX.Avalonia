@@ -36,6 +36,7 @@ public class MobileHotkeyService : IHotkeyService
     }
 
     public bool IsSuspended { get; set; }
+    public Task<bool> ShowInteractiveConfigurationAsync() => Task.FromResult(false);
 
     public bool RegisterHotkey(HotkeyInfo hotkeyInfo) => false;
     public bool UnregisterHotkey(HotkeyInfo hotkeyInfo) => false;

@@ -133,12 +133,24 @@ for the common case (last active CTS). Cancelled-and-replaced CTSes are GC'd aft
 (quickly-cancelled) lambda exits. CancellationTokenSource has no finalizer and holds no
 unmanaged resources unless `WaitHandle` was ever accessed (it was not), so GC is safe.
 
-### Fix 4 — Portal session persistence across hotkey re-registration (FUTURE)
+### Fix 4 — Complete Portal Strategy: Session Persistence and Configuration (DONE)
 
-Currently `RebindShortcutsAsync` closes and recreates the portal session on every call.
-This means the GNOME permission dialog may appear again if the session is lost. The correct
-approach is to keep the session alive and use `ConfigureShortcuts` (portal v2) or
-`BindShortcuts` on the existing session to update the binding set incrementally.
+Currently `RebindShortcutsAsync` closes and recreates the portal session on every hotkey change.
+This is an anti-pattern according to the `xdg-desktop-portal` design philosophy. The XDG GlobalShortcuts
+portal is designed so that the application declares its available actions once, and the Desktop
+Environment (Compositor) manages user configuration, key recording, and collision resolution.
+
+To fix this and provide a native Wayland experience:
+
+1. **Bind Once at Startup**: The application creates the session and calls `BindShortcuts` exactly
+   *once* (for the entire set of available tasks). Recreating the session is avoided unless the actual
+   set of hotkey workflows has grown/shrunk, preserving user-defined configurations and skipping spam dialogs.
+2. **UI Integration via `ConfigureShortcuts` (Portal v2)**: Instead of XerahS capturing raw keystrokes
+   in its own UI to set a hotkey, the "Set Hotkey" button in XerahS invokes the
+   `ConfigureShortcuts` D-Bus method. This delegates the UX to the DE (e.g., GNOME Settings or Plasma Wayland),
+   which opens a native portal dialog for the user to securely assign triggers directly.
+3. **Listen for Triggers**: XerahS uses the `ShortcutsChanged` D-Bus signal to silently learn when the
+   user mapping changes natively, so the UI can refresh if needed.
 
 ---
 
@@ -171,17 +183,18 @@ When the portal responds with `response=0` to `BindShortcuts` for the first time
 
 ## Open Questions
 
-1. **Portal v2 `ConfigureShortcuts`**: available in xdg-desktop-portal ≥ 1.18; should be
-   preferred over `BindShortcuts` for session lifetime management. Investigate whether
-   Tmds.DBus codegen supports the optional `ConfigureShortcuts` method cleanly.
+1. **Fallback for older portals**: `ConfigureShortcuts` is part of portal v2 (xdg-desktop-portal ≥ 1.18).
+   For older portals, users can still manually assign keys in standard GNOME Settings -> Keyboard,
+   but we need a strategy for how the XerahS UI gracefully falls back or shows instructions if the
+   `ConfigureShortcuts` call fails.
 
-2. **KDE Plasma support**: KDE Plasma ≥ 6.0 also implements the GlobalShortcuts portal.
-   Once GNOME is working, verify same flow works on KDE without portal-specific hacks.
+2. **KDE Plasma support**: KDE Plasma ≥ 6 implements the GlobalShortcuts portal. The aforementioned
+   "Bind Once + ConfigureShortcuts" architecture natively aligns with KDE's approach as well. Once
+   the refactor is complete, we should verify the flow on Plasma 6 Wayland.
 
-3. **Hotkey status feedback to UI**: with the async/debounced portal call, the `Registered`
-   status set optimistically by `RegisterHotkey` may not reflect actual portal state. If the
-   debounced `RebindShortcutsAsync` fails (e.g. portal rejects), the UI still shows green.
-   Consider a callback or event to update `HotkeyInfo.Status` after the async result is known.
+3. **Hotkey registration UI mapping**: The core XerahS hotkey models assume the app knows the key
+   combination synchronously. Adopting `ListShortcuts` requires making the UI state asynchronous
+   and reactive to the portal's source of truth.
 
 ---
 
