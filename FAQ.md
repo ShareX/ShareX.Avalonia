@@ -4,6 +4,10 @@
 
 **A:** XerahS is pronounced **ZERR-ahs** with IPA **/ˈzɛr.ɑːs/** and sounds like *Zer* from Xerox plus *ahs* as in glass or class.
 
+Listen to the pronunciation sample: [XerahS.wav](https://xerahs.com/assets/XerahS.wav)
+
+Audio sample provided by [@CubityFirst](https://github.com/CubityFirst).
+
 ---
 
 ### How is XerahS different from ShareX?
