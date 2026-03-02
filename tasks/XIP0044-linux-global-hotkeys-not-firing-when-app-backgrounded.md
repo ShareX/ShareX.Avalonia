@@ -133,6 +133,83 @@ for the common case (last active CTS). Cancelled-and-replaced CTSes are GC'd aft
 (quickly-cancelled) lambda exits. CancellationTokenSource has no finalizer and holds no
 unmanaged resources unless `WaitHandle` was ever accessed (it was not), so GC is safe.
 
+### Fix 5 — `parentWindow=<empty>` due to startup race (DONE — current branch)
+
+#### What was found (v0.19.4 debug log, 2026-03-02)
+
+The v0.19.4 debug build diagnostic line showed:
+```
+WaylandPortalHotkeyService: BindShortcuts payload: [...], parentWindow=<empty>, app_id=xerahs
+```
+
+- `app_id=xerahs` ✓ — Fix 1 (`Application.Name = "xerahs"`) IS working correctly.
+- `parentWindow=<empty>` ✗ — this is the remaining cause of `response=2`.
+
+#### Why parentWindow is empty — the startup race
+
+`NativeWindowHandleProvider` is set in `MainWindow.OnWindowOpened`, which fires when the
+main window renders for the first time. `ScheduleRebind()` fires after only a 100ms debounce.
+
+On slow builds (debug mode with 47-second startup time) the sequence is:
+1. Hotkeys registered → `ScheduleRebind()` queued with 100ms delay
+2. **100ms debounce fires → `BindShortcutsAsync` runs with `NativeWindowHandleProvider == null`**
+3. `parentWindow = ""` → portal cannot verify caller identity → `response=2`
+4. X11 fallback activated → hotkeys only work when app is focused
+5. *(40+ seconds later)* Window opens → `OnWindowOpened` sets `NativeWindowHandleProvider`
+   — but no retry is triggered
+
+The debug build 47-second startup makes this race deterministic, but it can also occur
+on slower hardware in production builds.
+
+#### Investigation attempts that were NOT needed
+
+- Inspecting `libwayland-client.so`, `zxdg_exporter_v2` protocol, Avalonia DLL symbols —
+  this was explored in case the fix required Wayland xdg-foreign export, but the root
+  cause turned out to be purely a timing/retry issue, not a missing handle type.
+- Avalonia.FreeDesktop DLL reflection — strings search showed `parentWindow` is used by
+  Avalonia's own file chooser portal code, confirming Avalonia passes `"x11:XID"` for
+  X11/XWayland windows and empty for native Wayland. Since we appear to run under X11
+  (Avalonia.X11 backend with XWayland), the XID path should work once timing is fixed.
+
+#### What `HandleDescriptor` is expected to be
+
+`MainWindow.OnWindowOpened` now logs:
+```
+MainWindow: OnWindowOpened — platform handle descriptor=XID, handle=<some intptr>
+```
+(or `wl_surface` if running under a pure native Wayland Avalonia backend — future case.)
+This log line was added to confirm the descriptor value in the next test run.
+
+#### Fix applied
+
+**`IHotkeyService.NotifyWindowReady()`** (default no-op):
+Added as a new default interface method so existing macOS/Windows implementations are unaffected.
+
+**`WaylandPortalHotkeyService.NotifyWindowReady()`**:
+Called from `OnWindowOpened` after `NativeWindowHandleProvider` is set. If the portal is
+in "unavailable" fallback state (`_portalUnavailableForSession == true`) — meaning the
+initial bind failed with response=2 — it resets the flag and calls `ScheduleRebind()`.
+The retry now runs with a valid `parentWindow` (e.g. `"x11:0x1234ab"`).
+
+**`RebindShortcutsAsync` fallback cleanup**:
+After a successful portal bind, if an X11 fallback service is still active (registered
+from the pre-window-ready failure), it is unregistered and disposed so the portal
+becomes the sole delivery path.
+
+**`MainWindow.OnWindowOpened` additions**:
+- Logs `HandleDescriptor` and `Handle` so we can confirm Avalonia's window handle type.
+- Calls `PlatformServices.Hotkey.NotifyWindowReady()`.
+
+**Expected log sequence after fix** (v0.19.5+):
+```
+MainWindow: OnWindowOpened — platform handle descriptor=XID, handle=<intptr>
+WaylandPortalHotkeyService: NotifyWindowReady — window handle now available; resetting portal-unavailable flag and retrying bind.
+WaylandPortalHotkeyService: CreateSession response=0 (Success)
+WaylandPortalHotkeyService: BindShortcuts payload: [...], parentWindow=x11:0x..., app_id=xerahs
+WaylandPortalHotkeyService: BindShortcuts response=0 (Success)
+WaylandPortalHotkeyService: Portal bind succeeded; releasing X11 fallback hotkeys.
+```
+
 ### Fix 4 — Complete Portal Strategy: Session Persistence and Configuration (DONE)
 
 Currently `RebindShortcutsAsync` closes and recreates the portal session on every hotkey change.
@@ -169,15 +246,24 @@ When the portal responds with `response=0` to `BindShortcuts` for the first time
 
 1. Ensure no installed XerahS instance is running: `pkill -f xerahs`
 2. Run debug build: `./run-debug-app.sh`
-3. Check log for:
+3. Check log for (in order):
+   - `MainWindow: OnWindowOpened — platform handle descriptor=XID, handle=<non-zero>`
+   - `WaylandPortalHotkeyService: NotifyWindowReady — ...resetting...retrying bind`
+   - `WaylandPortalHotkeyService: BindShortcuts payload: [...], parentWindow=x11:0x..., app_id=xerahs`
    - `WaylandPortalHotkeyService: CreateSession response=0 (Success)`
    - `WaylandPortalHotkeyService: BindShortcuts response=0 (Success)`
-   - No `PortalBindFailedException`, no `Activating X11 fallback`
-   - No `ObjectDisposedException`
+   - `WaylandPortalHotkeyService: Portal bind succeeded; releasing X11 fallback hotkeys.`
+   - **No** `PortalBindFailedException`, **no** `Activating X11 fallback` (after the retry)
+   - **No** `ObjectDisposedException`
 4. One GNOME permission dialog appears (first run only) — click **Allow**
 5. Minimise XerahS
 6. Press `Ctrl+Shift+F` (or any registered hotkey) from any other app
 7. Confirm the capture/action fires correctly
+
+**If `HandleDescriptor=wl_surface`** is logged instead of `XID`, the app is running under
+pure native Wayland (not XWayland). In that case `parentWindow` will still be empty and a
+further fix is needed: implement `zxdg_exporter_v2` via P/Invoke into `libwayland-client.so`
+to export the surface handle as `"wayland:EXPORTEDTOKEN"`. See Open Questions item 4.
 
 ---
 
@@ -196,6 +282,21 @@ When the portal responds with `response=0` to `BindShortcuts` for the first time
    combination synchronously. Adopting `ListShortcuts` requires making the UI state asynchronous
    and reactive to the portal's source of truth.
 
+4. **Pure native Wayland `parentWindow`**: If `OnWindowOpened` logs `descriptor=wl_surface`
+   (i.e. Avalonia is using a native Wayland backend, not X11/XWayland), `parentWindow` will
+   still be empty because we only handle the "XID" case. The fix requires implementing
+   `zxdg_exporter_v2` via P/Invoke into `libwayland-client.so`:
+   - `wl_proxy_get_display(wl_surface*)` → `wl_display*`
+   - `wl_display_get_registry(display)` → `wl_registry*`
+   - Listen for `zxdg_exporter_v2` global in `wl_registry::global` event
+   - Call `zxdg_exporter_v2.export_toplevel(wl_surface)` → `zxdg_exported_v2*`
+   - Receive `zxdg_exported_v2::handle` event → string token
+   - Format: `"wayland:{token}"` as `parentWindow`
+
+   This approach was NOT pursued yet because it's complex and we first need to confirm
+   whether the timing fix (Fix 5 / `NotifyWindowReady`) resolves the issue when the
+   handle descriptor IS "XID" (the expected case for XWayland sessions).
+
 ---
 
 ## Changelog
@@ -208,5 +309,7 @@ When the portal responds with `response=0` to `BindShortcuts` for the first time
 | 2026-03-02 | `1cb75370` | Fix CTS `ObjectDisposedException` in `ScheduleRebind` |
 | 2026-03-02 | `271265ca` | Packaging: real symlink, `StartupWMClass=xerahs`, DEB symlink tar entry |
 | 2026-03-02 | `271265ca` | Add `app_id` + `parentWindow` diagnostic log to `BindShortcutsAsync` |
-| *(future)* | — | Verify `parentWindow` is non-empty (Wayland/XWayland handle) |
-| *(future)* | — | Session persistence / `ConfigureShortcuts` for incremental rebinding |
+| 2026-03-02 | `0c44e21b` | Fix build: `IHotkeyService.ShowInteractiveConfigurationAsync` as default interface method |
+| 2026-03-02 | *(current)* | Fix startup race: `NotifyWindowReady()` retries portal after window opens; cleans up X11 fallback on success; logs `HandleDescriptor` |
+| *(future)* | — | Verify `HandleDescriptor=XID` in log; confirm `parentWindow=x11:0x...` and `response=0` |
+| *(future)* | — | If `HandleDescriptor=wl_surface`: implement `zxdg_exporter_v2` P/Invoke for native Wayland handle |

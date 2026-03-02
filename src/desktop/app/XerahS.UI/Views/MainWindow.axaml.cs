@@ -346,12 +346,30 @@ namespace XerahS.UI.Views
             // On X11/XWayland the descriptor is "XID"; on native Wayland it is "wl_surface"
             // (xdg-foreign export not yet implemented, so that path still passes empty string).
             var platformHandle = TryGetPlatformHandle();
+            XerahS.Common.DebugHelper.WriteLine(
+                $"MainWindow: OnWindowOpened — platform handle descriptor={platformHandle?.HandleDescriptor ?? "<null>"}, handle={platformHandle?.Handle}");
+
             if (platformHandle != null)
             {
                 XerahS.Platform.Abstractions.PlatformServices.NativeWindowHandleProvider = () =>
                     platformHandle.HandleDescriptor == "XID"
                         ? $"x11:{platformHandle.Handle:x}"
                         : null;
+            }
+
+            // Notify the hotkey service that the window is ready and the native window handle is
+            // now available via NativeWindowHandleProvider. If the portal BindShortcuts call at
+            // startup ran before this point (e.g. the 100ms debounce fired while the window was
+            // still initialising — in debug builds startup can take 40+ seconds) and received
+            // parentWindow="" which caused a response=2 failure, this triggers a portal retry so
+            // hotkeys work globally without needing an app restart.
+            try
+            {
+                XerahS.Platform.Abstractions.PlatformServices.Hotkey.NotifyWindowReady();
+            }
+            catch (Exception ex)
+            {
+                XerahS.Common.DebugHelper.WriteException(ex, "MainWindow: NotifyWindowReady failed");
             }
 
             // Only maximize if we are NOT in silent run mode

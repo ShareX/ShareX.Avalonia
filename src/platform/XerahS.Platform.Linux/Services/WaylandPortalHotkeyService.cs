@@ -96,6 +96,30 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
         }
     }
 
+    public void NotifyWindowReady()
+    {
+        if (_disposed || _portal == null)
+            return;
+
+        // The portal BindShortcuts call at startup may have received parentWindow="" because
+        // NativeWindowHandleProvider was not yet set (window hadn't opened yet).
+        // Now that the window is open and the handle is available, reset any response=2
+        // failure and retry the portal path.
+        if (_portalUnavailableForSession)
+        {
+            DebugHelper.WriteLine("WaylandPortalHotkeyService: NotifyWindowReady — window handle now available; resetting portal-unavailable flag and retrying bind.");
+            _portalUnavailableForSession = false;
+            _fallbackActivationLogged = false;
+            ScheduleRebind();
+        }
+        else if (_sessionHandle == null && _registered.Count > 0)
+        {
+            // No session established yet (startup race where first bind hasn't completed) — kick off bind now.
+            DebugHelper.WriteLine("WaylandPortalHotkeyService: NotifyWindowReady — no portal session yet; scheduling bind now that window handle is available.");
+            ScheduleRebind();
+        }
+    }
+
     public async Task<bool> ShowInteractiveConfigurationAsync()
     {
         if (_portal == null || _sessionHandle == null || ShouldUseFallbackHotkeys())
@@ -317,6 +341,19 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
             await BindShortcutsAsync(bindings).ConfigureAwait(false);
             _shortcutMap = map;
             _lastBoundIds = currentIds;
+
+            // Portal bind succeeded. If we previously activated the X11 fallback (e.g. because
+            // the initial bind ran before the window handle was available and got response=2),
+            // release it now so the portal is the sole delivery path.
+            if (_fallbackHotkeyService != null)
+            {
+                DebugHelper.WriteLine("WaylandPortalHotkeyService: Portal bind succeeded; releasing X11 fallback hotkeys.");
+                var fallback = _fallbackHotkeyService;
+                _fallbackHotkeyService = null;
+                fallback.UnregisterAll();
+                fallback.HotkeyTriggered -= OnFallbackHotkeyTriggered;
+                fallback.Dispose();
+            }
         }
         finally
         {
