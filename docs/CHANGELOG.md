@@ -10,9 +10,24 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 ## Unreleased
 
+## v0.19.1
 
+### Fixes
+- **Linux Recording**: Harden GStreamer recording by correcting region crop, removing conflicting `video/x-raw` caps before `glupload`, adding GL-to-CPU fallback, and making fatal errors selectable in RecordingView (01527ef5, ef55b9e7, 78523202, eba1e9d0, ba13d971)
+- **Linux Recording**: Clean up portal session on fatal errors to prevent unobserved exceptions (d69bd5a1)
+- **Core**: Fix tray stop button behavior and hotkey recording stop flow (36410a85)
+- **PluginLoadContext**: Fix stale shared dependency name/order checks (fff53962)
+- **Updates/Logging**: Fix reflection-disabled GitHub update JSON handling and normalize error log naming to `yyyyMMdd` (f2ed43cf)
 
+### Refactor
+- **Core**: Centralize log and app path handling with `PathsManager` and expand path audit coverage for plugins/screenshots/tools/troubleshooting paths (ad12770f, bcb0423e)
 
+### Build
+- **Release Automation**: Run maintenance chores during release bump-tag flow (df7976f4)
+- **Developer Tooling**: Add `run-debug-app.sh` helper script (7d4fe9ec)
+
+### Documentation
+- **XIP0042**: Update the ImageEditor SkiaSharp hardware acceleration task document (3605dfa7)
 
 ## v0.19.0
 
