@@ -67,8 +67,9 @@ public interface IHotkeyService : IDisposable
     /// <summary>
     /// Invokes the native interactive configuration dialog for global shortcuts.
     /// Returns true if the native configuration dialog was successfully shown and handled.
+    /// Platforms that do not support a native shortcut configuration UI return false.
     /// </summary>
-    Task<bool> ShowInteractiveConfigurationAsync();
+    Task<bool> ShowInteractiveConfigurationAsync() => Task.FromResult(false);
 }
 
 /// <summary>
