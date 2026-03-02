@@ -219,8 +219,12 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
     {
         var cts = new CancellationTokenSource();
         var old = Interlocked.Exchange(ref _rebindDebounceCts, cts);
+        // Cancel only — do not dispose here. The old task's lambda may not have started yet
+        // and still holds a reference to old's CTS; disposing it synchronously would cause
+        // ObjectDisposedException when the lambda accesses cts.Token inside Task.Delay.
+        // The old CTS is either disposed by its own lambda's finally block (if it ran first
+        // and its CompareExchange still matched) or collected by GC otherwise.
         old?.Cancel();
-        old?.Dispose();
 
         _ = Task.Run(async () =>
         {
