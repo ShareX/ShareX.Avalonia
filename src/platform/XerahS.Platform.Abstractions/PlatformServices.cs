@@ -303,6 +303,15 @@ namespace XerahS.Platform.Abstractions
             _themeService = null;
             _scrollingCaptureService = null;
             _ocrService = null;
+            NativeWindowHandleProvider = null;
         }
+
+        /// <summary>
+        /// Optional provider for the native parent window handle, formatted for XDG Desktop Portal use.
+        /// Set by the UI layer after the main window opens.
+        /// Returns portal-format strings such as "x11:0xdeadbeef" (X11/XWayland) or null.
+        /// Used by WaylandPortalHotkeyService to allow GNOME Shell to show the permissions dialog.
+        /// </summary>
+        public static Func<string?>? NativeWindowHandleProvider { get; set; }
     }
 }

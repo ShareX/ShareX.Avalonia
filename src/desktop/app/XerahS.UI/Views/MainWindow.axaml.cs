@@ -341,6 +341,19 @@ namespace XerahS.UI.Views
 
         private void OnWindowOpened(object? sender, EventArgs e)
         {
+            // Provide the native window handle to platform services so the Wayland GlobalShortcuts
+            // portal can display a transient permissions dialog (GNOME returns response=2 without it).
+            // On X11/XWayland the descriptor is "XID"; on native Wayland it is "wl_surface"
+            // (xdg-foreign export not yet implemented, so that path still passes empty string).
+            var platformHandle = TryGetPlatformHandle();
+            if (platformHandle != null)
+            {
+                XerahS.Platform.Abstractions.PlatformServices.NativeWindowHandleProvider = () =>
+                    platformHandle.HandleDescriptor == "XID"
+                        ? $"x11:{platformHandle.Handle:x}"
+                        : null;
+            }
+
             // Only maximize if we are NOT in silent run mode
             if (!SettingsManager.Settings.SilentRun)
             {

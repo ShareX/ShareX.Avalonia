@@ -359,7 +359,8 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
                 return $"{binding.Item1}:{trigger}";
             }));
         DebugHelper.WriteLine($"WaylandPortalHotkeyService: BindShortcuts payload: [{payload}]");
-        var requestPath = await _portal!.BindShortcutsAsync(sessionHandle, bindings, string.Empty, new Dictionary<string, object>()).ConfigureAwait(false);
+        var parentWindow = PlatformServices.NativeWindowHandleProvider?.Invoke() ?? string.Empty;
+        var requestPath = await _portal!.BindShortcutsAsync(sessionHandle, bindings, parentWindow, new Dictionary<string, object>()).ConfigureAwait(false);
         var request = _connection!.CreateProxy<IPortalRequest>(PortalBusName, requestPath);
         var (response, _) = await request.WaitForResponseAsync().ConfigureAwait(false);
         DebugHelper.WriteLine($"WaylandPortalHotkeyService: BindShortcuts response={response} ({DescribePortalResponse(response)})");
@@ -530,25 +531,28 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
 
     private static string BuildPreferredTrigger(HotkeyInfo hotkeyInfo)
     {
-        var parts = new List<string>(4);
+        // XDG GlobalShortcuts portal uses GLib/GTK accelerator format:
+        // modifiers are <Primary>, <Alt>, <Shift>, <Super> with no separator,
+        // followed by the lowercase key name. E.g. "<Primary><Shift>f", not "Ctrl+Shift+F".
+        var parts = new List<string>(5);
         if (hotkeyInfo.HasControl)
         {
-            parts.Add("Ctrl");
+            parts.Add("<Primary>");
         }
 
         if (hotkeyInfo.HasAlt)
         {
-            parts.Add("Alt");
+            parts.Add("<Alt>");
         }
 
         if (hotkeyInfo.HasShift)
         {
-            parts.Add("Shift");
+            parts.Add("<Shift>");
         }
 
         if (hotkeyInfo.HasMeta)
         {
-            parts.Add("Meta");
+            parts.Add("<Super>");
         }
 
         var keyName = MapKeyName(hotkeyInfo.Key);
@@ -557,7 +561,7 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
             parts.Add(keyName);
         }
 
-        return string.Join("+", parts);
+        return string.Concat(parts);
     }
 
     private static string MapKeyName(Key key)
@@ -569,7 +573,7 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
 
         if (key >= Key.A && key <= Key.Z)
         {
-            return key.ToString();
+            return key.ToString().ToLowerInvariant();
         }
 
         if (key >= Key.D0 && key <= Key.D9)
