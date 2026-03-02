@@ -247,13 +247,16 @@ class Program
                 File.Copy(file, destFile);
             }
 
-            // Create symlink binary in /usr/bin/xerahs
+            // Create /usr/bin/xerahs as a symlink to the real binary.
+            // A true symlink is required so that xdg-desktop-portal can resolve the Exec= path
+            // back to the real binary via /proc/PID/exe for app-ID detection. A wrapper shell
+            // script would not resolve to the same path and breaks portal app identification.
             string binPath = Path.Combine(dataRoot, "usr", "bin");
             Directory.CreateDirectory(binPath);
-            // We can't easily create a true symlink on Windows for the tar archive without specific library calls or storing it as a special entry.
-            // A safer bet for cross-platform packaging is a wrapper script.
-            string wrapperScript = Path.Combine(binPath, "xerahs");
-            File.WriteAllText(wrapperScript, "#!/bin/sh\nexec /usr/lib/xerahs/XerahS \"$@\"\n");
+            string symlinkPath = Path.Combine(binPath, "xerahs");
+            // Relative symlink: resolves to /usr/lib/xerahs/XerahS from /usr/bin/. A relative
+// target is used so rpmbuild can correctly traverse the symlink inside BUILDROOT.
+File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
 
             // Create desktop entry for application menu
             string applicationsPath = Path.Combine(dataRoot, "usr", "share", "applications");
@@ -269,7 +272,7 @@ class Program
                 Type=Application
                 Categories=Utility;Graphics;GTK;
                 Keywords=screenshot;screen;capture;share;upload;
-                StartupWMClass=XerahS
+                StartupWMClass=xerahs
                 X-GNOME-UsesNotifications=true
                 X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2
                 """;
@@ -395,11 +398,13 @@ class Program
                 File.Copy(file, destFile);
             }
 
-            // Wrapper script
+            // /usr/bin/xerahs as a symlink (see DEB section for rationale)
             string binPath = Path.Combine(stagePackageRoot, "usr", "bin");
             Directory.CreateDirectory(binPath);
-            string wrapperScript = Path.Combine(binPath, "xerahs");
-            File.WriteAllText(wrapperScript, "#!/bin/sh\nexec /usr/lib/xerahs/XerahS \"$@\"\n");
+            string symlinkPath = Path.Combine(binPath, "xerahs");
+            // Relative symlink: resolves to /usr/lib/xerahs/XerahS from /usr/bin/. A relative
+// target is used so rpmbuild can correctly traverse the symlink inside BUILDROOT.
+File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
 
             // Desktop entry
             string applicationsPath = Path.Combine(stagePackageRoot, "usr", "share", "applications");
@@ -415,7 +420,7 @@ class Program
                 Type=Application
                 Categories=Utility;Graphics;GTK;
                 Keywords=screenshot;screen;capture;share;upload;
-                StartupWMClass=XerahS
+                StartupWMClass=xerahs
                 X-GNOME-UsesNotifications=true
                 X-KDE-DBUS-Restricted-Interfaces=org.kde.KWin.ScreenShot2
                 """;
@@ -652,6 +657,14 @@ class Program
             // Standard debian data.tar.gz is usually ./usr/..., so we simulate that
             relativePath = "./" + relativePath;
 
+            // Detect and preserve symlinks: write a tar symlink entry instead of copying content.
+            string? linkTarget = new FileInfo(file).LinkTarget;
+            if (linkTarget != null)
+            {
+                WriteTarSymlinkEntry(tar, relativePath, linkTarget);
+                continue;
+            }
+
             // Permission handling
             UnixFileMode mode;
             if (IsExecutablePayloadPath(relativePath))
@@ -698,6 +711,14 @@ class Program
             entry.Mode = (UnixFileMode)Convert.ToInt32("644", 8);
         }
 
+        tar.WriteEntry(entry);
+    }
+
+    static void WriteTarSymlinkEntry(TarWriter tar, string entryPath, string linkTarget)
+    {
+        var entry = new UstarTarEntry(TarEntryType.SymbolicLink, entryPath);
+        entry.LinkName = linkTarget;
+        entry.Mode = (UnixFileMode)Convert.ToInt32("777", 8);
         tar.WriteEntry(entry);
     }
 

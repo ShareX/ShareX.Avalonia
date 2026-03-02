@@ -350,8 +350,9 @@ public sealed class WaylandPortalHotkeyService : IHotkeyService
                 string trigger = binding.Item2.TryGetValue("preferred_trigger", out var value) ? value?.ToString() ?? "<null>" : "<missing>";
                 return $"{binding.Item1}:{trigger}";
             }));
-        DebugHelper.WriteLine($"WaylandPortalHotkeyService: BindShortcuts payload: [{payload}]");
         var parentWindow = PlatformServices.NativeWindowHandleProvider?.Invoke() ?? string.Empty;
+        var appName = global::Avalonia.Application.Current?.Name ?? "<null>";
+        DebugHelper.WriteLine($"WaylandPortalHotkeyService: BindShortcuts payload: [{payload}], parentWindow={(string.IsNullOrEmpty(parentWindow) ? "<empty>" : parentWindow)}, app_id={appName}");
         var requestPath = await _portal!.BindShortcutsAsync(sessionHandle, bindings, parentWindow, new Dictionary<string, object>()).ConfigureAwait(false);
         var request = _connection!.CreateProxy<IPortalRequest>(PortalBusName, requestPath);
         var (response, _) = await request.WaitForResponseAsync().ConfigureAwait(false);
