@@ -101,7 +101,7 @@ namespace XerahS.UI.Views
         }
 
         /// <summary>
-        /// Returns true for nav tags that map to immediate actions (file upload, capture workflows)
+        /// Returns true for nav tags that map to immediate actions (dialogs, tool windows, workflows)
         /// rather than page navigation. These items use ItemInvoked instead of SelectionChanged.
         /// </summary>
         private static bool IsActionOnlyNavTag(string? tag)
@@ -111,8 +111,10 @@ namespace XerahS.UI.Views
                 return false;
             }
 
+            // "Tools" (no underscore) navigates to ToolsView page; "Tools_*" sub-items open dialogs/windows.
             return tag.StartsWith("Capture_", StringComparison.Ordinal)
                 || tag.StartsWith("Workflow_", StringComparison.Ordinal)
+                || tag.StartsWith("Tools_", StringComparison.Ordinal)
                 || tag == "Upload_FileUpload"
                 || tag == "Upload_ClipboardUploadWithContentViewer";
         }
