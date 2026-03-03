@@ -32,6 +32,7 @@ using XerahS.Core;
 using XerahS.UI.Views;
 using XerahS.Uploaders;
 using XerahS.Uploaders.CustomUploader;
+using XerahS.Uploaders.LegacySupport;
 using XerahS.Uploaders.PluginSystem;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -210,11 +211,22 @@ public partial class DestinationSettingsViewModel : ViewModelBase
                 }
             }
 
+            // Migrate built-in provider settings (S3, FTP, Pastebin, Imgur)
+            var builtinMigration = BuiltinInstanceMigrator.Migrate(SettingsManager.UploadersConfig);
+
+            if (builtinMigration.TotalCreated + builtinMigration.TotalUpdated > 0)
+            {
+                foreach (var category in Categories)
+                {
+                    category.LoadInstances();
+                }
+            }
+
             string title = customUploaderExport.FailedCount > 0
                 ? "Import Complete (With Warnings)"
                 : "Import Complete";
 
-            string summary = BuildImportSummary(configPath, result, customUploaderExport);
+            string summary = BuildImportSummary(configPath, result, customUploaderExport, builtinMigration);
             await ShowMessageDialogAsync(title, summary);
         }
         catch (Exception ex)
@@ -493,7 +505,8 @@ public partial class DestinationSettingsViewModel : ViewModelBase
     private static string BuildImportSummary(
         string sourceConfigPath,
         ImportResult importResult,
-        CustomUploaderExportResult customUploaderExport)
+        CustomUploaderExportResult customUploaderExport,
+        BuiltinMigrationResult builtinMigration)
     {
         var builder = new StringBuilder();
         builder.AppendLine($"Source: {sourceConfigPath}");
@@ -521,6 +534,14 @@ public partial class DestinationSettingsViewModel : ViewModelBase
                 builder.AppendLine();
                 builder.Append("Next step: use \"Add from Catalog\" to create destination instances from imported custom uploaders.");
             }
+        }
+
+        if (builtinMigration.HasAnything)
+        {
+            builder.AppendLine();
+            builder.AppendLine();
+            builder.AppendLine("Built-in provider migration:");
+            builder.Append(builtinMigration.GetSummary());
         }
 
         return builder.ToString();
