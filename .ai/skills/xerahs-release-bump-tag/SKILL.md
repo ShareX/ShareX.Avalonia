@@ -1,6 +1,6 @@
 ﻿---
 name: xerahs-release-bump-tag
-description: "Orchestrate XerahS release flow in strict order: maintenance-chores first, update-changelog second (optional if no CHANGELOG), verify build, bump/commit/push/tag, then monitor GitHub Actions every 2 minutes. On failures, inspect logs, fix root cause, and retry with the next patch release."
+description: "Orchestrate XerahS release flow in strict order: maintenance-chores first, update-changelog second (optional if no CHANGELOG), verify build, bump/commit/push/tag, monitor GitHub Actions every 2 minutes, ensure standard release notes content, then optionally set pre-release. On failures, inspect logs, fix root cause, and retry with the next patch release."
 ---
 
 # XerahS Release Bump Tag
@@ -13,7 +13,8 @@ Use this skill to run release steps in strict order:
 - Step 3: Verify build, then execute bump/commit/push/tag automation
 - Step 4: Monitor the tag-triggered release workflow every 2 minutes
 - Step 5: If failure occurs, inspect logs, fix issues, and retry with the next patch version
-- Step 6: If requested, set the successful release as pre-release
+- Step 6: Ensure standard release notes block is present on the GitHub release
+- Step 7: If requested, set the successful release as pre-release
 
 Step 3 performs:
 - Pre-check: Run `dotnet build src/desktop/XerahS.sln`; do not proceed if build fails.
@@ -31,6 +32,12 @@ Step 4-5 performs:
 - Re-run local pre-check build.
 - Retry release using next patch bump, then monitor again.
 - Repeat until workflow succeeds.
+
+Step 6 performs:
+- Ensures release notes always include:
+  - `Change log:`
+  - `https://xerahs.com/changelog.html`
+  - `### macOS Troubleshooting ("App is damaged")` section with Gatekeeper `xattr -cr` guidance.
 
 ## Primary Command
 
@@ -110,7 +117,12 @@ On environments where `bash` is not in PATH, execute the sequence manually:
    - Re-run `dotnet build src/desktop/XerahS.sln`.
    - Repeat Step 3 with next patch version.
 
-6. Step 6 - Set pre-release (when requested)
+6. Step 6 - Ensure standard release notes content
+   - Read current body: `gh release view v<new-version> --json body`
+   - Append the standard changelog + macOS troubleshooting block if missing.
+   - Write body: `gh release edit v<new-version> --notes-file <file>`
+
+7. Step 7 - Set pre-release (when requested)
    - `gh release edit v<new-version> --prerelease`
    - Verify: `gh release view v<new-version> --json isPrerelease,url,assets`
 
@@ -126,7 +138,8 @@ Default bump when unspecified: patch (`z`). Default commit type token: `CI`.
 5. After tag push, monitor the release workflow every 120 seconds until complete.
 6. If failed, inspect logs, fix root cause, and retry with next patch version.
 7. Continue retry loop until release workflow is successful.
-8. If requested, mark successful release as pre-release.
+8. Ensure standard release notes content is present on the successful release.
+9. If requested, mark successful release as pre-release.
 
 ## Guardrails
 
@@ -136,6 +149,7 @@ Default bump when unspecified: patch (`z`). Default commit type token: `CI`.
 - Always verify build before bump/tag.
 - Always monitor workflow after tag push; do not stop at tag creation.
 - Always inspect logs on failure and fix root cause before retry.
+- Always ensure the standard release notes block exists on the successful release.
 - Always use a new patch version for retries requiring new commits/tags.
 - Abort on detached HEAD.
 - Abort if version format is not `X.Y.Z`.
@@ -150,8 +164,9 @@ When executing this skill:
 3. Default bump is patch (`z`) when unspecified.
 4. Monitor tag workflow every 120 seconds until completion.
 5. On failure, inspect logs, fix issue, and retry with next patch version.
-6. If requested, set the final successful release to pre-release.
-7. Report final version, commit hash, branch push status, tag push status, run URL, and pre-release status.
+6. Ensure release notes include changelog link + macOS troubleshooting block.
+7. If requested, set the final successful release to pre-release.
+8. Report final version, commit hash, branch push status, tag push status, run URL, and pre-release status.
 
 ## Notes (lessons learnt)
 

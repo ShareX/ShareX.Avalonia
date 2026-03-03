@@ -130,6 +130,75 @@ monitor_release_run() {
   done
 }
 
+wait_for_release() {
+  local tag_name="$1"
+  local attempt=1
+  local max_attempts=90
+
+  while [[ $attempt -le $max_attempts ]]; do
+    if gh release view "$tag_name" --json url >/dev/null 2>&1; then
+      return 0
+    fi
+    echo "Waiting for release $tag_name (attempt $attempt/$max_attempts)..."
+    sleep 10
+    attempt=$((attempt + 1))
+  done
+
+  return 1
+}
+
+standard_release_notes_block() {
+  cat <<'EOF'
+Change log:
+https://xerahs.com/changelog.html
+
+### macOS Troubleshooting ("App is damaged")
+If you see a message saying **"XerahS is damaged and can't be opened"**, it is due to macOS security (Gatekeeper) on quarantined downloads. To fix it:
+
+1. Open **Terminal**.
+2. Type the following command (do not hit Enter yet):
+   ```bash
+   xattr -cr 
+   ```
+3. Drag the **XerahS.app** file from Finder into the Terminal window (this pastes the full path).
+4. Only now, press **Enter**.
+EOF
+}
+
+ensure_standard_release_notes() {
+  local tag_name="$1"
+  local existing_body=""
+  local updated_body_file=""
+  local release_url=""
+
+  require_cmd gh
+
+  if ! wait_for_release "$tag_name"; then
+    echo "Error: release $tag_name was not found. Cannot enforce standard release notes." >&2
+    exit 1
+  fi
+
+  existing_body="$(gh release view "$tag_name" --json body --jq '.body // ""')"
+  if [[ "$existing_body" == *"https://xerahs.com/changelog.html"* ]] && [[ "$existing_body" == *"### macOS Troubleshooting (\"App is damaged\")"* ]]; then
+    echo "Standard release notes block already present for $tag_name."
+    return 0
+  fi
+
+  updated_body_file="$(mktemp)"
+  {
+    if [[ -n "$existing_body" ]]; then
+      printf '%s\n\n' "$existing_body"
+    fi
+    standard_release_notes_block
+  } > "$updated_body_file"
+
+  gh release edit "$tag_name" --notes-file "$updated_body_file" >/dev/null
+  rm -f "$updated_body_file"
+
+  release_url="$(gh release view "$tag_name" --json url --jq '.url')"
+  echo "Standard release notes block ensured: $release_url"
+}
+
 set_release_prerelease() {
   local tag_name="$1"
   local is_prerelease=""
@@ -288,6 +357,9 @@ if [[ $MONITOR -eq 1 ]]; then
     exit 1
   fi
 fi
+
+echo "Step 5: ensuring standard release notes for $tag_name..."
+ensure_standard_release_notes "$tag_name"
 
 if [[ $SET_PRERELEASE -eq 1 ]]; then
   set_release_prerelease "$tag_name"
