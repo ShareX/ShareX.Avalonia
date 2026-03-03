@@ -31,6 +31,8 @@ namespace XerahS.Platform.Linux.Services;
 public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
 {
     private const string UnitName = "xerahs-watchfolder.service";
+    private const string LegacyUnitName = "watchfolder.service";
+    private static readonly string[] KnownUnitNames = { UnitName, LegacyUnitName };
 
     public override bool IsSupported => true;
 
@@ -52,9 +54,8 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             };
         }
 
-        string unitFilePath = GetUnitFilePath(scope);
-        bool installed = File.Exists(unitFilePath);
-        if (!installed)
+        string[] installedUnits = GetInstalledUnitNames(scope);
+        if (installedUnits.Length == 0)
         {
             return new WatchFolderDaemonStatus
             {
@@ -66,11 +67,20 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             };
         }
 
-        var activeResult = await RunSystemctlAsync(scope, $"is-active {UnitName}", cancellationToken);
-        var enabledResult = await RunSystemctlAsync(scope, $"is-enabled {UnitName}", cancellationToken);
+        bool isRunning = false;
+        bool startAtStartup = false;
+        foreach (string unitName in KnownUnitNames)
+        {
+            if (await IsUnitActiveAsync(scope, unitName, cancellationToken))
+            {
+                isRunning = true;
+            }
 
-        bool isRunning = activeResult.Output.Trim().Equals("active", StringComparison.OrdinalIgnoreCase);
-        bool startAtStartup = enabledResult.Output.Trim().Equals("enabled", StringComparison.OrdinalIgnoreCase);
+            if (await IsUnitEnabledAsync(scope, unitName, cancellationToken))
+            {
+                startAtStartup = true;
+            }
+        }
 
         return new WatchFolderDaemonStatus
         {
@@ -114,7 +124,7 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             return await StartSystemScopeWithElevationAsync(daemonPath, settingsFolder, startAtStartup, cancellationToken);
         }
 
-        var ensureResult = await EnsureUnitFileAsync(scope, daemonPath, settingsFolder, cancellationToken);
+        var ensureResult = await EnsureUnitFilesAsync(scope, daemonPath, settingsFolder, cancellationToken);
         if (!ensureResult.Success)
         {
             return ensureResult;
@@ -126,12 +136,13 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             return WatchFolderDaemonResult.Fail(WatchFolderDaemonErrorCode.CommandFailed, reloadResult.Output);
         }
 
-        var enableCommand = startAtStartup ? "enable" : "disable";
-        var enableResult = await RunSystemctlAsync(scope, $"{enableCommand} {UnitName}", cancellationToken);
+        var enableResult = await ConfigureStartupUnitsAsync(scope, startAtStartup, cancellationToken);
         if (!enableResult.IsSuccess)
         {
             return WatchFolderDaemonResult.Fail(WatchFolderDaemonErrorCode.CommandFailed, enableResult.Output);
         }
+
+        await StopLegacyUnitIfPresentAsync(scope, cancellationToken);
 
         var startResult = await RunSystemctlAsync(scope, $"start {UnitName}", cancellationToken);
         if (!startResult.IsSuccess)
@@ -152,7 +163,8 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             return WatchFolderDaemonResult.Fail(WatchFolderDaemonErrorCode.UnsupportedScope, "Unsupported daemon scope.");
         }
 
-        if (!File.Exists(GetUnitFilePath(scope)))
+        string[] installedUnits = GetInstalledUnitNames(scope);
+        if (installedUnits.Length == 0)
         {
             return WatchFolderDaemonResult.Ok("Daemon unit is not installed.");
         }
@@ -162,19 +174,30 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             return await StopSystemScopeWithElevationAsync(cancellationToken);
         }
 
-        var stopResult = await RunSystemctlAsync(scope, $"stop {UnitName}", cancellationToken);
-        if (!stopResult.IsSuccess && !stopResult.Output.Contains("not loaded", StringComparison.OrdinalIgnoreCase))
+        foreach (string unitName in installedUnits)
         {
-            return WatchFolderDaemonResult.Fail(WatchFolderDaemonErrorCode.CommandFailed, stopResult.Output);
+            var stopResult = await RunSystemctlAsync(scope, $"stop {unitName}", cancellationToken);
+            if (!stopResult.IsSuccess && !CanIgnoreUnitMissingOrInactiveError(stopResult.Output))
+            {
+                return WatchFolderDaemonResult.Fail(WatchFolderDaemonErrorCode.CommandFailed, stopResult.Output);
+            }
         }
 
         var timeout = gracefulTimeout <= TimeSpan.Zero ? TimeSpan.FromSeconds(30) : gracefulTimeout;
         var stopwatch = Stopwatch.StartNew();
         while (stopwatch.Elapsed < timeout)
         {
-            var activeResult = await RunSystemctlAsync(scope, $"is-active {UnitName}", cancellationToken);
-            bool isRunning = activeResult.Output.Trim().Equals("active", StringComparison.OrdinalIgnoreCase);
-            if (!isRunning)
+            bool anyRunning = false;
+            foreach (string unitName in installedUnits)
+            {
+                if (await IsUnitActiveAsync(scope, unitName, cancellationToken))
+                {
+                    anyRunning = true;
+                    break;
+                }
+            }
+
+            if (!anyRunning)
             {
                 return WatchFolderDaemonResult.Ok("Daemon stopped.");
             }
@@ -185,19 +208,33 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
         return WatchFolderDaemonResult.Fail(WatchFolderDaemonErrorCode.CommandFailed, "Daemon did not stop before timeout.");
     }
 
-    private static string GetUnitFilePath(WatchFolderDaemonScope scope)
+    private static string GetUnitFilePath(WatchFolderDaemonScope scope, string unitName)
     {
         if (scope == WatchFolderDaemonScope.System)
         {
-            return Path.Combine("/etc/systemd/system", UnitName);
+            return Path.Combine("/etc/systemd/system", unitName);
         }
 
         string configHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") ??
                             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".config");
-        return Path.Combine(configHome, "systemd", "user", UnitName);
+        return Path.Combine(configHome, "systemd", "user", unitName);
     }
 
-    private static async Task<WatchFolderDaemonResult> EnsureUnitFileAsync(
+    private static string[] GetInstalledUnitNames(WatchFolderDaemonScope scope)
+    {
+        var installed = new List<string>();
+        foreach (string unitName in KnownUnitNames)
+        {
+            if (File.Exists(GetUnitFilePath(scope, unitName)))
+            {
+                installed.Add(unitName);
+            }
+        }
+
+        return installed.ToArray();
+    }
+
+    private static async Task<WatchFolderDaemonResult> EnsureUnitFilesAsync(
         WatchFolderDaemonScope scope,
         string daemonPath,
         string settingsFolder,
@@ -205,15 +242,19 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
     {
         try
         {
-            string unitPath = GetUnitFilePath(scope);
-            string? directory = Path.GetDirectoryName(unitPath);
-            if (!string.IsNullOrWhiteSpace(directory))
+            string content = BuildUnitFileContent(scope, daemonPath, settingsFolder);
+            foreach (string unitName in KnownUnitNames)
             {
-                Directory.CreateDirectory(directory);
+                string unitPath = GetUnitFilePath(scope, unitName);
+                string? directory = Path.GetDirectoryName(unitPath);
+                if (!string.IsNullOrWhiteSpace(directory))
+                {
+                    Directory.CreateDirectory(directory);
+                }
+
+                await File.WriteAllTextAsync(unitPath, content, cancellationToken);
             }
 
-            string content = BuildUnitFileContent(scope, daemonPath, settingsFolder);
-            await File.WriteAllTextAsync(unitPath, content, cancellationToken);
             return WatchFolderDaemonResult.Ok();
         }
         catch (Exception ex)
@@ -228,20 +269,27 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
         bool startAtStartup,
         CancellationToken cancellationToken)
     {
-        string tempUnitPath = Path.GetTempFileName();
+        string tempPrimaryUnitPath = Path.GetTempFileName();
+        string tempLegacyUnitPath = Path.GetTempFileName();
         try
         {
             string unitContent = BuildUnitFileContent(WatchFolderDaemonScope.System, daemonPath, settingsFolder);
-            await File.WriteAllTextAsync(tempUnitPath, unitContent, cancellationToken);
+            await File.WriteAllTextAsync(tempPrimaryUnitPath, unitContent, cancellationToken);
+            await File.WriteAllTextAsync(tempLegacyUnitPath, unitContent, cancellationToken);
 
-            string unitPath = GetUnitFilePath(WatchFolderDaemonScope.System);
+            string primaryUnitPath = GetUnitFilePath(WatchFolderDaemonScope.System, UnitName);
+            string legacyUnitPath = GetUnitFilePath(WatchFolderDaemonScope.System, LegacyUnitName);
             string enableCommand = startAtStartup ? "enable" : "disable";
             string script = $"""
                              set -e
-                             cp '{EscapeShellSingleQuotedString(tempUnitPath)}' '{EscapeShellSingleQuotedString(unitPath)}'
-                             chmod 644 '{EscapeShellSingleQuotedString(unitPath)}'
+                             cp '{EscapeShellSingleQuotedString(tempPrimaryUnitPath)}' '{EscapeShellSingleQuotedString(primaryUnitPath)}'
+                             cp '{EscapeShellSingleQuotedString(tempLegacyUnitPath)}' '{EscapeShellSingleQuotedString(legacyUnitPath)}'
+                             chmod 644 '{EscapeShellSingleQuotedString(primaryUnitPath)}'
+                             chmod 644 '{EscapeShellSingleQuotedString(legacyUnitPath)}'
                              systemctl daemon-reload
                              systemctl {enableCommand} '{EscapeShellSingleQuotedString(UnitName)}'
+                             systemctl disable '{EscapeShellSingleQuotedString(LegacyUnitName)}' || true
+                             systemctl stop '{EscapeShellSingleQuotedString(LegacyUnitName)}' || true
                              systemctl start '{EscapeShellSingleQuotedString(UnitName)}'
                              """;
 
@@ -270,7 +318,8 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
         {
             try
             {
-                File.Delete(tempUnitPath);
+                File.Delete(tempPrimaryUnitPath);
+                File.Delete(tempLegacyUnitPath);
             }
             catch
             {
@@ -280,10 +329,14 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
 
     private static async Task<WatchFolderDaemonResult> StopSystemScopeWithElevationAsync(CancellationToken cancellationToken)
     {
-        CommandResult stopResult = await RunPrivilegedProcessAsync("systemctl", new[] { "stop", UnitName }, cancellationToken);
-        if (!stopResult.IsSuccess &&
-            !stopResult.Output.Contains("not loaded", StringComparison.OrdinalIgnoreCase))
+        foreach (string unitName in KnownUnitNames)
         {
+            CommandResult stopResult = await RunPrivilegedProcessAsync("systemctl", new[] { "stop", unitName }, cancellationToken);
+            if (stopResult.IsSuccess || CanIgnoreUnitMissingOrInactiveError(stopResult.Output))
+            {
+                continue;
+            }
+
             if (IsElevationDenied(stopResult.Output))
             {
                 return WatchFolderDaemonResult.Fail(
@@ -388,5 +441,66 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             : arguments;
 
         return RunProcessAsync("systemctl", fullArguments, cancellationToken, DefaultCommandTimeoutMs);
+    }
+
+    private static async Task<CommandResult> ConfigureStartupUnitsAsync(
+        WatchFolderDaemonScope scope,
+        bool startAtStartup,
+        CancellationToken cancellationToken)
+    {
+        string enableCommand = startAtStartup ? "enable" : "disable";
+        CommandResult primaryResult = await RunSystemctlAsync(scope, $"{enableCommand} {UnitName}", cancellationToken);
+        if (!primaryResult.IsSuccess)
+        {
+            return primaryResult;
+        }
+
+        CommandResult legacyDisableResult = await RunSystemctlAsync(scope, $"disable {LegacyUnitName}", cancellationToken);
+        if (!legacyDisableResult.IsSuccess && !CanIgnoreUnitMissingOrInactiveError(legacyDisableResult.Output))
+        {
+            return legacyDisableResult;
+        }
+
+        return new CommandResult(true, string.Empty);
+    }
+
+    private static async Task StopLegacyUnitIfPresentAsync(
+        WatchFolderDaemonScope scope,
+        CancellationToken cancellationToken)
+    {
+        if (!File.Exists(GetUnitFilePath(scope, LegacyUnitName)))
+        {
+            return;
+        }
+
+        CommandResult stopLegacyResult = await RunSystemctlAsync(scope, $"stop {LegacyUnitName}", cancellationToken);
+        if (!stopLegacyResult.IsSuccess && !CanIgnoreUnitMissingOrInactiveError(stopLegacyResult.Output))
+        {
+            return;
+        }
+    }
+
+    private static async Task<bool> IsUnitActiveAsync(
+        WatchFolderDaemonScope scope,
+        string unitName,
+        CancellationToken cancellationToken)
+    {
+        CommandResult activeResult = await RunSystemctlAsync(scope, $"is-active {unitName}", cancellationToken);
+        return activeResult.Output.Trim().Equals("active", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static async Task<bool> IsUnitEnabledAsync(
+        WatchFolderDaemonScope scope,
+        string unitName,
+        CancellationToken cancellationToken)
+    {
+        CommandResult enabledResult = await RunSystemctlAsync(scope, $"is-enabled {unitName}", cancellationToken);
+        return enabledResult.Output.Trim().Equals("enabled", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool CanIgnoreUnitMissingOrInactiveError(string output)
+    {
+        return output.Contains("not loaded", StringComparison.OrdinalIgnoreCase) ||
+               output.Contains("does not exist", StringComparison.OrdinalIgnoreCase);
     }
 }
