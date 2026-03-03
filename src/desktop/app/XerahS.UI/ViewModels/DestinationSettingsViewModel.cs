@@ -194,9 +194,15 @@ public partial class DestinationSettingsViewModel : ViewModelBase
 
             var customUploaderExport = ExportImportedCustomUploaders(result.ImportedCustomUploaders);
 
-            if (customUploaderExport.ExportedCount > 0)
+            if (customUploaderExport.ExportedCount > 0 || customUploaderExport.SkippedCount > 0)
             {
                 ProviderCatalog.LoadCustomUploaders(customUploaderExport.PluginsPath);
+
+                // Auto-create instances for newly exported custom uploaders
+                foreach (var filePath in customUploaderExport.ExportedFilePaths)
+                {
+                    AutoCreateCustomUploaderInstances(filePath, customUploaderExport);
+                }
 
                 foreach (var category in Categories)
                 {
@@ -277,13 +283,14 @@ public partial class DestinationSettingsViewModel : ViewModelBase
                     Directory.CreateDirectory(pluginsPath);
                 }
 
-                var filePath = Path.Combine(pluginsPath, $"{safeName}.sxcu");
+                // Ensure unique filename (with duplicate detection)
+                var filePath = ResolveCustomUploaderFilePath(pluginsPath, safeName, item, out bool isDuplicate);
 
-                // Ensure unique filename
-                int counter = 1;
-                while (File.Exists(filePath))
+                if (isDuplicate)
                 {
-                    filePath = Path.Combine(pluginsPath, $"{safeName}_{counter++}.sxcu");
+                    await ShowMessageDialogAsync("Custom Uploader Already Exists",
+                        $"A custom uploader with identical configuration as '{item.Name}' already exists.");
+                    return;
                 }
 
                 if (CustomUploaderRepository.SaveToFile(item, filePath))
@@ -311,6 +318,48 @@ public partial class DestinationSettingsViewModel : ViewModelBase
         {
             Common.DebugHelper.WriteException(ex, "Failed to create custom uploader");
             await ShowMessageDialogAsync("Error", $"Failed to create custom uploader: {ex.Message}");
+        }
+    }
+
+    private static void AutoCreateCustomUploaderInstances(string filePath, CustomUploaderExportResult exportResult)
+    {
+        string baseName = Path.GetFileNameWithoutExtension(filePath);
+        string slug = System.Text.RegularExpressions.Regex.Replace(
+            baseName.ToLowerInvariant(), @"[^a-z0-9]+", "_").Trim('_');
+        if (string.IsNullOrEmpty(slug)) slug = "unknown";
+        string providerId = $"custom_{slug}";
+
+        var provider = ProviderCatalog.GetProvider(providerId);
+        if (provider == null) return;
+
+        foreach (var category in provider.SupportedCategories)
+        {
+            bool alreadyExists = InstanceManager.Instance
+                .GetInstancesByCategory(category)
+                .Any(i => string.Equals(i.ProviderId, providerId, StringComparison.OrdinalIgnoreCase));
+
+            if (alreadyExists)
+            {
+                exportResult.InstancesSkipped++;
+                continue;
+            }
+
+            try
+            {
+                InstanceManager.Instance.AddInstance(new UploaderInstance
+                {
+                    ProviderId = providerId,
+                    Category = category,
+                    DisplayName = provider.Name,
+                    SettingsJson = provider.GetDefaultSettings(category),
+                    FileTypeRouting = new FileTypeScope { AllFileTypes = true }
+                });
+                exportResult.InstancesCreated++;
+            }
+            catch (Exception ex)
+            {
+                Common.DebugHelper.WriteException(ex, $"[DestinationSettings] Failed to auto-create instance for {providerId}/{category}");
+            }
         }
     }
 
@@ -379,6 +428,7 @@ public partial class DestinationSettingsViewModel : ViewModelBase
             if (CustomUploaderRepository.SaveToFile(customUploader, filePath))
             {
                 result.ExportedCount++;
+                result.ExportedFilePaths.Add(filePath);
             }
             else
             {
@@ -460,8 +510,17 @@ public partial class DestinationSettingsViewModel : ViewModelBase
             builder.AppendLine($"- Skipped duplicates: {customUploaderExport.SkippedCount}");
             builder.AppendLine($"- Failed exports: {customUploaderExport.FailedCount}");
             builder.AppendLine($"- Plugins folder: {customUploaderExport.PluginsPath}");
-            builder.AppendLine();
-            builder.Append("Next step: use \"Add from Catalog\" to create destination instances from imported custom uploaders.");
+
+            if (customUploaderExport.InstancesCreated > 0)
+            {
+                builder.AppendLine();
+                builder.Append($"Auto-created {customUploaderExport.InstancesCreated} destination instance(s) — ready to use.");
+            }
+            else if (customUploaderExport.ExportedCount > 0)
+            {
+                builder.AppendLine();
+                builder.Append("Next step: use \"Add from Catalog\" to create destination instances from imported custom uploaders.");
+            }
         }
 
         return builder.ToString();
@@ -473,6 +532,9 @@ public partial class DestinationSettingsViewModel : ViewModelBase
         public int ExportedCount { get; set; }
         public int SkippedCount { get; set; }
         public int FailedCount { get; set; }
+        public List<string> ExportedFilePaths { get; } = new();
+        public int InstancesCreated { get; set; }
+        public int InstancesSkipped { get; set; }
     }
 
     private async Task ShowMessageDialogAsync(string title, string message)
