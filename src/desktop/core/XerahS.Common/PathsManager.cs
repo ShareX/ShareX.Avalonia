@@ -100,7 +100,12 @@ namespace XerahS.Common
                     return Path.Combine(PersonalFolder, AppResources.PluginsFolderName);
                 return Path.Combine(AppContext.BaseDirectory, AppResources.PluginsFolderName);
 #else
-                return Path.Combine(PersonalFolder, AppResources.PluginsFolderName);
+                string personalPlugins = Path.Combine(PersonalFolder, AppResources.PluginsFolderName);
+                if (Directory.Exists(personalPlugins) && Directory.GetFileSystemEntries(personalPlugins).Length > 0)
+                {
+                    return personalPlugins;
+                }
+                return Path.Combine(AppContext.BaseDirectory, AppResources.PluginsFolderName);
 #endif
             }
         }
