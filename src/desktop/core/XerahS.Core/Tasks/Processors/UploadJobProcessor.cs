@@ -188,6 +188,15 @@ namespace XerahS.Core.Tasks.Processors
 
             if (targetInstance == null)
             {
+                // No instance found for the requested category.
+                // For Image uploads, fall back to File-category instances (multi-category providers
+                // like Amazon S3 support both Image and File even when configured as a File uploader).
+                if (category == UploaderCategory.Image)
+                {
+                    DebugHelper.WriteLine("No Image uploader configured; falling back to File-category instances.");
+                    return TryUploadWithFallback(instanceManager, category, info, null);
+                }
+
                 var errorMsg = $"No uploader instance configured (plugin system) for category {category}.";
                 DebugHelper.WriteLine(errorMsg);
                 return new UploadResult { IsSuccess = false, Response = errorMsg };
