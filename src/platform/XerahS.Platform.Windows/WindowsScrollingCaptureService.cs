@@ -39,6 +39,9 @@ namespace XerahS.Platform.Windows
             switch (method)
             {
                 case ScrollMethod.MouseWheel:
+                    // Save cursor position so the user's cursor isn't permanently hijacked
+                    NativeMethods.GetCursorPos(out POINT savedCursor);
+
                     // Move mouse to center of target window's client area for reliable wheel delivery
                     var clientRect = NativeMethods.GetClientRect(windowHandle);
                     if (clientRect.Width > 0 && clientRect.Height > 0)
@@ -54,6 +57,9 @@ namespace XerahS.Platform.Windows
                     }
                     // WHEEL_DELTA = 120; negative = scroll down
                     InputHelpers.SendMouseWheel(-120 * amount);
+
+                    // Restore cursor to where the user left it
+                    NativeMethods.SetCursorPos(savedCursor.X, savedCursor.Y);
                     break;
 
                 case ScrollMethod.DownArrow:
