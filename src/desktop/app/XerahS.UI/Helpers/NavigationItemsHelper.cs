@@ -86,7 +86,8 @@ namespace XerahS.UI.Helpers
                 var navItem = new NavigationViewItem
                 {
                     Content = displayName,
-                    Tag = $"Capture_{id}" // Use ID-based tag instead of index
+                    Tag = $"Capture_{id}", // Use ID-based tag instead of index
+                    SelectsOnInvoked = false  // Re-invocation always re-triggers the capture action (#170)
                 };
 
                 captureItem.MenuItems.Add(navItem);

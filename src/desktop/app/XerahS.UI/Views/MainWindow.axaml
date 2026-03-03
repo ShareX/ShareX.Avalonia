@@ -130,12 +130,13 @@
         </Border>
 
         <!-- Main Navigation Shell -->
-        <ui:NavigationView Grid.Row="1" 
-                           Name="NavView" 
-                           PaneDisplayMode="Left" 
+        <ui:NavigationView Grid.Row="1"
+                           Name="NavView"
+                           PaneDisplayMode="Left"
                            IsPaneOpen="True"
                            IsSettingsVisible="False"
                            SelectionChanged="OnNavSelectionChanged"
+                           ItemInvoked="OnNavItemInvoked"
                            AutomationProperties.Name="Main Navigation">
             <ui:NavigationView.MenuItems>
                 <!-- Capture Section - Items populated dynamically from first 3 workflows -->
@@ -177,9 +178,11 @@
                     <ui:NavigationViewItem.MenuItems>
                         <ui:NavigationViewItem Content="Upload File..."
                                                Tag="Upload_FileUpload"
+                                               SelectsOnInvoked="False"
                                                AutomationProperties.Name="File Upload"/>
                         <ui:NavigationViewItem Content="Upload Content..."
                                                Tag="Upload_ClipboardUploadWithContentViewer"
+                                               SelectsOnInvoked="False"
                                                AutomationProperties.Name="Upload Content"/>
                     </ui:NavigationViewItem.MenuItems>
                 </ui:NavigationViewItem>
