@@ -472,24 +472,19 @@ The document's conclusion that "Option B is the only viable path" applies to the
 
 ---
 
-## 7. Easy wins for `develop` branch — no GPU dependency
+## 7. Easy wins for `develop` branch
 
-These items require no Phase 3 GPU work, no external dependency upgrades, and carry zero or negligible regression risk. Each is self-contained and can be applied directly to `develop` in any order.
+### 7a. Implement now — no GPU dependency
 
-Items 7.1–7.4 were completed in `feature/XIP0042-optimizations` but have not been merged to `develop`. Items 7.5–7.7 are new findings from auditing the XerahS-only effects in `develop`. Item 7.8 is a tracking note for a blocked migration.
+These items require no Phase 3 GPU work, no external dependency upgrades, and carry zero or negligible regression risk. Each is self-contained and can be applied to `develop` in any order.
 
-### Status
+Items 7.1 and 7.2 were completed in `feature/XIP0042-optimizations` but have not been merged to `develop`. Item 7.3 is a new finding from auditing the XerahS-only effects in `develop`.
 
 | Item | Source | Risk | Status |
 |---|---|---|---|
 | **7.1** `Random.Shared` in Slice/TornEdge | §2.7 | None | ⏳ Pending |
 | **7.2** Remove redundant `Category` overrides (8 files) | §2.5 + new: WaveEdge | None | ⏳ Pending |
-| **7.3** `BlackAndWhiteImageEffect` two-pass color filter | §1a | Low — validate alpha=255 behavior | ⏳ Pending |
-| **7.4** `ColorizeImageEffect` — refactor to use helper | §2.1 | Low | ⏳ Pending |
-| **7.5** `GammaImageEffect` LUT caching | §2.2 extended | None | ⏳ Pending |
-| **7.6** `PosterizeImageEffect` → `SKColorFilter.CreateTable` | New (XerahS-only) | None | ⏳ Pending |
-| **7.7** `SolarizeImageEffect` → `SKColorFilter.CreateTable` | New (XerahS-only) | None | ⏳ Pending |
-| **7.8** `SKFilterQuality` full inventory | §2.4 extended | Blocked — SkiaSharp upgrade | ⏸️ Blocked |
+| **7.3** `GammaImageEffect` LUT caching | §2.2 extended | None | ⏳ Pending |
 
 ---
 
@@ -526,24 +521,49 @@ No other uses of `new Random()` exist in the XerahS ImageEditor source. `DrawPar
 
 ---
 
-### 7.3 `BlackAndWhiteImageEffect` — two-pass color filter
+### 7.3 `GammaImageEffect` — LUT caching
 
-Current `Apply` (line 12) uses `ApplyPixelOperation`. Replace with the two-pass approach from §1a so the effect routes through `ApplyColorFilter` (GPU-eligible when Phase 3 is wired).
+`Apply` (line 14) allocates and fills a fresh 256-byte table on every call. During live-preview slider drag this fires repeatedly with the same `Amount`. The table is determined solely by `Amount`, so it can be cached in two fields:
 
-1. **Pass 1** — grayscale via `ApplyColorMatrix` with luminance coefficients `(0.2126, 0.7152, 0.0722)`.
-2. **Pass 2** — step table via `SKColorFilter.CreateTable`: values 0–127 → 0, 128–255 → 255; alpha table forces 255 to match existing behavior (source alpha is always discarded).
+```csharp
+private float _cachedAmount = float.NaN;
+private byte[]? _cachedTable;
+```
 
-**Behavior note:** The original code produces fully-opaque black/white pixels regardless of source alpha. The two-pass replacement preserves this by including an alpha table of all-255. Validate on transparent source images to confirm.
+At the start of `Apply`, check `if (_cachedTable is null || _cachedAmount != Amount)` and rebuild only when `Amount` has changed. The `float.NaN` sentinel ensures the cache is always invalid after construction, so the first call always builds the table.
+
+**Risk:** None — identical output, no allocation on cache hits.
 
 ---
 
-### 7.4 `ColorizeImageEffect` — refactor to use `ApplyColorFilter` helper
+### 7b. Implement after Phase 3 — GPU eligibility is the primary justification
 
-Current `Apply` (lines 13–49) constructs its own `SKBitmap` + `SKCanvas`. The expensive color-filter step should use `ApplyColorFilter` (making it GPU-eligible at Phase 3). The blending step still requires a manual draw because partial-strength blending cannot be expressed as a single color filter.
+These items convert `ApplyPixelOperation` paths to `ApplyColorFilter`/`SKColorFilter.CreateTable`. On a CPU-only path this is a neutral-to-negative trade (the unsafe pointer loop is already fast; a color filter adds SKCanvas draw overhead). The payoff only materialises once Phase 3 is wired and the GPU path is active, at which point these effects become GPU-eligible at no extra implementation cost. Defer until Phase 3 host wiring begins.
 
-**Approach** (from §2.1):
+| Item | Effect | Why deferred |
+|---|---|---|
+| **7b.1** `BlackAndWhiteImageEffect` — two-pass color filter | §1a | Two passes + two allocations vs. one unsafe pointer scan; strictly worse without GPU |
+| **7b.2** `ColorizeImageEffect` — refactor to use `ApplyColorFilter` | §2.1 | Color-filter step gains GPU path; no CPU benefit without it |
+| **7b.3** `PosterizeImageEffect` → `SKColorFilter.CreateTable` | New (XerahS-only) | LUT vs. per-pixel arithmetic — marginal; GPU eligibility is the real benefit |
+| **7b.4** `SolarizeImageEffect` → `SKColorFilter.CreateTable` | New (XerahS-only) | Same as 7b.3 |
+
+Implementation details for each item are preserved below for reference when Phase 3 work begins.
+
+#### 7b.1 `BlackAndWhiteImageEffect` — two-pass color filter
+
+Current `Apply` (line 12) uses `ApplyPixelOperation` with a per-pixel lambda. Replace with:
+
+1. **Pass 1** — grayscale via `ApplyColorMatrix` with luminance coefficients `(0.2126, 0.7152, 0.0722)`.
+2. **Pass 2** — step table via `SKColorFilter.CreateTable`: values 0–127 → 0, 128–255 → 255; alpha table all-255 to match existing behavior (source alpha is always discarded).
+
+**Behavior note:** The original produces fully-opaque black/white regardless of source alpha. The replacement preserves this via the alpha table. Validate on transparent source images.
+
+#### 7b.2 `ColorizeImageEffect` — refactor to use `ApplyColorFilter` helper
+
+Current `Apply` (lines 13–49) constructs its own `SKBitmap` + `SKCanvas`. Route the color-filter step through the helper; the blending step still requires a manual draw (partial-strength blending cannot be expressed as a single color filter).
+
 ```csharp
-using var colorized = ApplyColorFilter(source, composedFilter);   // GPU-eligible
+using var colorized = ApplyColorFilter(source, composedFilter);
 
 SKBitmap result = new SKBitmap(source.Width, source.Height, source.ColorType, source.AlphaType);
 using (SKCanvas canvas = new SKCanvas(result))
@@ -565,74 +585,40 @@ return result;
 
 Visual output is identical to the current implementation.
 
----
+#### 7b.3 `PosterizeImageEffect` → `SKColorFilter.CreateTable`
 
-### 7.5 `GammaImageEffect` — LUT caching
-
-`Apply` (line 14) allocates and fills a fresh 256-byte table on every call. During live-preview slider drag this fires repeatedly with the same `Amount`. The table is determined solely by `Amount`, so it can be cached in two fields:
+The quantize function is deterministic per-byte and channel-independent. Precompute the table once and apply via `ApplyColorFilter`:
 
 ```csharp
-private float _cachedAmount = float.NaN;
-private byte[]? _cachedTable;
+int levels = Math.Clamp(Levels, 2, 64);
+float scale = levels - 1;
+byte[] table = new byte[256];
+for (int i = 0; i < 256; i++) table[i] = Quantize((byte)i, scale);
+using var filter = SKColorFilter.CreateTable(null, table, table, table);
+return ApplyColorFilter(source, filter);
 ```
 
-At the start of `Apply`, check `if (_cachedTable is null || _cachedAmount != Amount)` and rebuild only when `Amount` has changed. The `float.NaN` sentinel ensures the cache is always invalid after construction, so the first call always builds the table.
+`null` alpha table = alpha pass-through. Output is bit-exact to the current implementation. Optional: cache `(Levels, table)` as fields using the §7.3 pattern.
 
-**Risk:** None — identical output, no allocation on cache hits.
+#### 7b.4 `SolarizeImageEffect` → `SKColorFilter.CreateTable`
 
----
+`x > threshold ? (255 - x) : x` is a per-channel LUT:
 
-### 7.6 `PosterizeImageEffect` → `SKColorFilter.CreateTable`
-
-Current code applies a per-pixel quantize lambda via `ApplyPixelOperation`. The quantize function is deterministic per-byte and channel-independent — a direct fit for `SKColorFilter.CreateTable`.
-
-**Fix:**
 ```csharp
-public override SKBitmap Apply(SKBitmap source)
-{
-    int levels = Math.Clamp(Levels, 2, 64);
-    float scale = levels - 1;
-
-    byte[] table = new byte[256];
-    for (int i = 0; i < 256; i++) table[i] = Quantize((byte)i, scale);
-
-    using var filter = SKColorFilter.CreateTable(null, table, table, table);
-    return ApplyColorFilter(source, filter);
-}
+int threshold = Math.Clamp(Threshold, 0, 255);
+byte[] table = new byte[256];
+for (int i = 0; i < 256; i++) table[i] = (byte)(i > threshold ? 255 - i : i);
+using var filter = SKColorFilter.CreateTable(null, table, table, table);
+return ApplyColorFilter(source, filter);
 ```
 
-- `null` alpha table = alpha pass-through, matching current behavior.
-- Output is bit-exact to the current implementation for all input values.
-- Effect gains GPU eligibility when Phase 3 is wired.
-- Optional: cache `(Levels, table)` as fields using the same pattern as §7.5.
+Alpha pass-through, output bit-exact.
 
 ---
 
-### 7.7 `SolarizeImageEffect` → `SKColorFilter.CreateTable`
+### 7c. Blocked — SkiaSharp upgrade required
 
-Same pattern as §7.6. The solarize operation `x > threshold ? (255 - x) : x` is a per-channel LUT.
-
-**Fix:**
-```csharp
-public override SKBitmap Apply(SKBitmap source)
-{
-    int threshold = Math.Clamp(Threshold, 0, 255);
-
-    byte[] table = new byte[256];
-    for (int i = 0; i < 256; i++) table[i] = (byte)(i > threshold ? 255 - i : i);
-
-    using var filter = SKColorFilter.CreateTable(null, table, table, table);
-    return ApplyColorFilter(source, filter);
-}
-```
-
-- Alpha pass-through, output bit-exact, GPU-eligible at Phase 3.
-
----
-
-### 7.8 `SKFilterQuality` — extended inventory (blocked — SkiaSharp upgrade required)
-
-§2.4 documented `SKFilterQuality` in `PixelateImageEffect` and `ResizeImageEffect`. The XerahS `develop` branch has additional sites that will need migration when SkiaSharp is upgraded past 2.88.9. **Do not migrate until the upgrade lands** — required overloads (`SKCubicResampler.Mitchell`, `SKBitmap.Resize(SKImageInfo, SKSamplingOptions)`) are absent in 2.88.9.
+`SKFilterQuality` is deprecated in SkiaSharp ≥ 2.88 and must eventually be replaced with `SKSamplingOptions`. §2.4 documented two sites; the XerahS `develop` branch has additional usages. **Do not migrate until SkiaSharp is upgraded past 2.88.9** — the required overloads (`SKCubicResampler.Mitchell`, `SKBitmap.Resize(SKImageInfo, SKSamplingOptions)`) are absent in 2.88.9.
 
 | File | Current | Planned |
 |---|---|---|
