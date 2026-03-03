@@ -93,6 +93,7 @@ namespace XerahS.Platform.Linux.Services
             bool hasScreenshotPortal = PortalInterfaceChecker.HasInterface("org.freedesktop.portal.Screenshot");
             bool hasGlobalShortcutsPortal = PortalInterfaceChecker.HasInterface("org.freedesktop.portal.GlobalShortcuts");
             bool hasInputCapturePortal = PortalInterfaceChecker.HasInterface("org.freedesktop.portal.InputCapture");
+            bool hasStatusNotifierWatcher = PortalInterfaceChecker.HasStatusNotifierWatcher();
 
             string screenCastProbe = PortalInterfaceChecker.GetDiagnosticSummary("org.freedesktop.portal.ScreenCast");
             string screenshotProbe = PortalInterfaceChecker.GetDiagnosticSummary("org.freedesktop.portal.Screenshot");
@@ -179,6 +180,21 @@ namespace XerahS.Platform.Linux.Services
             sb.AppendLine($"InputCaptureProbe: {inputCaptureProbe}");
             sb.AppendLine();
 
+            sb.AppendLine("[SYSTEM TRAY (SNI)]");
+            sb.AppendLine($"StatusNotifierWatcher (org.kde.StatusNotifierWatcher): {ToStatus(hasStatusNotifierWatcher)}");
+            if (!hasStatusNotifierWatcher)
+            {
+                sb.AppendLine("  -> System tray icons will NOT appear. The SNI watcher service is missing.");
+                sb.AppendLine("  -> On GNOME: install the 'AppIndicator and KStatusNotifierItem Support' extension.");
+                sb.AppendLine("     Extension ID: appindicatorsupport@rgcjonas.gmail.com");
+                sb.AppendLine("     Fedora:  sudo dnf install gnome-shell-extension-appindicator");
+                sb.AppendLine("     Ubuntu:  sudo apt install gnome-shell-extension-appindicator");
+                sb.AppendLine("     Or install from: https://extensions.gnome.org/extension/615/");
+                sb.AppendLine("  -> On KDE Plasma: this is built-in (kded). No action needed.");
+                sb.AppendLine("  -> On XFCE/MATE: provided by the panel with indicator applet.");
+            }
+            sb.AppendLine();
+
             sb.AppendLine("[COMMAND RESOLUTION]");
             sb.AppendLine($"ffmpeg: {ToStatus(hasFfmpeg)} ({ffmpegProbe.Resolution})");
             sb.AppendLine($"wf-recorder: {ToStatus(hasWfRecorder)} ({wfRecorderProbe.Resolution})");
@@ -206,6 +222,17 @@ namespace XerahS.Platform.Linux.Services
             sb.AppendLine();
 
             sb.AppendLine("[RECOMMENDATIONS]");
+            if (!hasStatusNotifierWatcher)
+            {
+                sb.AppendLine("- [TRAY] System tray icons require org.kde.StatusNotifierWatcher on the session bus.");
+                if (currentDesktop.Contains("GNOME", StringComparison.OrdinalIgnoreCase))
+                {
+                    sb.AppendLine("  Install: sudo dnf install gnome-shell-extension-appindicator  (Fedora)");
+                    sb.AppendLine("  Install: sudo apt install gnome-shell-extension-appindicator  (Ubuntu/Debian)");
+                    sb.AppendLine("  Then enable: gnome-extensions enable appindicatorsupport@rgcjonas.gmail.com");
+                    sb.AppendLine("  Log out and back in for the extension to take effect.");
+                }
+            }
             if (isWayland)
             {
                 if (!hasScreenCastPortal)

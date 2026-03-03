@@ -80,7 +80,8 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     // Tray icon paths for different recording states
     private const string DefaultIconPath = "avares://XerahS.UI/Assets/ShareX.iconset/icon_16x16.png";
-    private const string MacOSMonochromeIconPath = "avares://XerahS.UI/Assets/tray-default-white.png";
+    // White/monochrome icon for dark panels (macOS menu bar, GNOME top bar via AppIndicator)
+    private const string WhiteIconPath = "avares://XerahS.UI/Assets/tray-default-white.png";
     private const string RecordingIconPath = "avares://XerahS.UI/Assets/tray-recording.png";
     private const string PausedIconPath = "avares://XerahS.UI/Assets/tray-recording-paused.png";
 
@@ -133,9 +134,12 @@ public class TrayIconHelper : INotifyPropertyChanged
 
     private static string GetIdleIconPath()
     {
-        return OperatingSystem.IsMacOS() && SettingsManager.Settings.UseWhiteShareXIcon
-            ? MacOSMonochromeIconPath
-            : DefaultIconPath;
+        // Use the white/monochrome icon on macOS (menu bar) and Linux (GNOME/KDE top panel)
+        // when the user has opted in. Both environments use dark system panels where a white
+        // icon matches the look of built-in indicators (WiFi, volume, battery).
+        bool useWhite = SettingsManager.Settings.UseWhiteShareXIcon &&
+                        (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux());
+        return useWhite ? WhiteIconPath : DefaultIconPath;
     }
 
     /// <summary>

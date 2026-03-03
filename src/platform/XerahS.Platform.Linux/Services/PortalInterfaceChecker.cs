@@ -206,6 +206,39 @@ internal static class PortalInterfaceChecker
         return null;
     }
 
+    /// <summary>
+    /// Checks whether <c>org.kde.StatusNotifierWatcher</c> is registered on the session bus.
+    /// This D-Bus service is required for system tray icons (SNI protocol) to be displayed.
+    /// On stock GNOME it is absent; the "AppIndicator and KStatusNotifierItem Support"
+    /// GNOME Shell extension (appindicatorsupport@rgcjonas.gmail.com) provides it.
+    /// On KDE Plasma it is provided by kded. On XFCE by xfce4-panel.
+    /// </summary>
+    public static bool HasStatusNotifierWatcher()
+    {
+        try
+        {
+            using var connection = new Connection(Address.Session);
+            connection.ConnectAsync().GetAwaiter().GetResult();
+            var introspectable = connection.CreateProxy<IIntrospectable>(
+                "org.kde.StatusNotifierWatcher",
+                new ObjectPath("/StatusNotifierWatcher"));
+            introspectable.IntrospectAsync().GetAwaiter().GetResult();
+            return true;
+        }
+        catch (DBusException ex) when (
+            ex.ErrorName == "org.freedesktop.DBus.Error.ServiceUnknown" ||
+            ex.ErrorName == "org.freedesktop.DBus.Error.NameHasNoOwner" ||
+            ex.ErrorName == "org.freedesktop.DBus.Error.NoReply")
+        {
+            return false;
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteLine($"PortalInterfaceChecker: StatusNotifierWatcher check failed: {ex.GetType().Name}: {ex.Message}");
+            return false;
+        }
+    }
+
     private static void RecordProbe(string interfaceName, bool found, string source, string detail)
     {
         ProbeResults[interfaceName] = new PortalProbeResult(found, source, detail);

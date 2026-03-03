@@ -68,9 +68,10 @@
                                 <StackPanel Spacing="16">
                                     <CheckBox IsChecked="{Binding TrayIconProgressEnabled}" Content="Show progress on tray icon" AutomationProperties.Name="Show Tray Progress"/>
                                     <CheckBox IsChecked="{Binding UseWhiteShareXIcon}"
-                                              Content="Use single-color white tray icon on macOS"
-                                              IsVisible="{Binding IsMacOS}"
-                                              AutomationProperties.Name="Use White macOS Tray Icon"/>
+                                              Content="Use single-color white tray icon (for dark panels)"
+                                              IsVisible="{Binding IsLinuxOrMacOS}"
+                                              ToolTip.Tip="Shows a white/monochrome icon that matches the look of system indicators (WiFi, volume, battery) on dark panels. On GNOME, requires the AppIndicator extension."
+                                              AutomationProperties.Name="Use White Tray Icon"/>
                                     
                                     <TextBlock Text="Click Actions" FontWeight="SemiBold" FontSize="12" Margin="0,8,0,0"/>
 

@@ -307,8 +307,16 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
             sb.AppendLine($"Installed-Size: {installedSizeKb}");
             sb.AppendLine("Section: utils");
             sb.AppendLine("Priority: optional");
+            // gnome-shell-extension-appindicator provides org.kde.StatusNotifierWatcher on GNOME,
+            // which is required for the system tray icon to appear. Listed as Suggests (not Recommends)
+            // so it does not auto-install on non-GNOME desktops (KDE, XFCE, etc.) where tray works
+            // natively without this package.
+            sb.AppendLine("Suggests: gnome-shell-extension-appindicator");
             sb.AppendLine("Description: XerahS - Cross-platform screen capture tool");
             sb.AppendLine(" A modern, cross-platform successor to ShareX.");
+            sb.AppendLine(" .");
+            sb.AppendLine(" On GNOME, install the gnome-shell-extension-appindicator package");
+            sb.AppendLine(" to enable the system tray icon.");
             
             File.WriteAllText(Path.Combine(controlRoot, "control"), sb.ToString());
 
@@ -530,9 +538,16 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         sb.AppendLine("Source0: %{name}-%{version}.tar.gz");
         sb.AppendLine($"BuildArch: {arch}");
         sb.AppendLine("BuildRequires: desktop-file-utils");
+        // gnome-shell-extension-appindicator provides org.kde.StatusNotifierWatcher on GNOME,
+        // required for the system tray icon. Suggests means it is displayed as optional by dnf
+        // and not pulled in automatically, so KDE/XFCE users are unaffected.
+        sb.AppendLine("Suggests: gnome-shell-extension-appindicator");
         sb.AppendLine();
         sb.AppendLine("%description");
         sb.AppendLine("XerahS is a modern, cross-platform screen capture and sharing tool.");
+        sb.AppendLine();
+        sb.AppendLine("On GNOME, install gnome-shell-extension-appindicator to enable the");
+        sb.AppendLine("system tray icon (Settings > Show tray icon).");
         sb.AppendLine();
         sb.AppendLine("%prep");
         sb.AppendLine("%setup -q -n %{name}-%{version}");
