@@ -380,6 +380,11 @@ namespace XerahS.Common
 
             try
             {
+                if (!IsValidURL(url))
+                {
+                    throw new Exception("Invalid URL.");
+                }
+
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                 {
                     FileName = url,
