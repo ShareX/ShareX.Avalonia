@@ -94,6 +94,20 @@ public partial class App : Application
                 return null;
             });
 
+            // Wire up SaveRequested / SaveAsRequested for embedded editor in MainWindow
+            Func<SkiaSharp.SKBitmap?> getEmbeddedSnapshot = () =>
+            {
+                if (desktop.MainWindow is Views.MainWindow mw)
+                {
+                    var contentFrame = mw.FindControl<ContentControl>("ContentFrame");
+                    if (contentFrame?.Content is ShareX.ImageEditor.Views.EditorView ev)
+                        return ev.GetSnapshot();
+                }
+                return null;
+            };
+            Services.MainViewModelHelper.WireSaveRequested(mainViewModel, getEmbeddedSnapshot, () => desktop.MainWindow);
+            Services.MainViewModelHelper.WireSaveAsRequested(mainViewModel, getEmbeddedSnapshot, () => desktop.MainWindow);
+
             // Prepare for Silent Run
             bool silentRun = XerahS.Core.SettingsManager.Settings.SilentRun;
 #if DEBUG

@@ -110,6 +110,12 @@ namespace XerahS.UI.Services
                     return editorView?.GetSnapshot();
                 });
 
+                // Wire up SaveRequested / SaveAsRequested for standalone editor window
+                Func<SkiaSharp.SKBitmap?> getSnapshot = () =>
+                    editorWindow.FindControl<ShareX.ImageEditor.Views.EditorView>("EditorViewControl")?.GetSnapshot();
+                MainViewModelHelper.WireSaveRequested(editorViewModel, getSnapshot, () => editorWindow);
+                MainViewModelHelper.WireSaveAsRequested(editorViewModel, getSnapshot, () => editorWindow);
+
                 // Set DataContext BEFORE initializing preview so bindings update correctly
                 editorWindow.DataContext = editorViewModel;
 

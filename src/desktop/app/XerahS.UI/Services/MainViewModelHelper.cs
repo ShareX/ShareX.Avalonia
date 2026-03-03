@@ -22,7 +22,12 @@
 */
 
 #endregion License Information (GPL v3)
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using ShareX.ImageEditor.Helpers;
 using ShareX.ImageEditor.ViewModels;
+using SkiaSharp;
+using System.IO;
 using XerahS.Common;
 using XerahS.Core;
 using XerahS.Uploaders.PluginSystem;
@@ -55,6 +60,122 @@ public static class MainViewModelHelper
         {
             HandleCopyRequested(viewModel, getEditedSnapshot);
         };
+    }
+
+    /// <summary>
+    /// Wires up the SaveRequested event to overwrite the last saved path, or falls back to SaveAs.
+    /// </summary>
+    public static void WireSaveRequested(MainViewModel viewModel, Func<SKBitmap?>? getEditedSnapshot = null, Func<Window?>? getWindow = null)
+    {
+        viewModel.SaveRequested += () =>
+        {
+            _ = HandleSaveRequestedAsync(viewModel, getEditedSnapshot, getWindow);
+        };
+    }
+
+    /// <summary>
+    /// Wires up the SaveAsRequested event to show a save file dialog and save to the chosen path.
+    /// </summary>
+    public static void WireSaveAsRequested(MainViewModel viewModel, Func<SKBitmap?>? getEditedSnapshot = null, Func<Window?>? getWindow = null)
+    {
+        viewModel.SaveAsRequested += () =>
+        {
+            _ = HandleSaveAsRequestedAsync(viewModel, getEditedSnapshot, getWindow);
+        };
+    }
+
+    private static async Task HandleSaveRequestedAsync(MainViewModel viewModel, Func<SKBitmap?>? getEditedSnapshot, Func<Window?>? getWindow)
+    {
+        DebugHelper.WriteLine("MainViewModelHelper: SaveRequested received");
+        try
+        {
+            if (!string.IsNullOrEmpty(viewModel.LastSavedPath))
+            {
+                SaveToPath(viewModel, getEditedSnapshot, viewModel.LastSavedPath);
+            }
+            else
+            {
+                await HandleSaveAsRequestedAsync(viewModel, getEditedSnapshot, getWindow);
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteLine($"Editor save failed: {ex.Message}");
+            DebugHelper.WriteException(ex);
+        }
+    }
+
+    private static async Task HandleSaveAsRequestedAsync(MainViewModel viewModel, Func<SKBitmap?>? getEditedSnapshot, Func<Window?>? getWindow)
+    {
+        DebugHelper.WriteLine("MainViewModelHelper: SaveAsRequested received");
+        try
+        {
+            var window = getWindow?.Invoke();
+            var topLevel = window != null ? TopLevel.GetTopLevel(window) : null;
+            if (topLevel?.StorageProvider == null)
+            {
+                DebugHelper.WriteLine("MainViewModelHelper: SaveAs — no storage provider available.");
+                return;
+            }
+
+            string suggestedName = string.IsNullOrEmpty(viewModel.LastSavedPath)
+                ? "image.png"
+                : Path.GetFileName(viewModel.LastSavedPath);
+
+            var options = new FilePickerSaveOptions
+            {
+                Title = "Save Image As",
+                SuggestedFileName = suggestedName,
+                FileTypeChoices = new[]
+                {
+                    new FilePickerFileType("PNG Image") { Patterns = new[] { "*.png" } },
+                    new FilePickerFileType("JPEG Image") { Patterns = new[] { "*.jpg", "*.jpeg" } },
+                },
+                DefaultExtension = "png"
+            };
+
+            var file = await topLevel.StorageProvider.SaveFilePickerAsync(options);
+            var path = file?.TryGetLocalPath();
+            if (string.IsNullOrEmpty(path))
+            {
+                DebugHelper.WriteLine("MainViewModelHelper: SaveAs cancelled or path unavailable.");
+                return;
+            }
+
+            SaveToPath(viewModel, getEditedSnapshot, path);
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteLine($"Editor save-as failed: {ex.Message}");
+            DebugHelper.WriteException(ex);
+        }
+    }
+
+    private static void SaveToPath(MainViewModel viewModel, Func<SKBitmap?>? getEditedSnapshot, string path)
+    {
+        SKBitmap? bitmap = getEditedSnapshot?.Invoke();
+        if (bitmap == null && viewModel.PreviewImage != null)
+            bitmap = BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
+
+        if (bitmap == null)
+        {
+            DebugHelper.WriteLine("MainViewModelHelper: SaveToPath — no image to save.");
+            return;
+        }
+
+        using (bitmap)
+        {
+            var ext = Path.GetExtension(path).ToLowerInvariant();
+            var format = ext is ".jpg" or ".jpeg" ? SKEncodedImageFormat.Jpeg : SKEncodedImageFormat.Png;
+            int quality = format == SKEncodedImageFormat.Jpeg ? 95 : 100;
+            using var data = bitmap.Encode(format, quality);
+            using var stream = File.OpenWrite(path);
+            data.SaveTo(stream);
+        }
+
+        viewModel.LastSavedPath = path;
+        viewModel.IsDirty = false;
+        DebugHelper.WriteLine($"MainViewModelHelper: Image saved to '{path}'");
     }
 
     private static async Task HandleUploadRequestedAsync(MainViewModel viewModel)
