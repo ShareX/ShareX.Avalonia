@@ -270,6 +270,7 @@ namespace XerahS.Uploaders
                 target.CustomFileUploaderSelected = source.CustomFileUploaderSelected;
                 target.CustomURLShortenerSelected = source.CustomURLShortenerSelected;
                 target.CustomURLSharingServiceSelected = source.CustomURLSharingServiceSelected;
+                result.AddImportedCustomUploaders(source.CustomUploadersList);
                 result.AddImported($"Custom Uploaders ({source.CustomUploadersList.Count})");
             }
         }
@@ -325,13 +326,23 @@ namespace XerahS.Uploaders
         private const string LogPrefix = "[UploadersConfigImporter]";
 
         public List<string> ImportedUploaders { get; } = new List<string>();
+        public List<CustomUploaderItem> ImportedCustomUploaders { get; } = new List<CustomUploaderItem>();
 
         public int TotalImported => ImportedUploaders.Count;
+        public int TotalImportedCustomUploaders => ImportedCustomUploaders.Count;
 
         public void AddImported(string uploaderName)
         {
             ImportedUploaders.Add(uploaderName);
             DebugHelper.WriteLine($"{LogPrefix} Imported: {uploaderName}");
+        }
+
+        public void AddImportedCustomUploaders(IEnumerable<CustomUploaderItem> customUploaders)
+        {
+            foreach (var customUploader in customUploaders)
+            {
+                ImportedCustomUploaders.Add(customUploader);
+            }
         }
 
         public string GetSummary()
