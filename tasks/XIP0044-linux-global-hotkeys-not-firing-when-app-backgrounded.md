@@ -112,6 +112,14 @@ For existing installations of v0.19.3 and earlier:
 sudo ln -sf /usr/lib/xerahs/XerahS /usr/bin/xerahs
 ```
 
+### Fix 2b — Developer "Debug Build" Gotcha (Documented)
+
+If you are running XerahS directly via `dotnet run` or from `bin/Debug/net10.0/XerahS`, the XDG GlobalShortcuts portal will still reject `BindShortcuts` with `response=2`. 
+This happens because the portal matches the DBus caller's `/proc/PID/exe` against the `Exec=` line of the system `.desktop` file. Your debug path does not match `/usr/bin/xerahs`.
+
+**Workaround for local testing:**
+Create a `.desktop` file in `~/.local/share/applications/xerahs.desktop` with the `Exec=` line pointing to your exact debug binary path, and then run `update-desktop-database ~/.local/share/applications/`.
+
 ### Fix 3 — Debounce CTS ObjectDisposedException (DONE: in-progress branch)
 
 `ScheduleRebind()` must not call `old?.Dispose()` synchronously. Only cancel the old CTS;
