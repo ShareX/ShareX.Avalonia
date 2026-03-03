@@ -78,6 +78,8 @@ namespace XerahS.Platform.Abstractions
     {
         [Description("Mouse wheel")]
         MouseWheel,
+        [Description("Mouse wheel message (no cursor movement)")]
+        MouseWheelMessage,
         [Description("Down arrow key")]
         DownArrow,
         [Description("Page down key")]

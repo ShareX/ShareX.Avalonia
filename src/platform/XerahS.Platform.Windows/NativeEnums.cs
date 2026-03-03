@@ -348,7 +348,8 @@ namespace XerahS.Platform.Windows
         GETTEXT = 0x000D,
         GETTEXTLENGTH = 0x000E,
         WM_VSCROLL = 0x0115,
-        WM_HSCROLL = 0x0114
+        WM_HSCROLL = 0x0114,
+        WM_MOUSEWHEEL = 0x020A
     }
 
     public enum ScrollBarOrientation : int

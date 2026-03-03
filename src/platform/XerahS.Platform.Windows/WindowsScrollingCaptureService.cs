@@ -73,6 +73,26 @@ namespace XerahS.Platform.Windows
                     InputHelpers.SendKeyPress(VirtualKeyCode.NEXT);
                     break;
 
+                case ScrollMethod.MouseWheelMessage:
+                    // Post WM_MOUSEWHEEL directly to the window without moving the physical cursor.
+                    // Works for standard Win32/WPF/WinForms controls. Falls back to MouseWheel
+                    // for apps that require real input (e.g. raw-input games).
+                    var msgClientRect = NativeMethods.GetClientRect(windowHandle);
+                    POINT msgCenter = new POINT
+                    {
+                        X = msgClientRect.Left + msgClientRect.Width / 2,
+                        Y = msgClientRect.Top + msgClientRect.Height / 2
+                    };
+                    NativeMethods.ClientToScreen(windowHandle, ref msgCenter);
+
+                    // wParam: HIWORD = wheel delta, LOWORD = key state (0)
+                    // lParam: HIWORD = Y screen coord, LOWORD = X screen coord
+                    int msgWheelDelta = -120 * amount;
+                    IntPtr msgWParam = (IntPtr)unchecked((int)((uint)(msgWheelDelta << 16)));
+                    IntPtr msgLParam = (IntPtr)unchecked((int)((uint)((msgCenter.Y << 16) | (msgCenter.X & 0xFFFF))));
+                    NativeMethods.PostMessage(windowHandle, (uint)WindowsMessages.WM_MOUSEWHEEL, msgWParam, msgLParam);
+                    break;
+
                 case ScrollMethod.ScrollMessage:
                     for (int i = 0; i < amount; i++)
                     {
