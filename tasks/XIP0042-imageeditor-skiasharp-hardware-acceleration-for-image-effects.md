@@ -21,9 +21,9 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 
 ---
 
-## Current State (as of Feb 2026)
+## Current State (as of Mar 2026)
 
-> **Jaex landed two rounds of optimisations/fixes; all remaining ImageEditor-side items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries. The GPU path in the ImageEditor library is complete, but host wiring is intentionally deferred: the Avalonia 11 frame-scoped API (`AvaloniaLocator / ISkiaGpuWithPlatformGraphicsContext`) is fragile and cannot be used outside a render callback, and a persistent offscreen `GRContext` (the only viable path) has a readback cost that negates the benefit for the color-matrix/filter operations targeted in early phases. GPU wiring will be pursued at Phase 3 (canvas compositor). See §3.**
+> **Jaex landed two rounds of optimisations/fixes; all remaining ImageEditor-side items were then implemented in `feature/XIP0042-optimizations`. A third round added diagnostics infrastructure and addressed build-time discoveries. The GPU path in the ImageEditor library is complete and is now fronted by a host-agnostic hook (`IEditorGpuContextProvider` / `EditorServices.GpuContextProvider`) so hosts can provide an Option B worker without ImageEditor depending on Avalonia. On the XerahS side, `feature/XIP0042-optimizations` wires this to an `EditorGpuWorker` that runs color-filter effects on a dedicated background thread (currently CPU-only). A true Option B GPU implementation (persistent offscreen `GRContext`) remains intentionally deferred until the canvas compositor is designed and/or Avalonia 12 `ISkiaGpu` APIs can be used safely. No user-visible GPU speed-up is expected yet; see §3.**
 
 ### Round 1 (prior audit)
 - ✅ `ApplyPixelOperation` rewritten with `unsafe` pointer arithmetic for `Bgra8888` — no `GetPixel`/`SetPixel`.
@@ -56,11 +56,12 @@ Any change to ImageEditor (effects, pipeline, or optional GPU path) **must remai
 | **§2.5** — Redundant `Category` overrides in 7 filter effects | ✅ DONE |
 | **§2.7** — `new Random()` per call in Slice/TornEdge | ✅ DONE |
 | **§2.8** — Diagnostics / observability infrastructure | ✅ DONE |
+| **2.9** — Host-agnostic GPU context provider (`IEditorGpuContextProvider` / `EditorServices.GpuContextProvider`) | ✅ DONE | Allows hosts to provide Option B workers without ImageEditor referencing Avalonia. |
 | §2.2 GammaImageEffect LUT caching | ⚠️ Low priority — profile first |
 | §2.3 BlurImageEffect allocation reduction | ⚠️ Low priority — profile first |
 | §2.6 SelectiveColor `ToHsl` short-circuit | ⚠️ Profile first |
 | **Phase 3** — GRContext / GPU surface path (ImageEditor library) | ✅ DONE (library ready; host wiring deferred) |
-| **Phase 3** — XerahS host wiring (`SetGpuContext`) | ⏸️ DEFERRED — see §3; revisit when canvas compositor is designed |
+| **Phase 3** — XerahS host wiring (Option B worker via `GpuContextProvider`) | ⚠️ PARTIAL — wired in `feature/XIP0042-optimizations` via CPU-only `EditorGpuWorker`; persistent `GRContext` and true GPU still deferred (§3). |
 | **§3.5** — GPU read-back threshold (160 000 px) | ✅ DONE |
 
 ### Effect map
@@ -433,7 +434,7 @@ Tune the threshold empirically on real hardware. Document the chosen value. Note
 
 **Remaining open items:**
 
-- **Phase 3 host wiring — deferred:** Pursue when the canvas compositor is designed. Use persistent offscreen `GRContext` (Option B, §3.3); the Avalonia 11 frame-scoped lease API cannot be used outside a render callback. The `GRContext?` parameter stays in the API as a forward-compatibility hook at zero cost.
+- **Phase 3 host wiring — deferred (GPU side):** The structural pieces are now in place — ImageEditor exposes `IEditorGpuContextProvider` / `EditorServices.GpuContextProvider`, and XerahS `feature/XIP0042-optimizations` wires this to an `EditorGpuWorker` that runs color-filter effects on a dedicated background worker thread. However, this worker is currently CPU-only; the persistent offscreen `GRContext` required for a true Option B GPU path is still intentionally deferred until the canvas compositor is designed. The Avalonia 11 frame-scoped lease API still cannot be used outside a render callback; Avalonia 12’s merged `ISkiaGpu.TryGetGrContext()` API may be used later to implement the persistent context safely.
 
 - **§2.4** — Re-apply `SKSamplingOptions` migration after upgrading SkiaSharp past 2.88.9.
 
