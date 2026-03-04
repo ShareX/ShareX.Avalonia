@@ -238,9 +238,9 @@ Additionally, XerahS's previous code would fall back to CLI capture tools after 
 |-------|------------|------------|--------|
 | **A** | Print key hotkey mapping | Fix pushed, needs testing | `aa579f0` |
 | **B** | Portal UI varies by DE | Documentation + logging done | `ee6d0fa` |
-| **C** | Portal lacks region selection on KDE | **Open** — needs ScreenCast alternative or CLI fallback |  |
-| **D** | GlobalShortcuts hotkey doesn't fire | **Open** — needs conflict detection + diagnostics |  |
-| **E** | InputCapture CreateSession fails | **Open** — logging improvement needed (non-fatal) |  |
+| **C** | Portal lacks region selection on KDE | **Fixed** — Spectacle/gnome-screenshot CLI fallbacks | `17a52cdc` |
+| **D** | GlobalShortcuts hotkey doesn't fire | **Covered by XIP0044** — root cause fixed | See XIP0044 |
+| **E** | InputCapture CreateSession fails | **Fixed** — improved logging | `c6e9dd21` |
 | **F** | Cancel portal opens Spectacle | Fix pushed, needs testing | `ee6d0fa` |
 
 ---
@@ -251,12 +251,14 @@ Additionally, XerahS's previous code would fall back to CLI capture tools after 
 - Request tester confirmation on issues #63 and #64 per the existing test matrices.
 - Close the issues once testers verify on KDE + GNOME + wlroots backends.
 
-### For Issues C and D (open)
-- Prototype ScreenCast-based single-frame capture for region selection.
-- Add CLI tool fallback providers for `spectacle`, `grim+slurp`, `gnome-screenshot`.
-- Test GlobalShortcuts on a clean key binding (e.g., `F9`) to isolate compositor conflicts.
-- Add D-Bus conflict detection for `kglobalaccel`.
+### For Issue C (fixed)
+- Test on KDE Plasma Wayland: trigger region capture → verify `spectacle --region` is invoked.
+- Test on GNOME Wayland: trigger region capture → verify `gnome-screenshot -a` is invoked.
+- Verify the portal is still tried first; CLI fallback only activates when portal doesn't provide region capture.
 
-### For Issue E (open, low priority)
-- Improve log message clarity.
-- Consider skipping InputCapture probe on KDE backends.
+### For Issue D (covered by XIP0044)
+- See XIP0044 verification steps.
+
+### For Issue E (fixed)
+- Verify log output on KDE Plasma shows descriptive message instead of terse `CreateSession failed (2)`.
+
