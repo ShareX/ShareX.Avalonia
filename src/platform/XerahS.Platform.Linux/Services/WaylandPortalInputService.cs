@@ -162,7 +162,9 @@ public sealed class WaylandPortalInputService : IInputService
 
         if (response != 0)
         {
-            DebugHelper.WriteLine($"WaylandPortalInputService: CreateSession failed ({response})");
+            DebugHelper.WriteLine($"WaylandPortalInputService: CreateSession rejected by portal backend (response={response}). " +
+                "This is expected on some compositors (e.g. KDE Plasma) where InputCapture is not fully supported. " +
+                "Cursor tracking will use fallback.");
             return null;
         }
 
