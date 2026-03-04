@@ -153,6 +153,23 @@ internal static class WaylandCliCapture
             var r = await CaptureWithGrimSlurpAsync().ConfigureAwait(false);
             if (r != null) return r;
         }
+
+        // KDE Plasma: use Spectacle's region capture mode.
+        // This provides native rectangle selection, unlike the XDG Portal Screenshot dialog
+        // which may only offer full-screen capture on some KDE versions.
+        if (desktop is "KDE")
+        {
+            var r = await CaptureWithSpectacleRegionAsync().ConfigureAwait(false);
+            if (r != null) return r;
+        }
+
+        // GNOME: gnome-screenshot provides area selection natively.
+        if (desktop is "GNOME")
+        {
+            var r = await CaptureWithGnomeScreenshotAreaAsync().ConfigureAwait(false);
+            if (r != null) return r;
+        }
+
         return null;
     }
 
@@ -312,6 +329,64 @@ internal static class WaylandCliCapture
             if (!completed) { try { process.Kill(); } catch { } return null; }
             if (process.ExitCode != 0 || !File.Exists(tempFile)) return null;
             DebugHelper.WriteLine("LinuxScreenCaptureService: Screenshot captured with hyprshot (window)");
+            using var stream = File.OpenRead(tempFile);
+            return SKBitmap.Decode(stream);
+        }
+        catch { return null; }
+        finally { TryDelete(tempFile); }
+    }
+
+    private static async Task<SKBitmap?> CaptureWithSpectacleRegionAsync()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"sharex_screenshot_{Guid.NewGuid():N}.png");
+        try
+        {
+            // spectacle --region: opens Spectacle's native rectangle selection UI.
+            // --nonotify: suppresses the notification after capture.
+            // --output: saves directly to the specified path.
+            // --background: runs without showing the main Spectacle window.
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "spectacle",
+                Arguments = $"--region --nonotify --background --output \"{tempFile}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+            if (process == null) return null;
+            var completed = await Task.Run(() => process.WaitForExit(60000)).ConfigureAwait(false);
+            if (!completed) { try { process.Kill(); } catch { } return null; }
+            if (process.ExitCode != 0 || !File.Exists(tempFile)) return null;
+            DebugHelper.WriteLine("LinuxScreenCaptureService: Screenshot captured with spectacle --region");
+            using var stream = File.OpenRead(tempFile);
+            return SKBitmap.Decode(stream);
+        }
+        catch { return null; }
+        finally { TryDelete(tempFile); }
+    }
+
+    private static async Task<SKBitmap?> CaptureWithGnomeScreenshotAreaAsync()
+    {
+        var tempFile = Path.Combine(Path.GetTempPath(), $"sharex_screenshot_{Guid.NewGuid():N}.png");
+        try
+        {
+            // gnome-screenshot -a: opens GNOME's native area selection crosshair.
+            // -f: saves to the specified file path.
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = "gnome-screenshot",
+                Arguments = $"-a -f \"{tempFile}\"",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
+            });
+            if (process == null) return null;
+            var completed = await Task.Run(() => process.WaitForExit(60000)).ConfigureAwait(false);
+            if (!completed) { try { process.Kill(); } catch { } return null; }
+            if (process.ExitCode != 0 || !File.Exists(tempFile)) return null;
+            DebugHelper.WriteLine("LinuxScreenCaptureService: Screenshot captured with gnome-screenshot -a");
             using var stream = File.OpenRead(tempFile);
             return SKBitmap.Decode(stream);
         }
