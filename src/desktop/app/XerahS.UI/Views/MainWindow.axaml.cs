@@ -354,7 +354,7 @@ namespace XerahS.UI.Views
             {
                 XerahS.Platform.Abstractions.PlatformServices.NativeWindowHandleProvider = () =>
                     platformHandle.HandleDescriptor == "XID"
-                        ? $"x11:{platformHandle.Handle:x}"
+                        ? $"x11:0x{platformHandle.Handle:x}"
                         : null;
             }
 
@@ -560,4 +560,3 @@ namespace XerahS.UI.Views
 
     }
 }
-

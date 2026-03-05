@@ -217,12 +217,8 @@ class Program
         using var fileStream = File.Create(outputPath);
         using var gzipStream = new GZipStream(fileStream, CompressionLevel.Optimal);
         using var tarWriter = new TarWriter(gzipStream, TarEntryFormat.Ustar);
-
-        foreach (var file in Directory.GetFiles(sourceDir, "*", SearchOption.AllDirectories))
-        {
-            string relativePath = Path.GetRelativePath(sourceDir, file).Replace('\\', '/');
-            WriteTarFileEntry(tarWriter, file, relativePath);
-        }
+        // Preserve symlinks for all tarball uses (portable archive and RPM Source0 staging tarball).
+        AddDirectoryToTar(tarWriter, sourceDir, sourceDir, prependDotPrefix: false);
     }
 
     static void CreateDeb(string sourceDir, string outputPath, string version, string arch)
@@ -371,13 +367,19 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
 
     static bool CreateRpm(string sourceDir, string outputPath, string version, string arch)
     {
-        if (!IsToolAvailable("rpmbuild"))
+        if (!TryGetRpmBuildInvoker(out string rpmBuildFileName, out string rpmBuildPrefixArgs, out string rpmBuildDisplayName))
         {
-            Console.WriteLine("rpmbuild not found in PATH.");
+            Console.WriteLine("rpmbuild not found in PATH or via flatpak-spawn --host.");
             return false;
         }
 
-        string workDir = Path.Combine(Path.GetTempPath(), "xerahs_rpm_" + Guid.NewGuid());
+        Console.WriteLine($"Using {rpmBuildDisplayName} for RPM build.");
+        bool rpmBuildRunsOnHost = rpmBuildFileName == "flatpak-spawn";
+        string workRoot = rpmBuildRunsOnHost
+            ? Path.Combine(Path.GetDirectoryName(outputPath) ?? sourceDir, ".tmp")
+            : Path.GetTempPath();
+        Directory.CreateDirectory(workRoot);
+        string workDir = Path.Combine(workRoot, "xerahs_rpm_" + Guid.NewGuid());
         string rpmRoot = Path.Combine(workDir, "rpmbuild");
         string buildRoot = Path.Combine(rpmRoot, "BUILDROOT");
         string sourcesRoot = Path.Combine(rpmRoot, "SOURCES");
@@ -466,10 +468,14 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
                 Console.WriteLine("Non-RPM host detected; disabling rpmbuild dependency checks.");
             }
 
+            string rpmBuildArgs = string.IsNullOrWhiteSpace(rpmBuildPrefixArgs)
+                ? $"-bb{depFlag} --target {arch} --define \"_topdir {rpmRoot}\" \"{specPath}\""
+                : $"{rpmBuildPrefixArgs} -bb{depFlag} --target {arch} --define \"_topdir {rpmRoot}\" \"{specPath}\"";
+
             var psi = new ProcessStartInfo
             {
-                FileName = "rpmbuild",
-                Arguments = $"-bb{depFlag} --target {arch} --define \"_topdir {rpmRoot}\" \"{specPath}\"",
+                FileName = rpmBuildFileName,
+                Arguments = rpmBuildArgs,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
@@ -479,7 +485,7 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
             using var proc = Process.Start(psi);
             if (proc == null)
             {
-                Console.WriteLine("Failed to start rpmbuild.");
+                Console.WriteLine($"Failed to start RPM build command: {rpmBuildDisplayName}");
                 return false;
             }
 
@@ -518,6 +524,17 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         finally
         {
             try { Directory.Delete(workDir, true); } catch { }
+            if (rpmBuildRunsOnHost)
+            {
+                try
+                {
+                    if (Directory.Exists(workRoot) && !Directory.EnumerateFileSystemEntries(workRoot).Any())
+                    {
+                        Directory.Delete(workRoot);
+                    }
+                }
+                catch { }
+            }
         }
     }
 
@@ -556,7 +573,8 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         sb.AppendLine("rm -rf %{buildroot}");
         sb.AppendLine("mkdir -p %{buildroot}");
         sb.AppendLine("cp -a usr %{buildroot}/usr");
-        sb.AppendLine("chmod 755 %{buildroot}/usr/bin/xerahs");
+        sb.AppendLine("rm -f %{buildroot}/usr/bin/xerahs");
+        sb.AppendLine("ln -s ../lib/xerahs/XerahS %{buildroot}/usr/bin/xerahs");
         sb.AppendLine("chmod 755 %{buildroot}/usr/lib/xerahs/XerahS");
         sb.AppendLine("if [ -f %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon ]; then chmod 755 %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon; fi");
         sb.AppendLine("if [ -f %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon.exe ]; then chmod 755 %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon.exe; fi");
@@ -615,6 +633,55 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         }
     }
 
+    static bool TryGetRpmBuildInvoker(out string fileName, out string prefixArgs, out string displayName)
+    {
+        if (IsToolAvailable("rpmbuild"))
+        {
+            fileName = "rpmbuild";
+            prefixArgs = string.Empty;
+            displayName = "rpmbuild";
+            return true;
+        }
+
+        if (IsHostToolAvailableViaFlatpak("rpmbuild"))
+        {
+            fileName = "flatpak-spawn";
+            prefixArgs = "--host rpmbuild";
+            displayName = "flatpak-spawn --host rpmbuild";
+            return true;
+        }
+
+        fileName = string.Empty;
+        prefixArgs = string.Empty;
+        displayName = string.Empty;
+        return false;
+    }
+
+    static bool IsHostToolAvailableViaFlatpak(string toolName)
+    {
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "flatpak-spawn",
+                Arguments = $"--host which {toolName}",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+            using var proc = Process.Start(psi);
+            if (proc == null) return false;
+            string stdout = proc.StandardOutput.ReadToEnd();
+            proc.WaitForExit(3000);
+            return proc.ExitCode == 0 && !string.IsNullOrWhiteSpace(stdout);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     static bool IsRpmNativeHost()
     {
         try
@@ -654,13 +721,13 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         }
     }
 
-    static void AddDirectoryToTar(TarWriter tar, string rootDir, string currentDir)
+    static void AddDirectoryToTar(TarWriter tar, string rootDir, string currentDir, bool prependDotPrefix = true)
     {
         string relativeDirPath = Path.GetRelativePath(rootDir, currentDir).Replace('\\', '/');
         if (!string.IsNullOrEmpty(relativeDirPath) && relativeDirPath != ".")
         {
             if (relativeDirPath.StartsWith("/")) relativeDirPath = relativeDirPath.Substring(1);
-            relativeDirPath = "./" + relativeDirPath.TrimEnd('/') + "/";
+            relativeDirPath = (prependDotPrefix ? "./" : string.Empty) + relativeDirPath.TrimEnd('/') + "/";
             WriteTarDirectoryEntry(tar, relativeDirPath);
         }
 
@@ -669,8 +736,11 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
             string relativePath = Path.GetRelativePath(rootDir, file).Replace('\\', '/');
             // Make sure relative path doesn't start with /
             if (relativePath.StartsWith("/")) relativePath = relativePath.Substring(1);
-            // Standard debian data.tar.gz is usually ./usr/..., so we simulate that
-            relativePath = "./" + relativePath;
+            if (prependDotPrefix)
+            {
+                // Standard debian data.tar.gz is usually ./usr/..., so we simulate that.
+                relativePath = "./" + relativePath;
+            }
 
             // Detect and preserve symlinks: write a tar symlink entry instead of copying content.
             string? linkTarget = new FileInfo(file).LinkTarget;
@@ -696,7 +766,7 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
 
         foreach (var dir in Directory.GetDirectories(currentDir))
         {
-            AddDirectoryToTar(tar, rootDir, dir);
+            AddDirectoryToTar(tar, rootDir, dir, prependDotPrefix);
         }
     }
 
@@ -829,6 +899,3 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         return null;
     }
 }
-
-
-
