@@ -51,11 +51,18 @@ public class ApplicationConfig : SettingsBase<ApplicationConfig>
 #pragma warning disable CA1416 // Validate platform compatibility
         this.ApplyDefaultPropertyValues();
 #pragma warning restore CA1416 // Validate platform compatibility
+        // On Linux (and macOS), system panels are typically dark; default to white tray icon
+        // so XerahS matches built-in indicators (wifi, volume, battery) in the system tray.
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            UseWhiteShareXIcon = true;
+        }
     }
 
     #region Settings - General
 
     public SupportedLanguage Language = SupportedLanguage.Automatic;
+    /// <summary>Show app icon in system tray (e.g. alongside wifi, volume, battery). Default true so tray is available on all platforms.</summary>
     public bool ShowTray = true;
     public bool SilentRun = false;
     public bool TrayIconProgressEnabled = true;
