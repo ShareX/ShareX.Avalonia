@@ -1,5 +1,5 @@
-[submodule "ImageEditor"]
-	path = ImageEditor
-	url = https://github.com/ShareX/ImageEditor.git
+[submodule "ShareX.ImageEditor"]
+	path = ShareX.ImageEditor
+	url = https://github.com/ShareX/ShareX.ImageEditor.git
 	branch = develop
 	update = rebase

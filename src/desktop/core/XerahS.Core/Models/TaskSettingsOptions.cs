@@ -132,7 +132,7 @@ public class RegionCaptureOptions
     public bool SwitchToSelectionToolAfterDrawing { get; set; } = false;
     public bool ActiveMonitorMode { get; set; } = false;
 
-    public EditorOptions AnnotationOptions { get; set; } = new EditorOptions();
+    public ImageEditorOptions AnnotationOptions { get; set; } = new ImageEditorOptions();
     public ShapeType LastRegionTool { get; set; } = ShapeType.RegionRectangle;
     public ShapeType LastAnnotationTool { get; set; } = ShapeType.DrawingRectangle;
     public ShapeType LastEditorTool { get; set; } = ShapeType.DrawingRectangle;

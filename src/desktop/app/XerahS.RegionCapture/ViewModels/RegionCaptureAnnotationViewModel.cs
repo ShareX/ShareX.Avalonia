@@ -40,7 +40,7 @@ namespace XerahS.RegionCapture.ViewModels;
 public partial class RegionCaptureAnnotationViewModel : ObservableObject
 {
     private readonly EditorCore _editorCore;
-    private EditorOptions? _options;
+    private ImageEditorOptions? _options;
 
     public RegionCaptureAnnotationViewModel()
     {
@@ -54,7 +54,7 @@ public partial class RegionCaptureAnnotationViewModel : ObservableObject
     /// Loads editor options from settings into the ViewModel.
     /// Call this after construction to restore saved preferences.
     /// </summary>
-    public void LoadOptions(EditorOptions options)
+    public void LoadOptions(ImageEditorOptions options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
 

@@ -158,5 +158,5 @@ public sealed record RegionCaptureOptions
     /// Editor options for persisting tool selection and styling preferences.
     /// These settings are saved between sessions.
     /// </summary>
-    public EditorOptions EditorOptions { get; init; } = new();
+    public ImageEditorOptions EditorOptions { get; init; } = new();
 }
