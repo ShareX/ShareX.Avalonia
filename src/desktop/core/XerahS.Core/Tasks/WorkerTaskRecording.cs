@@ -211,6 +211,20 @@ namespace XerahS.Core.Tasks
                          }
                     }
 
+                    // Open VideoEditor when AnnotateMedia is checked, mirroring how AnnotateMedia opens ImageEditor for images
+                    if (taskSettings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateMedia)
+                        && PlatformServices.IsInitialized && PlatformServices.UI != null)
+                    {
+                        string? ffmpegPath = ResolveGifFFmpegPath(taskSettings.CaptureSettings?.FFmpegOptions);
+                        string? editedPath = await PlatformServices.UI.ShowVideoEditorAsync(outputPath, ffmpegPath);
+                        if (!string.IsNullOrEmpty(editedPath) && File.Exists(editedPath))
+                        {
+                            outputPath = editedPath;
+                            Info.FilePath = outputPath;
+                            DebugHelper.WriteLine($"VideoEditor produced: {outputPath}");
+                        }
+                    }
+
                     // Handle After Capture tasks for recordings (manual handling since CaptureJobProcessor is for images)
                     if (taskSettings.AfterCaptureJob.HasFlag(AfterCaptureTasks.CopyImageToClipboard))
                     {
