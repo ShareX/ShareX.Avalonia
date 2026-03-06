@@ -1,7 +1,7 @@
 # EIP0001: ImageEditor Structure Refactor
 
 ## Status
-- Status: Implemented on March 6, 2026.
+- Status: Implemented on March 6, 2026. Follow-up cleanup phases added March 6, 2026.
 - Outcome: The planned structural refactor was completed across `ShareX.ImageEditor`, XerahS, and the ShareX host integration.
 - Remaining gap from the original verification plan: manual UI smoke scenarios were not re-run as part of this proposal closeout.
 
@@ -42,6 +42,72 @@
   - `Presentation/Views`
 - This was a process improvement, not a scope change.
 - ShareX repo-path changes were not needed because ShareX was already using the `ShareX.ImageEditor` submodule path; only its namespace imports/usages needed migration.
+
+---
+
+## Cleanup Phases (March 6, 2026)
+
+Post-implementation audit identified three remaining friction points for agentic coding. Addressed as separate mechanical commits.
+
+### Phase A: Delete Empty Artifact Directories
+
+**Problem:** Four empty directories were left as migration artifacts under `Presentation/`:
+```
+Presentation/Controls/Controls/
+Presentation/Converters/Converters/
+Presentation/Views/Controls/
+Presentation/Views/Views/Controls/
+```
+These appear in directory listings and Glob results, adding noise and suggesting false sub-structure.
+
+**Action:** Delete all four directories. No file or namespace changes.
+
+**Verification:** `find Presentation -empty -type d` returns nothing.
+
+---
+
+### Phase B: Disambiguate `ImageEffect.cs` Base Class File Names
+
+**Problem:** Three files share the name `ImageEffect.cs` in the same directory tree:
+```
+Core/ImageEffects/ImageEffect.cs              → abstract root base
+Core/ImageEffects/Adjustments/ImageEffect.cs  → abstract adjustments base
+Core/ImageEffects/Filters/ImageEffect.cs      → abstract filters base
+```
+When an agent greps for `ImageEffect` or does a Glob for `**/ImageEffect.cs`, it gets three candidates and must read all three to determine which is relevant. This multiplies agent context consumption on every effect-related task.
+
+**Action:**
+- Rename `Adjustments/ImageEffect.cs` → `AdjustmentImageEffect.cs`, class renamed to `AdjustmentImageEffect`
+- Rename `Filters/ImageEffect.cs` → `FilterImageEffect.cs`, class renamed to `FilterImageEffect`
+- Update all `~26` concrete adjustment effect classes: `: ImageEffect` → `: AdjustmentImageEffect`
+- Update all `~65` concrete filter effect classes: `: ImageEffect` → `: FilterImageEffect`
+- Root `Core/ImageEffects/ImageEffect.cs` stays unchanged as the unambiguous true base
+
+**Namespace impact:** None. Class renaming within the same namespace only.
+
+**Verification:** `find Core/ImageEffects -name "ImageEffect.cs"` returns exactly one result (the root base).
+
+---
+
+### Phase C: Relocate Input Controllers Out of `Views/`
+
+**Problem:** `Presentation/Views/Controllers/` contains behavioral input controllers:
+```
+EditorInputController.cs
+EditorSelectionController.cs
+EditorZoomController.cs
+```
+These are not views. Nesting them under `Views/` misrepresents their responsibility and means Glob patterns like `Presentation/Views/**` pull in non-view files.
+
+**Action:**
+- Move the three files from `Presentation/Views/Controllers/` → `Presentation/Controllers/`
+- Update namespace from `ShareX.ImageEditor.Presentation.Views.Controllers` → `ShareX.ImageEditor.Presentation.Controllers`
+- Update `using` directives in any consumer files (primarily `EditorView.*.cs`)
+- Remove the now-empty `Presentation/Views/Controllers/` directory
+
+**Verification:** `Presentation/Views/` contains only view and dialog files; controllers are at `Presentation/Controllers/`.
+
+---
 
 ## Summary
 - Treat `ShareX.ImageEditor` as the single source of truth library repo. XerahS and ShareX both consume that upstream as submodules.
