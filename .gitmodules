@@ -3,3 +3,7 @@
 	url = https://github.com/ShareX/ShareX.ImageEditor.git
 	branch = develop
 	update = rebase
+[submodule "ShareX.VideoEditor"]
+	path = ShareX.VideoEditor
+	url = https://github.com/ShareX/ShareX.VideoEditor.git
+	branch = main
