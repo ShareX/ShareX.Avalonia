@@ -215,8 +215,10 @@ public sealed class LinuxWatchFolderDaemonService : WatchFolderDaemonServiceBase
             return Path.Combine("/etc/systemd/system", unitName);
         }
 
-        string configHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME") ??
-                            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal), ".config");
+        string? xdgConfigHome = Environment.GetEnvironmentVariable("XDG_CONFIG_HOME");
+        string configHome = !string.IsNullOrWhiteSpace(xdgConfigHome)
+            ? xdgConfigHome
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".config");
         return Path.Combine(configHome, "systemd", "user", unitName);
     }
 

@@ -17,6 +17,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\app\XerahS.Bootstrap\XerahS.Bootstrap.csproj" />
+    <ProjectReference Include="..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\core\XerahS.Core\XerahS.Core.csproj" />
     <ProjectReference Include="..\..\app\XerahS.RegionCapture\XerahS.RegionCapture.csproj" />
     <ProjectReference Include="..\..\..\platform\XerahS.Platform.Abstractions\XerahS.Platform.Abstractions.csproj" />
@@ -31,5 +32,24 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <Target Name="BuildWatchFolderDaemonForDev" AfterTargets="Build">
+    <Message Text="Copying watch folder daemon artifacts to CLI output..." Importance="High" />
+
+    <PropertyGroup>
+      <_WatchFolderDaemonBuildDir>$(MSBuildThisFileDirectory)..\..\tools\XerahS.WatchFolder.Daemon\bin\$(Configuration)\$(TargetFramework)\</_WatchFolderDaemonBuildDir>
+      <_WatchFolderDaemonBuildDir Condition="'$(RuntimeIdentifier)' != ''">$(_WatchFolderDaemonBuildDir)$(RuntimeIdentifier)\</_WatchFolderDaemonBuildDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_WatchFolderDaemonBuildFiles Include="$(_WatchFolderDaemonBuildDir)**\*.*"
+                                    Exclude="$(_WatchFolderDaemonBuildDir)**\*.pdb;$(_WatchFolderDaemonBuildDir)**\*.xml" />
+    </ItemGroup>
+
+    <Copy SourceFiles="@(_WatchFolderDaemonBuildFiles)"
+          DestinationFiles="@(_WatchFolderDaemonBuildFiles->'$(OutDir)%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          Condition="'@(_WatchFolderDaemonBuildFiles)' != ''" />
+  </Target>
 </Project>
 
