@@ -54,6 +54,12 @@ namespace XerahS.CLI.Services
             return Task.FromResult<SKBitmap?>(image);
         }
 
+        public Task<string?> ShowVideoEditorAsync(string videoPath, string? ffmpegPath)
+        {
+            Console.Error.WriteLine("[WARNING] Video editor not available in CLI mode.");
+            return Task.FromResult<string?>(null);
+        }
+
         public Task<(AfterCaptureTasks Capture, AfterUploadTasks Upload, bool Cancel)> ShowAfterCaptureWindowAsync(
             SKBitmap image,
             AfterCaptureTasks afterCapture,

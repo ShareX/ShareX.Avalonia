@@ -37,6 +37,8 @@ internal sealed class HeadlessUIService : IUIService
 
     public Task<SKBitmap?> ShowEditorAsync(SKBitmap image) => Task.FromResult<SKBitmap?>(image);
 
+    public Task<string?> ShowVideoEditorAsync(string videoPath, string? ffmpegPath) => Task.FromResult<string?>(null);
+
     public Task<(AfterCaptureTasks Capture, AfterUploadTasks Upload, bool Cancel)> ShowAfterCaptureWindowAsync(
         SKBitmap image,
         AfterCaptureTasks afterCapture,
