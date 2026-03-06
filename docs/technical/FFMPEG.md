@@ -92,24 +92,51 @@ ffmpeg -f avfoundation -framerate 30 -capture_cursor 1 -i "1" -f avfoundation -i
 
 ### Installation
 
-FFmpeg must be installed with **PipeWire input support** compiled in. Check with:
+FFmpeg must be installed with **PipeWire input support** compiled in. Most modern distro packages include it by default. Check what you already have:
 
 ```sh
 ffmpeg -devices 2>&1 | grep pipewire
 ```
 
-If `pipewire` appears in the output, you are good. If not, install a distro package that includes it:
+If a `pipewire` line appears in the output, you are good. If not, use one of the following:
+
+**Fedora / RHEL (RPM Fusion)**
+
+RPM Fusion's build includes PipeWire. Enable it first if you haven't:
 
 ```sh
-# Fedora / RHEL
+sudo dnf install https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm
 sudo dnf install ffmpeg
+```
 
-# Ubuntu / Debian (from universe or a PPA with full codecs)
-sudo apt install ffmpeg
+**Ubuntu / Debian**
 
-# Arch
+Ubuntu 22.04+ and Debian 12+ include PipeWire in their default FFmpeg package. If yours doesn't, use a PPA with full codec support:
+
+```sh
+sudo add-apt-repository ppa:savoury1/ffmpeg4
+sudo apt update && sudo apt install ffmpeg
+```
+
+**Arch Linux**
+
+The official `ffmpeg` package in the Arch repos includes PipeWire:
+
+```sh
 sudo pacman -S ffmpeg
 ```
+
+**NixOS**
+
+Use `ffmpeg-full` which enables all inputs including PipeWire:
+
+```nix
+environment.systemPackages = [ pkgs.ffmpeg-full ];
+```
+
+**Static builds**
+
+Static builds (e.g. from johnvansickle.com) do **not** include PipeWire. PipeWire requires runtime linking to system libraries and cannot be statically bundled. You must use a dynamically linked package from your distro.
 
 GStreamer with PipeWire plugins is used as a fallback if FFmpeg lacks PipeWire support:
 
