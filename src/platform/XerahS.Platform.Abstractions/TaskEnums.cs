@@ -33,7 +33,7 @@ public enum AfterCaptureTasks // Localized
     ShowAfterCaptureWindow = 1 << 1,
     BeautifyImage = 1 << 2,
     AddImageEffects = 1 << 3,
-    AnnotateImage = 1 << 4,
+    AnnotateMedia = 1 << 4,
     CopyImageToClipboard = 1 << 5,
     PinToScreen = 1 << 6,
     SendImageToPrinter = 1 << 7,

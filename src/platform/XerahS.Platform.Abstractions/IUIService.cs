@@ -50,6 +50,12 @@ namespace XerahS.Platform.Abstractions
         Task<SKBitmap?> ShowEditorAsync(SKBitmap image);
 
         /// <summary>
+        /// Shows the video editor for the given video file. Returns the exported output path
+        /// if the user completed export, or null if cancelled.
+        /// </summary>
+        Task<string?> ShowVideoEditorAsync(string videoPath, string? ffmpegPath);
+
+        /// <summary>
         /// Shows the After Capture window and returns selected tasks.
         /// </summary>
         Task<(AfterCaptureTasks Capture, AfterUploadTasks Upload, bool Cancel)> ShowAfterCaptureWindowAsync(

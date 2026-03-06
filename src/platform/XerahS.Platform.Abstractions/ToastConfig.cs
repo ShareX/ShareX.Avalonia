@@ -100,7 +100,7 @@ public class ToastConfig
     /// <summary>
     /// Action to perform on middle click
     /// </summary>
-    public ToastClickAction MiddleClickAction { get; set; } = ToastClickAction.AnnotateImage;
+    public ToastClickAction MiddleClickAction { get; set; } = ToastClickAction.AnnotateMedia;
 
     /// <summary>
     /// Whether the toast should auto-hide when mouse is not over it
@@ -119,7 +119,7 @@ public class ToastConfig
 public enum ToastClickAction
 {
     CloseNotification,
-    AnnotateImage,
+    AnnotateMedia,
     CopyImageToClipboard,
     CopyFile,
     CopyFilePath,
