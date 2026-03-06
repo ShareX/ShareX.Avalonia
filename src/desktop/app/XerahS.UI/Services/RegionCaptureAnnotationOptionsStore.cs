@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 
-using ShareX.ImageEditor;
+using ShareX.ImageEditor.Hosting;
 using XerahS.Core;
 
 namespace XerahS.UI.Services;

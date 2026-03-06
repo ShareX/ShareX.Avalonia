@@ -27,7 +27,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
-using ShareX.ImageEditor.ViewModels;
+using ShareX.ImageEditor.Presentation.ViewModels;
 using XerahS.Common;
 using XerahS.Core;
 using XerahS.Platform.Abstractions;

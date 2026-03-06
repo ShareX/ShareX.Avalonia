@@ -30,7 +30,7 @@ using XerahS.Common;
 using XerahS.Core;
 using XerahS.Core.Managers;
 using XerahS.Core.Services;
-using BitmapConversionHelpers = ShareX.ImageEditor.Helpers.BitmapConversionHelpers;
+using BitmapConversionHelpers = ShareX.ImageEditor.Presentation.Rendering.BitmapConversionHelpers;
 using XerahS.Platform.Abstractions;
 using XerahS.RegionCapture;
 

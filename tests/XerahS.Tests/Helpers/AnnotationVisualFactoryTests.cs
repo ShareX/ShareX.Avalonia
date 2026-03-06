@@ -26,7 +26,8 @@
 using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using NUnit.Framework;
-using ShareX.ImageEditor.Annotations;
+using ShareX.ImageEditor.Core.Annotations;
+using ShareX.ImageEditor.Presentation.Rendering;
 using SkiaSharp;
 
 namespace XerahS.Tests.Helpers;

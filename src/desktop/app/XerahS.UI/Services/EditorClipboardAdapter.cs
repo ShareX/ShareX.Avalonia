@@ -22,7 +22,7 @@
 */
 
 #endregion License Information (GPL v3)
-using ShareX.ImageEditor.Services;
+using ShareX.ImageEditor.Hosting;
 using SkiaSharp;
 
 namespace XerahS.UI.Services;

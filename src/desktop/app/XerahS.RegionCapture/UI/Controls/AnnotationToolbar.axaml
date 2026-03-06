@@ -1,8 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:models="clr-namespace:ShareX.ImageEditor.Annotations;assembly=ShareX.ImageEditor"
-             xmlns:converters="clr-namespace:ShareX.ImageEditor.Converters;assembly=ShareX.ImageEditor"
-             xmlns:controls="clr-namespace:ShareX.ImageEditor.Controls;assembly=ShareX.ImageEditor"
+             xmlns:models="clr-namespace:ShareX.ImageEditor.Core.Annotations;assembly=ShareX.ImageEditor"
+             xmlns:converters="clr-namespace:ShareX.ImageEditor.Presentation.Converters;assembly=ShareX.ImageEditor"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls;assembly=ShareX.ImageEditor"
              x:Class="XerahS.RegionCapture.UI.Controls.AnnotationToolbar"
              MinWidth="860">
 

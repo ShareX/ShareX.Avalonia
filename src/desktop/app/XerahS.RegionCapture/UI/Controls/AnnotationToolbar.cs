@@ -27,7 +27,7 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using ShareX.ImageEditor.Controls;
+using ShareX.ImageEditor.Presentation.Controls;
 
 namespace XerahS.RegionCapture.UI.Controls;
 

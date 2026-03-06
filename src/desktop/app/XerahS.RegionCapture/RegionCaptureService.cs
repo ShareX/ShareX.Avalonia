@@ -22,7 +22,7 @@
 */
 
 #endregion License Information (GPL v3)
-using ShareX.ImageEditor;
+using ShareX.ImageEditor.Hosting;
 using XerahS.RegionCapture.Models;
 using XerahS.RegionCapture.Services;
 

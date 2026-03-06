@@ -25,7 +25,7 @@
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using ShareX.ImageEditor.ImageEffects;
+using ShareX.ImageEditor.Core.ImageEffects;
 using SkiaSharp;
 using System.IO.Compression;
 
@@ -118,12 +118,13 @@ internal sealed class XsiePreset
 
 internal sealed class ImageEffectSerializationBinder : ISerializationBinder
 {
-    private const string CurrentEffectsNamespacePrefix = "ShareX.ImageEditor.ImageEffects.";
+    private const string CurrentEffectsNamespacePrefix = "ShareX.ImageEditor.Core.ImageEffects.";
 
     private static readonly string[] LegacyEffectsNamespacePrefixes =
     [
         "ShareX.Editor.ImageEffects.",
-        "XerahS.Editor.ImageEffects."
+        "XerahS.Editor.ImageEffects.",
+        "ShareX.ImageEditor.ImageEffects."
     ];
 
     public Type BindToType(string? assemblyName, string typeName)

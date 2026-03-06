@@ -25,8 +25,8 @@
 
 using Avalonia.Controls;
 using Avalonia.Input;
-using ShareX.ImageEditor.Annotations;
-using ShareX.ImageEditor.ViewModels;
+using ShareX.ImageEditor.Core.Annotations;
+using ShareX.ImageEditor.Presentation.ViewModels;
 
 namespace XerahS.UI.Views
 {

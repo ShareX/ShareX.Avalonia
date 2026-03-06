@@ -30,7 +30,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using FluentAvalonia.UI.Controls;
-using ShareX.ImageEditor.Views;
+using ShareX.ImageEditor.Presentation.Views;
 using XerahS.Core;
 using XerahS.Core.Hotkeys;
 using XerahS.Core.Managers;

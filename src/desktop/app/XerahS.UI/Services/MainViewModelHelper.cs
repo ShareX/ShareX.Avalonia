@@ -24,8 +24,8 @@
 #endregion License Information (GPL v3)
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using ShareX.ImageEditor.Helpers;
-using ShareX.ImageEditor.ViewModels;
+using ShareX.ImageEditor.Presentation.Rendering;
+using ShareX.ImageEditor.Presentation.ViewModels;
 using SkiaSharp;
 using System.IO;
 using XerahS.Common;
@@ -191,7 +191,7 @@ public static class MainViewModelHelper
             }
 
             // Convert Avalonia Bitmap to SKBitmap for upload pipeline.
-            using var skBitmap = ShareX.ImageEditor.Helpers.BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
+            using var skBitmap = BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
             DebugHelper.WriteLine($"MainViewModelHelper: Converted bitmap {skBitmap.Width}x{skBitmap.Height}");
 
             // Get the default image uploader instance, or first available.
@@ -256,7 +256,7 @@ public static class MainViewModelHelper
 
             if (imageToCopy == null && viewModel.PreviewImage != null)
             {
-                imageToCopy = ShareX.ImageEditor.Helpers.BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
+                imageToCopy = BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
                 if (imageToCopy != null)
                     DebugHelper.WriteLine($"MainViewModelHelper: Using preview image {imageToCopy.Width}x{imageToCopy.Height} for clipboard");
             }

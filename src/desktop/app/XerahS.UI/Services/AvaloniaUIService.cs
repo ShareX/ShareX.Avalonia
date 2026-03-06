@@ -30,7 +30,8 @@ using XerahS.Common;
 using XerahS.Core;
 using XerahS.Platform.Abstractions;
 using XerahS.UI.ViewModels;
-using ShareX.ImageEditor.ViewModels;
+using ShareX.ImageEditor.Presentation.ViewModels;
+using ShareX.ImageEditor.Presentation.Views;
 using SkiaSharp;
 
 namespace XerahS.UI.Services
@@ -106,13 +107,13 @@ namespace XerahS.UI.Services
                 // Wire up CopyRequested to copy edited image (with annotations) to clipboard
                 MainViewModelHelper.WireCopyRequested(editorViewModel, () =>
                 {
-                    var editorView = editorWindow.FindControl<ShareX.ImageEditor.Views.EditorView>("EditorViewControl");
+                    var editorView = editorWindow.FindControl<EditorView>("EditorViewControl");
                     return editorView?.GetSnapshot();
                 });
 
                 // Wire up SaveRequested / SaveAsRequested for standalone editor window
                 Func<SkiaSharp.SKBitmap?> getSnapshot = () =>
-                    editorWindow.FindControl<ShareX.ImageEditor.Views.EditorView>("EditorViewControl")?.GetSnapshot();
+                    editorWindow.FindControl<EditorView>("EditorViewControl")?.GetSnapshot();
                 MainViewModelHelper.WireSaveRequested(editorViewModel, getSnapshot, () => editorWindow);
                 MainViewModelHelper.WireSaveAsRequested(editorViewModel, getSnapshot, () => editorWindow);
 
@@ -127,7 +128,7 @@ namespace XerahS.UI.Services
                 {
                     try
                     {
-                        var editorView = editorWindow.FindControl<ShareX.ImageEditor.Views.EditorView>("EditorViewControl");
+                        var editorView = editorWindow.FindControl<EditorView>("EditorViewControl");
                         if (editorView != null)
                         {
                             var snapshot = editorView.GetSnapshot();

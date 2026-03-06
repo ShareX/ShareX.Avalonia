@@ -43,9 +43,10 @@ using XerahS.Core.Hotkeys;
 using Avalonia; // For Application.Current
 using XerahS.Core.Tasks;
 using XerahS.Core.Managers;
-using ShareX.ImageEditor.Annotations;
-using ShareX.ImageEditor.ViewModels;
-using ShareX.ImageEditor.Views;
+using ShareX.ImageEditor.Core.Annotations;
+using ShareX.ImageEditor.Presentation.Theming;
+using ShareX.ImageEditor.Presentation.ViewModels;
+using ShareX.ImageEditor.Presentation.Views;
 using XerahS.UI.Helpers;
 using XerahS.UI.Views.Dialogs;
 
@@ -67,8 +68,8 @@ namespace XerahS.UI.Views
             KeyDown += OnKeyDown;
 
             // Set initial theme and subscribe to changes
-            RequestedThemeVariant = ShareX.ImageEditor.Helpers.ThemeManager.GetCurrentTheme();
-            ShareX.ImageEditor.Helpers.ThemeManager.ThemeChanged += (s, theme) => RequestedThemeVariant = theme;
+            RequestedThemeVariant = ThemeManager.GetCurrentTheme();
+            ThemeManager.ThemeChanged += (s, theme) => RequestedThemeVariant = theme;
 
             // Initial Navigation
             var navView = this.FindControl<NavigationView>("NavView");

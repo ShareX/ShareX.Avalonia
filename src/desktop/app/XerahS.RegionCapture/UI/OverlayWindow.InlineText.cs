@@ -30,7 +30,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Threading;
 using System;
-using ShareX.ImageEditor.Annotations;
+using ShareX.ImageEditor.Core.Annotations;
 using SkiaSharp;
 
 namespace XerahS.RegionCapture.UI;

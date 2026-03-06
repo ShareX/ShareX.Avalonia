@@ -28,10 +28,11 @@ using Avalonia.Media.Imaging;
 using Avalonia.Platform.Storage;
 using Avalonia.Controls;
 using CommunityToolkit.Mvvm.Input;
-using ShareX.ImageEditor;
-using ShareX.ImageEditor.Extensions;
-using ShareX.ImageEditor.ImageEffects;
-using ShareX.ImageEditor.ImageEffects.Manipulations;
+using ShareX.ImageEditor.Core.Editor;
+using ShareX.ImageEditor.Core.ImageEffects;
+using ShareX.ImageEditor.Core.ImageEffects.Helpers;
+using ShareX.ImageEditor.Core.ImageEffects.Manipulations;
+using ShareX.ImageEditor.Presentation.Controls;
 using SkiaSharp;
 using System;
 using System.Collections.ObjectModel;
@@ -654,7 +655,7 @@ namespace XerahS.UI.ViewModels
             string? name = null;
             try
             {
-                if (Activator.CreateInstance(type) is ShareX.ImageEditor.ImageEffects.ImageEffect effect)
+                if (Activator.CreateInstance(type) is ImageEffect effect)
                 {
                     name = effect.Name;
                 }
@@ -663,7 +664,7 @@ namespace XerahS.UI.ViewModels
             {
             }
 
-            Name = name ?? ShareX.ImageEditor.Extensions.TypeExtensions.GetDescription(type) ?? type.Name;
+            Name = name ?? TypeExtensions.GetDescription(type) ?? type.Name;
         }
     }
 }

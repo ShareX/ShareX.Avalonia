@@ -3,7 +3,7 @@
              xmlns:local="using:XerahS.UI"
              xmlns:vm="using:XerahS.UI.ViewModels"
              xmlns:views="using:XerahS.UI.Views"
-             xmlns:converters="clr-namespace:ShareX.ImageEditor.Converters;assembly=ShareX.ImageEditor"
+             xmlns:converters="clr-namespace:ShareX.ImageEditor.Presentation.Converters;assembly=ShareX.ImageEditor"
              xmlns:uiconverters="clr-namespace:XerahS.UI.Converters"
              xmlns:sty="using:FluentAvalonia.Styling"
              xmlns:core="using:XerahS.Core"

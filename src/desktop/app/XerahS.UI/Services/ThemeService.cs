@@ -48,11 +48,11 @@ namespace XerahS.UI.Services
 
                 if (Application.Current != null)
                 {
-                    var targetTheme = useDarkMode ? ShareX.ImageEditor.Helpers.ThemeManager.ShareXDark : ShareX.ImageEditor.Helpers.ThemeManager.ShareXLight;
+                    var targetTheme = useDarkMode ? ShareX.ImageEditor.Presentation.Theming.ThemeManager.ShareXDark : ShareX.ImageEditor.Presentation.Theming.ThemeManager.ShareXLight;
                     Application.Current.RequestedThemeVariant = targetTheme;
                     
                     // Also update the ImageEditor's ThemeManager so windows subscribed to it get the update
-                    ShareX.ImageEditor.Helpers.ThemeManager.SetTheme(targetTheme);
+                    ShareX.ImageEditor.Presentation.Theming.ThemeManager.SetTheme(targetTheme);
                     
                     DebugHelper.WriteLine($"Applied theme mode: {mode} (Dark: {useDarkMode}) -> {targetTheme.Key}");
                 }
@@ -171,11 +171,11 @@ namespace XerahS.UI.Services
                 {
                     if (Application.Current != null)
                     {
-                        var targetTheme = isDark ? ShareX.ImageEditor.Helpers.ThemeManager.ShareXDark : ShareX.ImageEditor.Helpers.ThemeManager.ShareXLight;
+                        var targetTheme = isDark ? ShareX.ImageEditor.Presentation.Theming.ThemeManager.ShareXDark : ShareX.ImageEditor.Presentation.Theming.ThemeManager.ShareXLight;
                         Application.Current.RequestedThemeVariant = targetTheme;
                         
                         // Sync ImageEditor theme manager
-                        ShareX.ImageEditor.Helpers.ThemeManager.SetTheme(targetTheme);
+                        ShareX.ImageEditor.Presentation.Theming.ThemeManager.SetTheme(targetTheme);
                         
                         DebugHelper.WriteLine($"System theme changed, applied: {(isDark ? "Dark" : "Light")}");
                     }

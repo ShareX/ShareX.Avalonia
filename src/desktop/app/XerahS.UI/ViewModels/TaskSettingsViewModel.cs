@@ -23,7 +23,7 @@
 
 #endregion License Information (GPL v3)
 using CommunityToolkit.Mvvm.ComponentModel;
-using ShareX.ImageEditor;
+using ShareX.ImageEditor.Core.Editor;
 using Common = XerahS.Common;
 using XerahS.Common;
 using XerahS.Core;

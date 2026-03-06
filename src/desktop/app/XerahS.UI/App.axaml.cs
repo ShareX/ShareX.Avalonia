@@ -26,7 +26,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
-using ShareX.ImageEditor.ViewModels;
+using ShareX.ImageEditor.Hosting;
+using ShareX.ImageEditor.Presentation.ViewModels;
+using ShareX.ImageEditor.Presentation.Views;
 using XerahS.Common;
 using XerahS.Core;
 using XerahS.Media.Encoders;
@@ -88,7 +90,7 @@ public partial class App : Application
                 if (desktop.MainWindow is Views.MainWindow mw)
                 {
                     var contentFrame = mw.FindControl<ContentControl>("ContentFrame");
-                    if (contentFrame?.Content is ShareX.ImageEditor.Views.EditorView ev)
+                    if (contentFrame?.Content is EditorView ev)
                         return ev.GetSnapshot();
                 }
                 return null;
@@ -100,7 +102,7 @@ public partial class App : Application
                 if (desktop.MainWindow is Views.MainWindow mw)
                 {
                     var contentFrame = mw.FindControl<ContentControl>("ContentFrame");
-                    if (contentFrame?.Content is ShareX.ImageEditor.Views.EditorView ev)
+                    if (contentFrame?.Content is EditorView ev)
                         return ev.GetSnapshot();
                 }
                 return null;
@@ -176,7 +178,7 @@ public partial class App : Application
                 ImageEncoderService.CreateDefault(() => PathsManager.GetFFmpegPath()));
 
             // Wire up Editor clipboard to platform implementation
-            ShareX.ImageEditor.Services.EditorServices.Clipboard = new Services.EditorClipboardAdapter();
+            EditorServices.Clipboard = new Services.EditorClipboardAdapter();
 
             // Build DI container from platform and app services (single composition root)
             Services.CompositionRoot.BuildAndSetRootProvider();

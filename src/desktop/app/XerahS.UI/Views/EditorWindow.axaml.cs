@@ -24,7 +24,7 @@
 #endregion License Information (GPL v3)
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using ShareX.ImageEditor.Helpers;
+using ShareX.ImageEditor.Presentation.Theming;
 
 namespace XerahS.UI.Views
 {

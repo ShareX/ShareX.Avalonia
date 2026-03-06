@@ -34,7 +34,7 @@ using XerahS.Core;
 using XerahS.Core.Managers;
 using XerahS.Core.Tasks;
 using XerahS.Platform.Abstractions;
-using BitmapConversionHelpers = ShareX.ImageEditor.Helpers.BitmapConversionHelpers;
+using BitmapConversionHelpers = ShareX.ImageEditor.Presentation.Rendering.BitmapConversionHelpers;
 
 namespace XerahS.UI.ViewModels;
 
