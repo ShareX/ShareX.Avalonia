@@ -255,6 +255,9 @@ public enum WorkflowType // Localized
     [Description("Image editor")]
     ImageEditor,
     [Category(EnumExtensions.WorkflowType_Category_Tools)]
+    [Description("Video editor")]
+    VideoEditor,
+    [Category(EnumExtensions.WorkflowType_Category_Tools)]
     [Description("Image combiner")]
     ImageCombiner,
     [Category(EnumExtensions.WorkflowType_Category_Tools)]

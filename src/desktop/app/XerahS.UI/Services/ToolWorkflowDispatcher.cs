@@ -62,6 +62,10 @@ internal static class ToolWorkflowDispatcher
                 dispatchTask = OpenImageEditorAsync(owner);
                 return true;
 
+            case WorkflowType.VideoEditor:
+                dispatchTask = OpenVideoEditorAsync(owner);
+                return true;
+
             case WorkflowType.HashCheck:
                 dispatchTask = HashCheckToolService.HandleWorkflowAsync(workflowType, owner);
                 return true;
@@ -162,6 +166,51 @@ internal static class ToolWorkflowDispatcher
         catch (Exception ex)
         {
             DebugHelper.WriteException(ex, "Failed to open image in editor");
+        }
+    }
+
+    private static async Task OpenVideoEditorAsync(Window? owner)
+    {
+        try
+        {
+            var topLevel = owner != null ? TopLevel.GetTopLevel(owner) : null;
+            if (topLevel == null)
+            {
+                return;
+            }
+
+            var options = new FilePickerOpenOptions
+            {
+                Title = "Open Video in Editor",
+                AllowMultiple = false,
+                FileTypeFilter =
+                [
+                    new FilePickerFileType("Video Files")
+                    {
+                        Patterns = ["*.mp4", "*.webm", "*.mov", "*.mkv", "*.avi", "*.m4v", "*.gif"]
+                    },
+                    FilePickerFileTypes.All
+                ]
+            };
+
+            var files = await topLevel.StorageProvider.OpenFilePickerAsync(options);
+            if (files.Count < 1)
+            {
+                return;
+            }
+
+            var path = files[0].TryGetLocalPath();
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            {
+                return;
+            }
+
+            string ffmpegPath = PathsManager.GetFFmpegPath();
+            await PlatformServices.UI.ShowVideoEditorAsync(path, string.IsNullOrEmpty(ffmpegPath) ? null : ffmpegPath);
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteException(ex, "Failed to open video in editor");
         }
     }
 }
