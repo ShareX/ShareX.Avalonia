@@ -250,7 +250,15 @@ namespace XerahS.UI.Views
                 var navItem = FindNavigationItemByTag(navView.MenuItems, navTag);
                 if (navItem != null)
                 {
-                    if (!ReferenceEquals(navView.SelectedItem, navItem))
+                    if (IsActionOnlyNavTag(navTag))
+                    {
+                        // Action-only items must not change nav selection — execute directly.
+                        if (contentFrame != null)
+                        {
+                            handled = HandleNavigationTag(navTag, contentFrame);
+                        }
+                    }
+                    else if (!ReferenceEquals(navView.SelectedItem, navItem))
                     {
                         navView.SelectedItem = navItem;
                         handled = true;
