@@ -32,6 +32,7 @@ using XerahS.Platform.Abstractions;
 using XerahS.UI.ViewModels;
 using ShareX.ImageEditor.Presentation.ViewModels;
 using ShareX.ImageEditor.Presentation.Views;
+using ShareX.VideoEditor.Hosting;
 using SkiaSharp;
 
 namespace XerahS.UI.Services
@@ -151,6 +152,19 @@ namespace XerahS.UI.Services
             });
 
             return await tcs.Task;
+        }
+
+        public async Task<string?> ShowVideoEditorAsync(string videoPath, string? ffmpegPath)
+        {
+            return await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var options = new VideoEditorOptions
+                {
+                    VideoPath = videoPath,
+                    FFmpegPath = ffmpegPath ?? string.Empty
+                };
+                return AvaloniaIntegration.ShowEditorDialog(options);
+            });
         }
 
         public async Task<(AfterCaptureTasks Capture, AfterUploadTasks Upload, bool Cancel)> ShowAfterCaptureWindowAsync(

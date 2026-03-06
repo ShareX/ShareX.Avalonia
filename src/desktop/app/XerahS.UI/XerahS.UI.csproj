@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\core\XerahS.Services.Abstractions\XerahS.Services.Abstractions.csproj" />
     <ProjectReference Include="..\XerahS.RegionCapture\XerahS.RegionCapture.csproj" />
     <ProjectReference Include="..\..\..\..\ShareX.ImageEditor\src\ShareX.ImageEditor\ShareX.ImageEditor.csproj" GlobalPropertiesToRemove="OS;Platform" />
+    <ProjectReference Include="..\..\..\..\ShareX.VideoEditor\src\ShareX.VideoEditor\ShareX.VideoEditor.csproj" GlobalPropertiesToRemove="OS;Platform" />
   </ItemGroup>
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
