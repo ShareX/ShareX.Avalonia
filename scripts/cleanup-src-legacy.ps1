@@ -23,7 +23,7 @@ if (-not (Test-Path $Src)) {
 # XIP0036 canonical top-level folders under src/ (do not remove)
 $KeepFolders = @("desktop", "platform", "mobile", "mobile-experimental")
 
-# Legacy folders to remove (flat projects and old Plugins; per tasks/complete/XIP0036_src_restructure.md)
+# Legacy folders to remove (flat projects and old Plugins; per docs/proposals/xip/XIP0036-xerahs-repository-file-reorganisation-plan.md)
 $LegacyFolders = @(
     "Plugins",
     "XerahS.App",

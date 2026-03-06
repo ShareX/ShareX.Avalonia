@@ -108,7 +108,7 @@ XerahS/
 Γö£ΓöÇΓöÇ docs/
 Γö£ΓöÇΓöÇ developers/
 Γö£ΓöÇΓöÇ scripts/
-Γö£ΓöÇΓöÇ tasks/
+Γö£ΓöÇΓöÇ docs/proposals/xip/
 Γö£ΓöÇΓöÇ tests/
 Γöé   Γö£ΓöÇΓöÇ XerahS.Tests/
 Γöé   ΓööΓöÇΓöÇ ShareX.Avalonia.Tests/      (optional: rename to XerahS.Avalonia.Tests)

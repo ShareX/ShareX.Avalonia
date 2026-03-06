@@ -136,7 +136,7 @@ This is **not a bug in XerahS** but requires mitigation:
 
 **Source**: [#64](https://github.com/ShareX/XerahS/issues/64) — Bo0sted's Phase 2 report
 **Severity**: High
-**Status**: Covered by [XIP0044](file:///c:/Users/liveu/source/repos/ShareX%20Team/XerahS/tasks/XIP0044-linux-global-hotkeys-not-firing-when-app-backgrounded.md)
+**Status**: Covered by [XIP0044](file:///c:/Users/liveu/source/repos/ShareX%20Team/XerahS/docs/proposals/xip/XIP0044-linux-global-hotkeys-not-firing-when-app-backgrounded.md)
 
 **Problem**: `WaylandPortalHotkeyService` successfully registers hotkeys via the `GlobalShortcuts` portal (`Response=0`, `BindShortcuts` success), but pressing the bound key produces no `Activated` signal. The hotkey is silently bound but never fires.
 

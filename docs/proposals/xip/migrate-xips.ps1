@@ -7,7 +7,7 @@ $ErrorActionPreference = "Continue"
 Set-Location "C:\Users\liveu\source\repos\ShareX Team\XerahS"
 
 # Get all XIP files
-$xipFiles = Get-ChildItem -Path "tasks" -Recurse -Filter "*.md" | Sort-Object FullName
+$xipFiles = Get-ChildItem -Path "docs/proposals/xip" -Recurse -Filter "*.md" | Sort-Object FullName
 
 Write-Host "Found $($xipFiles.Count) XIP documents to migrate" -ForegroundColor Cyan
 Write-Host ""

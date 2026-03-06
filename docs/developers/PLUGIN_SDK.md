@@ -85,4 +85,4 @@ A minimal copyable template is in **docs/templates/PluginTemplate/** (README, .c
 
 - **XerahS.UploaderPluginSdk** package README (or repo `src/desktop/core/XerahS.UploaderPluginSdk/README.md`) for the full contract list.
 - **docs/architecture/PLUGIN_AND_UPLOADERS_ARCHITECTURE_ANALYSIS.md** for architecture context.
-- **tasks/XIP0040_Plugin_Architecture_Action_Items.md** for the plugin/SDK roadmap.
+- **docs/proposals/xip/XIP0040-plugin-architecture-action-items.md** for the plugin/SDK roadmap.

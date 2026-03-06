@@ -2448,7 +2448,7 @@ src/XerahS.ScreenCapture/ScreenRecording/
 src/platform/XerahS.Platform.Windows/Recording/
 ΓööΓöÇΓöÇ WasapiAudioCapture.cs                        ΓÅ│ [NEW - IN PROGRESS]
 
-tasks/
+docs/proposals/xip/
 Γö£ΓöÇΓöÇ SIP0017_Implementation_Status_2026-01-08.md  Γ£à [NEW]
 ΓööΓöÇΓöÇ SIP0017_Progress_Summary_2026-01-08.md       Γ£à [NEW - THIS FILE]
 ```
@@ -3422,7 +3422,7 @@ WindowsPlatform.InitializeRecording():
 src/XerahS.ScreenCapture/ScreenRecording/
 ΓööΓöÇΓöÇ FFmpegRecordingService.cs          [NEW] 312 lines
 
-tasks/
+docs/proposals/xip/
 Γö£ΓöÇΓöÇ SIP0017_Implementation_Status_2026-01-08.md  [NEW]
 ΓööΓöÇΓöÇ SIP0017_Session_Summary_2026-01-08_CORRECTED.md  [NEW - THIS FILE]
 ```

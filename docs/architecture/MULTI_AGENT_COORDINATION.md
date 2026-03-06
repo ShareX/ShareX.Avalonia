@@ -157,7 +157,7 @@ Agents MUST stop and ask Antigravity if:
 
 | Task | Agent | Branch | Status |
 |------|-------|--------|--------|
-| **SIP0001: Port HelpersLib Utilities** | Codex | `feature/backend-gaps` | 📋 [Assigned](tasks/SIP0001_Port_HelpersLib_Utilities.md) |
+| **SIP0001: Port HelpersLib Utilities** | Codex | `feature/backend-gaps` | 📋 Assigned |
 | **Annotation Canvas (Phase 2)** | Copilot | `feature/annotation-canvas` | 🔥 **Next Priority** |
 | **Backend Gap Filling** | Codex | `feature/backend-gaps` | 🔥 **Next Priority** |
 | Plugin System | Antigravity | `feature/uploaders` | ✅ Complete |

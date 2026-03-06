@@ -175,4 +175,4 @@ dotnet build src/desktop/XerahS.sln -m:1
 
 Build timeout policy: if any build exceeds 5 minutes, stop it, resolve lock/process issues, and rerun.
 
-Implementation plan and file-level execution details are defined in [tasks/XIP0040_Plugin_Architecture_Action_Items.md](../../tasks/XIP0040_Plugin_Architecture_Action_Items.md).
+Implementation plan and file-level execution details are defined in [docs/proposals/xip/XIP0040-plugin-architecture-action-items.md](../proposals/xip/XIP0040-plugin-architecture-action-items.md).
