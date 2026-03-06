@@ -358,7 +358,7 @@ public class QuickTaskInfo
         new QuickTaskInfo { Name = "Save, Upload, Copy URL", AfterCapture = AfterCaptureTasks.SaveImageToFile | AfterCaptureTasks.UploadImageToHost, AfterUpload = AfterUploadTasks.CopyURLToClipboard },
         new QuickTaskInfo { Name = "Save only", AfterCapture = AfterCaptureTasks.SaveImageToFile, AfterUpload = AfterUploadTasks.None },
         new QuickTaskInfo { Name = "Copy to clipboard", AfterCapture = AfterCaptureTasks.CopyImageToClipboard, AfterUpload = AfterUploadTasks.None },
-        new QuickTaskInfo { Name = "Annotate", AfterCapture = AfterCaptureTasks.AnnotateImage, AfterUpload = AfterUploadTasks.None },
+        new QuickTaskInfo { Name = "Annotate", AfterCapture = AfterCaptureTasks.AnnotateMedia, AfterUpload = AfterUploadTasks.None },
     };
 }
 

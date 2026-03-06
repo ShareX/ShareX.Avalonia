@@ -98,7 +98,7 @@ namespace XerahS.Core.Tasks.Processors
             }
 
             // Annotation should happen BEFORE save, so the saved file includes annotations
-            if (settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateImage))
+            if (settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateMedia))
             {
                 if (info.Metadata?.Image != null && PlatformServices.UI != null)
                 {

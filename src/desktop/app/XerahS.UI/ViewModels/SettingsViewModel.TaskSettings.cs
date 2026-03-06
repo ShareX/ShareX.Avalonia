@@ -115,15 +115,15 @@ namespace XerahS.UI.ViewModels
             }
         }
 
-        public bool AnnotateImage
+        public bool AnnotateMedia
         {
-            get => ActiveTaskSettings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateImage);
+            get => ActiveTaskSettings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateMedia);
             set
             {
                 if (value)
-                    ActiveTaskSettings.AfterCaptureJob |= AfterCaptureTasks.AnnotateImage;
+                    ActiveTaskSettings.AfterCaptureJob |= AfterCaptureTasks.AnnotateMedia;
                 else
-                    ActiveTaskSettings.AfterCaptureJob &= ~AfterCaptureTasks.AnnotateImage;
+                    ActiveTaskSettings.AfterCaptureJob &= ~AfterCaptureTasks.AnnotateMedia;
                 OnPropertyChanged();
             }
         }

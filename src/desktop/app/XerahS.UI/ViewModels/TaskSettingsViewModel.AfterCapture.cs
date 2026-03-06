@@ -69,14 +69,14 @@ namespace XerahS.UI.ViewModels
             }
         }
 
-        public bool AnnotateImage
+        public bool AnnotateMedia
         {
-            get => _settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateImage);
+            get => _settings.AfterCaptureJob.HasFlag(AfterCaptureTasks.AnnotateMedia);
             set
             {
-                if (AnnotateImage != value)
+                if (AnnotateMedia != value)
                 {
-                    UpdateAfterCaptureTask(AfterCaptureTasks.AnnotateImage, value);
+                    UpdateAfterCaptureTask(AfterCaptureTasks.AnnotateMedia, value);
                     OnPropertyChanged();
                 }
             }

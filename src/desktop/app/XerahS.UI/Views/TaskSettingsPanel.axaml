@@ -66,7 +66,7 @@
                                     <CheckBox IsChecked="{Binding CopyImageToClipboard}" Content="Copy image to clipboard"/>
                                     <CheckBox IsChecked="{Binding UploadImageToHost}" Content="Upload image to host" FontWeight="SemiBold"/>
                                     <CheckBox IsChecked="{Binding ApplyImageEffects}" Content="Apply image effects"/>
-                                    <CheckBox IsChecked="{Binding AnnotateImage}" Content="Annotate image"/>
+                                    <CheckBox IsChecked="{Binding AnnotateMedia}" Content="Annotate media"/>
                                     <CheckBox IsChecked="{Binding ShowAfterCaptureWindow}" Content="Show after capture window"/>
                                 </StackPanel>
                             </Border>

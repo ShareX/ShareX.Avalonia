@@ -58,7 +58,7 @@ public class TaskSettings
 
     public WorkflowType Job = WorkflowType.None;
 
-    public AfterCaptureTasks AfterCaptureJob = AfterCaptureTasks.AnnotateImage | AfterCaptureTasks.CopyImageToClipboard | AfterCaptureTasks.SaveImageToFile;
+    public AfterCaptureTasks AfterCaptureJob = AfterCaptureTasks.AnnotateMedia | AfterCaptureTasks.CopyImageToClipboard | AfterCaptureTasks.SaveImageToFile;
 
     public AfterUploadTasks AfterUploadJob = AfterUploadTasks.CopyURLToClipboard;
 
@@ -213,7 +213,7 @@ public class TaskSettingsGeneral
     public SizeI ToastWindowSize = new SizeI(400, 300);
     public ToastClickAction ToastWindowLeftClickAction = ToastClickAction.OpenUrl;
     public ToastClickAction ToastWindowRightClickAction = ToastClickAction.CloseNotification;
-    public ToastClickAction ToastWindowMiddleClickAction = ToastClickAction.AnnotateImage;
+    public ToastClickAction ToastWindowMiddleClickAction = ToastClickAction.AnnotateMedia;
     public bool ToastWindowAutoHide = true;
     public bool DisableNotificationsOnFullscreen = false;
     public bool UseCustomCaptureSound = false;

@@ -310,7 +310,7 @@ public partial class AutoCaptureViewModel : ViewModelBase, IDisposable
                 Job = WorkflowType.PrintScreen,
                 AfterCaptureJob = (SettingsManager.DefaultTaskSettings?.AfterCaptureJob
                     ?? (AfterCaptureTasks.CopyImageToClipboard | AfterCaptureTasks.SaveImageToFile))
-                    & ~AfterCaptureTasks.AnnotateImage,
+                    & ~AfterCaptureTasks.AnnotateMedia,
                 AfterUploadJob = SettingsManager.DefaultTaskSettings?.AfterUploadJob
                     ?? AfterUploadTasks.CopyURLToClipboard,
                 GeneralSettings = new TaskSettingsGeneral

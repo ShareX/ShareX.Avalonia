@@ -275,8 +275,8 @@ public partial class ToastViewModel : ObservableObject, IDisposable
                 CopyUrl();
                 break;
 
-            case ToastClickAction.AnnotateImage:
-                AnnotateImage();
+            case ToastClickAction.AnnotateMedia:
+                AnnotateMedia();
                 break;
 
             case ToastClickAction.Upload:
@@ -431,23 +431,31 @@ public partial class ToastViewModel : ObservableObject, IDisposable
         }
     }
 
-    private async void AnnotateImage()
+    private async void AnnotateMedia()
     {
-        if (!string.IsNullOrEmpty(_config.FilePath) && FileHelpers.IsImageFile(_config.FilePath))
+        if (string.IsNullOrEmpty(_config.FilePath)) return;
+
+        try
         {
-            try
+            if (FileHelpers.IsImageFile(_config.FilePath))
             {
-                // Load image and use UI service to open editor
                 using var bitmap = SKBitmap.Decode(_config.FilePath);
                 if (bitmap != null)
                 {
                     await PlatformServices.UI.ShowEditorAsync(bitmap);
                 }
             }
-            catch (Exception ex)
+            else
             {
-                DebugHelper.WriteException(ex, "Failed to annotate image from toast");
+                string ffmpegPath = XerahS.Common.PathsManager.GetFFmpegPath();
+                await PlatformServices.UI.ShowVideoEditorAsync(
+                    _config.FilePath,
+                    string.IsNullOrEmpty(ffmpegPath) ? null : ffmpegPath);
             }
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteException(ex, "Failed to annotate media from toast");
         }
     }
 

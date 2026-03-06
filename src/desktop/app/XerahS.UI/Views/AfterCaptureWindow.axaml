@@ -143,9 +143,9 @@
               <CheckBox Content="Copy image to clipboard"
                         IsChecked="{Binding CopyImageToClipboard}"
                         AutomationProperties.Name="Copy Image to Clipboard"/>
-              <CheckBox Content="Annotate image"
-                        IsChecked="{Binding AnnotateImage}"
-                        AutomationProperties.Name="Annotate Image"/>
+              <CheckBox Content="Annotate media"
+                        IsChecked="{Binding AnnotateMedia}"
+                        AutomationProperties.Name="Annotate Media"/>
               <CheckBox Content="Upload image to host"
                         IsChecked="{Binding UploadImageToHost}"
                         AutomationProperties.Name="Upload Image to Host"/>

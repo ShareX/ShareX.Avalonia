@@ -36,6 +36,7 @@ using XerahS.RegionCapture.ScreenRecording;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using RecordingCaptureMode = XerahS.RegionCapture.ScreenRecording.CaptureMode;
 
 namespace XerahS.UI;
 
@@ -309,11 +310,11 @@ public class TrayIconHelper : INotifyPropertyChanged
     {
         switch (options.Mode)
         {
-            case CaptureMode.Region:
+            case RecordingCaptureMode.Region:
                 // Use the specified region
                 return options.Region;
 
-            case CaptureMode.Window:
+            case RecordingCaptureMode.Window:
                 // Get window bounds from platform services
                 if (options.TargetWindowHandle != IntPtr.Zero)
                 {
@@ -327,9 +328,9 @@ public class TrayIconHelper : INotifyPropertyChanged
                     }
                 }
                 // Fall through to screen mode if window bounds fail
-                goto case CaptureMode.Screen;
+                goto case RecordingCaptureMode.Screen;
 
-            case CaptureMode.Screen:
+            case RecordingCaptureMode.Screen:
             default:
                 // Get primary screen bounds
                 var screens = Platform.Abstractions.PlatformServices.Screen.GetAllScreens();
