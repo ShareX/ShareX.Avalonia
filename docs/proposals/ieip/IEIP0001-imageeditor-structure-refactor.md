@@ -1,4 +1,4 @@
-# EIP0001: ImageEditor Structure Refactor
+# IEIP0001: ImageEditor Structure Refactor
 
 ## Status
 - Status: Implemented on March 6, 2026. Follow-up cleanup phases added March 6, 2026.
