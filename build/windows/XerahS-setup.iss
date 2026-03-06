@@ -124,11 +124,19 @@ var
   ResultCode: Integer;
 begin
   DaemonWasRunning := False;
-  if Exec('taskkill.exe', '/F /IM xerahs-watchfolder-daemon.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
-    DaemonWasRunning := (ResultCode = 0);
-  { Ignore exit codes: 0 = killed, 1/128 = not found; wait briefly for handle release }
+  { Graceful shutdown first: sends WM_CLOSE / CTRL_BREAK without /F }
+  if Exec('taskkill.exe', '/IM xerahs-watchfolder-daemon.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode) then
+  begin
+    if ResultCode = 0 then
+    begin
+      DaemonWasRunning := True;
+      Sleep(2000); { Give the daemon time to exit cleanly }
+    end;
+  end;
+  { Safety net: force-terminate any remaining instance }
+  Exec('taskkill.exe', '/F /IM xerahs-watchfolder-daemon.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
   if DaemonWasRunning then
-    Sleep(500);
+    Sleep(500); { Brief pause for OS to release file handles }
 end;
 
 procedure StartWatchFolderDaemon();
@@ -147,7 +155,8 @@ end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if CurStep = ssPostInstall then
+  { Only restart the daemon if it was running before the install }
+  if (CurStep = ssPostInstall) and DaemonWasRunning then
     StartWatchFolderDaemon();
 end;
 
