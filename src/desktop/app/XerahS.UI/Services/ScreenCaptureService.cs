@@ -165,6 +165,24 @@ namespace XerahS.UI.Services
 
         public async Task<SKBitmap?> CaptureRegionAsync(CaptureOptions? options = null)
         {
+            // On Linux, when UseModernCapture is true use the XDG Portal / system dialog for region capture
+            // (behaviour prior to commit 58283cb). When false, use in-app overlay with crosshair.
+            if (OperatingSystem.IsLinux() && (options?.UseModernCapture ?? true))
+            {
+                try
+                {
+                    var portalBitmap = await _platformImpl.CaptureRegionAsync(options);
+                    if (portalBitmap != null)
+                        DebugHelper.WriteLine("[RegionCapture] Region captured via platform (XDG Portal / system dialog).");
+                    return portalBitmap;
+                }
+                catch (Exception ex)
+                {
+                    DebugHelper.WriteLine($"[RegionCapture] Platform region capture failed ({ex.Message}); falling back to overlay.");
+                    // Fall through to overlay path
+                }
+            }
+
             DateTime sessionStartUtc = DateTime.UtcNow;
             DebugHelper.WriteLine($"[RegionCapture] Milestone: region capture started (+0 ms)");
 

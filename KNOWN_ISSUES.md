@@ -8,7 +8,7 @@
 ## Linux
 
 ### Region Capture / Screenshot
-- **XDG Portal vs in-app overlay (commit 58283cb13900be85ede524022c5d5dc46877eebd):** Up to and including commit `58283cb13900be85ede524022c5d5dc46877eebd`, region capture on Linux used the XDG Portal to take a screenshot (system dialog). After that commit, XerahS uses its own overlay with crosshair for region selection. The overlay path can be sluggish (e.g. delay before the crosshair receives pointer events on Wayland) and may exhibit DPI/positioning issues in mixed-DPI setups.
+- **XDG Portal vs in-app overlay (commit 58283cb13900be85ede524022c5d5dc46877eebd):** Up to and including commit `58283cb13900be85ede524022c5d5dc46877eebd`, region capture on Linux used the XDG Portal to take a screenshot (system dialog). After that commit, XerahS uses its own overlay with crosshair for region selection by default. The overlay path can be sluggish (e.g. delay before the crosshair receives pointer events on Wayland) and may exhibit DPI/positioning issues in mixed-DPI setups. **Option:** Check **Use modern capture** in capture settings to use the XDG Portal / system dialog for region capture (old behaviour). Uncheck it to use the in-app overlay with crosshair.
 
 ### Global Hotkeys
 - **Global hotkeys not firing when app is backgrounded (XIP0044):** On Linux (Wayland / XWayland), global hotkeys currently only trigger when XerahS is the active window. When the app is minimised or another window has focus, registered shortcuts (e.g. screenshot/recording) do not fire, making them unusable for normal background usage. See `docs/proposals/xip/XIP0044-linux-global-hotkeys-not-firing-when-app-backgrounded.md` for analysis and planned fixes.
