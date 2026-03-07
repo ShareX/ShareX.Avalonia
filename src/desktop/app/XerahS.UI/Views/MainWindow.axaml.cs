@@ -67,6 +67,16 @@ namespace XerahS.UI.Views
             InitializeComponent();
             KeyDown += OnKeyDown;
 
+#if !DEBUG
+            // Video Editor is a work-in-progress; hide it in release builds.
+            var menuItemVideoEditor = this.FindControl<MenuItem>("MenuItemVideoEditor");
+            if (menuItemVideoEditor != null)
+                menuItemVideoEditor.IsVisible = false;
+            var navItemVideoEditor = this.FindControl<NavigationViewItem>("NavItemVideoEditor");
+            if (navItemVideoEditor != null)
+                navItemVideoEditor.IsVisible = false;
+#endif
+
             // Set initial theme and subscribe to changes
             RequestedThemeVariant = ThemeManager.GetCurrentTheme();
             ThemeManager.ThemeChanged += (s, theme) => RequestedThemeVariant = theme;

@@ -108,7 +108,7 @@
                     <MenuItem Header="Image _Thumbnailer..." Click="OnMenuNavigateClick" Tag="Tools_ImageThumbnailer"/>
                     <MenuItem Header="_Analyze Image..." Click="OnMenuNavigateClick" Tag="Tools_AnalyzeImage"/>
                     <Separator/>
-                    <MenuItem Header="_Video Editor..." Click="OnMenuNavigateClick" Tag="Tools_VideoEditor"/>
+                    <MenuItem Name="MenuItemVideoEditor" Header="_Video Editor..." Click="OnMenuNavigateClick" Tag="Tools_VideoEditor"/>
                     <MenuItem Header="_Video Converter..." Click="OnMenuNavigateClick" Tag="Tools_VideoConverter"/>
                     <MenuItem Header="Video Thumb_nailer..." Click="OnMenuNavigateClick" Tag="Tools_VideoThumbnailer"/>
                     <Separator/>
@@ -207,7 +207,7 @@
                         <ui:NavigationViewItem Content="Image Combiner..." Tag="Tools_ImageCombiner" SelectsOnInvoked="False" AutomationProperties.Name="Image Combiner Tool"/>
                         <ui:NavigationViewItem Content="Image Splitter..." Tag="Tools_ImageSplitter" SelectsOnInvoked="False" AutomationProperties.Name="Image Splitter Tool"/>
                         <ui:NavigationViewItem Content="Image Thumbnailer..." Tag="Tools_ImageThumbnailer" SelectsOnInvoked="False" AutomationProperties.Name="Image Thumbnailer Tool"/>
-                        <ui:NavigationViewItem Content="Video Editor..." Tag="Tools_VideoEditor" SelectsOnInvoked="False" AutomationProperties.Name="Video Editor Tool"/>
+                        <ui:NavigationViewItem Name="NavItemVideoEditor" Content="Video Editor..." Tag="Tools_VideoEditor" SelectsOnInvoked="False" AutomationProperties.Name="Video Editor Tool"/>
                         <ui:NavigationViewItem Content="Video Converter..." Tag="Tools_VideoConverter" SelectsOnInvoked="False" AutomationProperties.Name="Video Converter Tool"/>
                         <ui:NavigationViewItem Content="Video Thumbnailer..." Tag="Tools_VideoThumbnailer" SelectsOnInvoked="False" AutomationProperties.Name="Video Thumbnailer Tool"/>
                         <ui:NavigationViewItem Content="Analyze Image..." Tag="Tools_AnalyzeImage" SelectsOnInvoked="False" AutomationProperties.Name="Image Analyzer Tool"/>
