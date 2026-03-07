@@ -11,6 +11,25 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 ## Unreleased
 
 
+## v0.19.9
+
+### Features
+- **Uploaders**: Add URL shortener foundation and Bitly URL shortener plugin support `(af65a13b)`
+
+### Fixes
+- **Linux**: Improve region capture cropping for physical-resolution desktops, including KDE Plasma portal bitmaps and X11 overlay positioning `(2c538a18, 5f60ca94, fd15830a)`
+- **Linux**: Add region capture diagnostics, detect XWayland vs native Wayland, and restore fast overlay region capture `(bb8548cd, f20211f4, ac69ff73)`
+
+### Refactor
+- **Indexer**: Share tree helpers and settings types, collapse async adapters, and externalize HTML styles `(5b3b5ad6, b9b6913e, b7a1580d, 6a7608bd)`
+
+### Build
+- **ImageEditor**: Replace the redundant legacy submodule layout and update embedded ShareX.ImageEditor integration `(99c79b0f, 259307a3, 10b04276)`
+
+### Documentation
+- **XIP0047**: Summarize Linux region capture DPI and performance investigation, including X11 overlay shift and KDE physical-bitmap crop fixes `(abdba2b1, af43a177)`
+
+
 ## v0.19.8
 
 ### Features
