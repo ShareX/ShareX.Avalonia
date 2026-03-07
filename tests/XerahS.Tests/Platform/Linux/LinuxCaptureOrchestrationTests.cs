@@ -32,6 +32,7 @@ using XerahS.Platform.Linux.Capture.Contracts;
 using XerahS.Platform.Linux.Capture.Orchestration;
 using XerahS.Platform.Linux.Capture.Portal;
 using XerahS.Platform.Linux.Capture.Providers;
+using XerahS.Platform.Linux.Recording;
 
 namespace XerahS.Tests.Platform.Linux;
 
@@ -220,6 +221,28 @@ public class LinuxCaptureOrchestrationTests
             Assert.That(PortalScreenCapture.ShouldTryFallbackLookup(PortalScreenCapture.PortalResponseSuccess), Is.False);
             Assert.That(PortalScreenCapture.ShouldTryFallbackLookup(PortalScreenCapture.PortalResponseCancelled), Is.False);
             Assert.That(PortalScreenCapture.ShouldTryFallbackLookup(PortalScreenCapture.PortalResponseFailed), Is.True);
+        });
+    }
+
+    [Test]
+    public void WaylandPortalRecordingService_GnomeWayland_PrefersCpuGStreamer()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(WaylandPortalRecordingService.ShouldPreferCpuGStreamerPath("wayland", "GNOME", null, null), Is.True);
+            Assert.That(WaylandPortalRecordingService.ShouldPreferCpuGStreamerPath("wayland", "ubuntu:GNOME", null, null), Is.True);
+            Assert.That(WaylandPortalRecordingService.ShouldPreferCpuGStreamerPath("wayland", null, "gnome", null), Is.True);
+        });
+    }
+
+    [Test]
+    public void WaylandPortalRecordingService_NonGnomeOrNonWayland_DoesNotPreferCpuGStreamer()
+    {
+        Assert.Multiple(() =>
+        {
+            Assert.That(WaylandPortalRecordingService.ShouldPreferCpuGStreamerPath("wayland", "Hyprland", null, null), Is.False);
+            Assert.That(WaylandPortalRecordingService.ShouldPreferCpuGStreamerPath("wayland", null, null, "sway"), Is.False);
+            Assert.That(WaylandPortalRecordingService.ShouldPreferCpuGStreamerPath("x11", "GNOME", null, null), Is.False);
         });
     }
 

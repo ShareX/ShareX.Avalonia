@@ -98,7 +98,18 @@ public sealed class WaylandPortalRecordingService : IRecordingService
             // Fall back to portal + GStreamer/FFmpeg approach
             InitializePortalSession(options).GetAwaiter().GetResult();
 
-            var (executable, args, useGStreamer) = BuildRecordingCommand(options, _pipewireNodeId, _pipewireSourceWidth, _pipewireSourceHeight);
+            bool preferCpuGStreamer = ShouldPreferCpuGStreamerPath();
+            if (preferCpuGStreamer)
+            {
+                DebugHelper.WriteLine("[WaylandPortalRecording] GNOME Wayland detected; preferring CPU GStreamer pipeline to avoid black GL captures.");
+            }
+
+            var (executable, args, useGStreamer) = BuildRecordingCommand(
+                options,
+                _pipewireNodeId,
+                _pipewireSourceWidth,
+                _pipewireSourceHeight,
+                preferCpuGStreamer);
             DebugHelper.WriteLine($"[WaylandPortalRecording] Using {(useGStreamer ? "GStreamer" : "FFmpeg")}");
             DebugHelper.WriteLine($"[WaylandPortalRecording] Command: {executable} {args}");
 
@@ -110,8 +121,8 @@ public sealed class WaylandPortalRecordingService : IRecordingService
                 //   (b) GL path without filter → glupload "unhandled format" on some systems
                 // The fallback (no GL) uses videoconvert which handles both raw and DMABuf universally.
                 string? fallbackGstArgs = null;
-                bool hasGlElements = HasGStreamerElement("gldownload") && HasGStreamerElement("glupload");
-                if (hasGlElements)
+                bool primaryUsesGl = !preferCpuGStreamer && HasGStreamerElement("gldownload") && HasGStreamerElement("glupload");
+                if (primaryUsesGl)
                 {
                     // options.OutputPath was resolved (and possibly extension-adjusted) by BuildRecordingCommand above.
                     var (fallbackPipeline, _) = BuildGStreamerPipeline(options, _pipewireNodeId,
@@ -755,6 +766,26 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         }
     }
 
+    internal static bool ShouldPreferCpuGStreamerPath(
+        string? sessionType = null,
+        string? currentDesktop = null,
+        string? sessionDesktop = null,
+        string? desktopSession = null)
+    {
+        sessionType ??= Environment.GetEnvironmentVariable("XDG_SESSION_TYPE");
+        if (!string.Equals(sessionType, "wayland", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string desktopHints =
+            $"{currentDesktop ?? Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP")} " +
+            $"{sessionDesktop ?? Environment.GetEnvironmentVariable("XDG_SESSION_DESKTOP")} " +
+            $"{desktopSession ?? Environment.GetEnvironmentVariable("DESKTOP_SESSION")}";
+
+        return desktopHints.Contains("GNOME", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static bool HasWfRecorder()
     {
         try
@@ -823,7 +854,12 @@ public sealed class WaylandPortalRecordingService : IRecordingService
                desktopSession.Contains("SWAY");
     }
 
-    private static (string executable, string arguments, bool useGStreamer) BuildRecordingCommand(RecordingOptions options, uint pipeWireNodeId, int sourceWidth = 0, int sourceHeight = 0)
+    private static (string executable, string arguments, bool useGStreamer) BuildRecordingCommand(
+        RecordingOptions options,
+        uint pipeWireNodeId,
+        int sourceWidth = 0,
+        int sourceHeight = 0,
+        bool preferCpuGStreamer = false)
     {
         var settings = options.Settings ?? new ScreenRecordingSettings();
         string outputPath = options.OutputPath ?? GetDefaultOutputPath();
@@ -839,7 +875,13 @@ public sealed class WaylandPortalRecordingService : IRecordingService
         {
             DebugHelper.WriteLine("[WaylandPortalRecording] FFmpeg lacks pipewire support, using GStreamer");
             // -e flag: send EOS on SIGINT for proper file finalization
-            var (pipeline, actualOutputPath) = BuildGStreamerPipeline(options, pipeWireNodeId, outputPath, sourceWidth, sourceHeight);
+            var (pipeline, actualOutputPath) = BuildGStreamerPipeline(
+                options,
+                pipeWireNodeId,
+                outputPath,
+                sourceWidth,
+                sourceHeight,
+                useGl: !preferCpuGStreamer);
 
             // Update options with the actual output path (may differ if muxer changed, e.g. .mp4 -> .mkv)
             if (!string.Equals(outputPath, actualOutputPath, StringComparison.Ordinal))

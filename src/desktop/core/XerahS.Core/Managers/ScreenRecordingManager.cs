@@ -460,6 +460,7 @@ public class ScreenRecordingManager
 
                 TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", "Calling recordingService.StartRecordingAsync");
                 await recordingService.StartRecordingAsync(optionsToStart);
+                UpdateFinalOutputExtensionFromSegmentPath(optionsToStart.OutputPath);
 
                 TroubleshootingHelper.Log("ScreenRecorder", "MANAGER", "Recording started successfully");
 
@@ -620,6 +621,42 @@ public class ScreenRecordingManager
 
         var segmentPath = BuildSegmentPath(_finalOutputPath!, _segmentIndex++);
         return CloneOptions(options, segmentPath);
+    }
+
+    private void UpdateFinalOutputExtensionFromSegmentPath(string? actualSegmentPath)
+    {
+        if (string.IsNullOrWhiteSpace(actualSegmentPath))
+        {
+            return;
+        }
+
+        string actualExtension = Path.GetExtension(actualSegmentPath);
+        if (string.IsNullOrWhiteSpace(actualExtension))
+        {
+            return;
+        }
+
+        lock (_lock)
+        {
+            if (string.IsNullOrWhiteSpace(_finalOutputPath))
+            {
+                return;
+            }
+
+            string currentExtension = Path.GetExtension(_finalOutputPath);
+            if (string.Equals(currentExtension, actualExtension, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _finalOutputPath = Path.ChangeExtension(_finalOutputPath, actualExtension);
+            if (_resumeOptions != null)
+            {
+                _resumeOptions.OutputPath = _finalOutputPath;
+            }
+
+            DebugHelper.WriteLine($"ScreenRecordingManager: Adjusted final output extension to match recorder container: {_finalOutputPath}");
+        }
     }
 
     private async Task StartRecordingInternalAsync(RecordingOptions options, bool isResume)
