@@ -10,7 +10,34 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 ## Unreleased
 
-## v0.19.1
+
+## v0.19.8
+
+### Features
+- **Video Editor**: Integrate ShareX.VideoEditor; add WorkflowType.VideoEditor, Tools menu and sidebar nav, AnnotateMedia (renamed from AnnotateImage) with toast dispatch to VideoEditor; open editor after recording when AnnotateMedia set; headless stubs and IUIService wiring `(5a969637, 66dd517c, 5a3f3d20, d3edd7c2, 3e8b9203, b0cf726c, f4e081df, 65a8a0f2)`
+
+### Fixes
+- **Linux**: UseModernCapture option (XDG Portal vs overlay), Wayland region capture and mixed-DPI bounds, GNOME portal recording output, double region-selection prompt fix; KDE Spectacle and GNOME fallbacks (XIP0046-C); system tray SNI (GNOME/Wayland); systemd user unit path via UserProfile `(8e2f372b, 8b686d9c, 792f9f5c, 5aafdad2, ad0f48d5, 58283cb1, 6426a6c6, 17a52cdc, 74dd1532, ffa8f982)`
+- **Core**: Validate URL before OpenURL Process.Start; SaveRequested/SaveAsRequested for embedded and standalone editor; fall back to File-category instances when no Image uploader; default white tray icon on Linux/macOS; Tools_* nav items and VideoEditor dispatch; AnnotateImage JSON deserialization; Linux portal handle format and RPM packaging `(d16c0179, 6595731d, 7ec997c0, 63f81ce6, ddf64eb5, e9f8594b, b4b47f53, 1172b9a5, c6e9dd21)`
+- **ImageEditor**: Submodule updates and macOS build; add ShareX.ImageEditor at develop; Zoom to Fit in zoom picker; §7a easy wins (Random.Shared, Category overrides, Gamma LUT cache) `(03833f97, aa407405, ae2a7ac6, 3179068a, 18c11a48, aeba3c67, 81d9cfee, 16e6f52d, 36dfd283, 6ab5833c, 6c220749, 8a8a493d, c65cb432, a13faf83, e3e01c2f)`
+- **VideoEditor submodule**: Button theme isolation and ReactiveUI main thread scheduler fixes `(ac7a1eec, 672a1e09)`
+- **Watch Folder**: Support legacy watchfolder.service `(9d291a15)`
+- **Core**: Hide Video Editor from Tools menu in release builds `(692cb5a0)`
+
+### Refactor
+- **ImageEditor**: Advance Phase 1 commits; migrate to new namespaces; rename submodule and sync references `(512e4216, eebd11e3, 6d58166f)`
+- **Core**: Centralize plugins path selection in PathsManager `(1ec799ac)`
+
+### Build
+- **Core**: Enforce standard release notes block; version bump to 0.19.7 `(88287c36, 7b601c62)`
+
+### Documentation
+- **Core**: Move image editor refactor proposal to IEIP; move proposals into docs/proposals; Backend Porting checklist (March 2026); EIP0001 phases A/B/C; OS-specific known issues and Linux hotkey workaround; XIP0046 summary (Issues C, D, E fixed); FFMPEG.md; XIP0042/XIP0044/XIP0046 task docs; run-debug-app.ps1; VEIP0001 and XIP0046 proposal `(cc325496, 73d661ce, d21b4a9a, 26c25e9b, bd700307, fb3c0400, daf7c1f9, 18b424ae, 7594c988, 87fa948d, efe3a4c7, c17a71d9, b733f172, 41e1d9c0, f315361d)`
+
+### Performance
+- **Core**: Faster overlay and smoother crosshair on Linux (region capture) `(a6e93903)`
+
+## v0.19.5
 
 ### Fixes
 - **Linux Recording**: Harden GStreamer recording by correcting region crop, removing conflicting `video/x-raw` caps before `glupload`, adding GL-to-CPU fallback, and making fatal errors selectable in RecordingView (01527ef5, ef55b9e7, 78523202, eba1e9d0, ba13d971)
@@ -32,7 +59,7 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 ## v0.19.0
 
 ### Fixes
-- **Core**: Correct DMDO_90/DMDO_270 → ModeRotation mapping in DXGI capture (b484d197)
+- **Core**: Correct DMDO_90/DMDO_270 →â†’ ModeRotation mapping in DXGI capture (b484d197)
 
 ### Documentation
 - **Core**: Fix XIP0042 markdown rendering (939f92c5)
@@ -42,7 +69,7 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 ### Changed
 - **Core**: [Docs] Shorten XIP0043 title and backup filename; sync XIP0038/XIP0040 slugs (8ebe0ae8)
 - **Core**: [Docs] XIP sync: GitHub source of truth, single-folder backup, merge script (5994bb13)
-- **Core**: [XIP0042] Second audit — update task after Jaex's Round 2 fixes (4c06d5cf)
+- **Core**: [XIP0042] Second audit â€” update task after Jaex's Round 2 fixes (4c06d5cf)
 - **Core**: [XIP0042] Sync task doc from feature/XIP0042-optimizations (latest implementation status) (b9da24b8)
 - **Core**: [XIP0042] Update GPU effects task with current codebase audit (7c70e94a)
 - **Core**: Move XIP0043 task to complete folder (2b9a95ed)

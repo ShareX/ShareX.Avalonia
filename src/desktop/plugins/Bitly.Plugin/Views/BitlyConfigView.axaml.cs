@@ -23,10 +23,20 @@
 
 #endregion License Information (GPL v3)
 
-namespace XerahS.Uploaders.PluginSystem;
+using Avalonia.Controls;
+using Avalonia.Markup.Xaml;
 
-public static class ProviderIds
+namespace ShareX.Bitly.Plugin.Views;
+
+public partial class BitlyConfigView : UserControl
 {
-    public const string Auto = "auto";
-    public const string Bitly = "bitly";
+    public BitlyConfigView()
+    {
+        InitializeComponent();
+    }
+
+    private void InitializeComponent()
+    {
+        AvaloniaXamlLoader.Load(this);
+    }
 }

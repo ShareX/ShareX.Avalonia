@@ -23,10 +23,15 @@
 
 #endregion License Information (GPL v3)
 
-namespace XerahS.Uploaders.PluginSystem;
+namespace XerahS.Uploaders;
 
-public static class ProviderIds
+/// <summary>
+/// Base class for URL shortener uploaders (plugin category UrlShortener).
+/// </summary>
+public abstract class UrlShortener : Uploader
 {
-    public const string Auto = "auto";
-    public const string Bitly = "bitly";
+    /// <summary>
+    /// Shorten the given URL and return a result with ShortenedURL set on success.
+    /// </summary>
+    public abstract UploadResult ShortenURL(string url);
 }

@@ -23,10 +23,30 @@
 
 #endregion License Information (GPL v3)
 
-namespace XerahS.Uploaders.PluginSystem;
+namespace ShareX.Bitly.Plugin;
 
-public static class ProviderIds
+/// <summary>
+/// Configuration model for Bitly URL shortener (OAuth2 + optional custom domain).
+/// </summary>
+public class BitlyConfigModel
 {
-    public const string Auto = "auto";
-    public const string Bitly = "bitly";
+    /// <summary>
+    /// Bitly OAuth2 client ID (from https://bitly.com/a/settings/advanced).
+    /// </summary>
+    public string ClientId { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Bitly OAuth2 client secret.
+    /// </summary>
+    public string ClientSecret { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional custom short domain (e.g. bit.ly or a custom branded domain).
+    /// </summary>
+    public string Domain { get; set; } = string.Empty;
+
+    /// <summary>
+    /// OAuth2 access token. Obtain via Bitly OAuth flow or paste after authorizing in browser.
+    /// </summary>
+    public string AccessToken { get; set; } = string.Empty;
 }

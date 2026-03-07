@@ -1,0 +1,1 @@
+{"pluginId":"bitly","name":"Bitly URL Shortener","version":"1.0.0","author":"ShareX Team","description":"Shorten URLs with Bitly (OAuth2)","apiVersion":"1.0","entryPoint":"ShareX.Bitly.Plugin.BitlyProvider","assemblyFileName":"XerahS.Bitly.Plugin.dll","supportedCategories":["UrlShortener"],"configViewId":"bitly","dependencies":[],"homepageUrl":"https://bitly.com/"}
