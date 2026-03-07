@@ -43,7 +43,7 @@ public sealed record MonitorInfo(
 
     /// <summary>
     /// Gets the bounds Avalonia should use when placing the overlay window.
-    /// On Wayland these are compositor/logical coordinates; elsewhere they match <see cref="PhysicalBounds"/>.
+    /// On non-Windows (Wayland, X11, macOS) these are logical coordinates so the overlay is not squashed in mixed-DPI setups; Windows uses <see cref="PhysicalBounds"/>.
     /// </summary>
     public PixelRect OverlayBounds => OverlayBoundsOverride ?? PhysicalBounds;
 
