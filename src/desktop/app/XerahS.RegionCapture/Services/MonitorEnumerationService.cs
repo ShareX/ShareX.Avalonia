@@ -63,33 +63,63 @@ public static class MonitorEnumerationService
 
         var monitors = new List<MonitorInfo>();
         var allScreens = screens.All;
+        bool isWayland = IsWaylandSession();
+        var logicalScreens = new List<AvaloniaScreenLayout>(allScreens.Count);
 
         for (int i = 0; i < allScreens.Count; i++)
         {
             var screen = allScreens[i];
-            var scaleFactor = screen.Scaling;
+            var scaleFactor = screen.Scaling > 0 ? screen.Scaling : 1.0;
 
-            var physicalBounds = new PixelRect(
+            var overlayBounds = new PixelRect(
                 screen.Bounds.X,
                 screen.Bounds.Y,
                 screen.Bounds.Width,
                 screen.Bounds.Height);
 
-            var workArea = new PixelRect(
+            var overlayWorkArea = new PixelRect(
                 screen.WorkingArea.X,
                 screen.WorkingArea.Y,
                 screen.WorkingArea.Width,
                 screen.WorkingArea.Height);
 
-            monitors.Add(new MonitorInfo(
+            logicalScreens.Add(new AvaloniaScreenLayout(
                 DeviceName: $"Display {i + 1}",
-                PhysicalBounds: physicalBounds,
-                WorkArea: workArea,
                 ScaleFactor: scaleFactor,
+                Bounds: overlayBounds,
+                WorkingArea: overlayWorkArea,
+                IsPrimary: screen.IsPrimary));
+        }
+
+        if (isWayland)
+        {
+            return WaylandMonitorLayoutNormalizer.Normalize(logicalScreens);
+        }
+
+        foreach (var screen in logicalScreens)
+        {
+            monitors.Add(new MonitorInfo(
+                DeviceName: screen.DeviceName,
+                PhysicalBounds: screen.Bounds,
+                WorkArea: screen.WorkingArea,
+                ScaleFactor: screen.ScaleFactor,
                 IsPrimary: screen.IsPrimary));
         }
 
         return monitors;
+    }
+
+    private static bool IsWaylandSession()
+    {
+        if (!OperatingSystem.IsLinux())
+        {
+            return false;
+        }
+
+        return string.Equals(
+            Environment.GetEnvironmentVariable("XDG_SESSION_TYPE"),
+            "wayland",
+            StringComparison.OrdinalIgnoreCase);
     }
 
 #if WINDOWS

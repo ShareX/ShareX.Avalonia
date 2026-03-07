@@ -32,12 +32,25 @@ public sealed record MonitorInfo(
     PixelRect PhysicalBounds,
     PixelRect WorkArea,
     double ScaleFactor,
-    bool IsPrimary)
+    bool IsPrimary,
+    PixelRect? OverlayBoundsOverride = null,
+    PixelRect? OverlayWorkAreaOverride = null)
 {
     /// <summary>
     /// Gets the DPI value for this monitor (96 * ScaleFactor).
     /// </summary>
     public double Dpi => 96.0 * ScaleFactor;
+
+    /// <summary>
+    /// Gets the bounds Avalonia should use when placing the overlay window.
+    /// On Wayland these are compositor/logical coordinates; elsewhere they match <see cref="PhysicalBounds"/>.
+    /// </summary>
+    public PixelRect OverlayBounds => OverlayBoundsOverride ?? PhysicalBounds;
+
+    /// <summary>
+    /// Gets the work area in the same coordinate space as <see cref="OverlayBounds"/>.
+    /// </summary>
+    public PixelRect OverlayWorkArea => OverlayWorkAreaOverride ?? WorkArea;
 
     /// <summary>
     /// Converts physical pixels to logical (DIPs) for this monitor.

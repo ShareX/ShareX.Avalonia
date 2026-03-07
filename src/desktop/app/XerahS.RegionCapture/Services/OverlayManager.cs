@@ -98,8 +98,19 @@ public sealed class OverlayManager : IDisposable
             }
 
             // Focus the primary monitor's overlay
-            var primaryOverlay = _overlays.FirstOrDefault(o =>
-                monitors.FirstOrDefault(m => m.IsPrimary)?.PhysicalBounds == GetOverlayMonitorBounds(o));
+            int primaryIndex = -1;
+            for (int i = 0; i < monitors.Count; i++)
+            {
+                if (monitors[i].IsPrimary)
+                {
+                    primaryIndex = i;
+                    break;
+                }
+            }
+
+            var primaryOverlay = primaryIndex >= 0 && primaryIndex < _overlays.Count
+                ? _overlays[primaryIndex]
+                : null;
 
             primaryOverlay?.Focus();
 
@@ -110,11 +121,6 @@ public sealed class OverlayManager : IDisposable
         {
             CloseAllOverlays();
         }
-    }
-
-    private static PixelRect GetOverlayMonitorBounds(OverlayWindow overlay)
-    {
-        return new PixelRect(overlay.Position.X, overlay.Position.Y, overlay.Width, overlay.Height);
     }
 
     private void CloseAllOverlays()

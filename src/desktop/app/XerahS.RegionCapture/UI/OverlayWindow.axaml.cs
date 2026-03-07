@@ -130,9 +130,9 @@ public partial class OverlayWindow : Window
         DataContext = _viewModel;
 
         // Position window to cover the entire monitor
-        Position = new AvPixelPoint((int)monitor.PhysicalBounds.X, (int)monitor.PhysicalBounds.Y);
-        Width = monitor.PhysicalBounds.Width / monitor.ScaleFactor;
-        Height = monitor.PhysicalBounds.Height / monitor.ScaleFactor;
+        Position = new AvPixelPoint((int)monitor.OverlayBounds.X, (int)monitor.OverlayBounds.Y);
+        Width = monitor.OverlayBounds.Width;
+        Height = monitor.OverlayBounds.Height;
 
         // Create and add the capture control
         _captureControl = new RegionCaptureControl(_monitor, options, initialCursor);
@@ -1026,4 +1026,3 @@ internal static class SKColorExtensions
         return Color.FromArgb(color.Alpha, color.Red, color.Green, color.Blue);
     }
 }
-
