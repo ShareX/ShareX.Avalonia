@@ -137,6 +137,21 @@ public class ScreenRecordingManager
     }
 
     /// <summary>
+    /// Planned final output path for the active recording, after backend-specific
+    /// container adjustments such as .mp4 -> .webm fallback.
+    /// </summary>
+    public string? PlannedOutputPath
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _finalOutputPath;
+            }
+        }
+    }
+
+    /// <summary>
     /// Signals the current recording task to stop.
     /// Used by the hotkey handler to resume the waiting WorkerTask.
     /// </summary>
@@ -786,6 +801,7 @@ public class ScreenRecordingManager
         if (_segments.Count == 1)
         {
             string single = _segments[0];
+            string finalOutputPath = _finalOutputPath!;
             if (!string.Equals(single, _finalOutputPath, StringComparison.OrdinalIgnoreCase))
             {
                 FileHelpers.CreateDirectoryFromFilePath(_finalOutputPath);
@@ -794,7 +810,7 @@ public class ScreenRecordingManager
 
             _segments.Clear();
             ResetSegmentState();
-            return _finalOutputPath;
+            return finalOutputPath;
         }
 
         string ffmpegPath = PathsManager.GetFFmpegPath();
@@ -804,6 +820,7 @@ public class ScreenRecordingManager
             return _segments.LastOrDefault();
         }
 
+        string finalConcatPath = _finalOutputPath!;
         string tempOutput = FileHelpers.AppendTextToFileName(_finalOutputPath, "-concat");
         await Task.Run(() =>
         {
@@ -819,7 +836,7 @@ public class ScreenRecordingManager
 
         _segments.Clear();
         ResetSegmentState();
-        return _finalOutputPath;
+        return finalConcatPath;
     }
 
     private void CleanupSegments(bool deleteFinalOutput)

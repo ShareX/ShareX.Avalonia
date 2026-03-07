@@ -530,9 +530,31 @@ namespace XerahS.Core.Tasks
                             WorkflowId = Info.TaskSettings.WorkflowId
                         };
 
-                        SKRectI selection;
                         bool isLinuxWayland = OperatingSystem.IsLinux() &&
                             Environment.GetEnvironmentVariable("XDG_SESSION_TYPE")?.Equals("wayland", StringComparison.OrdinalIgnoreCase) == true;
+
+                        // When the XDG ScreenCast portal is available it presents its own source/region
+                        // picker during recording initialisation. Showing XerahS's crosshair selector
+                        // first would force the user to select a region twice, so skip it entirely.
+                        bool portalHandlesSourceSelection = isLinuxWayland &&
+                            ScreenRecorderService.NativeRecordingServiceFactory != null;
+
+                        if (portalHandlesSourceSelection)
+                        {
+                            TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK",
+                                "Linux Wayland with portal: skipping pre-recording region selection (portal handles it)");
+
+                            if (isScreenRecordDelay && !await ApplyCaptureStartDelayAsync(taskSettings, workflowCategory, captureDelaySeconds, token))
+                            {
+                                return;
+                            }
+
+                            await HandleStartRecordingAsync(CaptureMode.Screen);
+                            TroubleshootingHelper.Log(Info.TaskSettings.Job.ToString(), "WORKER_TASK", "HandleStartRecordingAsync completed");
+                            return;
+                        }
+
+                        SKRectI selection;
 
                         if (isLinuxWayland)
                         {
