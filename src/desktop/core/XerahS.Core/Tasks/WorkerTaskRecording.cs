@@ -97,6 +97,8 @@ namespace XerahS.Core.Tasks
 
                 // 1. Start recording
                 await ScreenRecordingManager.Instance.StartRecordingAsync(recordingOptions);
+                recordingOptions.OutputPath = ScreenRecordingManager.Instance.PlannedOutputPath ?? recordingOptions.OutputPath;
+                Info.FilePath = recordingOptions.OutputPath;
                 TroubleshootingHelper.Log(taskSettings.Job.ToString(), "WORKER_TASK", "ScreenRecordingManager.StartRecordingAsync completed");
 
                 // 2. Wait for stop signal (ASYNC WAIT - Yields thread, keeps task alive)
