@@ -49,7 +49,7 @@ internal static class ToolNavigationRegistry
         ["Tools_ImageCombiner"] = new(WorkflowType.ImageCombiner, ToolNavigationDispatchMode.DirectToolService),
         ["Tools_ImageSplitter"] = new(WorkflowType.ImageSplitter, ToolNavigationDispatchMode.DirectToolService),
         ["Tools_ImageThumbnailer"] = new(WorkflowType.ImageThumbnailer, ToolNavigationDispatchMode.DirectToolService),
-        ["Tools_VideoEditor"] = new(WorkflowType.VideoEditor, ToolNavigationDispatchMode.ExecuteWorkflow),
+        ["Tools_VideoEditor"] = new(WorkflowType.VideoEditor, ToolNavigationDispatchMode.DirectToolService),
         ["Tools_VideoConverter"] = new(WorkflowType.VideoConverter, ToolNavigationDispatchMode.DirectToolService),
         ["Tools_VideoThumbnailer"] = new(WorkflowType.VideoThumbnailer, ToolNavigationDispatchMode.DirectToolService),
         ["Tools_AnalyzeImage"] = new(WorkflowType.AnalyzeImage, ToolNavigationDispatchMode.DirectToolService),
