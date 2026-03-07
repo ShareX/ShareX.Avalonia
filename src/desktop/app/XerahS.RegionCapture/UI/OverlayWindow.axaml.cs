@@ -133,8 +133,19 @@ public partial class OverlayWindow : Window
         InitializeComponent();
         DataContext = _viewModel;
 
-        // Position window to cover the entire monitor
+        // Position window to cover the entire monitor.
+        // On X11, Window.Position is in physical pixels; use PhysicalBounds to avoid placing the
+        // overlay on the wrong screen when monitors have different DPI (logical ≠ physical origin).
+        // On Wayland and other platforms, Window.Position uses compositor logical coordinates; use
+        // OverlayBounds (logical) so it matches what the compositor reports for Screen.Bounds.
+#if !WINDOWS
+        bool usePhysicalPosition = OperatingSystem.IsLinux() && !MonitorEnumerationService.IsWaylandSession();
+        var posX = usePhysicalPosition ? monitor.PhysicalBounds.X : monitor.OverlayBounds.X;
+        var posY = usePhysicalPosition ? monitor.PhysicalBounds.Y : monitor.OverlayBounds.Y;
+        Position = new AvPixelPoint((int)posX, (int)posY);
+#else
         Position = new AvPixelPoint((int)monitor.OverlayBounds.X, (int)monitor.OverlayBounds.Y);
+#endif
         Width = monitor.OverlayBounds.Width;
         Height = monitor.OverlayBounds.Height;
 

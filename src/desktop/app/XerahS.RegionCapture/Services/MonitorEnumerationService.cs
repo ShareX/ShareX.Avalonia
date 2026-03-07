@@ -130,7 +130,7 @@ public static class MonitorEnumerationService
             Math.Max(1, physical.Height / scaleFactor));
     }
 
-    private static bool IsWaylandSession()
+    internal static bool IsWaylandSession()
     {
         if (!OperatingSystem.IsLinux())
         {
