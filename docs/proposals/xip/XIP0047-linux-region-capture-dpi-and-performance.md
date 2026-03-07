@@ -1,6 +1,6 @@
 # XIP0047 — Linux Region Capture: DPI and Performance Issues
 
-**Status**: Open (mitigations implemented; some issues may persist)
+**Status**: Open (major overlay DPI regression fixed; Linux portal/hotkey/input issues still remain)
 **Priority**: High
 **Affected platform**: Linux (Wayland, mixed-DPI)
 **Related**: Commit `58283cb13900be85ede524022c5d5dc46877eebd`, KNOWN_ISSUES.md, XIP0046
@@ -62,6 +62,22 @@ This XIP summarises those issues and all attempts tried to fix or mitigate them.
 
 **Known limitation**: The 2% size tolerance heuristic could produce false positives on certain multi-monitor configurations where logical and physical bitmap sizes happen to be close. No per-monitor physical-to-logical mapping is attempted when the size check fails; the existing logical path is used as fallback.
 
+### Issue 4 — Frozen overlay smaller than monitor (Linux fast-overlay regression)
+
+**Problem**: After the earlier mixed-DPI mitigations, the overlay window itself could fill the monitor correctly while the *frozen screenshot drawn inside it* was still smaller than the monitor. This was most visible on Linux/X11-via-XWayland mixed-DPI setups: the overlay diagnostics showed `FillsMonitor=True`, but the user still saw a smaller frozen image composited inside the full-size overlay window.
+
+**Root cause**: The Linux fast-overlay guard in `ScreenCaptureService.cs` used:
+`options?.UseTransparentOverlay ?? OperatingSystem.IsLinux()`
+When `options` was non-null, that expression ignored `OperatingSystem.IsLinux()` and reused the frozen pre-capture path unless `UseTransparentOverlay` was explicitly true. That reintroduced the portal bitmap mismatch described in this XIP.
+
+**Fix**: Change both overlay entry points to use:
+`OperatingSystem.IsLinux() || (options?.UseTransparentOverlay ?? false)`
+and only capture a background bitmap when the frozen-overlay path is intentionally selected.
+
+**Files**: `ScreenCaptureService.cs`
+
+**Result**: Linux overlay uses the intended transparent/live path again. The debug log no longer prints `Pre-capture fullScreenBitmap` before overlay display, and instead shows `CaptureRectAsync path (no pre-capture)`. Overlay diagnostics confirm `FillsMonitor=True` on both monitors while the visible overlay also matches the monitor bounds.
+
 ---
 
 ## Performance Issues and Attempts
@@ -72,8 +88,9 @@ This XIP summarises those issues and all attempts tried to fix or mitigate them.
 
 **Attempts**:
 - **Fast overlay on Linux**: When `UseTransparentOverlay` is true or on Linux, skip pre-capture and show the overlay immediately. After the user selects a region, use `CaptureRectAsync` (portal full-screen + crop) when there is no pre-capture bitmap.  
-- **Files**: `ScreenCaptureService.cs` (`useFastOverlay = options?.UseTransparentOverlay ?? OperatingSystem.IsLinux()`).  
-**Result**: Overlay appears much sooner on Linux; capture happens after selection.
+- **Implementation correction**: The initial expression used for this mitigation, `options?.UseTransparentOverlay ?? OperatingSystem.IsLinux()`, was wrong whenever `options` was non-null. The corrected logic is `OperatingSystem.IsLinux() || (options?.UseTransparentOverlay ?? false)`, applied in both overlay entry points.  
+- **Files**: `ScreenCaptureService.cs`  
+**Result**: Overlay appears much sooner on Linux and no longer uses the mismatched frozen portal bitmap by default. Confirmed by logs showing `overlay displayed (+134 ms)` and `CaptureRectAsync path (no pre-capture)`.
 
 ### Issue 2 — Sluggish crosshair
 
@@ -136,12 +153,13 @@ To restore the **pre-58283cb** behaviour (portal/system dialog for region captur
 | Area            | Issue                                         | Attempt / fix                                                                                          | Status      |
 |----------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------------|-------------|
 | DPI            | Overlay squashing (mixed-DPI)                 | OverlayBounds (logical) for overlay; normaliser for all non-Windows                                   | Implemented |
+| DPI            | Frozen overlay smaller than monitor           | Fix Linux fast-overlay gating so overlay path really skips pre-capture on Linux                       | Implemented |
 | DPI            | Wrong crop — GNOME (logical portal bitmap)    | VirtualScreenBoundsForCrop = OverlayBounds union; selection → logical on Linux                        | Implemented |
 | DPI            | Wrong crop — KDE (physical portal bitmap)     | PhysicalVirtualScreenBoundsForCrop + PhysicalRectForCrop; physical-bitmap detection in Linux service  | Implemented |
 | DPI            | Overlay window shift on X11 (mixed-DPI)       | Use PhysicalBounds.X/Y for Window.Position on X11; keep OverlayBounds on Wayland                     | Implemented |
 | DPI            | Wayland position API ambiguity                | OverlayBounds (logical) used; physical would place window off-screen on HiDPI Wayland                | Known limit |
 | DPI            | Vertical monitor stacking Y-bug (normaliser)  | Normaliser uses (logicalY − minLogicalY)×scale; wrong for vertical mixed-DPI stacking                | Known limit |
-| Performance    | Pre-capture delay                             | Fast overlay on Linux (skip pre-capture)                                                              | Implemented |
+| Performance    | Pre-capture delay                             | Fast overlay on Linux (skip pre-capture); follow-up fix for null-coalescing regression                | Implemented |
 | Performance    | Sluggish crosshair                            | Throttle redraws ~60 FPS; cache pens; reset on press                                                  | Implemented |
 | Performance    | ~2.4 s until first pointer move               | Primary overlay first; delayed focus retries (50/200/500 ms)                                          | Implemented |
 | Observability  | Bottleneck visibility                         | Milestone logging + flush                                                                              | Implemented |

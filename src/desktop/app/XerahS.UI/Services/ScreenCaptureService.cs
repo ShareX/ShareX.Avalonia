@@ -92,13 +92,21 @@ namespace XerahS.UI.Services
                         }
                     }
 
-                    // Capture background for magnifier
+                    bool useFastOverlay = OperatingSystem.IsLinux() || (options?.UseTransparentOverlay ?? false);
+
+                    // Capture background only when using the frozen-overlay path.
                     SkiaSharp.SKBitmap? backgroundForMagnifier = null;
-                    try
+                    if (!useFastOverlay)
                     {
-                        backgroundForMagnifier = await _platformImpl.CaptureFullScreenAsync(new CaptureOptions { ShowCursor = false });
+                        try
+                        {
+                            backgroundForMagnifier = await _platformImpl.CaptureFullScreenAsync(new CaptureOptions { ShowCursor = false });
+                        }
+                        catch
+                        {
+                            // Ignore
+                        }
                     }
-                    catch { /* Ignore */ }
 
                     var captureService = new RegionCaptureService
                     {
@@ -106,7 +114,7 @@ namespace XerahS.UI.Services
                         {
                             ShowCursor = options?.ShowCursor ?? false,
                             BackgroundImage = backgroundForMagnifier,
-                            UseTransparentOverlay = options?.UseTransparentOverlay ?? false,
+                            UseTransparentOverlay = useFastOverlay,
                             EditorOptions = RegionCaptureAnnotationOptionsStore.GetEditorOptions(options?.WorkflowId),
                         }
                     };
@@ -203,7 +211,7 @@ namespace XerahS.UI.Services
             // 2. Capture background for frozen overlay and magnifier BEFORE showing overlay
             // When UseTransparentOverlay is true, or on Linux (slow full-screen capture), skip so overlay appears immediately.
             // After selection we use CaptureRectAsync when fullScreenBitmap is null.
-            bool useFastOverlay = options?.UseTransparentOverlay ?? OperatingSystem.IsLinux();
+            bool useFastOverlay = OperatingSystem.IsLinux() || (options?.UseTransparentOverlay ?? false);
             SKBitmap? fullScreenBitmap = null;
             if (!useFastOverlay)
             {
