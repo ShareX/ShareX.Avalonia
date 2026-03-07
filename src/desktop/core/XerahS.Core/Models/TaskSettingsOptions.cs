@@ -26,6 +26,7 @@
 using Newtonsoft.Json;
 using ShareX.ImageEditor.Core.ImageEffects;
 using ShareX.ImageEditor.Hosting;
+using XerahS.Indexer;
 using XerahS.Platform.Abstractions;
 using XerahS.Services.Abstractions;
 using System.ComponentModel;
@@ -255,75 +256,7 @@ public class PinToScreenOptions
     public Size MinimizeSize { get; set; } = new Size(100, 100);
 }
 
-public class IndexerSettings
-{
-    [DefaultValue(IndexerOutput.Html)]
-    public IndexerOutput Output { get; set; }
-
-    [DefaultValue(true)]
-    public bool SkipHiddenFolders { get; set; }
-
-    [DefaultValue(true)]
-    public bool SkipHiddenFiles { get; set; }
-
-    [DefaultValue(false)]
-    public bool SkipFiles { get; set; }
-
-    [DefaultValue(0)]
-    public int MaxDepthLevel { get; set; }
-
-    [DefaultValue(true)]
-    public bool ShowSizeInfo { get; set; }
-
-    [DefaultValue(true)]
-    public bool AddFooter { get; set; }
-
-    [DefaultValue("|___")]
-    public string IndentationText { get; set; }
-
-    [DefaultValue(false)]
-    public bool AddEmptyLineAfterFolders { get; set; }
-
-    [DefaultValue(false)]
-    public bool UseCustomCSSFile { get; set; }
-
-    [DefaultValue(false)]
-    public bool DisplayPath { get; set; }
-
-    [DefaultValue(false)]
-    public bool DisplayPathLimited { get; set; }
-
-    [DefaultValue("")]
-    public string CustomCSSFilePath { get; set; } = string.Empty;
-
-    [DefaultValue(true)]
-    public bool UseAttribute { get; set; }
-
-    [DefaultValue(true)]
-    public bool CreateParseableJson { get; set; }
-
-    [JsonIgnore]
-    public bool BinaryUnits;
-
-    [DefaultValue(null)]
-    public List<string>? IncludedFileExtensions { get; set; }
-
-    [DefaultValue(null)]
-    public List<string>? ExcludedFileExtensions { get; set; }
-
-    public IndexerSettings()
-    {
-        Output = IndexerOutput.Html;
-        SkipHiddenFolders = true;
-        SkipHiddenFiles = true;
-        IndentationText = "|___";
-        ShowSizeInfo = true;
-        AddFooter = true;
-        UseAttribute = true;
-        CreateParseableJson = true;
-        BinaryUnits = true;
-    }
-}
+// IndexerSettings class is defined in XerahS.Indexer.IndexerSettings
 
 public class ImageBeautifierOptions
 {

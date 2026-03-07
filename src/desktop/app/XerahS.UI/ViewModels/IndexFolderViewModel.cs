@@ -38,6 +38,7 @@ using System.Threading;
 using XerahS.Common;
 using XerahS.Common.Converters;
 using XerahS.Core;
+using XerahS.Indexer;
 using XerahS.Core.Managers;
 using XerahS.Platform.Abstractions;
 
@@ -497,7 +498,7 @@ public partial class IndexFolderViewModel : ViewModelBase
             _taskSettings.Job = WorkflowType.IndexFolder;
             _taskSettings.ToolsSettings.IndexerFolderPath = FolderPath;
 
-            var indexerSettings = BuildIndexerSettings(_taskSettings.ToolsSettings.IndexerSettings);
+            var indexerSettings = _taskSettings.ToolsSettings.IndexerSettings ?? new XerahS.Indexer.IndexerSettings();
             
             // Use async indexer with progress reporting and cancellation support
             string outputExtension = GetOutputExtension(Output);
@@ -707,32 +708,7 @@ public partial class IndexFolderViewModel : ViewModelBase
         }
     }
 
-    private static XerahS.Indexer.IndexerSettings BuildIndexerSettings(XerahS.Core.IndexerSettings settings)
-    {
-        var indexerSettings = new XerahS.Indexer.IndexerSettings
-        {
-            Output = (XerahS.Indexer.IndexerOutput)settings.Output,
-            SkipHiddenFolders = settings.SkipHiddenFolders,
-            SkipHiddenFiles = settings.SkipHiddenFiles,
-            SkipFiles = settings.SkipFiles,
-            MaxDepthLevel = settings.MaxDepthLevel,
-            ShowSizeInfo = settings.ShowSizeInfo,
-            AddFooter = settings.AddFooter,
-            IndentationText = settings.IndentationText,
-            AddEmptyLineAfterFolders = settings.AddEmptyLineAfterFolders,
-            UseCustomCSSFile = settings.UseCustomCSSFile,
-            DisplayPath = settings.DisplayPath,
-            DisplayPathLimited = settings.DisplayPathLimited,
-            CustomCSSFilePath = settings.CustomCSSFilePath,
-            UseAttribute = settings.UseAttribute,
-            CreateParseableJson = settings.CreateParseableJson,
-            IncludedFileExtensions = settings.IncludedFileExtensions != null ? new List<string>(settings.IncludedFileExtensions) : null,
-            ExcludedFileExtensions = settings.ExcludedFileExtensions != null ? new List<string>(settings.ExcludedFileExtensions) : null
-        };
 
-        indexerSettings.BinaryUnits = settings.BinaryUnits;
-        return indexerSettings;
-    }
 
     private string WriteIndexOutput(TaskSettings taskSettings, string sourceOutputFilePath, string fallbackOutput)
     {

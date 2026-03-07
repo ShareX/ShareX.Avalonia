@@ -28,6 +28,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Input;
 using XerahS.Core;
+using XerahS.Indexer;
 
 namespace XerahS.UI.ViewModels
 {

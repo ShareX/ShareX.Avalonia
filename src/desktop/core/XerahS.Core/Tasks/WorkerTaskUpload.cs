@@ -140,11 +140,10 @@ namespace XerahS.Core.Tasks
 
             try
             {
-                var coreSettings = taskSettings.ToolsSettings.IndexerSettings ?? new IndexerSettings();
-                var indexerSettings = BuildIndexerSettings(coreSettings);
+                var indexerSettings = taskSettings.ToolsSettings.IndexerSettings ?? new XerahS.Indexer.IndexerSettings();
 
                 string output = XerahS.Indexer.Indexer.Index(folderPath, indexerSettings);
-                outputPath = WriteIndexOutput(taskSettings, folderPath, output, coreSettings.Output);
+                outputPath = WriteIndexOutput(taskSettings, folderPath, output, indexerSettings.Output);
                 return !string.IsNullOrEmpty(outputPath);
             }
             catch (Exception ex)
@@ -154,32 +153,7 @@ namespace XerahS.Core.Tasks
             }
         }
 
-        private static XerahS.Indexer.IndexerSettings BuildIndexerSettings(IndexerSettings settings)
-        {
-            var indexerSettings = new XerahS.Indexer.IndexerSettings
-            {
-                Output = (XerahS.Indexer.IndexerOutput)settings.Output,
-                SkipHiddenFolders = settings.SkipHiddenFolders,
-                SkipHiddenFiles = settings.SkipHiddenFiles,
-                SkipFiles = settings.SkipFiles,
-                MaxDepthLevel = settings.MaxDepthLevel,
-                ShowSizeInfo = settings.ShowSizeInfo,
-                AddFooter = settings.AddFooter,
-                IndentationText = settings.IndentationText,
-                AddEmptyLineAfterFolders = settings.AddEmptyLineAfterFolders,
-                UseCustomCSSFile = settings.UseCustomCSSFile,
-                DisplayPath = settings.DisplayPath,
-                DisplayPathLimited = settings.DisplayPathLimited,
-                CustomCSSFilePath = settings.CustomCSSFilePath,
-                UseAttribute = settings.UseAttribute,
-                CreateParseableJson = settings.CreateParseableJson
-            };
-
-            indexerSettings.BinaryUnits = settings.BinaryUnits;
-            return indexerSettings;
-        }
-
-        private static string WriteIndexOutput(TaskSettings taskSettings, string folderPath, string output, IndexerOutput outputType)
+        private static string WriteIndexOutput(TaskSettings taskSettings, string folderPath, string output, XerahS.Indexer.IndexerOutput outputType)
         {
             string extension = GetIndexFolderExtension(outputType);
             string screenshotsFolder = TaskHelpers.GetScreenshotsFolder(taskSettings);
@@ -191,14 +165,14 @@ namespace XerahS.Core.Tasks
             return resolvedPath;
         }
 
-        private static string GetIndexFolderExtension(IndexerOutput outputType)
+        private static string GetIndexFolderExtension(XerahS.Indexer.IndexerOutput outputType)
         {
             return outputType switch
             {
-                IndexerOutput.Html => "html",
-                IndexerOutput.Txt => "txt",
-                IndexerOutput.Xml => "xml",
-                IndexerOutput.Json => "json",
+                XerahS.Indexer.IndexerOutput.Html => "html",
+                XerahS.Indexer.IndexerOutput.Txt => "txt",
+                XerahS.Indexer.IndexerOutput.Xml => "xml",
+                XerahS.Indexer.IndexerOutput.Json => "json",
                 _ => "txt"
             };
         }

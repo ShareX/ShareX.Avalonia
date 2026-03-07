@@ -23,6 +23,7 @@
 
 #endregion License Information (GPL v3)
 using System.ComponentModel;
+using XerahS.Indexer;
 
 namespace XerahS.Core;
 
@@ -148,17 +149,7 @@ public enum ThumbnailLocationType
 
 // EImageFormat moved to XerahS.Services.Abstractions
 
-public enum IndexerOutput
-{
-    [Description("Text")]
-    Txt,
-    [Description("HTML")]
-    Html,
-    [Description("XML")]
-    Xml,
-    [Description("JSON")]
-    Json
-}
+// IndexerOutput enum is defined in XerahS.Indexer.IndexerOutput
 
 public enum AIProvider
 {
