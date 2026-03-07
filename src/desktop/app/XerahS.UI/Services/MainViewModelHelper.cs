@@ -30,7 +30,6 @@ using SkiaSharp;
 using System.IO;
 using XerahS.Common;
 using XerahS.Core;
-using XerahS.Uploaders.PluginSystem;
 
 namespace XerahS.UI.Services;
 
@@ -194,43 +193,18 @@ public static class MainViewModelHelper
             using var skBitmap = BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
             DebugHelper.WriteLine($"MainViewModelHelper: Converted bitmap {skBitmap.Width}x{skBitmap.Height}");
 
-            // Get the default image uploader instance, or first available.
-            string? destinationInstanceId = null;
-            var defaultInstance = InstanceManager.Instance.GetDefaultInstance(UploaderCategory.Image);
-            if (defaultInstance != null)
-            {
-                destinationInstanceId = defaultInstance.InstanceId;
-                DebugHelper.WriteLine($"MainViewModelHelper: Using default instance: {defaultInstance.DisplayName} ({destinationInstanceId})");
-            }
-            else
-            {
-                // Fall back to first available image uploader.
-                var imageInstances = InstanceManager.Instance.GetInstancesByCategory(UploaderCategory.Image);
-                var firstInstance = imageInstances.FirstOrDefault();
-                if (firstInstance != null)
-                {
-                    destinationInstanceId = firstInstance.InstanceId;
-                    DebugHelper.WriteLine($"MainViewModelHelper: Using first instance: {firstInstance.DisplayName} ({destinationInstanceId})");
-                }
-                else
-                {
-                    DebugHelper.WriteLine("MainViewModelHelper: No image uploader instances available.");
-                }
-            }
-
             var taskSettings = new TaskSettings
             {
                 Job = WorkflowType.None,
-                AfterCaptureJob = AfterCaptureTasks.UploadImageToHost,
-                AfterUploadJob = AfterUploadTasks.CopyURLToClipboard,
-                DestinationInstanceId = destinationInstanceId
+                AfterCaptureJob = AfterCaptureTasks.None,
+                AfterUploadJob = AfterUploadTasks.CopyURLToClipboard
             };
 
             DebugHelper.WriteLine($"MainViewModelHelper: TaskSettings created - Job={taskSettings.Job}, AfterCapture={taskSettings.AfterCaptureJob}, AfterUpload={taskSettings.AfterUploadJob}, DestId={taskSettings.DestinationInstanceId}");
 
-            DebugHelper.WriteLine("MainViewModelHelper: Calling TaskManager.StartTask...");
-            await Core.Managers.TaskManager.Instance.StartTask(taskSettings, skBitmap.Copy());
-            DebugHelper.WriteLine("MainViewModelHelper: TaskManager.StartTask completed");
+            DebugHelper.WriteLine("MainViewModelHelper: Calling TaskManager.StartImageUploadTask...");
+            await Core.Managers.TaskManager.Instance.StartImageUploadTask(taskSettings, skBitmap.Copy());
+            DebugHelper.WriteLine("MainViewModelHelper: TaskManager.StartImageUploadTask completed");
         }
         catch (Exception ex)
         {

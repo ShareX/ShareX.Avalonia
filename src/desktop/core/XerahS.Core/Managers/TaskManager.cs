@@ -162,6 +162,61 @@ namespace XerahS.Core.Managers
             await task.StartAsync();
         }
 
+        public async Task StartImageUploadTask(TaskSettings? taskSettings, SkiaSharp.SKBitmap image)
+        {
+            if (taskSettings == null)
+            {
+                DebugHelper.WriteLine("StartImageUploadTask called with null TaskSettings, skipping.");
+                return;
+            }
+
+            if (image == null)
+            {
+                DebugHelper.WriteLine("StartImageUploadTask called with null image, skipping.");
+                return;
+            }
+
+            TroubleshootingHelper.Log(taskSettings.Job.ToString(), "TASK_MANAGER", "StartImageUploadTask Entry");
+
+            var safeTaskSettings = taskSettings;
+            var task = WorkerTask.Create(safeTaskSettings, image);
+            task.Info.DataType = EDataType.Image;
+            task.Info.Job = TaskJob.DataUpload;
+
+            string imageExtension = EnumExtensions.GetDescription(safeTaskSettings.ImageSettings.ImageFormat);
+            task.Info.SetFileName(TaskHelpers.GetFileName(safeTaskSettings, imageExtension, task.Info.Metadata));
+
+            lock (_tasksLock)
+            {
+                _tasks.Enqueue(task);
+
+                while (_tasks.Count > _maxHistoricalTasks)
+                {
+                    if (_tasks.TryDequeue(out var oldTask))
+                    {
+                        try
+                        {
+                            oldTask.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            DebugHelper.WriteLine($"Error disposing old task: {ex.Message}");
+                        }
+                    }
+                }
+            }
+
+            task.StatusChanged += (s, e) => DebugHelper.WriteLine($"Task Status: {task.Status}");
+            task.TaskCompleted += (s, e) =>
+            {
+                TaskCompleted?.Invoke(this, task);
+            };
+
+            TaskStarted?.Invoke(this, task);
+
+            await task.StartAsync();
+        }
+
         public async Task StartTextTask(TaskSettings? taskSettings, string text)
         {
             if (taskSettings == null)
