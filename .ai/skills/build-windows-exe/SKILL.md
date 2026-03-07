@@ -31,7 +31,7 @@ Follow these instructions **exactly** and in order to build Windows executables 
 <context>
   <build_script_path>ShareX Team\XerahS\build\windows\package-windows.ps1</build_script_path>
   <dist_output_path>ShareX Team\XerahS\dist</dist_output_path>
-  <common_locked_file>ShareX Team\XerahS\ImageEditor\src\ShareX.ImageEditor\obj\Release\net10.0-windows10.0.26100.0\ShareX.ImageEditor.dll</common_locked_file>
+  <common_locked_file>ShareX Team\XerahS\ShareX.ImageEditor\src\ShareX.ImageEditor\obj\Release\net10.0-windows10.0.26100.0\ShareX.ImageEditor.dll</common_locked_file>
   <expected_outputs>
     - XerahS-{version}-win-x64.exe
     - XerahS-{version}-win-arm64.exe
@@ -40,13 +40,13 @@ Follow these instructions **exactly** and in order to build Windows executables 
 
 ## Build Process
 
-### Phase 0: Update ImageEditor Submodule
+### Phase 0: Update ShareX.ImageEditor Submodule
 
-**Always pull the latest ImageEditor submodule before building** to ensure the embedded image editor is up-to-date.
+**Always pull the latest `ShareX.ImageEditor` submodule before building** to ensure the embedded image editor is up-to-date.
 
 ```powershell
 cd 'ShareX Team\XerahS'
-git submodule update --remote --merge ImageEditor
+git submodule update --remote --merge ShareX.ImageEditor
 ```
 
 ### Phase 1: Pre-Build Cleanup
@@ -71,7 +71,7 @@ git submodule update --remote --merge ImageEditor
 
 3. **If file locks persist, delete the problematic obj folder**:
    ```powershell
-   Remove-Item 'ShareX Team\XerahS\ImageEditor\src\ShareX.ImageEditor\obj' -Recurse -Force -ErrorAction SilentlyContinue
+   Remove-Item 'ShareX Team\XerahS\ShareX.ImageEditor\src\ShareX.ImageEditor\obj' -Recurse -Force -ErrorAction SilentlyContinue
    ```
 
 ### Phase 2: Initial Build Attempt
@@ -107,12 +107,12 @@ git submodule update --remote --merge ImageEditor
 
 2. **Remove the locked obj folder**:
    ```powershell
-   Remove-Item 'ShareX Team\XerahS\ImageEditor\src\ShareX.ImageEditor\obj\Release' -Recurse -Force -ErrorAction SilentlyContinue
+   Remove-Item 'ShareX Team\XerahS\ShareX.ImageEditor\src\ShareX.ImageEditor\obj\Release' -Recurse -Force -ErrorAction SilentlyContinue
    ```
 
-3. **Pre-build the ImageEditor project separately with single-threaded compilation**:
+3. **Pre-build the `ShareX.ImageEditor` project separately with single-threaded compilation**:
    ```powershell
-   dotnet build 'ShareX Team\XerahS\ImageEditor\src\ShareX.ImageEditor\ShareX.ImageEditor.csproj' -c Release -p:UseSharedCompilation=false /m:1
+   dotnet build 'ShareX Team\XerahS\ShareX.ImageEditor\src\ShareX.ImageEditor\ShareX.ImageEditor.csproj' -c Release -p:UseSharedCompilation=false /m:1
    ```
    - The `/m:1` flag forces single-threaded build
    - `UseSharedCompilation=false` disables the VBCSCompiler server
@@ -130,12 +130,12 @@ git submodule update --remote --merge ImageEditor
 1. **Clean and kill processes**:
    ```powershell
    Get-Process | Where-Object { $_.Name -like '*VBCSCompiler*' -or $_.Name -like '*dotnet*' } | Stop-Process -Force -ErrorAction SilentlyContinue
-   Remove-Item 'ShareX Team\XerahS\ImageEditor\src\ShareX.ImageEditor\obj\Release' -Recurse -Force -ErrorAction SilentlyContinue
+   Remove-Item 'ShareX Team\XerahS\ShareX.ImageEditor\src\ShareX.ImageEditor\obj\Release' -Recurse -Force -ErrorAction SilentlyContinue
    ```
 
-2. **Pre-build ImageEditor**:
+2. **Pre-build `ShareX.ImageEditor`**:
    ```powershell
-   dotnet build 'ShareX Team\XerahS\ImageEditor\src\ShareX.ImageEditor\ShareX.ImageEditor.csproj' -c Release -p:UseSharedCompilation=false /m:1
+   dotnet build 'ShareX Team\XerahS\ShareX.ImageEditor\src\ShareX.ImageEditor\ShareX.ImageEditor.csproj' -c Release -p:UseSharedCompilation=false /m:1
    ```
 
 3. **Publish ARM64 manually**:
@@ -195,7 +195,7 @@ git submodule update --remote --merge ImageEditor
 
 ### Sequential Builds Are Mandatory
 
-**NEVER run two builds at the same time.** ImageEditor targets multiple TFMs (`net9.0`, `net10.0`, `net9.0-windows10.0.26100.0`, `net10.0-windows10.0.26100.0`) and MSBuild parallelism causes all of them to race on the same `ShareX.ImageEditor.dll` output path, producing `CS2012` file lock errors.
+**NEVER run two builds at the same time.** `ShareX.ImageEditor` targets multiple TFMs (`net9.0`, `net10.0`, `net9.0-windows10.0.26100.0`, `net10.0-windows10.0.26100.0`) and MSBuild parallelism causes all of them to race on the same `ShareX.ImageEditor.dll` output path, producing `CS2012` file lock errors.
 
 - **Architectures**: `package-windows.ps1` already iterates `win-x64` then `win-arm64` sequentially via `foreach` — never invoke it twice concurrently.
 - **Internal parallelism**: Controlled by `/m:1` on the `dotnet publish` call, which forces single-threaded MSBuild and eliminates the intra-build race.
@@ -216,7 +216,7 @@ git submodule update --remote --merge ImageEditor
 ### Build Error Handling
 - **Don't panic if you see CS2012 errors**: The build may still succeed
 - **Always check if XerahS.exe was created**: The error might be during a retry
-- **ImageEditor is the usual culprit**: It has parallel TFM builds (net9.0, net10.0, with/without Windows SDK)
+- **`ShareX.ImageEditor` is the usual culprit**: It has parallel TFM builds (net9.0, net10.0, with/without Windows SDK)
 - **ARM64 builds are more prone to locking**: They run after x64 which may leave processes
 
 ### Best Practices

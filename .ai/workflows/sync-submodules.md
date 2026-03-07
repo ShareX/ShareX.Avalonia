@@ -2,7 +2,7 @@
 description: Automatically sync git submodules to the latest commit on their tracked branch
 ---
 
-This workflow ensures that all git submodules (specifically ImageEditor) are updated to the latest commit on their remote branch, preventing detached head states or outdated references.
+This workflow ensures that all git submodules (specifically `ShareX.ImageEditor`) are updated to the latest commit on their remote branch, preventing detached head states or outdated references.
 
 1.  **Check Submodule Status**
     Run `git submodule status` to see current commits.

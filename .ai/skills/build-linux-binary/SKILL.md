@@ -43,12 +43,12 @@ Follow these instructions **exactly** and in order to build Linux binaries for X
 
 ## Build Process
 
-### Phase 0: Update ImageEditor Submodule
+### Phase 0: Update ShareX.ImageEditor Submodule
 
-**Always pull the latest ImageEditor submodule before building** to ensure the embedded image editor is up-to-date.
+**Always pull the latest `ShareX.ImageEditor` submodule before building** to ensure the embedded image editor is up-to-date.
 
 ```bash
-git submodule update --remote --merge ImageEditor
+git submodule update --remote --merge ShareX.ImageEditor
 ```
 
 ### Phase 1: Pre-Build Cleanup
@@ -65,7 +65,7 @@ git submodule update --remote --merge ImageEditor
 
 2. **Optional — clean obj folders if locks persist**:
    ```bash
-   rm -rf /path/to/XerahS/ImageEditor/src/ShareX.ImageEditor/obj/Release
+   rm -rf /path/to/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/obj/Release
    ```
    This is most useful if you see `The process cannot access the file '...ShareX.ImageEditor.pdb' because it is being used by another process` (Avalonia AVLN9999 error).
 
@@ -107,7 +107,7 @@ make sure to specify x:Class and include your XAML file as AvaloniaResource
 Avalonia's XAML compiler silently fails to compile the referencing AXAML, which cascades to break the entire app's precompiled XAML.
 
 **How to diagnose**:
-- Check any recently added/modified converters under `ImageEditor/src/ShareX.ImageEditor/UI/Adapters/Converters/`
+- Check any recently added/modified converters under `ShareX.ImageEditor/src/ShareX.ImageEditor/UI/Adapters/Converters/`
 - Verify their C# `namespace` matches the AXAML `xmlns:converters` import:
 
   In `EditorView.axaml`:
@@ -207,12 +207,12 @@ Timestamps should match the current build session.
 
 ### Sequential Builds Are Mandatory
 
-**NEVER run two builds at the same time.** ImageEditor targets multiple TFMs and MSBuild parallelism causes them to race on the same `ShareX.ImageEditor.dll` output path.
+**NEVER run two builds at the same time.** `ShareX.ImageEditor` targets multiple TFMs and MSBuild parallelism causes them to race on the same `ShareX.ImageEditor.dll` output path.
 
 - **Architectures**: `package-linux.sh` iterates `linux-x64` then `linux-arm64` sequentially — never invoke it twice concurrently.
-- **Internal parallelism**: If `CS2012` / file lock errors appear on ImageEditor, pre-build it separately with `/m:1` to force single-threaded compilation:
+- **Internal parallelism**: If `CS2012` / file lock errors appear on `ShareX.ImageEditor`, pre-build it separately with `/m:1` to force single-threaded compilation:
   ```bash
-  dotnet build ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj \
+  dotnet build ShareX.ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj \
     -c Release -p:UseSharedCompilation=false /m:1
   ```
 - **Between builds**: Always kill all `dotnet` and `package-linux.sh` processes and wait for them to exit before starting a new build session.

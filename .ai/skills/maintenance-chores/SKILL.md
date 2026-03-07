@@ -2,7 +2,7 @@
 
 **Objective**: Automate periodic maintenance tasks for XerahS including version bumps, changelog updates, and repository synchronization.
 
-**Scope**: This skill manages routine operations across all XerahS repositories (main, ImageEditor, website) to keep versions and documentation in sync.
+**Scope**: This skill manages routine operations across all XerahS repositories (main, ShareX.ImageEditor, website) to keep versions and documentation in sync.
 
 ---
 
@@ -19,12 +19,12 @@ git pull origin develop
 - Pulls the latest changes from the `develop` branch of the main XerahS repository
 - Verify exit code is 0 (success)
 
-#### 1.2 Pull ImageEditor Repository
+#### 1.2 Pull ShareX.ImageEditor Repository
 ```powershell
-git -C ImageEditor pull origin main
+git -C ShareX.ImageEditor pull origin develop
 ```
-- Pulls the latest changes from ImageEditor submodule/nested repository
-- This typically targets `main` or `develop` depending on ImageEditor's branch strategy
+- Pulls the latest changes from the `ShareX.ImageEditor` submodule
+- This tracks the `develop` branch in the current repo configuration
 - Verify exit code is 0 (success)
 
 #### 1.3 Pull Website Repository (Optional)
@@ -59,8 +59,8 @@ Write-Host "Current Version: $version"
    - File: `Directory.Build.props`
    - Update `<Version>X.Y.Z</Version>`
 
-2. **ImageEditor Directory.Build.props**
-   - File: `ImageEditor/Directory.Build.props`
+2. **ShareX.ImageEditor Directory.Build.props**
+   - File: `ShareX.ImageEditor/Directory.Build.props`
    - Update `<Version>X.Y.Z</Version>`
    - Note: May maintain different version from main project
 
@@ -143,8 +143,8 @@ Entry Format:
 # Check main repository
 git status --short
 
-# Check ImageEditor submodule
-git -C ImageEditor status --short
+# Check ShareX.ImageEditor submodule
+git -C ShareX.ImageEditor status --short
 
 # Check website repository
 git -C ../xerahs.github.io status --short
@@ -162,8 +162,8 @@ git -C ../ShareX status --short
 # Main repository
 git add .
 
-# ImageEditor submodule (always check, even if no direct edits)
-git -C ImageEditor add .
+# ShareX.ImageEditor submodule (always check, even if no direct edits)
+git -C ShareX.ImageEditor add .
 
 # Website repository
 git -C ../xerahs.github.io add .
@@ -178,8 +178,8 @@ git -C ../ShareX add .
 **CRITICAL**: Commit changes in ALL repositories, even if they seem unrelated to version bump:
 
 ```powershell
-# ImageEditor submodule (commit FIRST - submodules before parent)
-git -C ImageEditor commit -m "[v0.15.6] [Chore] Update ImageEditor version and changes"
+# ShareX.ImageEditor submodule (commit FIRST - submodules before parent)
+git -C ShareX.ImageEditor commit -m "[v0.15.6] [Chore] Update ShareX.ImageEditor version and changes"
 
 # Main repository (commit AFTER submodules to capture updated references)
 git commit -m "[v0.15.6] [Chore] Update version and changelog for release"
@@ -204,8 +204,8 @@ git -C ../ShareX commit -m "[v0.15.6] [Chore] Update ShareX changes"
 **Push ALL repositories including submodules:**
 
 ```powershell
-# ImageEditor submodule (push FIRST - before parent)
-git -C ImageEditor push origin develop
+# ShareX.ImageEditor submodule (push FIRST - before parent)
+git -C ShareX.ImageEditor push origin develop
 
 # Main repository (push AFTER submodules)
 git push origin develop
@@ -230,9 +230,9 @@ git -C ../ShareX push origin develop
 
 ## 🔧 Implementation Checklist
 
-- ✅ Pull all repositories (main XerahS, ImageEditor submodule, website, ShareX)
+- ✅ Pull all repositories (main XerahS, ShareX.ImageEditor submodule, website, ShareX)
 - ✅ Determine appropriate version bump (patch/minor/major)
-- ✅ Update `Directory.Build.props` in both main and ImageEditor
+- ✅ Update `Directory.Build.props` in both main and ShareX.ImageEditor
 - ✅ **Run `.github/skills/update-changelog/SKILL.md` to consolidate and format changelog** ← PRIMARY STEP
 - ✅ Update version references in README/docs as needed
 - ✅ Run `dotnet build` to validate changes
@@ -249,7 +249,7 @@ git -C ../ShareX push origin develop
 
 - Local repositories cloned as siblings under `ShareX Team/` directory:
   - `XerahS/` (main repository, current working directory)
-  - `XerahS/ImageEditor/` (submodule)
+  - `XerahS/ShareX.ImageEditor/` (submodule)
   - `xerahs.github.io/` (sibling repository, optional)
   - `ShareX/` (sibling repository, optional)
 - Git configured with user identity
@@ -270,7 +270,7 @@ git -C ../ShareX push origin develop
 
 3. **Branch Strategy**:
    - Main XerahS: commit to `develop` branch
-   - ImageEditor: commits to `main` branch (or per ImageEditor's strategy)
+   - ShareX.ImageEditor: commits to `develop` branch
    - Website: commits to `main` branch
 
 4. **Atomic Operations**:
@@ -284,7 +284,7 @@ git -C ../ShareX push origin develop
 **Check status of ALL repositories**:
 ```powershell
 git status --short
-git -C ImageEditor status --short
+git -C ShareX.ImageEditor status --short
 git -C ../xerahs.github.io status --short
 git -C ../ShareX status --short
 ```
@@ -292,7 +292,7 @@ git -C ../ShareX status --short
 **Pull all repositories**:
 ```powershell
 git pull origin develop
-git -C ImageEditor pull origin develop
+git -C ShareX.ImageEditor pull origin develop
 git -C ../xerahs.github.io pull origin main
 git -C ../ShareX pull origin develop
 ```
@@ -300,7 +300,7 @@ git -C ../ShareX pull origin develop
 **Stage, commit, and push ALL repositories (including submodules)**:
 ```powershell
 # Submodules first, parent last
-git -C ImageEditor add . ; git -C ImageEditor commit -m "[vX.Y.Z] [Chore] Update ImageEditor" ; git -C ImageEditor push origin develop
+git -C ShareX.ImageEditor add . ; git -C ShareX.ImageEditor commit -m "[vX.Y.Z] [Chore] Update ShareX.ImageEditor" ; git -C ShareX.ImageEditor push origin develop
 
 # Then parent repository
 git add . ; git commit -m "[vX.Y.Z] [Chore] Update version and changelog" ; git push origin develop

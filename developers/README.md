@@ -9,7 +9,7 @@
 ## Getting Started for Developers
 
 ### Cloning with Submodules
-XerahS depends on [ShareX/ImageEditor](https://github.com/ShareX/ImageEditor), which is included as a Git submodule. To clone the repository with all dependencies:
+XerahS depends on [ShareX/ImageEditor](https://github.com/ShareX/ImageEditor), which is included as the `ShareX.ImageEditor` Git submodule. To clone the repository with all dependencies:
 
 ```bash
 git clone --recursive https://github.com/ShareX/XerahS.git
@@ -30,9 +30,9 @@ dotnet build
 ```
 
 ### Updating Submodules
-To pull the latest changes for the ImageEditor submodule:
+To pull the latest changes for the `ShareX.ImageEditor` submodule:
 ```bash
-git submodule update --remote --merge
+git submodule update --remote --merge ShareX.ImageEditor
 ```
 
 ## Target Framework Reference
@@ -79,7 +79,7 @@ All projects standardize on Windows SDK **10.0.26100.0** (Windows 11 24H2). Plug
 | XerahS.PluginExporter | `net10.0` | Plugin packager |
 | XerahS.Audits.Tool | `net10.0` | Dev tool |
 | XerahS.Tests | `net10.0-windows10.0.26100.0` | NUnit tests |
-| **Submodule (ImageEditor)** | | |
+| **Submodule (ShareX.ImageEditor)** | | |
 | ShareX.ImageEditor | `net9.0` / `net9.0-windows10.0.26100.0` / `net10.0` / `net10.0-windows10.0.26100.0` | Multi-target for ShareX compat; only net10.0 variants build from XerahS |
 | ShareX.ImageEditor.Loader | `net10.0-windows10.0.26100.0` | Standalone demo app |
 
@@ -314,7 +314,7 @@ See also: [Destination Plugin Development Guide](plugins-destinations/README.md)
 ### Prerequisites
 Ensure you have the following installed:
 - [.NET 10.0 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- ImageEditor submodule (initialized as described above)
+- `ShareX.ImageEditor` submodule (initialized as described above)
 
 ### Clone Repositories
 ```bash

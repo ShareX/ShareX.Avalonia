@@ -30,19 +30,19 @@ See `developers/guidelines/CODING_STANDARDS.md` for exact header formats.
 
 ### pre-push
 
-Ensures `ImageEditor` is attached to a branch and auto-pushes branch commits before pushing the superproject.
+Ensures `ShareX.ImageEditor` is attached to a branch and auto-pushes branch commits before pushing the superproject.
 
 **What it does:**
 - Runs the same detached `HEAD` recovery logic used by `post-checkout`/`post-merge`
-- If `ImageEditor` is ahead of its upstream, pushes those commits automatically
+- If `ShareX.ImageEditor` is ahead of its upstream, pushes those commits automatically
 - Sets upstream to `origin/<branch>` when possible
 
 ### post-checkout
 
-Ensures `ImageEditor` is not left detached after checkout operations.
+Ensures `ShareX.ImageEditor` is not left detached after checkout operations.
 
 **What it does:**
-- Detects detached `HEAD` in `ImageEditor`
+- Detects detached `HEAD` in `ShareX.ImageEditor`
 - Resolves default branch from `origin/HEAD` (fallback: `develop`, `main`, `master`)
 - Checks out the default branch locally
 - Attempts fast-forward to upstream when available

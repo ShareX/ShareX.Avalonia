@@ -16,7 +16,7 @@ case "$uname_out" in
     elif command -v bash >/dev/null 2>&1; then
       exec bash "$script_dir/sync-imageeditor-head.bash"
     else
-      echo "PowerShell or bash not found; cannot run ImageEditor sync hook." >&2
+      echo "PowerShell or bash not found; cannot run ShareX.ImageEditor sync hook." >&2
       exit 0
     fi
     ;;
@@ -28,7 +28,7 @@ case "$uname_out" in
     elif command -v pwsh >/dev/null 2>&1; then
       exec pwsh -NoProfile -File "$script_dir/sync-imageeditor-head.ps1"
     else
-      echo "bash or PowerShell not found; cannot run ImageEditor sync hook." >&2
+      echo "bash or PowerShell not found; cannot run ShareX.ImageEditor sync hook." >&2
       exit 0
     fi
     ;;

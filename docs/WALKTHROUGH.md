@@ -3,7 +3,7 @@
 ## Snapshot (Updated 2026-02-23)
 
 - Desktop capture workflow (capture -> annotate/edit -> save/copy/upload) is implemented.
-- Editor integration is now based on the `ImageEditor` submodule (`ShareX.ImageEditor`).
+- Editor integration is now based on the `ShareX.ImageEditor` submodule.
 - Release automation builds Windows, Linux (x64/arm64), and macOS (x64/arm64) packages.
 - Current work is mostly stabilization, parity testing, and macOS hardening rather than missing core features.
 
@@ -27,7 +27,7 @@
   provider catalog, dynamic plugin loading, instance management, file-type routing.
 - `src/platform`:
   platform service implementations for Windows, Linux, and macOS.
-- `ImageEditor/src/ShareX.ImageEditor`:
+- `ShareX.ImageEditor/src/ShareX.ImageEditor`:
   upstream editor submodule used by UI/Core/RegionCapture.
 - `tests/XerahS.Tests`:
   test coverage for core helpers, uploader config, hotkeys, Linux capture orchestration, coordinate transforms.

@@ -4,7 +4,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-IMAGEEDITOR_PATH="$REPO_ROOT/ImageEditor"
+IMAGEEDITOR_PATH="$REPO_ROOT/ShareX.ImageEditor"
 
 is_truthy() {
     case "${1:-}" in
@@ -42,7 +42,7 @@ if [ -z "$branch_name" ]; then
     was_detached=1
 
     if [ -n "$(git -C "$IMAGEEDITOR_PATH" status --porcelain 2>/dev/null)" ]; then
-        echo "WARN: ImageEditor is detached but has local changes; skipping auto-checkout." >&2
+        echo "WARN: ShareX.ImageEditor is detached but has local changes; skipping auto-checkout." >&2
         exit 0
     fi
 
@@ -60,7 +60,7 @@ if [ -z "$branch_name" ]; then
     fi
 
     if [ -z "$default_branch" ]; then
-        echo "WARN: ImageEditor is detached and default branch could not be detected." >&2
+        echo "WARN: ShareX.ImageEditor is detached and default branch could not be detected." >&2
         exit 0
     fi
 
@@ -69,7 +69,7 @@ if [ -z "$branch_name" ]; then
     elif git -C "$IMAGEEDITOR_PATH" show-ref --verify --quiet "refs/remotes/origin/$default_branch"; then
         git -C "$IMAGEEDITOR_PATH" checkout -B "$default_branch" "origin/$default_branch" >/dev/null 2>&1
     else
-        echo "WARN: ImageEditor default branch '$default_branch' not available locally." >&2
+        echo "WARN: ShareX.ImageEditor default branch '$default_branch' not available locally." >&2
         exit 0
     fi
 
@@ -78,7 +78,7 @@ if [ -z "$branch_name" ]; then
     fi
 
     branch_name="$default_branch"
-    echo "INFO: ImageEditor detached HEAD fixed -> $default_branch"
+    echo "INFO: ShareX.ImageEditor detached HEAD fixed -> $default_branch"
 fi
 
 if [ "$auto_push_enabled" -ne 1 ]; then
@@ -86,7 +86,7 @@ if [ "$auto_push_enabled" -ne 1 ]; then
 fi
 
 if [ -z "$branch_name" ]; then
-    echo "WARN: ImageEditor auto-push skipped because no active branch is checked out." >&2
+    echo "WARN: ShareX.ImageEditor auto-push skipped because no active branch is checked out." >&2
     exit 0
 fi
 
@@ -100,9 +100,9 @@ fi
 
 if [ -z "$upstream_ref" ]; then
     if git -C "$IMAGEEDITOR_PATH" push -u origin "$branch_name" >/dev/null 2>&1; then
-        echo "INFO: ImageEditor branch '$branch_name' pushed and upstream set."
+        echo "INFO: ShareX.ImageEditor branch '$branch_name' pushed and upstream set."
     else
-        echo "WARN: ImageEditor auto-push failed for '$branch_name' (set upstream)." >&2
+        echo "WARN: ShareX.ImageEditor auto-push failed for '$branch_name' (set upstream)." >&2
     fi
     exit 0
 fi
@@ -110,13 +110,13 @@ fi
 ahead_count="$(git -C "$IMAGEEDITOR_PATH" rev-list --count "${upstream_ref}..HEAD" 2>/dev/null || echo 0)"
 if [ "$ahead_count" -eq 0 ]; then
     if [ "$was_detached" -eq 1 ]; then
-        echo "INFO: ImageEditor auto-push skipped; '$branch_name' is already up to date."
+        echo "INFO: ShareX.ImageEditor auto-push skipped; '$branch_name' is already up to date."
     fi
     exit 0
 fi
 
 if git -C "$IMAGEEDITOR_PATH" push >/dev/null 2>&1; then
-    echo "INFO: ImageEditor auto-pushed $ahead_count commit(s) from '$branch_name'."
+    echo "INFO: ShareX.ImageEditor auto-pushed $ahead_count commit(s) from '$branch_name'."
 else
-    echo "WARN: ImageEditor auto-push failed for '$branch_name'." >&2
+    echo "WARN: ShareX.ImageEditor auto-push failed for '$branch_name'." >&2
 fi

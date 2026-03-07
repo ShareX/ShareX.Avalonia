@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Resolve-Path (Join-Path $scriptDir "..")
-$imageEditorPath = Join-Path $repoRoot "ImageEditor"
+$imageEditorPath = Join-Path $repoRoot "ShareX.ImageEditor"
 
 function Test-Truthy {
     param([string]$Value)
@@ -47,7 +47,7 @@ if (-not $branchName) {
 
     $porcelain = git -C $imageEditorPath status --porcelain 2>$null
     if ($porcelain) {
-        Write-Host "WARN: ImageEditor is detached but has local changes; skipping auto-checkout." -ForegroundColor Yellow
+        Write-Host "WARN: ShareX.ImageEditor is detached but has local changes; skipping auto-checkout." -ForegroundColor Yellow
         exit 0
     }
 
@@ -74,7 +74,7 @@ if (-not $branchName) {
     }
 
     if (-not $defaultBranch) {
-        Write-Host "WARN: ImageEditor is detached and default branch could not be detected." -ForegroundColor Yellow
+        Write-Host "WARN: ShareX.ImageEditor is detached and default branch could not be detected." -ForegroundColor Yellow
         exit 0
     }
 
@@ -86,7 +86,7 @@ if (-not $branchName) {
         if ($LASTEXITCODE -eq 0) {
             git -C $imageEditorPath checkout -B $defaultBranch "origin/$defaultBranch" *> $null
         } else {
-            Write-Host "WARN: ImageEditor default branch '$defaultBranch' not available locally." -ForegroundColor Yellow
+            Write-Host "WARN: ShareX.ImageEditor default branch '$defaultBranch' not available locally." -ForegroundColor Yellow
             exit 0
         }
     }
@@ -97,7 +97,7 @@ if (-not $branchName) {
     }
 
     $branchName = $defaultBranch
-    Write-Host "INFO: ImageEditor detached HEAD fixed -> $defaultBranch"
+    Write-Host "INFO: ShareX.ImageEditor detached HEAD fixed -> $defaultBranch"
 }
 
 if (-not $autoPushEnabled) {
@@ -105,7 +105,7 @@ if (-not $autoPushEnabled) {
 }
 
 if (-not $branchName) {
-    Write-Host "WARN: ImageEditor auto-push skipped because no active branch is checked out." -ForegroundColor Yellow
+    Write-Host "WARN: ShareX.ImageEditor auto-push skipped because no active branch is checked out." -ForegroundColor Yellow
     exit 0
 }
 
@@ -121,9 +121,9 @@ if (-not $upstreamRef) {
 if (-not $upstreamRef) {
     git -C $imageEditorPath push -u origin $branchName *> $null
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "INFO: ImageEditor branch '$branchName' pushed and upstream set."
+        Write-Host "INFO: ShareX.ImageEditor branch '$branchName' pushed and upstream set."
     } else {
-        Write-Host "WARN: ImageEditor auto-push failed for '$branchName' (set upstream)." -ForegroundColor Yellow
+        Write-Host "WARN: ShareX.ImageEditor auto-push failed for '$branchName' (set upstream)." -ForegroundColor Yellow
     }
     exit 0
 }
@@ -136,14 +136,14 @@ if ($aheadCountRaw) {
 
 if ($aheadCount -eq 0) {
     if ($wasDetached) {
-        Write-Host "INFO: ImageEditor auto-push skipped; '$branchName' is already up to date."
+        Write-Host "INFO: ShareX.ImageEditor auto-push skipped; '$branchName' is already up to date."
     }
     exit 0
 }
 
 git -C $imageEditorPath push *> $null
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "INFO: ImageEditor auto-pushed $aheadCount commit(s) from '$branchName'."
+    Write-Host "INFO: ShareX.ImageEditor auto-pushed $aheadCount commit(s) from '$branchName'."
 } else {
-    Write-Host "WARN: ImageEditor auto-push failed for '$branchName'." -ForegroundColor Yellow
+    Write-Host "WARN: ShareX.ImageEditor auto-push failed for '$branchName'." -ForegroundColor Yellow
 }

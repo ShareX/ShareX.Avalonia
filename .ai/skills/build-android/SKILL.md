@@ -61,7 +61,7 @@ Follow these instructions when building or deploying Android apps. **Never let a
 3. **Fix the cause** before retrying:
    - **Lingering processes**: A previous `dotnet` build may be holding the APK or DLLs. Find and stop the process (see "Pre-build: release locks" below).
    - **Clean failing**: If `dotnet clean` fails with "file in use", the lock is often the APK or a DLL; the error message names the process (e.g. ".NET Host (PID)").
-   - **Parallelism**: Use `-m:1` so only one project builds at a time and ImageEditor/plugin DLLs are not raced.
+   - **Parallelism**: Use `-m:1` so only one project builds at a time and `ShareX.ImageEditor`/plugin DLLs are not raced.
 
 Do **not** increase the timeout to 10+ minutes. Fix locks and parallelism instead.
 
@@ -141,7 +141,7 @@ If you see many `dotnet` processes and a recent build was run, consider stopping
 
 ### 3. Use single-node build to avoid races (required)
 
-**NEVER run two Android (or solution) builds at the same time.** ImageEditor and the AmazonS3 plugin share outputs that the Avalonia XAML task and MSBuild copy; parallel MSBuild nodes race on the same DLLs and Android wrapped `.so` files and cause lock errors. **That is why the Android build feels slow:** we must use **`-m:1`** (single node), so the build runs sequentially with no parallelism.
+**NEVER run two Android (or solution) builds at the same time.** `ShareX.ImageEditor` and the AmazonS3 plugin share outputs that the Avalonia XAML task and MSBuild copy; parallel MSBuild nodes race on the same DLLs and Android wrapped `.so` files and cause lock errors. **That is why the Android build feels slow:** we must use **`-m:1`** (single node), so the build runs sequentially with no parallelism.
 
 - **MAUI**: The script `build-and-deploy-android-maui.ps1` already uses **`-m:1`**. Do not remove it.
 - **Avalonia**: The script `build-and-deploy-android-ava.ps1` uses **`-m:1`** by default. Do not remove it.
@@ -162,7 +162,7 @@ dotnet clean "src\mobile-experimental\XerahS.Mobile.Maui\XerahS.Mobile.Maui.cspr
 dotnet clean "src\mobile-experimental\XerahS.Mobile.Ava\XerahS.Mobile.Ava.csproj" -f net10.0-android -c Debug -v minimal
 ```
 
-If clean still fails, manually remove `obj` folders that are locked (e.g. `ImageEditor\src\ShareX.ImageEditor\obj`, `src\desktop\plugins\AmazonS3.Plugin\obj`, `src\mobile-experimental\XerahS.Mobile.Ava\obj\Debug\net10.0-android`, or the MAUI `obj\Debug\net10.0-android` if the APK is locked).
+If clean still fails, manually remove `obj` folders that are locked (e.g. `ShareX.ImageEditor\src\ShareX.ImageEditor\obj`, `src\desktop\plugins\AmazonS3.Plugin\obj`, `src\mobile-experimental\XerahS.Mobile.Ava\obj\Debug\net10.0-android`, or the MAUI `obj\Debug\net10.0-android` if the APK is locked).
 
 ---
 

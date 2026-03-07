@@ -1,4 +1,4 @@
-name: Enforce ImageEditor Submodule Develop Head
+name: Enforce ShareX.ImageEditor Submodule Develop Head
 
 on:
   pull_request:
@@ -21,18 +21,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          configured_branch="$(git config -f .gitmodules --get submodule.ImageEditor.branch || true)"
-          configured_update="$(git config -f .gitmodules --get submodule.ImageEditor.update || true)"
+          configured_branch="$(git config -f .gitmodules --get submodule.ShareX.ImageEditor.branch || true)"
+          configured_update="$(git config -f .gitmodules --get submodule.ShareX.ImageEditor.update || true)"
           if [[ -z "${configured_branch}" ]]; then
-            echo "Missing submodule.ImageEditor.branch in .gitmodules"
+            echo "Missing submodule.ShareX.ImageEditor.branch in .gitmodules"
             exit 1
           fi
           if [[ "${configured_branch}" != "develop" ]]; then
-            echo "ImageEditor submodule must track 'develop', found '${configured_branch}'"
+            echo "ShareX.ImageEditor submodule must track 'develop', found '${configured_branch}'"
             exit 1
           fi
           if [[ "${configured_update}" != "rebase" ]]; then
-            echo "ImageEditor submodule update strategy must be 'rebase', found '${configured_update}'"
+            echo "ShareX.ImageEditor submodule update strategy must be 'rebase', found '${configured_update}'"
             exit 1
           fi
           echo "Configured branch: ${configured_branch}"
@@ -42,8 +42,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          submodule_url="$(git config -f .gitmodules --get submodule.ImageEditor.url)"
-          pinned_commit="$(git ls-tree HEAD ImageEditor | awk '{print $3}')"
+          submodule_url="$(git config -f .gitmodules --get submodule.ShareX.ImageEditor.url)"
+          pinned_commit="$(git ls-tree HEAD ShareX.ImageEditor | awk '{print $3}')"
           latest_develop_commit="$(git ls-remote "${submodule_url}" refs/heads/develop | awk '{print $1}')"
 
           echo "Pinned commit: ${pinned_commit}"
@@ -55,7 +55,7 @@ jobs:
           fi
 
           if [[ "${pinned_commit}" != "${latest_develop_commit}" ]]; then
-            echo "ImageEditor submodule is not at latest develop head."
-            echo "Run: git submodule update --remote -- ImageEditor"
+            echo "ShareX.ImageEditor submodule is not at latest develop head."
+            echo "Run: git submodule update --remote -- ShareX.ImageEditor"
             exit 1
           fi
