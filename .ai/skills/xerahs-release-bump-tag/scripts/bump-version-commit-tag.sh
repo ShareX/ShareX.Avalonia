@@ -10,6 +10,7 @@ and create/push matching tag (vX.Y.Z).
 
 Options:
   --bump <x|y|z|major|minor|patch>  Bump type (interactive if omitted)
+  --no-bump                          Keep current version (no bump); commit/push/tag as-is
   --type <token>                     Commit type token (default: CI)
   --summary <text>                   Commit summary (default: "Release v<new-version>")
   --branch <name>                    Require current branch name
@@ -114,6 +115,7 @@ require_cmd grep
 require_cmd awk
 
 BUMP=""
+NO_BUMP=0
 TYPE_TOKEN="CI"
 SUMMARY=""
 REQUIRE_BRANCH=""
@@ -127,6 +129,10 @@ while [[ $# -gt 0 ]]; do
     --bump)
       BUMP="$2"
       shift 2
+      ;;
+    --no-bump)
+      NO_BUMP=1
+      shift
       ;;
     --type)
       TYPE_TOKEN="$2"
@@ -198,12 +204,15 @@ if [[ -z "$current_version" ]]; then
   exit 1
 fi
 
-if [[ -z "$BUMP" ]]; then
-  prompt_if_empty BUMP "Select bump type [x=major, y=minor, z=patch] (default z): " "z"
+if [[ $NO_BUMP -eq 1 ]]; then
+  new_version="$current_version"
+else
+  if [[ -z "$BUMP" ]]; then
+    prompt_if_empty BUMP "Select bump type [x=major, y=minor, z=patch] (default z): " "z"
+  fi
+  BUMP="$(normalize_bump "$BUMP")"
+  new_version="$(next_version "$current_version" "$BUMP")"
 fi
-BUMP="$(normalize_bump "$BUMP")"
-
-new_version="$(next_version "$current_version" "$BUMP")"
 tag_name="v${new_version}"
 
 if git rev-parse "$tag_name" >/dev/null 2>&1; then
@@ -224,7 +233,11 @@ if [[ $ASSUME_YES -eq 0 ]]; then
   echo ""
   echo "Repository : $repo_root"
   echo "Branch     : $current_branch"
-  echo "Version    : $current_version -> $new_version"
+  if [[ $NO_BUMP -eq 1 ]]; then
+    echo "Version    : $new_version (unchanged)"
+  else
+    echo "Version    : $current_version -> $new_version"
+  fi
   echo "Tag        : $tag_name"
   echo "Commit msg : [v${new_version}] [${TYPE_TOKEN}] ${SUMMARY}"
   echo "Push       : $([[ $NO_PUSH -eq 0 ]] && echo yes || echo no)"
@@ -238,7 +251,11 @@ if [[ $ASSUME_YES -eq 0 ]]; then
 fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
-  echo "[DRY RUN] Would update $version_file to $new_version"
+  if [[ $NO_BUMP -eq 0 ]]; then
+    echo "[DRY RUN] Would update $version_file to $new_version"
+  else
+    echo "[DRY RUN] Would keep version $new_version (no bump)"
+  fi
   echo "[DRY RUN] Would run: git add -A"
   echo "[DRY RUN] Would run: git commit -m \"[v${new_version}] [${TYPE_TOKEN}] ${SUMMARY}\""
   if [[ $NO_PUSH -eq 0 ]]; then
@@ -253,12 +270,14 @@ if [[ $DRY_RUN -eq 1 ]]; then
   exit 0
 fi
 
-update_version_file "$version_file" "$new_version"
+if [[ $NO_BUMP -eq 0 ]]; then
+  update_version_file "$version_file" "$new_version"
+fi
 
 git add -A
 
 if git diff --cached --quiet; then
-  echo "Error: no staged changes after bump. Nothing to commit." >&2
+  echo "Error: no staged changes. Nothing to commit." >&2
   exit 1
 fi
 
