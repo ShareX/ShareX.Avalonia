@@ -26,11 +26,13 @@
 namespace XerahS.Indexer
 {
     /// <summary>
-    /// Async streaming JSON indexer.
+    /// Generic async adapter that wraps any sync <see cref="Indexer"/> subclass.
+    /// Replaces the boilerplate IndexerHtmlAsync, IndexerXmlAsync, IndexerJsonAsync
+    /// classes that were identical except for the concrete type they delegated to.
     /// </summary>
-    public class IndexerJsonAsync : IndexerAsync
+    internal class IndexerSyncAdapter<T> : IndexerAsync where T : Indexer
     {
-        public IndexerJsonAsync(IndexerSettings indexerSettings, IProgress<IndexerProgress>? progress = null, CancellationToken cancellationToken = default)
+        public IndexerSyncAdapter(IndexerSettings indexerSettings, IProgress<IndexerProgress>? progress = null, CancellationToken cancellationToken = default)
             : base(indexerSettings, progress, cancellationToken)
         {
         }
@@ -38,10 +40,10 @@ namespace XerahS.Indexer
         protected override async Task<IndexResult> IndexToFileAsync(string folderPath, string outputFilePath)
         {
             var startTime = DateTime.UtcNow;
-            
+
             try
             {
-                var legacyIndexer = new IndexerJson(settings);
+                var legacyIndexer = (T)Activator.CreateInstance(typeof(T), settings)!;
                 string output = await Task.Run(() => legacyIndexer.Index(folderPath), cancellationToken);
                 await File.WriteAllTextAsync(outputFilePath, output, cancellationToken);
 
@@ -67,7 +69,7 @@ namespace XerahS.Indexer
             string folderPath, string outputFilePath, int maxPreviewLines)
         {
             var result = await IndexToFileAsync(folderPath, outputFilePath);
-            
+
             string preview = string.Empty;
             if (result.Success)
             {
@@ -78,7 +80,7 @@ namespace XerahS.Indexer
                     preview += $"\n... ({lines.Length - maxPreviewLines} more lines)";
                 }
             }
-            
+
             return (result, preview);
         }
     }
