@@ -39,11 +39,28 @@ This XIP summarises those issues and all attempts tried to fix or mitigate them.
    **Files**: `CaptureOptions.cs`, `ScreenCaptureService.cs`, `LinuxScreenCaptureService.cs`  
    **Result**: Crop mapping matches portal bitmap; captured region aligns with user selection. Windows path unchanged (physical bounds and selection only when not Linux).
 
-### Issue 2 — Overlay window shift (non-Windows)
+### Issue 2 — Overlay window shift on X11 (mixed-DPI, non-primary monitors)
 
-**Problem**: Overlay does not sit exactly on top of the screen; it is shifted.
+**Problem**: On X11 with mixed-DPI monitors, the overlay for a secondary monitor appeared shifted. Root cause: `Window.Position` on X11 expects **physical pixels**, but the code was using `OverlayBounds.X/Y` (logical coordinates). When the secondary monitor has a different DPI from the primary, `logicalX ≠ physicalX` and the window was placed on the wrong screen.
 
-**Attempts**: Comparison with the Windows implementation (position/size in physical vs logical) was started; no code change was applied in this round. Overlay position/size source is the same as for the squashing fix (logical `OverlayBounds`). If shift persists, further alignment (e.g. origin or rounding) may be needed.
+**Fix**: In `OverlayWindow.axaml.cs` constructor, detect X11 (Linux and not Wayland) via `MonitorEnumerationService.IsWaylandSession()` (changed from `private` to `internal`). Use `PhysicalBounds.X/Y` for `Position` on X11; keep `OverlayBounds.X/Y` on Wayland and all other platforms (where `Window.Position` uses compositor logical coordinates matching `Screen.Bounds`).
+
+**Files**: `OverlayWindow.axaml.cs`, `MonitorEnumerationService.cs`
+
+**Known limitation**: On Wayland, `Window.Position` is documented as physical pixels but the Avalonia Wayland backend uses compositor logical coordinates internally. Using `OverlayBounds.X/Y` (logical) is safe and matches `Screen.Bounds`. Using `PhysicalBounds.X/Y` (physical) could place windows off-screen on Wayland with HiDPI. No code change applied for Wayland.
+
+### Issue 3 — Wrong crop on KDE Plasma (physical-resolution portal bitmap, mixed-DPI)
+
+**Problem**: On KDE Plasma, the XDG portal returns a **physical-resolution** screenshot. The existing crop path assumed a **logical-resolution** bitmap (valid for GNOME) and applied a single linear scale (`bitmap / logicalVirtual`) to map the selection. For mixed-DPI setups this scale is a non-uniform average and produces an incorrect crop.
+
+**Fix**:
+- `CaptureOptions.cs`: Added `PhysicalVirtualScreenBoundsForCrop` (physical virtual screen union) and `PhysicalRectForCrop` (selection in physical pixels).
+- `ScreenCaptureService.cs` (Linux path): After setting `VirtualScreenBoundsForCrop`, also compute `PhysicalVirtualScreenBoundsForCrop` (union of `monitor.PhysicalBounds`) and set `PhysicalRectForCrop = selection` (the raw physical selection).
+- `LinuxScreenCaptureService.CaptureRectAsync`: Before the existing logical path, check whether the portal bitmap dimensions match `PhysicalVirtualScreenBoundsForCrop` (within 2% tolerance). If so, use `PhysicalRectForCrop` directly offset by the physical virtual origin — no scale needed. If not, fall through to the existing logical path (GNOME).
+
+**Files**: `CaptureOptions.cs`, `ScreenCaptureService.cs`, `LinuxScreenCaptureService.cs`
+
+**Known limitation**: The 2% size tolerance heuristic could produce false positives on certain multi-monitor configurations where logical and physical bitmap sizes happen to be close. No per-monitor physical-to-logical mapping is attempted when the size check fails; the existing logical path is used as fallback.
 
 ---
 
@@ -116,16 +133,19 @@ To restore the **pre-58283cb** behaviour (portal/system dialog for region captur
 
 ## Summary Table
 
-| Area            | Issue                          | Attempt / fix                                                                 | Status        |
-|----------------|---------------------------------|-------------------------------------------------------------------------------|---------------|
-| DPI            | Overlay squashing (mixed-DPI)   | OverlayBounds (logical) for overlay; normaliser for all non-Windows          | Implemented   |
-| DPI            | Wrong crop (portal vs selection)| VirtualScreenBoundsForCrop = OverlayBounds union; selection → logical on Linux| Implemented   |
-| DPI            | Overlay window shift            | Analysed; no code change yet                                                  | Open          |
-| Performance    | Pre-capture delay               | Fast overlay on Linux (skip pre-capture)                                      | Implemented   |
-| Performance    | Sluggish crosshair              | Throttle redraws ~60 FPS; cache pens; reset on press                          | Implemented   |
-| Performance    | ~2.4 s until first pointer move | Primary overlay first; delayed focus retries (50/200/500 ms)                  | Implemented   |
-| Observability  | Bottleneck visibility           | Milestone logging + flush                                                     | Implemented   |
-| User choice    | Prefer portal over overlay      | UseModernCapture = true → platform (portal); false → overlay                  | Implemented   |
+| Area            | Issue                                         | Attempt / fix                                                                                          | Status      |
+|----------------|-----------------------------------------------|--------------------------------------------------------------------------------------------------------|-------------|
+| DPI            | Overlay squashing (mixed-DPI)                 | OverlayBounds (logical) for overlay; normaliser for all non-Windows                                   | Implemented |
+| DPI            | Wrong crop — GNOME (logical portal bitmap)    | VirtualScreenBoundsForCrop = OverlayBounds union; selection → logical on Linux                        | Implemented |
+| DPI            | Wrong crop — KDE (physical portal bitmap)     | PhysicalVirtualScreenBoundsForCrop + PhysicalRectForCrop; physical-bitmap detection in Linux service  | Implemented |
+| DPI            | Overlay window shift on X11 (mixed-DPI)       | Use PhysicalBounds.X/Y for Window.Position on X11; keep OverlayBounds on Wayland                     | Implemented |
+| DPI            | Wayland position API ambiguity                | OverlayBounds (logical) used; physical would place window off-screen on HiDPI Wayland                | Known limit |
+| DPI            | Vertical monitor stacking Y-bug (normaliser)  | Normaliser uses (logicalY − minLogicalY)×scale; wrong for vertical mixed-DPI stacking                | Known limit |
+| Performance    | Pre-capture delay                             | Fast overlay on Linux (skip pre-capture)                                                              | Implemented |
+| Performance    | Sluggish crosshair                            | Throttle redraws ~60 FPS; cache pens; reset on press                                                  | Implemented |
+| Performance    | ~2.4 s until first pointer move               | Primary overlay first; delayed focus retries (50/200/500 ms)                                          | Implemented |
+| Observability  | Bottleneck visibility                         | Milestone logging + flush                                                                              | Implemented |
+| User choice    | Prefer portal over overlay                    | UseModernCapture = true → platform (portal); false → overlay                                          | Implemented |
 
 ---
 
