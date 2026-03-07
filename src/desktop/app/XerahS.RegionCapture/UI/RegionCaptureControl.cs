@@ -22,6 +22,7 @@
 */
 
 #endregion License Information (GPL v3)
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -69,9 +70,15 @@ public sealed class RegionCaptureControl : UserControl
     // Keyboard state tracking
     private SelectionModifier _activeModifiers = SelectionModifier.None;
 
+    // Throttle crosshair redraws to ~60 FPS to reduce compositor load (Linux/mixed DPI)
+    private static readonly long CrosshairInvalidateIntervalTicks = Math.Max(1, Stopwatch.Frequency / 60);
+    private long _lastCrosshairInvalidateTicks;
+
     // Visual brushes and pens (lazy initialization for performance)
     private IBrush? _dimBrush;
     private IBrush DimBrush => _dimBrush ??= new SolidColorBrush(Color.FromArgb((byte)(_dimOpacity * 255), 0, 0, 0));
+    private IPen? _crosshairLinePen;
+    private IPen? _crosshairPen;
 
     private static readonly IPen SelectionPen = new Pen(Brushes.White, 2);
     private static readonly IPen SelectionShadowPen = new Pen(new SolidColorBrush(Color.FromArgb(100, 0, 0, 0)), 4);
@@ -247,6 +254,7 @@ public sealed class RegionCaptureControl : UserControl
 
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
+            _lastCrosshairInvalidateTicks = 0; // Allow immediate redraw on drag start
             if (_mode == RegionCaptureMode.ScreenColorPicker)
             {
                 _stateMachine.ConfirmPoint(physicalPoint);
@@ -282,7 +290,13 @@ public sealed class RegionCaptureControl : UserControl
             _stateMachine.UpdateHoveredWindow(window);
         }
 
-        InvalidateVisual();
+        // Throttle redraws to ~60 FPS to avoid sluggish crosshair on Linux (Avalonia #19363, compositor load)
+        long now = Stopwatch.GetTimestamp();
+        if (_lastCrosshairInvalidateTicks == 0 || (now - _lastCrosshairInvalidateTicks) >= CrosshairInvalidateIntervalTicks)
+        {
+            _lastCrosshairInvalidateTicks = now;
+            InvalidateVisual();
+        }
     }
 
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
@@ -607,43 +621,39 @@ public sealed class RegionCaptureControl : UserControl
         if (!bounds.Contains(cursorLocal))
             return;
 
+        // Cache pens to avoid per-frame allocations (Avalonia high-frequency rendering; issue #19363)
+        _crosshairLinePen ??= new Pen(new SolidColorBrush(Color.FromUInt32(_crosshairLineColor)), 1);
+        _crosshairPen ??= new Pen(new SolidColorBrush(Color.FromUInt32(_crosshairColor)), 1.5);
+
         const double crosshairLength = 32; // Length of the colored crosshair portion
-        
-        // Regular line pen (configurable color for full-screen lines)
-        var lineColor = Color.FromUInt32(_crosshairLineColor);
-        var linePen = new Pen(new SolidColorBrush(lineColor), 1);
-        
-        // Crosshair colored pen (configurable color, more visible near cursor)
-        var crosshairColor = Color.FromUInt32(_crosshairColor);
-        var crosshairPen = new Pen(new SolidColorBrush(crosshairColor), 1.5);
 
         // Vertical line - top portion (regular)
-        context.DrawLine(linePen,
+        context.DrawLine(_crosshairLinePen,
             new Point(cursorLocal.X, 0),
             new Point(cursorLocal.X, Math.Max(0, cursorLocal.Y - crosshairLength)));
 
         // Vertical line - crosshair portion (colored, 32px centered on cursor)
-        context.DrawLine(crosshairPen,
+        context.DrawLine(_crosshairPen,
             new Point(cursorLocal.X, Math.Max(0, cursorLocal.Y - crosshairLength)),
             new Point(cursorLocal.X, Math.Min(bounds.Height, cursorLocal.Y + crosshairLength)));
 
         // Vertical line - bottom portion (regular)
-        context.DrawLine(linePen,
+        context.DrawLine(_crosshairLinePen,
             new Point(cursorLocal.X, Math.Min(bounds.Height, cursorLocal.Y + crosshairLength)),
             new Point(cursorLocal.X, bounds.Height));
 
         // Horizontal line - left portion (regular)
-        context.DrawLine(linePen,
+        context.DrawLine(_crosshairLinePen,
             new Point(0, cursorLocal.Y),
             new Point(Math.Max(0, cursorLocal.X - crosshairLength), cursorLocal.Y));
 
         // Horizontal line - crosshair portion (colored, 32px centered on cursor)
-        context.DrawLine(crosshairPen,
+        context.DrawLine(_crosshairPen,
             new Point(Math.Max(0, cursorLocal.X - crosshairLength), cursorLocal.Y),
             new Point(Math.Min(bounds.Width, cursorLocal.X + crosshairLength), cursorLocal.Y));
 
         // Horizontal line - right portion (regular)
-        context.DrawLine(linePen,
+        context.DrawLine(_crosshairLinePen,
             new Point(Math.Min(bounds.Width, cursorLocal.X + crosshairLength), cursorLocal.Y),
             new Point(bounds.Width, cursorLocal.Y));
     }

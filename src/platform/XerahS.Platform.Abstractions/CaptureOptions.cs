@@ -39,6 +39,7 @@ namespace XerahS.Platform.Abstractions
 
         /// <summary>
         /// For region captures: use transparent overlay (live desktop visible) vs frozen screenshot background.
+        /// When true, the overlay is shown immediately without waiting for full-screen capture (faster on Linux).
         /// True for RectangleTransparent workflow, false for other region capture workflows.
         /// </summary>
         public bool UseTransparentOverlay { get; set; } = false;

@@ -178,20 +178,24 @@ namespace XerahS.UI.Services
             }
 
             // 2. Capture background for frozen overlay and magnifier BEFORE showing overlay
-            // Single capture serves both purposes - avoids duplicate DXGI capture (~200ms saved)
+            // When UseTransparentOverlay is true, or on Linux (slow full-screen capture), skip so overlay appears immediately.
+            // After selection we use CaptureRectAsync when fullScreenBitmap is null.
+            bool useFastOverlay = options?.UseTransparentOverlay ?? OperatingSystem.IsLinux();
             SKBitmap? fullScreenBitmap = null;
-            try
+            if (!useFastOverlay)
             {
-                fullScreenBitmap = await _platformImpl.CaptureFullScreenAsync(new CaptureOptions
+                try
                 {
-                    ShowCursor = false,
-                    UseModernCapture = options?.UseModernCapture ?? true
-                });
-            }
-
-            catch
-            {
-                // Ignore - full screen capture is optional for fallback
+                    fullScreenBitmap = await _platformImpl.CaptureFullScreenAsync(new CaptureOptions
+                    {
+                        ShowCursor = false,
+                        UseModernCapture = options?.UseModernCapture ?? true
+                    });
+                }
+                catch
+                {
+                    // Ignore - full screen capture is optional for fallback
+                }
             }
 
             // 3. Select Region (UI) - pass ghost cursor for overlay display
@@ -208,7 +212,7 @@ namespace XerahS.UI.Services
                         {
                             ShowCursor = options?.ShowCursor ?? false,
                             BackgroundImage = fullScreenBitmap,
-                            UseTransparentOverlay = options?.UseTransparentOverlay ?? false,
+                            UseTransparentOverlay = useFastOverlay,
                             EditorOptions = RegionCaptureAnnotationOptionsStore.GetEditorOptions(options?.WorkflowId),
                         }
                     };
