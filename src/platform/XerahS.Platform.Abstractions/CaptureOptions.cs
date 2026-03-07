@@ -72,7 +72,22 @@ namespace XerahS.Platform.Abstractions
         /// When set, the capture backend may use this to map the crop rect from app virtual screen
         /// coordinates to the actual capture bitmap size (e.g. when portal returns different resolution).
         /// Used on Linux when cropping a full-screen portal capture to the selected region.
+        /// Coordinates are in logical (compositor) pixels — matches the logical overlay layout.
         /// </summary>
         public Rectangle? VirtualScreenBoundsForCrop { get; set; }
+
+        /// <summary>
+        /// Physical (device-pixel) virtual screen bounds. Set alongside <see cref="VirtualScreenBoundsForCrop"/>
+        /// on Linux so <c>LinuxScreenCaptureService</c> can detect whether the portal screenshot is in
+        /// physical or logical pixel space and choose the correct crop mapping.
+        /// </summary>
+        public Rectangle? PhysicalVirtualScreenBoundsForCrop { get; set; }
+
+        /// <summary>
+        /// Selection rectangle in physical (device) pixel coordinates.
+        /// Used together with <see cref="PhysicalVirtualScreenBoundsForCrop"/> when the portal
+        /// screenshot is detected to be in physical pixel space (e.g. KDE Plasma portal).
+        /// </summary>
+        public Rectangle? PhysicalRectForCrop { get; set; }
     }
 }
