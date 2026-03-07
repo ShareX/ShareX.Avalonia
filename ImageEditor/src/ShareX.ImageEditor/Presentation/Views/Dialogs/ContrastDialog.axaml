@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.ContrastDialog"
+             x:Name="ContrastDialogRoot">
+
+    <UserControl.Resources>
+        <SolidColorBrush x:Key="AccentColor">#3975D5</SolidColorBrush>
+        <SolidColorBrush x:Key="TextColor">#E7E9EA</SolidColorBrush>
+        <SolidColorBrush x:Key="LabelColor">#9CA3AF</SolidColorBrush>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.label">
+            <Setter Property="Foreground" Value="{StaticResource LabelColor}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style Selector="Button.primary">
+            <Setter Property="Background" Value="{StaticResource AccentColor}"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="Padding" Value="20,8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style Selector="Button.secondary">
+            <Setter Property="Background" Value="#3E3E3E"/>
+            <Setter Property="Foreground" Value="{StaticResource TextColor}"/>
+            <Setter Property="Padding" Value="20,8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+    </UserControl.Styles>
+
+    <StackPanel Spacing="0">
+        <!-- Header -->
+        <TextBlock Text="Contrast" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+        
+        <!-- Slider -->
+        <controls:EffectSlider Label="Amount" ValueStringFormat="{}{0:0}" x:Name="AmountSlider"
+                    Minimum="-100" Maximum="100" Value="0"
+                    TickFrequency="10" IsSnapToTickEnabled="True"
+                    Background="#374151"
+                    ValueChanged="OnValueChanged"/>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>
+

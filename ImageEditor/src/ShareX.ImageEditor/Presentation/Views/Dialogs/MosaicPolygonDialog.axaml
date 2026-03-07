@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="380"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.MosaicPolygonDialog"
+             x:Name="MosaicPolygonDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Mosaic Polygon" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Shape" Foreground="#9CA3AF"/>
+                <ComboBox x:Name="ShapeComboBox"
+                          SelectedIndex="0"
+                          SelectionChanged="OnShapeChanged"
+                          HorizontalAlignment="Stretch"
+                          Background="#374151"
+                          BorderThickness="0"
+                          CornerRadius="4">
+                    <ComboBoxItem Content="Hexagon"/>
+                    <ComboBoxItem Content="Triangle"/>
+                </ComboBox>
+            </StackPanel>
+
+            <controls:EffectSlider Label="Cell size (px)" ValueStringFormat="{}{0:0}" x:Name="CellSizeSlider"
+                                   Minimum="8"
+                                   Maximum="80"
+                                   Value="24"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Border width (px)" ValueStringFormat="{}{0:0.0}" x:Name="BorderWidthSlider"
+                                   Minimum="0"
+                                   Maximum="6"
+                                   Value="1"
+                                   TickFrequency="0.1"
+                                   IsSnapToTickEnabled="False"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Border opacity (%)" ValueStringFormat="{}{0:0}" x:Name="BorderOpacitySlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="45"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Randomness (%)" ValueStringFormat="{}{0:0}" x:Name="RandomnessSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="18"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

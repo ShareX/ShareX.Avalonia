@@ -1,0 +1,52 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="320"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.PencilSketchDialog"
+             x:Name="PencilSketchDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Pencil Sketch" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="8">
+            <controls:EffectSlider Label="Blur radius (px)" ValueStringFormat="{}{0:0}" x:Name="BlurRadiusSlider"
+                                   Minimum="1"
+                                   Maximum="24"
+                                   Value="8"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Edge strength (%)" ValueStringFormat="{}{0:0}" x:Name="EdgeStrengthSlider"
+                                   Minimum="0"
+                                   Maximum="160"
+                                   Value="65"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Pencil darkness (%)" ValueStringFormat="{}{0:0}" x:Name="PencilDarknessSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="70"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Paper brightness (%)" ValueStringFormat="{}{0:0}" x:Name="PaperBrightnessSlider"
+                                   Minimum="40"
+                                   Maximum="130"
+                                   Value="100"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

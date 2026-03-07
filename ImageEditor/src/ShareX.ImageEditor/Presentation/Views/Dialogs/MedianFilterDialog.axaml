@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="220"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.MedianFilterDialog"
+             x:Name="MedianFilterDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Median filter" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <controls:EffectSlider Label="Radius" ValueStringFormat="{}{0:0}" x:Name="RadiusSlider"
+                    Minimum="1"
+                    Maximum="5"
+                    Value="1"
+                    TickFrequency="1"
+                    IsSnapToTickEnabled="True"
+                    ValueChanged="OnValueChanged"/>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>
+

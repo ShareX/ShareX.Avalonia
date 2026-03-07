@@ -1,0 +1,120 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             xmlns:cp="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.ColorPicker"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="430"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.NeonEdgeGlowDialog"
+             x:Name="NeonEdgeGlowDialogRoot">
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+    </UserControl.Styles>
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Neon Edge Glow" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="8">
+            <controls:EffectSlider Label="Edge strength" ValueStringFormat="{}{0:0.0}" x:Name="StrengthSlider"
+                                   Minimum="0.1"
+                                   Maximum="6"
+                                   Value="2.2"
+                                   TickFrequency="0.1"
+                                   IsSnapToTickEnabled="False"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Threshold" ValueStringFormat="{}{0:0}" x:Name="ThresholdSlider"
+                                   Minimum="0"
+                                   Maximum="255"
+                                   Value="36"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Glow radius (px)" ValueStringFormat="{}{0:0}" x:Name="RadiusSlider"
+                                   Minimum="0"
+                                   Maximum="40"
+                                   Value="8"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Glow intensity (%)" ValueStringFormat="{}{0:0}" x:Name="IntensitySlider"
+                                   Minimum="0"
+                                   Maximum="250"
+                                   Value="120"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Base dim (%)" ValueStringFormat="{}{0:0}" x:Name="BaseDimSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="30"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Neon color" Foreground="#9CA3AF"/>
+                <Grid>
+                    <Button x:Name="ColorButton"
+                            Classes="editor-button"
+                            Click="OnColorButtonClick"
+                            Height="36"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                        <Grid ColumnDefinitions="Auto,8,*">
+                            <Grid Grid.Column="0" Width="24" Height="24" VerticalAlignment="Center">
+                                <Border CornerRadius="4" ClipToBounds="True">
+                                    <Border.Background>
+                                        <DrawingBrush TileMode="Tile" DestinationRect="0,0,8,8" SourceRect="0,0,8,8">
+                                            <DrawingBrush.Drawing>
+                                                <DrawingGroup>
+                                                    <GeometryDrawing Brush="#CCCCCC">
+                                                        <GeometryDrawing.Geometry><RectangleGeometry Rect="0,0,8,8"/></GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                    <GeometryDrawing Brush="#999999">
+                                                        <GeometryDrawing.Geometry>
+                                                            <GeometryGroup>
+                                                                <RectangleGeometry Rect="0,0,4,4"/>
+                                                                <RectangleGeometry Rect="4,4,4,4"/>
+                                                            </GeometryGroup>
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                </DrawingGroup>
+                                            </DrawingBrush.Drawing>
+                                        </DrawingBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Background="{Binding NeonColorBrush, ElementName=NeonEdgeGlowDialogRoot}" CornerRadius="4"/>
+                            </Grid>
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding NeonColorText, ElementName=NeonEdgeGlowDialogRoot}"
+                                       Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+
+                    <Popup x:Name="ColorPopup"
+                           PlacementTarget="{Binding #ColorButton}"
+                           Placement="Bottom"
+                           IsLightDismissEnabled="True"
+                           VerticalOffset="4">
+                        <Border Background="#1F2937" CornerRadius="8" Padding="4" BorderBrush="#374151" BorderThickness="1">
+                            <cp:ColorView x:Name="ColorViewControl"
+                                          Color="{Binding NeonColorValue, ElementName=NeonEdgeGlowDialogRoot, Mode=TwoWay}"
+                                          IsAlphaVisible="True"
+                                          IsColorPreviewVisible="True"/>
+                        </Border>
+                    </Popup>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

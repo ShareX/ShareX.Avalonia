@@ -1,0 +1,205 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="620"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.DrawTextDialog">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Text" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Text" Foreground="#9CA3AF"/>
+                    <TextBox x:Name="TextContentInput"
+                             Text="Text"
+                             TextChanged="OnTextChanged"
+                             AcceptsReturn="True"
+                             MinHeight="70"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Placement" Foreground="#9CA3AF"/>
+                    <ComboBox x:Name="PlacementComboBox"
+                              SelectedIndex="0"
+                              SelectionChanged="OnSelectionChanged"
+                              HorizontalAlignment="Stretch"
+                              Background="#374151"
+                              BorderThickness="0"
+                              CornerRadius="4">
+                        <ComboBoxItem Content="Top left"/>
+                        <ComboBoxItem Content="Top center"/>
+                        <ComboBoxItem Content="Top right"/>
+                        <ComboBoxItem Content="Middle left"/>
+                        <ComboBoxItem Content="Middle center"/>
+                        <ComboBoxItem Content="Middle right"/>
+                        <ComboBoxItem Content="Bottom left"/>
+                        <ComboBoxItem Content="Bottom center"/>
+                        <ComboBoxItem Content="Bottom right"/>
+                    </ComboBox>
+                </StackPanel>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Offset X" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="OffsetXInput"
+                                       Value="0"
+                                       Minimum="-4000"
+                                       Maximum="4000"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Offset Y" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="OffsetYInput"
+                                       Value="0"
+                                       Minimum="-4000"
+                                       Maximum="4000"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Angle" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="AngleInput"
+                                       Value="0"
+                                       Minimum="-3600"
+                                       Maximum="3600"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Font size" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="FontSizeInput"
+                                       Value="36"
+                                       Minimum="1"
+                                       Maximum="500"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Font family" Foreground="#9CA3AF"/>
+                    <TextBox x:Name="FontFamilyTextBox"
+                             Text="Arial"
+                             TextChanged="OnTextChanged"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <CheckBox x:Name="BoldCheckBox"
+                              Content="Bold"
+                              Foreground="#E7E9EA"
+                              Checked="OnSettingChanged"
+                              Unchecked="OnSettingChanged"/>
+                    <CheckBox x:Name="ItalicCheckBox"
+                              Content="Italic"
+                              Foreground="#E7E9EA"
+                              Checked="OnSettingChanged"
+                              Unchecked="OnSettingChanged"/>
+                    <CheckBox x:Name="AutoHideCheckBox"
+                              Content="Auto hide"
+                              Foreground="#E7E9EA"
+                              Checked="OnSettingChanged"
+                              Unchecked="OnSettingChanged"/>
+                </StackPanel>
+
+                <Separator/>
+                <TextBlock Text="Fill" Foreground="#9CA3AF"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Color" Foreground="#9CA3AF"/>
+                    <controls:ColorPickerDropdown x:Name="FillColorPicker"
+                                                  SelectedColorValue="#FFEBEBEB"/>
+                </StackPanel>
+
+                <Separator/>
+                <TextBlock Text="Outline" Foreground="#9CA3AF"/>
+
+                <CheckBox x:Name="OutlineCheckBox"
+                          Content="Enable outline"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Outline size" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="OutlineSizeInput"
+                                   Value="5"
+                                   Minimum="0"
+                                   Maximum="200"
+                                   Increment="1"
+                                   FormatString="0"
+                                   ValueChanged="OnNumericChanged"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Outline color" Foreground="#9CA3AF"/>
+                    <controls:ColorPickerDropdown x:Name="OutlineColorPicker"
+                                                  SelectedColorValue="#FFEB0000"/>
+                </StackPanel>
+
+                <Separator/>
+                <TextBlock Text="Shadow" Foreground="#9CA3AF"/>
+
+                <CheckBox x:Name="ShadowCheckBox"
+                          Content="Enable shadow"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Shadow offset X" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="ShadowOffsetXInput"
+                                       Value="0"
+                                       Minimum="-4000"
+                                       Maximum="4000"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Shadow offset Y" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="ShadowOffsetYInput"
+                                       Value="5"
+                                       Minimum="-4000"
+                                       Maximum="4000"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Shadow color" Foreground="#9CA3AF"/>
+                    <controls:ColorPickerDropdown x:Name="ShadowColorPicker"
+                                                  SelectedColorValue="#7D000000"/>
+                </StackPanel>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button"
+                    Content="Cancel"
+                    Click="OnCancelClick"
+                    Margin="0,0,4,0"
+                    HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active"
+                    Content="Apply"
+                    Click="OnApplyClick"
+                    Margin="4,0,0,0"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

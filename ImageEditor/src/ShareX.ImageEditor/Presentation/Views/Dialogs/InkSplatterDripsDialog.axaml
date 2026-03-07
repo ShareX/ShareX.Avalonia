@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="390"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.InkSplatterDripsDialog"
+             x:Name="InkSplatterDripsDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Ink splatter + drips" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="8">
+            <controls:EffectSlider Label="Ink amount (%)" ValueStringFormat="{}{0:0}" x:Name="InkAmountSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="55"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Drip length (%)" ValueStringFormat="{}{0:0}" x:Name="DripLengthSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="45"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Spread (%)" ValueStringFormat="{}{0:0}" x:Name="SpreadSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="35"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Paper fade (%)" ValueStringFormat="{}{0:0}" x:Name="PaperFadeSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="20"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

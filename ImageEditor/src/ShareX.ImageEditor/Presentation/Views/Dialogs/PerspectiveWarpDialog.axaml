@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="430"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.PerspectiveWarpDialog"
+             x:Name="PerspectiveWarpDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Perspective Warp" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Top left offset" Foreground="#9CA3AF"/>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="X" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="TopLeftXInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="Y" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="TopLeftYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Top right offset" Foreground="#9CA3AF"/>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="X" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="TopRightXInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="Y" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="TopRightYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Bottom right offset" Foreground="#9CA3AF"/>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="X" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="BottomRightXInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="Y" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="BottomRightYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Bottom left offset" Foreground="#9CA3AF"/>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="X" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="BottomLeftXInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="6">
+                    <TextBlock Grid.Column="0" Text="Y" Foreground="#9CA3AF" VerticalAlignment="Center"/>
+                    <NumericUpDown Grid.Column="1" x:Name="BottomLeftYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="10" FormatString="0" ValueChanged="OnValueChanged"/>
+                </Grid>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

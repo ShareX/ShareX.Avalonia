@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <Platforms>x64;ARM64</Platforms>
+  </PropertyGroup>
+</Project>

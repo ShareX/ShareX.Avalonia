@@ -1,0 +1,53 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="420"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.CrystalizeShardsDialog"
+             x:Name="CrystalizeShardsDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Crystalize shards" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="8">
+            <controls:EffectSlider Label="Shard size (px)" ValueStringFormat="{}{0:0}" x:Name="ShardSizeSlider"
+                                   Minimum="6"
+                                   Maximum="80"
+                                   Value="22"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Jitter (%)" ValueStringFormat="{}{0:0}" x:Name="JitterSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="65"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Edge strength (%)" ValueStringFormat="{}{0:0}" x:Name="EdgeStrengthSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="75"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Shine (%)" ValueStringFormat="{}{0:0}" x:Name="ShineSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="30"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>
+

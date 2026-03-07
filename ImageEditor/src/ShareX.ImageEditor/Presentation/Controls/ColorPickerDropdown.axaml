@@ -1,0 +1,97 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:cp="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.ColorPicker"
+             mc:Ignorable="d" d:DesignWidth="200" d:DesignHeight="40"
+             x:Class="ShareX.ImageEditor.Presentation.Controls.ColorPickerDropdown"
+             x:Name="ColorPickerDropdownRoot">
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+    </UserControl.Styles>
+
+    <Grid>
+        <!-- Dropdown Button -->
+        <Button x:Name="DropdownButton"
+                Classes="editor-button"
+                Click="OnDropdownButtonClick"
+                Height="40"
+                MinWidth="60"
+                HorizontalContentAlignment="Stretch">
+            <Grid ColumnDefinitions="Auto,*,Auto">
+                <!-- Color Preview -->
+                <Grid Grid.Column="0" 
+                      Width="24" 
+                      Height="24" 
+                      VerticalAlignment="Center" 
+                      Margin="0,0,6,0">
+                    
+                    <!-- Checkered Background -->
+                    <Border CornerRadius="4" ClipToBounds="True">
+                        <Border.Background>
+                            <DynamicResource ResourceKey="ShareX.Brush.Checkered.Small"/>
+                        </Border.Background>
+                    </Border>
+                    
+                    <!-- Color Overlay -->
+                    <Border Background="{Binding SelectedColor, ElementName=ColorPickerDropdownRoot}"
+                            CornerRadius="4"/>
+                    
+                    <!-- Border Color: Hole in center showing checkered through -->
+                    <Border IsVisible="{Binding ShowBorderHole, ElementName=ColorPickerDropdownRoot}"
+                            Margin="5"
+                            CornerRadius="2"
+                            ClipToBounds="True"
+                            IsHitTestVisible="False">
+                        <Border.Background>
+                            <DynamicResource ResourceKey="ShareX.Brush.Checkered.Small"/>
+                        </Border.Background>
+                    </Border>
+                    
+                    <!-- Text Color: Plain 'A' label -->
+                    <TextBlock Text="A"
+                               IsVisible="{Binding ShowTextLabel, ElementName=ColorPickerDropdownRoot}"
+                               FontFamily="Segoe UI"
+                               FontWeight="Bold"
+                               FontSize="14"
+                               Foreground="{Binding IconForeground, ElementName=ColorPickerDropdownRoot}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               IsHitTestVisible="False"/>
+                </Grid>
+
+                <!-- Spacer -->
+                <Border Grid.Column="1"/>
+
+                <!-- Chevron Icon (FontAwesome ChevronDown) -->
+                <TextBlock Grid.Column="2"
+                           Text="&#xf078;"
+                           FontFamily="{DynamicResource ShareX.FontFamily.Icon}"
+                           FontWeight="Black"
+                           FontSize="10"
+                           Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"
+                           VerticalAlignment="Center"/>
+            </Grid>
+        </Button>
+
+        <Popup x:Name="ColorPopup"
+               PlacementTarget="{Binding #DropdownButton}"
+               Placement="Bottom"
+               IsLightDismissEnabled="True"
+               VerticalOffset="4">
+            <Border Background="{DynamicResource ShareX.Brush.Background.Popup}" 
+                    CornerRadius="8" 
+                    Padding="4"
+                    BorderBrush="{DynamicResource ShareX.Brush.Border}"
+                    BorderThickness="1">
+                <cp:ColorView x:Name="ColorViewControl"
+                              Color="{Binding SelectedColorValue, ElementName=ColorPickerDropdownRoot, Mode=TwoWay}"
+                              IsAlphaVisible="True"
+                              IsColorPreviewVisible="True"
+                              SelectedIndex="1"
+                              HsvColor="{Binding SelectedHsvColor, ElementName=ColorPickerDropdownRoot, Mode=TwoWay}"/>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

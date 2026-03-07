@@ -1,0 +1,43 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="420"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.RGBSplitDialog"
+             x:Name="RGBSplitDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="RGB Split" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Red" Foreground="#9CA3AF"/>
+                <TextBlock Text="Offset X" Foreground="#9CA3AF" FontSize="12"/>
+                <NumericUpDown x:Name="RedXInput" Value="-5" Minimum="-1000" Maximum="1000" Increment="1" FormatString="0" ValueChanged="OnValueChanged"/>
+                <TextBlock Text="Offset Y" Foreground="#9CA3AF" FontSize="12"/>
+                <NumericUpDown x:Name="RedYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="1" FormatString="0" ValueChanged="OnValueChanged"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Green" Foreground="#9CA3AF"/>
+                <TextBlock Text="Offset X" Foreground="#9CA3AF" FontSize="12"/>
+                <NumericUpDown x:Name="GreenXInput" Value="0" Minimum="-1000" Maximum="1000" Increment="1" FormatString="0" ValueChanged="OnValueChanged"/>
+                <TextBlock Text="Offset Y" Foreground="#9CA3AF" FontSize="12"/>
+                <NumericUpDown x:Name="GreenYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="1" FormatString="0" ValueChanged="OnValueChanged"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Blue" Foreground="#9CA3AF"/>
+                <TextBlock Text="Offset X" Foreground="#9CA3AF" FontSize="12"/>
+                <NumericUpDown x:Name="BlueXInput" Value="5" Minimum="-1000" Maximum="1000" Increment="1" FormatString="0" ValueChanged="OnValueChanged"/>
+                <TextBlock Text="Offset Y" Foreground="#9CA3AF" FontSize="12"/>
+                <NumericUpDown x:Name="BlueYInput" Value="0" Minimum="-1000" Maximum="1000" Increment="1" FormatString="0" ValueChanged="OnValueChanged"/>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

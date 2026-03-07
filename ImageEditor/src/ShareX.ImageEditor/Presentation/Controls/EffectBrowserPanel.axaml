@@ -1,0 +1,80 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="300" d:DesignHeight="600"
+             x:Class="ShareX.ImageEditor.Presentation.Controls.EffectBrowserPanel">
+
+    <UserControl.Styles>
+        <Style Selector="TextBlock.category-header">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="Foreground" Value="{DynamicResource ShareX.Brush.Text.Secondary}"/>
+            <Setter Property="Margin" Value="8,8,0,8"/>
+        </Style>
+        <Style Selector="Button.effect-item">
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Control.Background}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,8"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="HorizontalContentAlignment" Value="Left"/>
+            
+            <Style Selector="^:pointerover">
+                <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Control.Background.Hover}"/>
+            </Style>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Search Box -->
+        <TextBox x:Name="SearchBox"
+                 Grid.Row="0"
+                 Watermark="Search effects..."
+                 Margin="16,16,16,0"
+                 CornerRadius="4"
+                 TextChanged="OnSearchTextChanged"/>
+
+        <!-- Categories List -->
+        <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <ItemsControl x:Name="CategoriesControl" Margin="16,8,16,16">
+                <ItemsControl.DataTemplates>
+                    <!-- EffectCategory Template -->
+                    <DataTemplate DataType="{x:Type controls:EffectCategory}">
+                        <StackPanel Margin="0,0,0,8" IsVisible="{Binding IsVisible}">
+                            <TextBlock Text="{Binding HeaderText}" Classes="category-header"/>
+                            <ItemsControl ItemsSource="{Binding VisibleEffects}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate DataType="{x:Type controls:EffectItem}">
+                                        <Button Classes="effect-item" 
+                                                Command="{Binding ExecuteCommand}"
+                                                PointerPressed="OnEffectItemPointerPressed"
+                                                ToolTip.Tip="{Binding Description}">
+                                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                                <TextBlock Text="{Binding Icon}" 
+                                                           FontFamily="{DynamicResource ShareX.FontFamily.Icon}"
+                                                           FontSize="16"
+                                                           Foreground="{DynamicResource ShareX.Brush.Text}"
+                                                           VerticalAlignment="Center"
+                                                           Width="20" TextAlignment="Center"/>
+                                                <TextBlock Text="{Binding Name}" 
+                                                           Foreground="{DynamicResource ShareX.Brush.Text}"
+                                                           FontSize="13"
+                                                           VerticalAlignment="Center"/>
+                                            </StackPanel>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </DataTemplate>
+                </ItemsControl.DataTemplates>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

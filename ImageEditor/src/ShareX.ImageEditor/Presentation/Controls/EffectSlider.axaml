@@ -1,0 +1,31 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:ShareX.ImageEditor.Presentation.Controls">
+
+    <Style Selector="controls|EffectSlider">
+        <Setter Property="Background" Value="#374151"/>
+        <Setter Property="Template">
+            <ControlTemplate>
+                <StackPanel Spacing="0">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Grid.Column="0"
+                                   Text="{TemplateBinding Label}"
+                                   Foreground="#9CA3AF"/>
+                        <Border Grid.Column="1" Classes="capsule">
+                            <TextBlock Text="{TemplateBinding ValueText}"
+                                       Foreground="#E7E9EA"/>
+                        </Border>
+                    </Grid>
+                    <Slider Minimum="{TemplateBinding Minimum}"
+                            Maximum="{TemplateBinding Maximum}"
+                            Value="{Binding Value, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                            TickFrequency="{TemplateBinding TickFrequency}"
+                            IsSnapToTickEnabled="{TemplateBinding IsSnapToTickEnabled}"
+                            Background="{TemplateBinding Background}"
+                            IsEnabled="{TemplateBinding IsEnabled}"/>
+                </StackPanel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+</Styles>

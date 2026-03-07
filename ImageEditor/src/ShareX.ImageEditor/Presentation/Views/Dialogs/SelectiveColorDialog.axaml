@@ -1,0 +1,62 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.SelectiveColorDialog"
+             x:Name="SelectiveColorDialogRoot">
+
+    <StackPanel Spacing="0">
+        <!-- Header -->
+        <TextBlock Text="Selective Color" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+        
+        <StackPanel Spacing="12">
+            <!-- Color Range Selector -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="Color Range" Foreground="#9CA3AF"/>
+                <ComboBox x:Name="RangeComboBox" SelectedIndex="0" HorizontalAlignment="Stretch" SelectionChanged="OnRangeChanged"
+                          Background="#374151" BorderThickness="0" CornerRadius="4">
+                    <ComboBoxItem>Reds</ComboBoxItem>
+                    <ComboBoxItem>Yellows</ComboBoxItem>
+                    <ComboBoxItem>Greens</ComboBoxItem>
+                    <ComboBoxItem>Cyans</ComboBoxItem>
+                    <ComboBoxItem>Blues</ComboBoxItem>
+                    <ComboBoxItem>Magentas</ComboBoxItem>
+                    <ComboBoxItem>Whites</ComboBoxItem>
+                    <ComboBoxItem>Neutrals</ComboBoxItem>
+                    <ComboBoxItem>Blacks</ComboBoxItem>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Hue Shift -->
+            <controls:EffectSlider Label="Hue Shift" ValueStringFormat="{}{0:0}°" x:Name="HueSlider"
+                        Minimum="-180" Maximum="180" Value="0"
+                        TickFrequency="30" IsSnapToTickEnabled="False"
+                        Background="#374151"
+                        ValueChanged="OnValueChanged"/>
+
+            <!-- Saturation Shift -->
+            <controls:EffectSlider Label="Saturation Shift" ValueStringFormat="{}{0:0}%" x:Name="SatSlider"
+                        Minimum="-100" Maximum="100" Value="0"
+                        TickFrequency="25" IsSnapToTickEnabled="False"
+                         Background="#374151"
+                        ValueChanged="OnValueChanged"/>
+
+            <!-- Lightness Shift -->
+            <controls:EffectSlider Label="Lightness Shift" ValueStringFormat="{}{0:0}%" x:Name="LightSlider"
+                        Minimum="-100" Maximum="100" Value="0"
+                        TickFrequency="25" IsSnapToTickEnabled="False"
+                         Background="#374151"
+                        ValueChanged="OnValueChanged"/>
+
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>
+

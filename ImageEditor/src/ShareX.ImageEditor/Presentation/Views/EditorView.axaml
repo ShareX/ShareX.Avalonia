@@ -1,0 +1,926 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="using:ShareX.ImageEditor.Presentation.ViewModels"
+             xmlns:views="using:ShareX.ImageEditor.Presentation.Views"
+             xmlns:models="using:ShareX.ImageEditor.Core.Annotations"
+             xmlns:converters="using:ShareX.ImageEditor.Presentation.Converters"
+             xmlns:helpers="using:ShareX.ImageEditor.Presentation.Rendering"
+             xmlns:controls="using:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="ShareX.ImageEditor.Presentation.Views.EditorView"
+             Focusable="True"
+             KeyDown="OnKeyDown"
+             KeyUp="OnKeyUp">
+
+    <UserControl.DataTemplates>
+        <DataTemplate DataType="{x:Type vm:ConfirmationDialogViewModel}">
+            <views:ConfirmationDialogView />
+        </DataTemplate>
+    </UserControl.DataTemplates>
+
+    <UserControl.Resources>
+        <converters:DoubleToCornerRadiusConverter x:Key="DoubleToCornerRadius" />
+        <converters:EqualsConverter x:Key="EqualsConverter" />
+
+        <x:String x:Key="IconSelect">&#xf25a;</x:String>
+        <x:String x:Key="IconRectangle">&#xf0c8;</x:String>
+        <x:String x:Key="IconEllipse">&#xf111;</x:String>
+        <x:String x:Key="IconLine">&#xf068;</x:String>
+        <x:String x:Key="IconArrow">&#xf061;</x:String>
+        <x:String x:Key="IconPen">&#xf304;</x:String>
+        <x:String x:Key="IconHighlighter">&#xf591;</x:String>
+        <x:String x:Key="IconText">&#xf031;</x:String>
+        <x:String x:Key="IconSpeechBalloon">&#xf4ad;</x:String>
+        <x:String x:Key="IconNumber">&#xf0cb;</x:String>
+        <x:String x:Key="IconBlur">&#xf043;</x:String>
+        <x:String x:Key="IconPixelate">&#xf009;</x:String>
+        <x:String x:Key="IconMagnify">&#xf00e;</x:String>
+        <x:String x:Key="IconSpotlight">&#xf0eb;</x:String>
+        <x:String x:Key="IconSmartEraser">&#xf12d;</x:String>
+        <x:String x:Key="IconCrop">&#xf125;</x:String>
+        <x:String x:Key="IconCutOut">&#xf0c4;</x:String>
+        <x:String x:Key="IconBackground">&#xf03e;</x:String>
+        <x:String x:Key="IconUndo">&#xf0e2;</x:String>
+        <x:String x:Key="IconRedo">&#xf01e;</x:String>
+        <x:String x:Key="IconClear">&#xf12d;</x:String>
+        <x:String x:Key="IconDelete">&#xf2ed;</x:String>
+        <x:String x:Key="IconCopy">&#xf0c5;</x:String>
+        <x:String x:Key="IconSave">&#xf0c7;</x:String>
+        <x:String x:Key="IconDownload">&#xf019;</x:String>
+        <x:String x:Key="IconZoomIn">&#xf00e;</x:String>
+        <x:String x:Key="IconZoomOut">&#xf010;</x:String>
+        <x:String x:Key="IconSync">&#xf021;</x:String>
+        <x:String x:Key="IconCloud">&#xf0c2;</x:String>
+        <x:String x:Key="IconCloudArrowUp">&#xf0ee;</x:String>
+        <x:String x:Key="IconMoon">&#xf186;</x:String>
+        <x:String x:Key="IconPaste">&#xf0ea;</x:String>
+        <x:String x:Key="IconDuplicate">&#xf24d;</x:String>
+        <x:String x:Key="IconBringToFront">&#xf102;</x:String>
+        <x:String x:Key="IconBringForward">&#xf106;</x:String>
+        <x:String x:Key="IconSendBackward">&#xf107;</x:String>
+        <x:String x:Key="IconSendToBack">&#xf103;</x:String>
+        <x:String x:Key="IconHardDrive">&#xf0a0;</x:String>
+        <x:String x:Key="IconThumbtack">&#xf08d;</x:String>
+        <x:String x:Key="IconPlay">&#xf04b;</x:String>
+        <x:String x:Key="IconCancel">&#xf00d;</x:String>
+        <x:String x:Key="IconBold">&#xf032;</x:String>
+        <x:String x:Key="IconItalic">&#xf033;</x:String>
+        <x:String x:Key="IconUnderline">&#xf0cd;</x:String>
+
+        <ContextMenu x:Key="EditorContextMenu"
+                     Placement="Pointer"
+                     BorderBrush="{DynamicResource ShareX.Brush.Border}"
+                     BorderThickness="1"
+                     CornerRadius="6"
+                     Padding="6,2"
+                     Cursor="Arrow">
+            <MenuItem Header="Undo" Command="{Binding UndoCommand}" InputGesture="Ctrl+Z">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconUndo}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Redo" Command="{Binding RedoCommand}" InputGesture="Ctrl+Y">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconRedo}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <Separator/>
+
+            <MenuItem Header="Delete" Command="{Binding DeleteSelectedCommand}" InputGesture="Delete">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconDelete}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Delete all" Command="{Binding ClearAnnotationsCommand}" InputGesture="Shift+Delete">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconClear}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Flatten" Command="{Binding FlattenImageCommand}" InputGesture="Ctrl+Shift+F">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="&#xf5fd;"/>
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <Separator/>
+
+            <MenuItem Header="Cut" Command="{Binding CutAnnotationCommand}" InputGesture="Ctrl+X">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconCutOut}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Copy" Command="{Binding CopyAnnotationCommand}" InputGesture="Ctrl+C">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconCopy}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Paste" Command="{Binding PasteCommand}" InputGesture="Ctrl+V">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconPaste}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Duplicate" Command="{Binding DuplicateSelectedCommand}" InputGesture="Ctrl+D">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconDuplicate}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <Separator/>
+
+            <MenuItem Header="Bring to front" Command="{Binding BringToFrontCommand}" InputGesture="Home">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconBringToFront}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Bring forward" Command="{Binding BringForwardCommand}" InputGesture="PageUp">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconBringForward}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Send backward" Command="{Binding SendBackwardCommand}" InputGesture="PageDown">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconSendBackward}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+            <MenuItem Header="Send to back" Command="{Binding SendToBackCommand}" InputGesture="End">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconSendToBack}"/>
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <Separator/>
+
+            <MenuItem Header="Theme">
+                <MenuItem.Icon>
+                    <TextBlock FontFamily="{DynamicResource ShareX.FontFamily.Icon}" Text="{StaticResource IconMoon}"/>
+                </MenuItem.Icon>
+                <MenuItem Header="ShareX (Dark)" Command="{Binding SetThemeCommand}" CommandParameter="ShareXDark"/>
+                <MenuItem Header="ShareX (Light)" Command="{Binding SetThemeCommand}" CommandParameter="ShareXLight"/>
+                <MenuItem Header="Dark" Command="{Binding SetThemeCommand}" CommandParameter="Dark"/>
+                <MenuItem Header="Light" Command="{Binding SetThemeCommand}" CommandParameter="Light"/>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.Resources>
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://ShareX.ImageEditor/Presentation/Controls/EffectSlider.axaml" />
+
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="{DynamicResource ShareX.FontFamily.Default}"/>
+            <Setter Property="FontSize" Value="{DynamicResource ShareX.FontSize.Default}"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+
+        <Style Selector="Button.editor-button">
+            <Setter Property="Height" Value="40"/>
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Control.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ShareX.Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground" Value="{DynamicResource ShareX.Brush.Text}"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+
+            <Style Selector="^:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="{DynamicResource ShareX.Brush.Border}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+            </Style>
+
+            <Style Selector="^:pressed">
+                <Setter Property="RenderTransform" Value="none"/>
+            </Style>
+
+            <Style Selector="^:pressed /template/ ContentPresenter#PART_ContentPresenter">
+                <Setter Property="BorderBrush" Value="{DynamicResource ShareX.Brush.Border}"/>
+                <Setter Property="BorderThickness" Value="1"/>
+            </Style>
+
+            <Style Selector="^.active">
+                <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Accent}"/>
+            </Style>
+        </Style>
+
+        <Style Selector="Border.popup-border">
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Control.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ShareX.Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Padding" Value="8"/>
+            <Setter Property="BoxShadow" Value="0 4 16 #40000000"/>
+        </Style>
+
+        <Style Selector="Slider:horizontal">
+            <Setter Property="Foreground" Value="{DynamicResource ShareX.Brush.Accent}"/>
+
+            <Style Selector="^ /template/ Thumb">
+                <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Accent}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource ShareX.Brush.Control.Background}"/>
+                <Setter Property="BorderThickness" Value="4"/>
+            </Style>
+
+            <Style Selector="^ /template/ Thumb:pointerover">
+                <Setter Property="BorderThickness" Value="3"/>
+            </Style>
+        </Style>
+
+        <Style Selector="CheckBox">
+            <Style Selector="^:checked /template/ Border#NormalRectangle">
+                <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Accent}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+        </Style>
+
+        <Style Selector="ContextMenu">
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Control.Background}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ShareX.Brush.Border}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Padding" Value="6,2"/>
+        </Style>
+        <Style Selector="ContextMenu MenuItem">
+            <Setter Property="Foreground" Value="{DynamicResource ShareX.Brush.Text}"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="CornerRadius" Value="4"/>
+        </Style>
+        <Style Selector="ContextMenu MenuItem:pointerover /template/ Border#PART_LayoutRoot">
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Accent}"/>
+        </Style>
+        <Style Selector="ContextMenu MenuItem:separator">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Margin" Value="0,4"/>
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Control.Background}"/>
+        </Style>
+
+        <Style Selector="Border.capsule">
+            <Setter Property="Padding" Value="6,3"/>
+            <Setter Property="CornerRadius" Value="4"/>
+            <Setter Property="Background" Value="{DynamicResource ShareX.Brush.Accent}"/>
+
+            <Style Selector="^ TextBlock">
+                <Setter Property="Foreground" Value="{DynamicResource ShareX.Brush.Text}"/>
+            </Style>
+        </Style>
+    </UserControl.Styles>
+
+    <Grid RowDefinitions="*">
+
+        <!-- Row 0: Main Content Area with Preview and Sidebar (Background Layer) -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,*,Auto" Background="{DynamicResource ShareX.Brush.Background.Main}">
+
+            <!-- Left Sidebar (Settings Panel) -->
+            <Border Grid.Column="0" Padding="0" IsVisible="{Binding IsSettingsPanelOpen}" Background="{DynamicResource ShareX.Brush.Background.Panel}"
+                    BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="0,0,1,0">
+                <ScrollViewer x:Name="SidebarScrollViewer" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto"
+                              ScrollChanged="OnSidebarScrollChanged">
+                    <StackPanel Width="220" Spacing="0" Margin="16">
+
+                        <!-- Margin Slider -->
+                        <StackPanel Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Margin" Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"/>
+                                <Border Grid.Column="1" Classes="capsule">
+                                    <TextBlock Text="{Binding PreviewPadding, StringFormat='{}{0:F0} px'}"/>
+                                </Border>
+                            </Grid>
+                            <Slider Minimum="0"
+                                    Maximum="200"
+                                    Value="{Binding PreviewPadding}"
+                                    Background="{DynamicResource ShareX.Brush.Control.Background.Disabled}"/>
+                        </StackPanel>
+
+                        <!-- Padding Slider -->
+                        <StackPanel Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Padding" Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"/>
+                                <Border Grid.Column="1" Classes="capsule">
+                                    <TextBlock Text="{Binding SmartPadding, StringFormat='{}{0:F0} px'}"/>
+                                </Border>
+                            </Grid>
+                            <Slider Minimum="0"
+                                    Maximum="200"
+                                    Value="{Binding SmartPadding}"
+                                    Background="{DynamicResource ShareX.Brush.Control.Background.Disabled}"/>
+                            <!-- Smart Padding Checkbox -->
+                            <CheckBox IsChecked="{Binding UseSmartPadding}"
+                                      Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"
+                                      Content="Smart Padding"
+                                      Margin="0,0,0,8"/>
+                        </StackPanel>
+
+                        <!-- Rounded Corner Slider -->
+                        <StackPanel Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Rounded Corner" Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"/>
+                                <Border Grid.Column="1" Classes="capsule">
+                                    <TextBlock Text="{Binding PreviewCornerRadius, StringFormat='{}{0:F0} px'}"/>
+                                </Border>
+                            </Grid>
+                            <Slider Minimum="0"
+                                    Maximum="50"
+                                    Value="{Binding PreviewCornerRadius}"
+                                    Background="{DynamicResource ShareX.Brush.Control.Background.Disabled}"/>
+                        </StackPanel>
+
+                        <!-- Shadow Slider -->
+                        <StackPanel Spacing="0">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0" Text="Shadow" Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"/>
+                                <Border Grid.Column="1" Classes="capsule">
+                                    <TextBlock Text="{Binding ShadowBlur, StringFormat='{}{0:F0} px'}"/>
+                                </Border>
+                            </Grid>
+                            <Slider Minimum="0"
+                                    Maximum="100"
+                                    Value="{Binding ShadowBlur}"
+                                    Background="{DynamicResource ShareX.Brush.Control.Background.Disabled}"/>
+                        </StackPanel>
+
+                        <!-- Ratio -->
+                        <StackPanel Spacing="0">
+                            <TextBlock Text="Ratio" Foreground="{DynamicResource ShareX.Brush.Text.Secondary}" Margin="0,0,0,8"/>
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,*,*">
+                                <Grid.Styles>
+                                    <Style Selector="Button.editor-button">
+                                        <Setter Property="Margin" Value="2"/>
+                                        <Setter Property="Width" Value="NaN"/>
+                                        <Setter Property="Height" Value="32"/>
+                                    </Style>
+                                </Grid.Styles>
+
+                                <!-- Row 0 -->
+                                <Button Grid.Row="0" Grid.Column="0" Content="Auto"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="Auto"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=Auto}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <Button Grid.Row="0" Grid.Column="1" Content="1:1"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="1:1"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=1:1}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <Button Grid.Row="0" Grid.Column="2" Content="4:3"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="4:3"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=4:3}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+                                <!-- Row 1 -->
+                                <Button Grid.Row="1" Grid.Column="0" Content="3:2"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="3:2"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=3:2}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <Button Grid.Row="1" Grid.Column="1" Content="16:9"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="16:9"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=16:9}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <Button Grid.Row="1" Grid.Column="2" Content="5:3"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="5:3"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=5:3}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+
+                                <!-- Row 2 -->
+                                <Button Grid.Row="2" Grid.Column="0" Content="9:16"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="9:16"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=9:16}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <Button Grid.Row="2" Grid.Column="1" Content="3:4"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="3:4"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=3:4}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                                <Button Grid.Row="2" Grid.Column="2" Content="2:3"
+                                        Classes="editor-button"
+                                        Command="{Binding SetOutputRatioCommand}" CommandParameter="2:3"
+                                        Classes.active="{Binding SelectedOutputRatio, Converter={StaticResource EqualsConverter}, ConverterParameter=2:3}"
+                                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Background -->
+                        <StackPanel Spacing="0">
+                            <TextBlock Text="Background" Foreground="{DynamicResource ShareX.Brush.Text.Secondary}" Margin="0,8"/>
+                            <ItemsControl ItemsSource="{Binding GradientPresets}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <WrapPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Padding="0" BorderThickness="0" Background="Transparent" Margin="2"
+                                                Command="{Binding DataContext.ApplyGradientPresetCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}">
+                                            <Border Width="50" Height="50" CornerRadius="5" Background="{Binding Brush}" ToolTip.Tip="{Binding Name}"/>
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Central Preview Canvas -->
+            <Grid Grid.Column="1" Margin="8">
+                <ScrollViewer Name="CanvasScrollViewer"
+                              Background="Transparent"
+                              HorizontalScrollBarVisibility="Auto"
+                              VerticalScrollBarVisibility="Auto"
+                              PointerPressed="OnScrollViewerPointerPressed"
+                              PointerMoved="OnScrollViewerPointerMoved"
+                              PointerReleased="OnScrollViewerPointerReleased">
+                    <LayoutTransformControl HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <LayoutTransformControl.LayoutTransform>
+                            <ScaleTransform ScaleX="{Binding Zoom}" ScaleY="{Binding Zoom}" />
+                        </LayoutTransformControl.LayoutTransform>
+                        <!-- Main Canvas Container with Checkered Background and Shadow -->
+                        <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <!-- Checkered Background -->
+                            <Border BorderThickness="1"
+                                    BorderBrush="{DynamicResource ShareX.Brush.Border}"
+                                    Background="{DynamicResource ShareX.Brush.Checkered}"/>
+
+                            <!-- Actual Content -->
+                            <Border x:Name="PreviewFrame"
+                                    IsVisible="{Binding HasPreviewImage}"
+                                     HorizontalAlignment="Stretch"
+                                     VerticalAlignment="Stretch"
+                                     Background="{Binding CanvasBackground}"
+                                     Padding="{Binding CanvasPadding}">
+                                <!-- Outer Border: User-controlled Shadow effect -->
+                                <Border BoxShadow="{Binding CanvasShadow}"
+                                       CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}">
+                                    <!-- Padding Border: Uses top-left pixel color -->
+                                    <Border Background="{Binding SmartPaddingColor}"
+                                            Padding="{Binding SmartPaddingThickness}"
+                                            CornerRadius="{Binding CanvasCornerRadius, Converter={StaticResource DoubleToCornerRadius}}"
+                                            ClipToBounds="True">
+                                        <!-- Inner Border: White background only -->
+                                        <Border Background="Transparent">
+                                            <Grid Name="CanvasContainer"
+                                                  Background="Transparent"
+                                                  Width="{Binding ImageWidth}"
+                                                  Height="{Binding ImageHeight}">
+
+                                                <!-- Image layer (Hybrid Rendering: using SkiaSharp) -->
+                                                <controls:SKCanvasControl Name="CanvasControl"
+                                                                        HorizontalAlignment="Stretch"
+                                                                        VerticalAlignment="Stretch"/>
+
+                                                <!-- Annotation Layer (Saved content) -->
+                                                <Canvas Name="AnnotationCanvas"
+                                                        Background="Transparent"
+                                                        IsVisible="{Binding HasPreviewImage}"
+                                                        HorizontalAlignment="Stretch"
+                                                        VerticalAlignment="Stretch"
+                                                        Cursor="Cross"
+                                                        PointerPressed="OnCanvasPointerPressed"
+                                                        PointerMoved="OnCanvasPointerMoved"
+                                                        PointerReleased="OnCanvasPointerReleased">
+                                                </Canvas>
+
+                                                <!-- Overlay Layer (Transient UI: Selection handles, Crop) -->
+                                                <Canvas Name="OverlayCanvas"
+                                                        IsHitTestVisible="True"
+                                                        HorizontalAlignment="Stretch"
+                                                        VerticalAlignment="Stretch"
+                                                        PointerPressed="OnCanvasPointerPressed"
+                                                        PointerMoved="OnCanvasPointerMoved"
+                                                        PointerReleased="OnCanvasPointerReleased">
+                                                    <Rectangle Name="CropOverlay"
+                                                               IsVisible="False"
+                                                               Stroke="White"
+                                                               StrokeThickness="2"
+                                                               StrokeDashArray="4,2"
+                                                               Fill="#80000000" />
+                                                </Canvas>
+                                            </Grid>
+                                        </Border>
+                                    </Border>
+                                </Border>
+                            </Border>
+                        </Grid>
+                    </LayoutTransformControl>
+                </ScrollViewer>
+                
+            </Grid>
+
+            <!-- Right Sidebar (Effects Panel) -->
+            <Border Grid.Column="2" Padding="0" IsVisible="{Binding IsRightEffectsSidebarVisible}" Background="{DynamicResource ShareX.Brush.Background.Panel}"
+                    BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="1,0,0,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <ScrollViewer Grid.Row="0" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                        <StackPanel Width="220" Spacing="0" Margin="16">
+                            <ContentControl Content="{Binding EffectsPanelContent}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+        </Grid>
+
+        <!-- Row 0: Annotation Toolbar (split into two centered rows) - OVERLAY -->
+        <StackPanel Grid.Row="0" Orientation="Vertical" Spacing="0" Margin="0,0,0,0" VerticalAlignment="Top" HorizontalAlignment="Center">
+
+            <!-- Top Toolbar: Tools and Actions -->
+            <Border Padding="4" Background="{DynamicResource ShareX.Brush.Background.Toolbar}" BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="1" CornerRadius="0,0,4,4" HorizontalAlignment="Center"
+                    DataContext="{Binding ToolbarAdapter}"
+                    MaxWidth="{Binding Bounds.Width, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <ScrollViewer x:Name="ToolbarScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" ScrollChanged="OnToolbarScrollChanged">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <!-- Drawing Tools -->
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Select}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Select}"
+                                ToolTip.Tip="Select (V)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconSelect}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Rectangle}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Rectangle}"
+                                ToolTip.Tip="Rectangle (R)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconRectangle}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Ellipse}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Ellipse}"
+                                ToolTip.Tip="Ellipse (E)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconEllipse}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Line}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Line}"
+                                ToolTip.Tip="Line (L)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconLine}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Arrow}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Arrow}"
+                                ToolTip.Tip="Arrow (A)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconArrow}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Freehand}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Freehand}"
+                                ToolTip.Tip="Freehand (F)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconPen}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Text}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Text}"
+                                ToolTip.Tip="Text (T)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconText}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=SpeechBalloon}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.SpeechBalloon}"
+                                ToolTip.Tip="Speech Balloon (O)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconSpeechBalloon}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Step}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Step}"
+                                ToolTip.Tip="Step (N)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconNumber}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Highlight}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Highlight}"
+                                ToolTip.Tip="Highlight (H)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconHighlighter}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=SmartEraser}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.SmartEraser}"
+                                ToolTip.Tip="Smart Eraser (W)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconSmartEraser}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Blur}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Blur}"
+                                ToolTip.Tip="Blur (B)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconBlur}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Pixelate}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Pixelate}"
+                                ToolTip.Tip="Pixelate (P)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconPixelate}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Magnify}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Magnify}"
+                                ToolTip.Tip="Magnify (M)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconMagnify}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Spotlight}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Spotlight}"
+                                ToolTip.Tip="Spotlight (S)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconSpotlight}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=Crop}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.Crop}"
+                                ToolTip.Tip="Crop (C)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconCrop}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ActiveTool, Converter={StaticResource EqualsConverter}, ConverterParameter=CutOut}"
+                                Command="{Binding SelectToolCommand}" CommandParameter="{x:Static models:EditorTool.CutOut}"
+                                ToolTip.Tip="Cut Out (U)"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconCutOut}"/>
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding IsSettingsPanelOpen}"
+                                Command="{Binding ToggleSettingsPanelCommand}"
+                                ToolTip.Tip="Background"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconBackground}"/>
+
+                        <!-- Effects Panel Toggle Button -->
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding IsEffectsPanelOpen}"
+                                Command="{Binding ToggleEffectsPanelCommand}"
+                                ToolTip.Tip="Effects"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="&#xf0d0;"/>
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <!-- Bottom Toolbar: Tool Options -->
+            <Border Padding="4,0,4,4" Margin="0,-1,0,0" Background="{DynamicResource ShareX.Brush.Background.Toolbar}" BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="1,0,1,1" CornerRadius="0,0,4,4" HorizontalAlignment="Center"
+                    DataContext="{Binding ToolbarAdapter}"
+                    IsVisible="{Binding ShowToolOptionsSeparator}"
+                    MaxWidth="{Binding Bounds.Width, RelativeSource={RelativeSource AncestorType=UserControl}}">
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel Orientation="Horizontal" Spacing="4">
+                        <!-- Active Tool Icon -->
+                        <Border Background="Transparent"
+                                Width="40"
+                                Height="40"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Center"
+                                ToolTip.Tip="{Binding ActiveToolName}">
+                            <TextBlock Text="{Binding ActiveToolIcon}"
+                                       FontFamily="{DynamicResource ShareX.FontFamily.Icon}"
+                                       FontSize="16" FontWeight="Black"
+                                       Foreground="{DynamicResource ShareX.Brush.Separator}"
+                                       VerticalAlignment="Center"
+                                       TextAlignment="Center"
+                                       HorizontalAlignment="Center"
+                                       Width="20"/>
+                        </Border>
+
+                        <!-- Border Color Picker Dropdown -->
+                        <controls:ColorPickerDropdown x:Name="ColorPickerDropdown"
+                            SelectedColor="{Binding SelectedColorBrush}"
+                            ColorChanged="OnColorChanged"
+                            Height="40"
+                            IsVisible="{Binding ShowBorderColor}"
+                            ShowBorderHole="True"
+                            ToolTip.Tip="Border Color"/>
+
+                        <!-- Fill Color Picker Dropdown -->
+                        <controls:ColorPickerDropdown x:Name="FillColorPickerDropdown"
+                            SelectedColor="{Binding FillColorBrush}"
+                            ColorChanged="OnFillColorChanged"
+                            Height="40"
+                            IsVisible="{Binding ShowFillColor}"
+                            ToolTip.Tip="Fill Color"/>
+
+                        <!-- Text Color Picker Dropdown -->
+                        <controls:ColorPickerDropdown x:Name="TextColorPickerDropdown"
+                            SelectedColor="{Binding TextColorBrush}"
+                            ColorChanged="OnTextColorChanged"
+                            Height="40"
+                            IsVisible="{Binding ShowTextColor}"
+                            ShowTextLabel="True"
+                            ToolTip.Tip="Text Color"/>
+
+                        <!-- Thickness Picker Dropdown -->
+                        <controls:WidthPickerDropdown
+                            SelectedWidth="{Binding StrokeWidth}"
+                            WidthChanged="OnWidthChanged"
+                            Height="40"
+                            IsVisible="{Binding ShowThickness}"
+                            ToolTip.Tip="Thickness"/>
+
+                        <!-- Font Size Picker Dropdown -->
+                        <controls:FontSizePickerDropdown
+                            SelectedFontSize="{Binding FontSize}"
+                            FontSizeChanged="OnFontSizeChanged"
+                            Height="40"
+                            IsVisible="{Binding ShowFontSize}"
+                            ToolTip.Tip="Font Size"/>
+
+                        <!-- Strength Slider -->
+                        <controls:StrengthSlider
+                            SelectedStrength="{Binding EffectStrength}"
+                            Maximum="{Binding EffectStrengthMaximum}"
+                            StrengthChanged="OnStrengthChanged"
+                            IsVisible="{Binding ShowStrength}"
+                            ToolTip.Tip="Effect Strength"/>
+
+                        <!-- Bold Toggle Button -->
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding TextBold}"
+                                Click="OnBoldButtonClick"
+                                IsVisible="{Binding ShowTextStyle}"
+                                ToolTip.Tip="Toggle Bold"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconBold}"/>
+
+                        <!-- Italic Toggle Button -->
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding TextItalic}"
+                                Click="OnItalicButtonClick"
+                                IsVisible="{Binding ShowTextStyle}"
+                                ToolTip.Tip="Toggle Italic"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconItalic}"/>
+
+                        <!-- Underline Toggle Button -->
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding TextUnderline}"
+                                Click="OnUnderlineButtonClick"
+                                IsVisible="{Binding ShowTextStyle}"
+                                ToolTip.Tip="Toggle Underline"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconUnderline}"/>
+
+                        <!-- Shadow Toggle Button -->
+                        <Button Classes="editor-button" Width="40"
+                                Classes.active="{Binding ShadowEnabled}"
+                                Click="OnShadowButtonClick"
+                                IsVisible="False"
+                                ToolTip.Tip="Toggle Shadow"
+                                FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black" FontSize="16" Content="{StaticResource IconMoon}"/>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+
+        <!-- Row 0: Export Actions Toolbar (Bottom Centered, Floating) -->
+        <Border Grid.Row="0" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,0"
+                Padding="4" Background="{DynamicResource ShareX.Brush.Background.Toolbar}" BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="1" CornerRadius="4,4,0,0"
+                MaxWidth="{Binding Bounds.Width, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                ClipToBounds="False">
+            <StackPanel Orientation="Horizontal" Spacing="4" ClipToBounds="False">
+                <!-- Zoom Picker -->
+                <controls:ZoomPickerDropdown
+                    SelectedZoom="{Binding Zoom}"
+                    ZoomChanged="OnZoomChanged"
+                    ZoomToFitRequested="OnZoomPickerZoomToFitRequested"
+                    Height="40"
+                    ToolTip.Tip="Zoom (Ctrl + Wheel)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5"/>
+
+                <!-- Separator -->
+                <Border Width="1" Height="38" Background="{DynamicResource ShareX.Brush.Separator}" Margin="4,0"/>
+
+                <!-- Task Mode Buttons -->
+                <Grid IsVisible="{Binding TaskMode}" Width="90" Height="40" Margin="4,0,10,0" ClipToBounds="False" VerticalAlignment="Bottom">
+                    <!-- Cancel Button: Red Rectangle (Behind) -->
+                    <Button Command="{Binding CancelCommand}"
+                            Background="#DC2626"
+                            BorderBrush="#EF4444"
+                            BorderThickness="1"
+                            Height="40" VerticalAlignment="Bottom" HorizontalAlignment="Right"
+                            Width="50" Margin="0,0,0,0" Padding="25,0,10,0" CornerRadius="0,4,4,0"
+                            ToolTip.Tip="Cancel (Esc)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5"
+                            ZIndex="0">
+                        <Button.Styles>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="RenderTransform" Value="none"/>
+                            </Style>
+                            <Style Selector="Button:pressed /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#EF4444"/>
+                                <Setter Property="BorderBrush" Value="#EF4444"/>
+                            </Style>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#EF4444"/>
+                                <Setter Property="BorderBrush" Value="#EF4444"/>
+                            </Style>
+                        </Button.Styles>
+                        <TextBlock Text="{StaticResource IconCancel}"
+                                   FontFamily="{DynamicResource ShareX.FontFamily.Icon}"
+                                   FontSize="16" FontWeight="Black" Foreground="White"
+                                   VerticalAlignment="Center"/>
+                    </Button>
+
+                    <!-- Continue Button: Big Green Circle (Front) -->
+                    <Button Command="{Binding ContinueCommand}"
+                            Width="56" Height="56" CornerRadius="28"
+                            Background="#10B981"
+                            BorderBrush="#13DD9A"
+                            BorderThickness="1"
+                            HorizontalAlignment="Left" VerticalAlignment="Bottom"
+                            Margin="0,0,0,-8"
+                            ToolTip.Tip="Continue (Enter)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5"
+                            ZIndex="20">
+                        <Button.Styles>
+                            <Style Selector="Button:pressed">
+                                <Setter Property="RenderTransform" Value="none"/>
+                            </Style>
+                            <Style Selector="Button:pressed /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#13DD9A"/>
+                                <Setter Property="BorderBrush" Value="#13DD9A"/>
+                            </Style>
+                            <Style Selector="Button:pointerover /template/ ContentPresenter">
+                                <Setter Property="Background" Value="#13DD9A"/>
+                                <Setter Property="BorderBrush" Value="#13DD9A"/>
+                            </Style>
+                        </Button.Styles>
+                        <TextBlock Text="{StaticResource IconPlay}"
+                                   FontFamily="{DynamicResource ShareX.FontFamily.Icon}"
+                                   FontSize="22" FontWeight="Black" Foreground="White"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Margin="4,0,0,0"/>
+                    </Button>
+                </Grid>
+
+                <Button Classes="editor-button" Command="{Binding CopyCommand}" Width="40" Padding="0"
+                        ToolTip.Tip="Copy image to clipboard (Ctrl+Shift+C)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5">
+                    <TextBlock Text="{StaticResource IconCopy}" FontSize="16" FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black"/>
+                </Button>
+
+                <Button Classes="editor-button" Command="{Binding SaveCommand}" Width="40" Padding="0"
+                        ToolTip.Tip="Save image (Ctrl+S)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5">
+                    <TextBlock Text="{StaticResource IconSave}" FontSize="16" FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black"/>
+                </Button>
+
+                <Button Classes="editor-button" Command="{Binding SaveAsCommand}" Width="40" Padding="0"
+                        ToolTip.Tip="Save image as... (Ctrl+Shift+S)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5">
+                    <TextBlock Text="{StaticResource IconHardDrive}" FontSize="16" FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black"/>
+                </Button>
+
+                <Button Classes="editor-button" Command="{Binding PinToScreenCommand}" Width="40" Padding="0"
+                        ToolTip.Tip="Pin image to screen (Ctrl+P)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5">
+                    <TextBlock Text="{StaticResource IconThumbtack}" FontSize="16" FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black"/>
+                </Button>
+
+                <Button Classes="editor-button" Command="{Binding UploadCommand}" Width="40" Padding="0"
+                        ToolTip.Tip="Upload image (Ctrl+U)" ToolTip.Placement="Top" ToolTip.VerticalOffset="-5">
+                    <TextBlock Text="{StaticResource IconCloudArrowUp}" FontSize="16" FontFamily="{DynamicResource ShareX.FontFamily.Icon}" FontWeight="Black"/>
+                </Button>
+            </StackPanel>
+        </Border>
+
+        <!-- Effect Browser Panel Overlay -->
+        <Grid Grid.Row="0"
+              IsVisible="{Binding IsEffectBrowserVisible}"
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              ZIndex="30">
+
+            <!-- Click-away background to close the panel -->
+            <Grid Background="#30000000"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Stretch"
+                  PointerPressed="OnEffectBrowserOverlayPointerPressed" />
+
+            <!-- The Panel Itself -->
+            <Border Background="{DynamicResource ShareX.Brush.Background.Panel}"
+                    BorderBrush="{DynamicResource ShareX.Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Top"
+                    Margin="16,125,16,125"
+                    BoxShadow="{DynamicResource ShareX.BoxShadow.Dropdown}"
+                    Width="800">
+
+                <controls:EffectBrowserPanel x:Name="EffectBrowserPanel"
+                    EffectDialogRequested="OnEffectDialogRequested"
+                    CropImageRequested="OnCropImageRequested"
+                    AutoCropImageRequested="OnAutoCropImageRequested"
+                    Rotate90CWRequested="OnRotate90CWRequested"
+                    Rotate90CCWRequested="OnRotate90CCWRequested"
+                    Rotate180Requested="OnRotate180Requested"
+                    RotateCustomAngleRequested="OnRotateCustomAngleRequested"
+                    FlipHorizontalRequested="OnFlipHorizontalRequested"
+                    FlipVerticalRequested="OnFlipVerticalRequested"
+                    InvertRequested="OnInvertRequested"
+                    BlackAndWhiteRequested="OnBlackAndWhiteRequested"
+                    PolaroidRequested="OnPolaroidRequested"
+                    EdgeDetectRequested="OnEdgeDetectRequested"
+                    EmbossRequested="OnEmbossRequested"
+                    MeanRemovalRequested="OnMeanRemovalRequested"
+                    SmoothRequested="OnSmoothRequested"/>
+            </Border>
+        </Grid>
+
+        <!-- Modal Overlay -->
+        <Border Grid.Row="0" Grid.RowSpan="1"
+                IsVisible="{Binding IsModalOpen}"
+                Background="#80000000"
+                IsHitTestVisible="True">
+            <Grid>
+                <!-- Click outside to close -->
+                <Border Background="Transparent"
+                        PointerPressed="OnModalBackgroundPressed"/>
+
+                <!-- Modal Content -->
+                <ContentControl Content="{Binding ModalContent}"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

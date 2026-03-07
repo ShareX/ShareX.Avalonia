@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:ShareX.ImageEditor.Presentation.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+             x:Class="ShareX.ImageEditor.Presentation.Views.ConfirmationDialogView"
+             x:DataType="vm:ConfirmationDialogViewModel">
+
+    <Border Background="{DynamicResource ShareX.Brush.Background.Popup}" 
+            BorderBrush="{DynamicResource ShareX.Brush.Border}" 
+            BorderThickness="1" 
+            CornerRadius="4" 
+            Padding="0" 
+            Width="400"
+            BoxShadow="0 4 10 0 #40000000">
+        <Grid RowDefinitions="Auto,*,Auto" Background="{DynamicResource ShareX.Brush.Background.Popup}">
+            <!-- Title Bar -->
+            <Border Grid.Row="0" Background="{DynamicResource ShareX.Brush.Background.Toolbar}" 
+                    BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="0,0,0,1"
+                    Padding="10,6">
+                <TextBlock Text="{Binding Title}" FontWeight="Normal"/>
+            </Border>
+
+            <!-- Content -->
+            <StackPanel Grid.Row="1" Margin="20" Spacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="25" VerticalAlignment="Center">
+                    <TextBlock Text="⚠️" FontSize="40" VerticalAlignment="Center" FontWeight="Normal"/>
+                    <TextBlock Text="{Binding Message}" TextWrapping="Wrap" VerticalAlignment="Center" MaxWidth="300" FontWeight="Normal"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Buttons -->
+            <Border Grid.Row="2" Background="{DynamicResource ShareX.Brush.Background.Toolbar}" 
+                    BorderBrush="{DynamicResource ShareX.Brush.Border}" BorderThickness="0,1,0,0"
+                    Padding="10">
+                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
+                    <Button Classes="editor-button" Padding="20,0" Content="Yes" Command="{Binding YesCommand}" HorizontalContentAlignment="Center"/>
+                    <Button Classes="editor-button" Padding="20,0" Content="No" Command="{Binding NoCommand}" HorizontalContentAlignment="Center"/>
+                    <Button Classes="editor-button" Padding="20,0" Content="Cancel" Command="{Binding CancelCommand}" HorizontalContentAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>

@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="280"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.CropImageDialog"
+             x:Name="CropImageDialogRoot">
+
+    <StackPanel Spacing="0">
+        <!-- Header -->
+        <TextBlock Text="Crop Image" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+        
+        <StackPanel Spacing="12">
+            <!-- Crop Inputs - one per row: X, Y, Width, Height -->
+            <StackPanel Spacing="8">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="X" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="XInput" 
+                                   Value="{Binding CropX, ElementName=CropImageDialogRoot}"
+                                   Minimum="0" Maximum="10000" Increment="1" FormatString="0" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Y" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="YInput" 
+                                   Value="{Binding CropY, ElementName=CropImageDialogRoot}"
+                                   Minimum="0" Maximum="10000" Increment="1" FormatString="0" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Width" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="WidthInput" 
+                                   Value="{Binding CropWidth, ElementName=CropImageDialogRoot}"
+                                   Minimum="1" Maximum="10000" Increment="1" FormatString="0" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Height" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="HeightInput" 
+                                   Value="{Binding CropHeight, ElementName=CropImageDialogRoot}"
+                                   Minimum="1" Maximum="10000" Increment="1" FormatString="0" HorizontalAlignment="Stretch"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Info text -->
+            <TextBlock x:Name="InfoText"
+                       Foreground="#9CA3AF"
+                       FontSize="11"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Crop" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

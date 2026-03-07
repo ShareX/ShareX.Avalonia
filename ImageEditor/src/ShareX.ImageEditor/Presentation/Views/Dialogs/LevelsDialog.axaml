@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="340"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.LevelsDialog"
+             x:Name="LevelsDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Levels" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="8">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Input Black" Foreground="#9CA3AF"/>
+                <NumericUpDown x:Name="InputBlackInput"
+                               Minimum="0" Maximum="255"
+                               Value="0"
+                               Increment="1"
+                               FormatString="0"
+                               ValueChanged="OnValueChanged"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Input White" Foreground="#9CA3AF"/>
+                <NumericUpDown x:Name="InputWhiteInput"
+                               Minimum="0" Maximum="255"
+                               Value="255"
+                               Increment="1"
+                               FormatString="0"
+                               ValueChanged="OnValueChanged"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Gamma" Foreground="#9CA3AF"/>
+                <NumericUpDown x:Name="GammaInput"
+                               Minimum="0.1" Maximum="5"
+                               Value="1"
+                               Increment="0.05"
+                               FormatString="0.##"
+                               ValueChanged="OnValueChanged"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Output Black" Foreground="#9CA3AF"/>
+                <NumericUpDown x:Name="OutputBlackInput"
+                               Minimum="0" Maximum="255"
+                               Value="0"
+                               Increment="1"
+                               FormatString="0"
+                               ValueChanged="OnValueChanged"/>
+            </StackPanel>
+
+            <StackPanel Spacing="4">
+                <TextBlock Text="Output White" Foreground="#9CA3AF"/>
+                <NumericUpDown x:Name="OutputWhiteInput"
+                               Minimum="0" Maximum="255"
+                               Value="255"
+                               Increment="1"
+                               FormatString="0"
+                               ValueChanged="OnValueChanged"/>
+            </StackPanel>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

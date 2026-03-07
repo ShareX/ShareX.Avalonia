@@ -1,0 +1,41 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.1.11312.151
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.ImageEditor.Loader", "src\ShareX.ImageEditor.Loader\ShareX.ImageEditor.Loader.csproj", "{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShareX.ImageEditor", "src\ShareX.ImageEditor\ShareX.ImageEditor.csproj", "{445C4AF8-8E87-CB94-B4DC-82A6192C680A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM64 = Debug|ARM64
+		Debug|x64 = Debug|x64
+		Release|ARM64 = Release|ARM64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Debug|ARM64.Build.0 = Debug|ARM64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Debug|x64.ActiveCfg = Debug|x64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Debug|x64.Build.0 = Debug|x64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Release|ARM64.ActiveCfg = Release|ARM64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Release|ARM64.Build.0 = Release|ARM64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Release|x64.ActiveCfg = Release|x64
+		{39BD7CA6-CED4-1F3D-FD5A-72738BFC0144}.Release|x64.Build.0 = Release|x64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Debug|ARM64.Build.0 = Debug|ARM64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Debug|x64.ActiveCfg = Debug|x64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Debug|x64.Build.0 = Debug|x64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Release|ARM64.ActiveCfg = Release|ARM64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Release|ARM64.Build.0 = Release|ARM64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Release|x64.ActiveCfg = Release|x64
+		{445C4AF8-8E87-CB94-B4DC-82A6192C680A}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4A3F6C36-7B8E-4560-9F5C-123456789ABC}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,172 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="460" d:DesignHeight="560"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.DrawParticlesDialog">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Particles" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
+                      VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="10">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Image folder" Foreground="#9CA3AF"/>
+                    <TextBox x:Name="ImageFolderTextBox"
+                             TextChanged="OnTextChanged"
+                             Watermark="Path to folder containing particle images"/>
+                    <Button Classes="editor-button"
+                            Content="Browse..."
+                            Click="OnBrowseFolderClick"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="Image count" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="ImageCountInput"
+                                   Value="1"
+                                   Minimum="1"
+                                   Maximum="1000"
+                                   Increment="1"
+                                   FormatString="0"
+                                   ValueChanged="OnNumericChanged"/>
+                </StackPanel>
+
+                <CheckBox x:Name="BackgroundCheckBox"
+                          Content="Draw particles in background"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+
+                <Separator/>
+
+                <CheckBox x:Name="RandomSizeCheckBox"
+                          Content="Random size"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Random size min" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="RandomSizeMinInput"
+                                       Value="64"
+                                       Minimum="1"
+                                       Maximum="4096"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Random size max" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="RandomSizeMaxInput"
+                                       Value="128"
+                                       Minimum="1"
+                                       Maximum="4096"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                </Grid>
+
+                <Separator/>
+
+                <CheckBox x:Name="RandomAngleCheckBox"
+                          Content="Random angle"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Random angle min" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="RandomAngleMinInput"
+                                       Value="0"
+                                       Minimum="-3600"
+                                       Maximum="3600"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Random angle max" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="RandomAngleMaxInput"
+                                       Value="360"
+                                       Minimum="-3600"
+                                       Maximum="3600"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                </Grid>
+
+                <Separator/>
+
+                <CheckBox x:Name="RandomOpacityCheckBox"
+                          Content="Random opacity"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+                <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="Random opacity min" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="RandomOpacityMinInput"
+                                       Value="0"
+                                       Minimum="0"
+                                       Maximum="100"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Random opacity max" Foreground="#9CA3AF"/>
+                        <NumericUpDown x:Name="RandomOpacityMaxInput"
+                                       Value="100"
+                                       Minimum="0"
+                                       Maximum="100"
+                                       Increment="1"
+                                       FormatString="0"
+                                       ValueChanged="OnNumericChanged"/>
+                    </StackPanel>
+                </Grid>
+
+                <Separator/>
+
+                <CheckBox x:Name="NoOverlapCheckBox"
+                          Content="Prevent overlap"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+                <StackPanel Spacing="4">
+                    <TextBlock Text="No-overlap offset" Foreground="#9CA3AF"/>
+                    <NumericUpDown x:Name="NoOverlapOffsetInput"
+                                   Value="0"
+                                   Minimum="-2000"
+                                   Maximum="2000"
+                                   Increment="1"
+                                   FormatString="0"
+                                   ValueChanged="OnNumericChanged"/>
+                </StackPanel>
+
+                <CheckBox x:Name="EdgeOverlapCheckBox"
+                          Content="Allow edge overlap"
+                          Foreground="#E7E9EA"
+                          Checked="OnSettingChanged"
+                          Unchecked="OnSettingChanged"/>
+            </StackPanel>
+        </ScrollViewer>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button"
+                    Content="Cancel"
+                    Click="OnCancelClick"
+                    Margin="0,0,4,0"
+                    HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active"
+                    Content="Apply"
+                    Click="OnApplyClick"
+                    Margin="4,0,0,0"
+                    Grid.Column="1"
+                    HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

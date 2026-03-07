@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             mc:Ignorable="d" d:DesignWidth="420" d:DesignHeight="460"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.TiltShiftDialog"
+             x:Name="TiltShiftDialogRoot">
+
+    <StackPanel Spacing="0">
+        <TextBlock Text="Tilt-Shift (Miniature)" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+
+        <StackPanel Spacing="10">
+            <StackPanel Spacing="4">
+                <TextBlock Text="Mode" Foreground="#9CA3AF"/>
+                <ComboBox x:Name="ModeComboBox"
+                          SelectedIndex="0"
+                          SelectionChanged="OnModeChanged"
+                          HorizontalAlignment="Stretch"
+                          Background="#374151"
+                          BorderThickness="0"
+                          CornerRadius="4">
+                    <ComboBoxItem Content="Linear"/>
+                    <ComboBoxItem Content="Radial"/>
+                </ComboBox>
+            </StackPanel>
+
+            <controls:EffectSlider Label="Blur radius (px)" ValueStringFormat="{}{0:0}" x:Name="BlurRadiusSlider"
+                                   Minimum="0"
+                                   Maximum="30"
+                                   Value="12"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Focus size (%)" ValueStringFormat="{}{0:0}" x:Name="FocusSizeSlider"
+                                   Minimum="5"
+                                   Maximum="90"
+                                   Value="30"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Focus X (%)" ValueStringFormat="{}{0:0}" x:Name="FocusXSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="50"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Focus Y (%)" ValueStringFormat="{}{0:0}" x:Name="FocusYSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="50"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Falloff (%)" ValueStringFormat="{}{0:0}" x:Name="FalloffSlider"
+                                   Minimum="1"
+                                   Maximum="60"
+                                   Value="24"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+
+            <controls:EffectSlider Label="Saturation boost (%)" ValueStringFormat="{}{0:0}" x:Name="SaturationSlider"
+                                   Minimum="0"
+                                   Maximum="100"
+                                   Value="35"
+                                   TickFrequency="1"
+                                   IsSnapToTickEnabled="True"
+                                   ValueChanged="OnValueChanged"/>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="120" d:DesignHeight="40"
+             x:Class="ShareX.ImageEditor.Presentation.Controls.ZoomPickerDropdown"
+             x:Name="ZoomPickerDropdownRoot">
+
+    <Grid>
+        <!-- Dropdown Button -->
+        <Button x:Name="DropdownButton"
+                Classes="editor-button"
+                Click="OnDropdownButtonClick"
+                Height="40"
+                MinWidth="80"
+                HorizontalContentAlignment="Stretch">
+            <Grid ColumnDefinitions="*,Auto">
+                <!-- Zoom Display -->
+                <TextBlock Grid.Column="0"
+                           Text="{Binding SelectedZoom, ElementName=ZoomPickerDropdownRoot, StringFormat='{}{0:P0}'}"
+                           FontSize="12"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           HorizontalAlignment="Center"
+                           Margin="4,0,0,0"/>
+
+                <!-- Chevron Icon (FontAwesome ChevronDown) -->
+                <TextBlock Grid.Column="1"
+                           Text="&#xf078;"
+                           FontFamily="{DynamicResource ShareX.FontFamily.Icon}"
+                           FontWeight="Black"
+                           FontSize="10"
+                           Foreground="{DynamicResource ShareX.Brush.Text.Secondary}"
+                           VerticalAlignment="Center"
+                           Margin="8,0,4,0"/>
+            </Grid>
+        </Button>
+
+        <!-- Popup -->
+        <Popup x:Name="ZoomPopup"
+               PlacementTarget="{Binding #DropdownButton}"
+               Placement="Bottom"
+               IsLightDismissEnabled="True"
+               VerticalOffset="-4">
+            <Border Classes="popup-border">
+                <StackPanel Orientation="Vertical" Spacing="0">
+                    <ItemsControl ItemsSource="{Binding ZoomLevels, ElementName=ZoomPickerDropdownRoot}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <StackPanel Orientation="Vertical" Spacing="2"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Height="32"
+                                        MinWidth="60"
+                                        Margin="0"
+                                        Background="Transparent"
+                                        BorderThickness="0"
+                                        Click="OnZoomSelected"
+                                        CommandParameter="{Binding .}">
+                                    <TextBlock Text="{Binding ., StringFormat='{}{0:P0}'}"
+                                               FontSize="12"
+                                               FontWeight="SemiBold"
+                                               HorizontalAlignment="Center"
+                                               VerticalAlignment="Center"/>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <!-- Separator -->
+                    <Border Height="1" Background="{DynamicResource ShareX.Brush.Separator}" Margin="4,4"/>
+                    <!-- Zoom to Fit -->
+                    <Button Height="32"
+                            MinWidth="60"
+                            Margin="0,0,0,2"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="OnZoomToFitSelected">
+                        <TextBlock Text="Zoom to Fit"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

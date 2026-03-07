@@ -1,0 +1,171 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="clr-namespace:ShareX.ImageEditor.Presentation.Controls"
+             xmlns:cp="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.ColorPicker"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="400"
+             x:Class="ShareX.ImageEditor.Presentation.Views.Dialogs.ReplaceColorDialog"
+             x:Name="ReplaceColorDialogRoot">
+
+    <UserControl.Styles>
+        <StyleInclude Source="avares://Avalonia.Controls.ColorPicker/Themes/Fluent/Fluent.xaml" />
+    </UserControl.Styles>
+
+    <StackPanel Spacing="0">
+        <!-- Header -->
+        <TextBlock Text="Replace Color" Foreground="#9CA3AF" Margin="0,0,0,8"/>
+        
+        <StackPanel Spacing="12">
+            <!-- Target Color -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="Target Color" Foreground="#9CA3AF"/>
+                <Grid>
+                    <Button x:Name="TargetColorButton"
+                            Classes="editor-button"
+                            Click="OnTargetColorButtonClick"
+                            Height="36"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                        <Grid ColumnDefinitions="Auto,8,*">
+                            <!-- Color Preview with checkered background -->
+                            <Grid Grid.Column="0" Width="24" Height="24" VerticalAlignment="Center">
+                                <Border CornerRadius="4" ClipToBounds="True">
+                                    <Border.Background>
+                                        <DrawingBrush TileMode="Tile"
+                                                      DestinationRect="0,0,8,8"
+                                                      SourceRect="0,0,8,8">
+                                            <DrawingBrush.Drawing>
+                                                <DrawingGroup>
+                                                    <GeometryDrawing Brush="#CCCCCC">
+                                                        <GeometryDrawing.Geometry>
+                                                            <RectangleGeometry Rect="0,0,8,8"/>
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                    <GeometryDrawing Brush="#999999">
+                                                        <GeometryDrawing.Geometry>
+                                                            <GeometryGroup>
+                                                                <RectangleGeometry Rect="0,0,4,4"/>
+                                                                <RectangleGeometry Rect="4,4,4,4"/>
+                                                            </GeometryGroup>
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                </DrawingGroup>
+                                            </DrawingBrush.Drawing>
+                                        </DrawingBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Background="{Binding TargetColorBrush, ElementName=ReplaceColorDialogRoot}"
+                                        CornerRadius="4"/>
+                            </Grid>
+                            <!-- Color label -->
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding TargetColorText, ElementName=ReplaceColorDialogRoot}"
+                                       Foreground="#9CA3AF"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+
+                    <Popup x:Name="TargetColorPopup"
+                           PlacementTarget="{Binding #TargetColorButton}"
+                           Placement="Bottom"
+                           IsLightDismissEnabled="True"
+                           VerticalOffset="4">
+                        <Border Background="#1F2937"
+                                CornerRadius="8"
+                                Padding="4"
+                                BorderBrush="#374151"
+                                BorderThickness="1">
+                            <cp:ColorView x:Name="TargetColorViewControl"
+                                          Color="{Binding TargetColorValue, ElementName=ReplaceColorDialogRoot, Mode=TwoWay}"
+                                          IsAlphaVisible="True"
+                                          IsColorPreviewVisible="True"/>
+                        </Border>
+                    </Popup>
+                </Grid>
+            </StackPanel>
+
+            <!-- Replace Color -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="Replace With" Foreground="#9CA3AF"/>
+                <Grid>
+                    <Button x:Name="ReplaceColorButton"
+                            Classes="editor-button"
+                            Click="OnReplaceColorButtonClick"
+                            Height="36"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Stretch">
+                        <Grid ColumnDefinitions="Auto,8,*">
+                            <!-- Color Preview with checkered background -->
+                            <Grid Grid.Column="0" Width="24" Height="24" VerticalAlignment="Center">
+                                <Border CornerRadius="4" ClipToBounds="True">
+                                    <Border.Background>
+                                        <DrawingBrush TileMode="Tile"
+                                                      DestinationRect="0,0,8,8"
+                                                      SourceRect="0,0,8,8">
+                                            <DrawingBrush.Drawing>
+                                                <DrawingGroup>
+                                                    <GeometryDrawing Brush="#CCCCCC">
+                                                        <GeometryDrawing.Geometry>
+                                                            <RectangleGeometry Rect="0,0,8,8"/>
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                    <GeometryDrawing Brush="#999999">
+                                                        <GeometryDrawing.Geometry>
+                                                            <GeometryGroup>
+                                                                <RectangleGeometry Rect="0,0,4,4"/>
+                                                                <RectangleGeometry Rect="4,4,4,4"/>
+                                                            </GeometryGroup>
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                </DrawingGroup>
+                                            </DrawingBrush.Drawing>
+                                        </DrawingBrush>
+                                    </Border.Background>
+                                </Border>
+                                <Border Background="{Binding ReplaceColorBrush, ElementName=ReplaceColorDialogRoot}"
+                                        CornerRadius="4"/>
+                            </Grid>
+                            <!-- Color label -->
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding ReplaceColorText, ElementName=ReplaceColorDialogRoot}"
+                                       Foreground="#9CA3AF"
+                                       VerticalAlignment="Center"/>
+                        </Grid>
+                    </Button>
+
+                    <Popup x:Name="ReplaceColorPopup"
+                           PlacementTarget="{Binding #ReplaceColorButton}"
+                           Placement="Bottom"
+                           IsLightDismissEnabled="True"
+                           VerticalOffset="4">
+                        <Border Background="#1F2937"
+                                CornerRadius="8"
+                                Padding="4"
+                                BorderBrush="#374151"
+                                BorderThickness="1">
+                            <cp:ColorView x:Name="ReplaceColorViewControl"
+                                          Color="{Binding ReplaceColorValue, ElementName=ReplaceColorDialogRoot, Mode=TwoWay}"
+                                          IsAlphaVisible="True"
+                                          IsColorPreviewVisible="True"/>
+                        </Border>
+                    </Popup>
+                </Grid>
+            </StackPanel>
+
+            <!-- Tolerance Slider -->
+            <controls:EffectSlider Label="Tolerance" ValueStringFormat="{}{0:0}%" x:Name="ToleranceSlider"
+                        Minimum="0" Maximum="100" Value="10"
+                        TickFrequency="10" IsSnapToTickEnabled="False"
+                        Background="#374151"
+                        ValueChanged="OnValueChanged"/>
+        </StackPanel>
+
+        <!-- Buttons -->
+        <Grid ColumnDefinitions="*,*" Margin="0,16,0,0">
+            <Button Classes="editor-button" Content="Cancel" Click="OnCancelClick" Margin="0,0,4,0" HorizontalAlignment="Stretch"/>
+            <Button Classes="editor-button active" Content="Apply" Click="OnApplyClick" Margin="4,0,0,0" Grid.Column="1" HorizontalAlignment="Stretch"/>
+        </Grid>
+    </StackPanel>
+</UserControl>
+
