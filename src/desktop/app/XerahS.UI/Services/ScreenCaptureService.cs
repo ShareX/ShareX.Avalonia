@@ -163,13 +163,6 @@ namespace XerahS.UI.Services
 
         public async Task<SKBitmap?> CaptureRegionAsync(CaptureOptions? options = null)
         {
-            if (IsLinuxWayland() && (options?.UseModernCapture ?? true))
-            {
-                // Wayland compositors can misbehave with the in-app overlay. Delegate to platform-native
-                // region capture (portal/grim/slurp and DE-specific tools) for better compatibility.
-                return await _platformImpl.CaptureRegionAsync(options);
-            }
-
             // 1. Capture cursor BEFORE showing overlay (if ShowCursor is enabled)
             XerahS.Platform.Abstractions.CursorInfo? ghostCursor = null;
             if (options?.ShowCursor == true)
@@ -199,14 +192,6 @@ namespace XerahS.UI.Services
             catch
             {
                 // Ignore - full screen capture is optional for fallback
-            }
-
-            if (IsLinuxWayland() && fullScreenBitmap == null)
-            {
-                // On Wayland, if silent background capture failed, the overlay cannot function properly
-                // (or would require an annoying dialog just for background).
-                // Fallback to native region capture immediately to avoid broken "Dialog -> Overlay -> Dialog" UX.
-                return await _platformImpl.CaptureRegionAsync(options);
             }
 
             // 3. Select Region (UI) - pass ghost cursor for overlay display
