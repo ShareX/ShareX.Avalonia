@@ -407,6 +407,29 @@ namespace XerahS.UI.Services
                                 (int)Math.Round(vBottom));
                             DebugHelper.WriteLine($"[RegionCapture] Virtual bounds (logical, OverlayBounds union): L={vLeft:F0}, T={vTop:F0}, R={vRight:F0}, B={vBottom:F0}, Size={vRight - vLeft:F0}x{vBottom - vTop:F0}");
 
+                            // Also pass physical virtual bounds so LinuxScreenCaptureService can detect
+                            // whether the portal returned a physical-resolution bitmap (e.g. KDE Plasma)
+                            // and apply the correct crop without a uniform linear scale.
+                            var pb0 = monitors[0].PhysicalBounds;
+                            double physVLeft = pb0.X, physVTop = pb0.Y, physVRight = pb0.Right, physVBottom = pb0.Bottom;
+                            for (int i = 1; i < monitors.Count; i++)
+                            {
+                                var pb = monitors[i].PhysicalBounds;
+                                physVLeft = Math.Min(physVLeft, pb.X);
+                                physVTop = Math.Min(physVTop, pb.Y);
+                                physVRight = Math.Max(physVRight, pb.Right);
+                                physVBottom = Math.Max(physVBottom, pb.Bottom);
+                            }
+                            captureOptions.PhysicalVirtualScreenBoundsForCrop = Rectangle.FromLTRB(
+                                (int)Math.Round(physVLeft),
+                                (int)Math.Round(physVTop),
+                                (int)Math.Round(physVRight),
+                                (int)Math.Round(physVBottom));
+                            captureOptions.PhysicalRectForCrop = Rectangle.FromLTRB(
+                                selection.Left, selection.Top, selection.Right, selection.Bottom);
+                            DebugHelper.WriteLine($"[RegionCapture] Physical virtual bounds: L={physVLeft:F0}, T={physVTop:F0}, R={physVRight:F0}, B={physVBottom:F0}, Size={physVRight - physVLeft:F0}x{physVBottom - physVTop:F0}");
+                            DebugHelper.WriteLine($"[RegionCapture] PhysicalRectForCrop: L={selection.Left}, T={selection.Top}, R={selection.Right}, B={selection.Bottom}");
+
                             double cx = (selection.Left + selection.Right) / 2.0;
                             double cy = (selection.Top + selection.Bottom) / 2.0;
                             var center = new XerahS.RegionCapture.Models.PixelPoint((int)cx, (int)cy);

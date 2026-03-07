@@ -214,10 +214,35 @@ namespace XerahS.Platform.Linux
                     (int)rect.Bottom
                 );
 
+                // Fast path: portal returned a physical-resolution bitmap (e.g. KDE Plasma portal).
+                // Detect by comparing bitmap size to PhysicalVirtualScreenBoundsForCrop (within 2% tolerance).
+                // If matched, use PhysicalRectForCrop directly — no per-monitor scale needed.
+                bool usedPhysicalPath = false;
+                var physicalVirtualBounds = options?.PhysicalVirtualScreenBoundsForCrop;
+                var physicalRect = options?.PhysicalRectForCrop;
+                if (physicalVirtualBounds.HasValue && physicalRect.HasValue)
+                {
+                    var pv = physicalVirtualBounds.Value;
+                    const double tolerance = 0.02;
+                    bool widthMatch = Math.Abs(fullBitmap.Width - pv.Width) <= Math.Max(1, pv.Width * tolerance);
+                    bool heightMatch = Math.Abs(fullBitmap.Height - pv.Height) <= Math.Max(1, pv.Height * tolerance);
+                    DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Physical bitmap check: bitmap={fullBitmap.Width}x{fullBitmap.Height}, physVirtual={pv.Width}x{pv.Height}, widthMatch={widthMatch}, heightMatch={heightMatch}");
+                    if (widthMatch && heightMatch)
+                    {
+                        var pr = physicalRect.Value;
+                        cropRect.Left = pr.Left - pv.Left;
+                        cropRect.Top = pr.Top - pv.Top;
+                        cropRect.Right = pr.Right - pv.Left;
+                        cropRect.Bottom = pr.Bottom - pv.Top;
+                        DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Physical path: crop at physical offset ({pv.Left},{pv.Top}): L={cropRect.Left}, T={cropRect.Top}, R={cropRect.Right}, B={cropRect.Bottom}");
+                        usedPhysicalPath = true;
+                    }
+                }
+
                 // When portal/capture returns a different size than app virtual screen (e.g. 2560x2790 vs physical layout),
                 // transform the selection rect from virtual screen coordinates to capture bitmap coordinates.
                 var virtualBounds = options?.VirtualScreenBoundsForCrop;
-                if (virtualBounds.HasValue)
+                if (!usedPhysicalPath && virtualBounds.HasValue)
                 {
                     var v = virtualBounds.Value;
                     DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: VirtualScreenBoundsForCrop: X={v.X}, Y={v.Y}, Width={v.Width}, Height={v.Height}");
@@ -238,7 +263,7 @@ namespace XerahS.Platform.Linux
                         DebugHelper.WriteLine("LinuxScreenCaptureService: CaptureRectAsync: Virtual size matches capture; using rect as direct crop (no scale).");
                     }
                 }
-                else
+                else if (!usedPhysicalPath)
                 {
                     DebugHelper.WriteLine("LinuxScreenCaptureService: CaptureRectAsync: VirtualScreenBoundsForCrop not set; using rect as direct crop.");
                 }
