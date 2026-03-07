@@ -194,6 +194,28 @@ public partial class OverlayWindow : Window
         _captureControl.Focus();
         // On Linux/Wayland the compositor often grants focus with delay; retry focus a few times so pointer events (crosshair) start sooner
         ScheduleDelayedFocusRetries();
+
+        // Diagnostic: log actual window geometry after opening to verify physical pixel sizing
+        try
+        {
+            var topLeftPhysical = this.PointToScreen(new Avalonia.Point(0, 0));
+            var bottomRightPhysical = this.PointToScreen(new Avalonia.Point(Width, Height));
+            int physicalWindowW = bottomRightPhysical.X - topLeftPhysical.X;
+            int physicalWindowH = bottomRightPhysical.Y - topLeftPhysical.Y;
+
+            // Screen info at window position
+            var screenAtWindow = Screens?.ScreenFromPoint(Position);
+            string screenInfo = screenAtWindow != null
+                ? $"ScreenAt={screenAtWindow.Bounds.Width}x{screenAtWindow.Bounds.Height} Scale={screenAtWindow.Scaling:F4} IsPrimary={screenAtWindow.IsPrimary}"
+                : "ScreenAt=null";
+
+            DebugHelper.WriteLine($"[OverlayWindow.OnOpened] {_monitor.DeviceName}: Logical=({Width:F1}x{Height:F1}) Position={Position} PhysicalTopLeft=({topLeftPhysical.X},{topLeftPhysical.Y}) PhysicalSize=({physicalWindowW}x{physicalWindowH}) MonitorPhysical=({_monitor.PhysicalBounds.Width:F0}x{_monitor.PhysicalBounds.Height:F0}) {screenInfo}");
+            DebugHelper.WriteLine($"[OverlayWindow.OnOpened] {_monitor.DeviceName}: FillsMonitor={physicalWindowW >= (int)_monitor.PhysicalBounds.Width && physicalWindowH >= (int)_monitor.PhysicalBounds.Height} (physW={physicalWindowW} >= monW={(int)_monitor.PhysicalBounds.Width}, physH={physicalWindowH} >= monH={(int)_monitor.PhysicalBounds.Height})");
+        }
+        catch (Exception ex)
+        {
+            DebugHelper.WriteLine($"[OverlayWindow.OnOpened] {_monitor.DeviceName}: Diagnostic failed: {ex.Message}");
+        }
     }
 
     private async void ScheduleDelayedFocusRetries()
@@ -889,15 +911,20 @@ public partial class OverlayWindow : Window
         var coordinateService = new CoordinateTranslationService();
         var virtualBounds = coordinateService.GetVirtualScreenBounds();
 
+        DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: fullBitmap={fullBackground.Width}x{fullBackground.Height} virtualBounds=({virtualBounds.X:F0},{virtualBounds.Y:F0},{virtualBounds.Width:F0},{virtualBounds.Height:F0}) PhysicalBounds=({monitor.PhysicalBounds.X:F0},{monitor.PhysicalBounds.Y:F0},{monitor.PhysicalBounds.Width:F0},{monitor.PhysicalBounds.Height:F0}) Scale={monitor.ScaleFactor:F4}");
+
         int sourceX = (int)Math.Round(monitor.PhysicalBounds.X - virtualBounds.X);
         int sourceY = (int)Math.Round(monitor.PhysicalBounds.Y - virtualBounds.Y);
         int sourceWidth = Math.Max(1, (int)Math.Round(monitor.PhysicalBounds.Width));
         int sourceHeight = Math.Max(1, (int)Math.Round(monitor.PhysicalBounds.Height));
 
         var sourceRect = new SKRectI(sourceX, sourceY, sourceX + sourceWidth, sourceY + sourceHeight);
+        DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: physicalSourceRect=({sourceRect.Left},{sourceRect.Top},{sourceRect.Width}x{sourceRect.Height}) before clamp");
         sourceRect.Intersect(new SKRectI(0, 0, fullBackground.Width, fullBackground.Height));
+        DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: clampedSourceRect=({sourceRect.Left},{sourceRect.Top},{sourceRect.Width}x{sourceRect.Height}) valid={sourceRect.Width > 0 && sourceRect.Height > 0}");
         if (sourceRect.Width <= 0 || sourceRect.Height <= 0)
         {
+            DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: sourceRect empty after clamp — returning null");
             return null;
         }
 
@@ -913,18 +940,22 @@ public partial class OverlayWindow : Window
 
         int logicalWidth = Math.Max(1, (int)Math.Round(monitor.PhysicalBounds.Width / monitor.ScaleFactor));
         int logicalHeight = Math.Max(1, (int)Math.Round(monitor.PhysicalBounds.Height / monitor.ScaleFactor));
+        DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: extracted={monitorBitmap.Width}x{monitorBitmap.Height} targetLogical={logicalWidth}x{logicalHeight}");
         if (monitorBitmap.Width == logicalWidth && monitorBitmap.Height == logicalHeight)
         {
+            DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: no resize needed → {monitorBitmap.Width}x{monitorBitmap.Height}");
             return monitorBitmap;
         }
 
         var logicalBitmap = monitorBitmap.Resize(new SKImageInfo(logicalWidth, logicalHeight), SKFilterQuality.High);
         if (logicalBitmap != null)
         {
+            DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: resized {monitorBitmap.Width}x{monitorBitmap.Height} → {logicalBitmap.Width}x{logicalBitmap.Height}");
             monitorBitmap.Dispose();
             return logicalBitmap;
         }
 
+        DebugHelper.WriteLine($"[BackgroundBitmap] {monitor.DeviceName}: resize failed, returning extracted {monitorBitmap.Width}x{monitorBitmap.Height}");
         return monitorBitmap;
     }
 

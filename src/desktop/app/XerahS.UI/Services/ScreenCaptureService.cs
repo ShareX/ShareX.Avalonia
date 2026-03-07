@@ -214,6 +214,14 @@ namespace XerahS.UI.Services
                         ShowCursor = false,
                         UseModernCapture = options?.UseModernCapture ?? true
                     });
+                    if (fullScreenBitmap != null)
+                    {
+                        DebugHelper.WriteLine($"[RegionCapture] Pre-capture fullScreenBitmap: {fullScreenBitmap.Width}x{fullScreenBitmap.Height}");
+                    }
+                    else
+                    {
+                        DebugHelper.WriteLine("[RegionCapture] Pre-capture fullScreenBitmap: null");
+                    }
                 }
                 catch
                 {
@@ -323,6 +331,7 @@ namespace XerahS.UI.Services
                     try
                     {
                         var virtualBounds = PlatformServices.Screen.GetVirtualScreenBounds();
+                        DebugHelper.WriteLine($"[RegionCapture] Pre-capture crop: fullBitmap={fullScreenBitmap.Width}x{fullScreenBitmap.Height} virtualBounds=({virtualBounds.X},{virtualBounds.Y},{virtualBounds.Width}x{virtualBounds.Height}) selection=({selection.Left},{selection.Top},{selection.Right},{selection.Bottom})");
                         if (!virtualBounds.IsEmpty)
                         {
                             var offsetX = virtualBounds.X;
@@ -332,13 +341,7 @@ namespace XerahS.UI.Services
                                 selection.Top - offsetY,
                                 selection.Right - offsetX,
                                 selection.Bottom - offsetY);
-
-#if DEBUG
-                            if (offsetX != 0 || offsetY != 0)
-                            {
-                                DebugHelper.WriteLine($"[RegionCapture] Applied virtual screen offset: ({offsetX},{offsetY}) Selection={selection.Left},{selection.Top},{selection.Right},{selection.Bottom} Crop={cropRect.Left},{cropRect.Top},{cropRect.Right},{cropRect.Bottom}");
-                            }
-#endif
+                            DebugHelper.WriteLine($"[RegionCapture] Pre-capture crop: offset=({offsetX},{offsetY}) cropRect=({cropRect.Left},{cropRect.Top},{cropRect.Right},{cropRect.Bottom}) size={cropRect.Width}x{cropRect.Height}");
                         }
                     }
                     catch
