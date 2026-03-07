@@ -159,4 +159,10 @@ public sealed record RegionCaptureOptions
     /// These settings are saved between sessions.
     /// </summary>
     public ImageEditorOptions EditorOptions { get; init; } = new();
+
+    /// <summary>
+    /// When set, used to log elapsed ms at milestones (overlay shown, mouse down/up, etc.) for bottleneck diagnosis.
+    /// Set by ScreenCaptureService at the start of region capture UI.
+    /// </summary>
+    public DateTime? SessionStartUtc { get; init; }
 }

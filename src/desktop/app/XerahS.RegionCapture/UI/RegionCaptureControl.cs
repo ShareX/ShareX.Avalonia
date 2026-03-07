@@ -62,6 +62,7 @@ public sealed class RegionCaptureControl : UserControl
     private readonly bool _useTransparentOverlay;
     private readonly bool _quickCrop;
     private readonly bool _useLightResizeNodes;
+    private readonly DateTime? _sessionStartUtc;
     private readonly XerahS.Platform.Abstractions.CursorInfo? _ghostCursor;
     private readonly Bitmap? _ghostCursorBitmap;
     private readonly SkiaSharp.SKBitmap? _backgroundBitmap;
@@ -73,6 +74,9 @@ public sealed class RegionCaptureControl : UserControl
     // Throttle crosshair redraws to ~60 FPS to reduce compositor load (Linux/mixed DPI)
     private static readonly long CrosshairInvalidateIntervalTicks = Math.Max(1, Stopwatch.Frequency / 60);
     private long _lastCrosshairInvalidateTicks;
+
+    // Milestone: log first pointer move once (to diagnose delay until crosshair is responsive)
+    private bool _firstPointerMovedLogged;
 
     // Visual brushes and pens (lazy initialization for performance)
     private IBrush? _dimBrush;
@@ -139,6 +143,7 @@ public sealed class RegionCaptureControl : UserControl
         _crosshairLineColor = options.CrosshairLineColor;
         _quickCrop = options.QuickCrop;
         _useLightResizeNodes = options.UseLightResizeNodes;
+        _sessionStartUtc = options.SessionStartUtc;
 
         // Convert background bitmap to Avalonia Bitmap for rendering when not transparent
         // PERFORMANCE: Use direct pixel copy instead of slow PNG encoding (~1-2s saved for 4K screens)
@@ -241,7 +246,15 @@ public sealed class RegionCaptureControl : UserControl
     {
     }
 
-    private void OnSelectionConfirmed(RegionSelectionResult result) => RegionSelected?.Invoke(result);
+    private void OnSelectionConfirmed(RegionSelectionResult result)
+    {
+        if (_sessionStartUtc is { } start)
+        {
+            double elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds;
+            XerahS.Common.DebugHelper.WriteLine($"[RegionCapture] Milestone: selection confirmed (+{elapsedMs:F0} ms)");
+        }
+        RegionSelected?.Invoke(result);
+    }
     private void OnSelectionChanged(PixelRect rect) => SelectionChanged?.Invoke(rect);
     private void OnSelectionCancelled() => Cancelled?.Invoke();
 
@@ -254,6 +267,11 @@ public sealed class RegionCaptureControl : UserControl
 
         if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
         {
+            if (_sessionStartUtc is { } start)
+            {
+                double elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds;
+                XerahS.Common.DebugHelper.WriteLine($"[RegionCapture] Milestone: first mouse down (+{elapsedMs:F0} ms)");
+            }
             _lastCrosshairInvalidateTicks = 0; // Allow immediate redraw on drag start
             if (_mode == RegionCaptureMode.ScreenColorPicker)
             {
@@ -275,9 +293,26 @@ public sealed class RegionCaptureControl : UserControl
         }
     }
 
+    protected override void OnAttachedToVisualTree(Avalonia.VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        if (_sessionStartUtc is { } start)
+        {
+            double elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds;
+            XerahS.Common.DebugHelper.WriteLine($"[RegionCapture] Milestone: overlay control attached to visual tree (+{elapsedMs:F0} ms)");
+        }
+    }
+
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
+
+        if (!_firstPointerMovedLogged && _sessionStartUtc is { } start)
+        {
+            _firstPointerMovedLogged = true;
+            double elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds;
+            XerahS.Common.DebugHelper.WriteLine($"[RegionCapture] Milestone: first pointer moved (+{elapsedMs:F0} ms)");
+        }
 
         var point = e.GetPosition(this);
         var physicalPoint = LocalToPhysical(point);
@@ -305,6 +340,11 @@ public sealed class RegionCaptureControl : UserControl
 
         if (_state == CaptureState.Dragging && _mode != RegionCaptureMode.ScreenColorPicker)
         {
+            if (_sessionStartUtc is { } start)
+            {
+                double elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds;
+                XerahS.Common.DebugHelper.WriteLine($"[RegionCapture] Milestone: mouse up (+{elapsedMs:F0} ms)");
+            }
             var point = e.GetPosition(this);
             var physicalPoint = LocalToPhysical(point);
             _stateMachine.UpdateCursorPosition(physicalPoint);

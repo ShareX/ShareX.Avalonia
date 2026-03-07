@@ -78,6 +78,10 @@ public partial class OverlayWindow : Window
     // CTRL modifier state for toggling between drawing and region selection
     private bool _ctrlPressed;
 
+    // Delayed focus retries to work around Linux/Wayland compositor not granting focus immediately (reduces "first pointer moved" delay)
+    private static readonly int[] FocusRetryDelayMs = [50, 200, 500];
+    private bool _windowClosed;
+
     public OverlayWindow()
     {
         // Design-time constructor
@@ -162,11 +166,44 @@ public partial class OverlayWindow : Window
         WireUpToolbarEvents();
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        _windowClosed = true;
+        base.OnClosed(e);
+    }
+
     protected override void OnOpened(EventArgs e)
     {
         base.OnOpened(e);
-        // Focus the capture control so it receives keyboard events
+        // Focus the capture control so it receives keyboard and pointer events
+        this.Focus();
         _captureControl.Focus();
+        // On Linux/Wayland the compositor often grants focus with delay; retry focus a few times so pointer events (crosshair) start sooner
+        ScheduleDelayedFocusRetries();
+    }
+
+    private async void ScheduleDelayedFocusRetries()
+    {
+        foreach (int delayMs in FocusRetryDelayMs)
+        {
+            await Task.Delay(delayMs);
+            if (_windowClosed)
+                return;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (_windowClosed)
+                    return;
+                try
+                {
+                    this.Focus();
+                    _captureControl.Focus();
+                }
+                catch
+                {
+                    // Window may be closing
+                }
+            }, DispatcherPriority.Input);
+        }
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

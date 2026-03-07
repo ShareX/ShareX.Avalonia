@@ -193,7 +193,7 @@ namespace XerahS.Platform.Linux
 
         public async Task<SKBitmap?> CaptureRectAsync(SKRect rect, CaptureOptions? options = null)
         {
-            DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Capturing rect - Left={rect.Left}, Top={rect.Top}, Right={rect.Right}, Bottom={rect.Bottom}");
+            DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Input rect (from UI): Left={rect.Left}, Top={rect.Top}, Right={rect.Right}, Bottom={rect.Bottom}, Size={rect.Right - rect.Left:F0}x{rect.Bottom - rect.Top:F0}");
 
             // Capture full screen with the same options and crop.
             var fullBitmap = await CaptureFullScreenAsync(options);
@@ -214,7 +214,36 @@ namespace XerahS.Platform.Linux
                     (int)rect.Bottom
                 );
 
-                DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Initial crop rect: Left={cropRect.Left}, Top={cropRect.Top}, Right={cropRect.Right}, Bottom={cropRect.Bottom}");
+                // When portal/capture returns a different size than app virtual screen (e.g. 2560x2790 vs physical layout),
+                // transform the selection rect from virtual screen coordinates to capture bitmap coordinates.
+                var virtualBounds = options?.VirtualScreenBoundsForCrop;
+                if (virtualBounds.HasValue)
+                {
+                    var v = virtualBounds.Value;
+                    DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: VirtualScreenBoundsForCrop: X={v.X}, Y={v.Y}, Width={v.Width}, Height={v.Height}");
+                    if (v.Width > 0 && v.Height > 0 &&
+                        (v.Width != fullBitmap.Width || v.Height != fullBitmap.Height))
+                    {
+                        double scaleX = (double)fullBitmap.Width / v.Width;
+                        double scaleY = (double)fullBitmap.Height / v.Height;
+                        DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Applying mapping: scaleX={scaleX:F4}, scaleY={scaleY:F4} (capture size {fullBitmap.Width}x{fullBitmap.Height} vs virtual {v.Width}x{v.Height})");
+                        cropRect.Left = (int)Math.Round((rect.Left - v.X) * scaleX);
+                        cropRect.Top = (int)Math.Round((rect.Top - v.Y) * scaleY);
+                        cropRect.Right = (int)Math.Round((rect.Right - v.X) * scaleX);
+                        cropRect.Bottom = (int)Math.Round((rect.Bottom - v.Y) * scaleY);
+                        DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Mapped crop rect: L={cropRect.Left}, T={cropRect.Top}, R={cropRect.Right}, B={cropRect.Bottom}, Size={cropRect.Width}x{cropRect.Height}");
+                    }
+                    else
+                    {
+                        DebugHelper.WriteLine("LinuxScreenCaptureService: CaptureRectAsync: Virtual size matches capture; using rect as direct crop (no scale).");
+                    }
+                }
+                else
+                {
+                    DebugHelper.WriteLine("LinuxScreenCaptureService: CaptureRectAsync: VirtualScreenBoundsForCrop not set; using rect as direct crop.");
+                }
+
+                DebugHelper.WriteLine($"LinuxScreenCaptureService: CaptureRectAsync: Crop rect before clamp: L={cropRect.Left}, T={cropRect.Top}, R={cropRect.Right}, B={cropRect.Bottom}");
 
                 // Clamp to image bounds
                 cropRect.Left = Math.Max(0, cropRect.Left);

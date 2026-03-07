@@ -25,6 +25,7 @@
 using XerahS.RegionCapture.Models;
 using XerahS.RegionCapture;
 using XerahS.RegionCapture.UI;
+using XerahS.Common;
 
 namespace XerahS.RegionCapture.Services;
 
@@ -83,21 +84,7 @@ public sealed class OverlayManager : IDisposable
                 _overlays.Add(overlay);
             }
 
-            // Show all overlays simultaneously
-            foreach (var overlay in _overlays)
-            {
-                overlay.Show();
-                overlay.Activate();
-
-#if WINDOWS
-                if (overlay.TryGetPlatformHandle()?.Handle is { } handle)
-                {
-                    Platform.Windows.NativeWindowService.ExcludeHandle(handle);
-                }
-#endif
-            }
-
-            // Focus the primary monitor's overlay
+            // Determine primary overlay first so we can show and focus it before others (helps Linux/Wayland grant focus sooner)
             int primaryIndex = -1;
             for (int i = 0; i < monitors.Count; i++)
             {
@@ -112,7 +99,40 @@ public sealed class OverlayManager : IDisposable
                 ? _overlays[primaryIndex]
                 : null;
 
-            primaryOverlay?.Focus();
+            // Show primary overlay first and focus it immediately so compositor has one clear focus target (reduces pointer-event delay on Wayland)
+            if (primaryOverlay != null)
+            {
+                primaryOverlay.Show();
+                primaryOverlay.Activate();
+                primaryOverlay.Focus();
+#if WINDOWS
+                if (primaryOverlay.TryGetPlatformHandle()?.Handle is { } primaryHandle)
+                {
+                    Platform.Windows.NativeWindowService.ExcludeHandle(primaryHandle);
+                }
+#endif
+            }
+
+            // Show remaining overlays
+            foreach (var overlay in _overlays)
+            {
+                if (overlay == primaryOverlay)
+                    continue;
+                overlay.Show();
+                overlay.Activate();
+#if WINDOWS
+                if (overlay.TryGetPlatformHandle()?.Handle is { } handle)
+                {
+                    Platform.Windows.NativeWindowService.ExcludeHandle(handle);
+                }
+#endif
+            }
+
+            if (options?.SessionStartUtc is { } start)
+            {
+                double elapsedMs = (DateTime.UtcNow - start).TotalMilliseconds;
+                DebugHelper.WriteLine($"[RegionCapture] Milestone: overlay displayed (+{elapsedMs:F0} ms)");
+            }
 
             // Wait for result
             return await _completionSource.Task;

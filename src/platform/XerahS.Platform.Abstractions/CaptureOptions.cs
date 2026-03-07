@@ -23,6 +23,7 @@
 
 #endregion License Information (GPL v3)
 
+using System.Drawing;
 using System.Threading;
 
 namespace XerahS.Platform.Abstractions
@@ -66,5 +67,12 @@ namespace XerahS.Platform.Abstractions
         /// Cancellation token used during capture start delay.
         /// </summary>
         public CancellationToken CaptureStartDelayCancellationToken { get; set; } = CancellationToken.None;
+
+        /// <summary>
+        /// When set, the capture backend may use this to map the crop rect from app virtual screen
+        /// coordinates to the actual capture bitmap size (e.g. when portal returns different resolution).
+        /// Used on Linux when cropping a full-screen portal capture to the selected region.
+        /// </summary>
+        public Rectangle? VirtualScreenBoundsForCrop { get; set; }
     }
 }
