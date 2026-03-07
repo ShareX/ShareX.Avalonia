@@ -25,6 +25,7 @@
 
 using System;
 using System.IO;
+using XerahS.Common;
 
 namespace XerahS.Indexer
 {
@@ -117,8 +118,9 @@ namespace XerahS.Indexer
                         folderInfo.Files.Sort((x, y) => x.Name.CompareTo(y.Name));
                     }
                 }
-                catch (UnauthorizedAccessException)
+                catch (UnauthorizedAccessException ex)
                 {
+                    DebugHelper.WriteException(ex, $"Access denied: {folderPath}");
                 }
             }
 

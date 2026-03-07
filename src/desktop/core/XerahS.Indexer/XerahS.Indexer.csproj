@@ -11,4 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="IndexerHtml.default.css" />
+  </ItemGroup>
 </Project>
