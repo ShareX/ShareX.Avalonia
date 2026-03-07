@@ -26,6 +26,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform;
+using XerahS.Common;
 using XerahS.RegionCapture.Models;
 using PixelRect = XerahS.RegionCapture.Models.PixelRect;
 
@@ -62,7 +63,13 @@ public static class MonitorEnumerationService
             return [];
 
         var allScreens = screens.All;
-        bool isWayland = IsWaylandSession();
+        // Check whether Avalonia is actually using the Wayland backend.
+        // XDG_SESSION_TYPE=wayland alone is not sufficient: the app may be running via XWayland
+        // (Avalonia X11 backend, platform handle=XID). In that case Screen.Bounds are in physical
+        // X11 pixels and must be divided by scale just like a pure X11 session.
+        bool isAvaloniaWayland = IsAvaloniaWaylandBackend();
+        DebugHelper.WriteLine($"[MonitorEnum] isAvaloniaWayland={isAvaloniaWayland} (XDG_SESSION_TYPE={Environment.GetEnvironmentVariable("XDG_SESSION_TYPE") ?? "unset"})");
+
         var logicalScreens = new List<AvaloniaScreenLayout>(allScreens.Count);
 
         for (int i = 0; i < allScreens.Count; i++)
@@ -70,12 +77,16 @@ public static class MonitorEnumerationService
             var screen = allScreens[i];
             var scaleFactor = screen.Scaling > 0 ? screen.Scaling : 1.0;
 
-            // Wayland and macOS: Avalonia reports bounds in logical coordinates (compositor space / points).
-            // X11: Avalonia reports bounds in device (physical) pixels; convert to logical so the
-            // normalizer produces correct OverlayBounds (logical) and PhysicalBounds for mixed DPI.
+            DebugHelper.WriteLine($"[MonitorEnum] Screen[{i}]: Bounds=({screen.Bounds.X},{screen.Bounds.Y},{screen.Bounds.Width},{screen.Bounds.Height}) WorkingArea=({screen.WorkingArea.X},{screen.WorkingArea.Y},{screen.WorkingArea.Width},{screen.WorkingArea.Height}) Scaling={scaleFactor:F4} IsPrimary={screen.IsPrimary}");
+
+            // Wayland native backend and macOS: Avalonia reports bounds in logical coordinates
+            // (compositor space / points) — keep as-is.
+            // X11 backend (including XWayland): Avalonia reports bounds in device (physical) pixels;
+            // convert to logical so the normalizer produces correct OverlayBounds and PhysicalBounds
+            // for mixed-DPI setups.
             PixelRect bounds;
             PixelRect workArea;
-            bool useLogicalAsIs = isWayland || OperatingSystem.IsMacOS();
+            bool useLogicalAsIs = isAvaloniaWayland || OperatingSystem.IsMacOS();
             if (useLogicalAsIs)
             {
                 bounds = new PixelRect(
@@ -95,6 +106,7 @@ public static class MonitorEnumerationService
                 workArea = PhysicalToLogicalRect(ToPixelRect(screen.WorkingArea), scaleFactor);
             }
 
+            DebugHelper.WriteLine($"[MonitorEnum] Screen[{i}]: useLogicalAsIs={useLogicalAsIs} logicalBounds=({bounds.X:F1},{bounds.Y:F1},{bounds.Width:F1},{bounds.Height:F1})");
             logicalScreens.Add(new AvaloniaScreenLayout(
                 DeviceName: $"Display {i + 1}",
                 ScaleFactor: scaleFactor,
@@ -106,9 +118,12 @@ public static class MonitorEnumerationService
         // Always use the normalizer on non-Windows so overlay windows get logical bounds
         // (OverlayBoundsOverride) and capture uses physical bounds. This avoids one monitor's
         // overlay appearing squashed in mixed-DPI configurations (X11, macOS, Wayland).
-        // Aligns with: Avalonia Screen.Bounds in device pixels (X11); Wayland/macOS logical;
-        // AVALONIA_SCREEN_SCALE_FACTORS and mixed-DPI issues (#14755, #17834).
-        return WaylandMonitorLayoutNormalizer.Normalize(logicalScreens);
+        var monitors = WaylandMonitorLayoutNormalizer.Normalize(logicalScreens);
+        foreach (var m in monitors)
+        {
+            DebugHelper.WriteLine($"[MonitorEnum] MonitorInfo: {m.DeviceName} IsPrimary={m.IsPrimary} Scale={m.ScaleFactor:F4} PhysicalBounds=({m.PhysicalBounds.X:F1},{m.PhysicalBounds.Y:F1},{m.PhysicalBounds.Width:F1},{m.PhysicalBounds.Height:F1}) OverlayBounds=({m.OverlayBounds.X:F1},{m.OverlayBounds.Y:F1},{m.OverlayBounds.Width:F1},{m.OverlayBounds.Height:F1})");
+        }
+        return monitors;
     }
 
     private static PixelRect ToPixelRect(Avalonia.PixelRect r)
@@ -141,6 +156,24 @@ public static class MonitorEnumerationService
             Environment.GetEnvironmentVariable("XDG_SESSION_TYPE"),
             "wayland",
             StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Returns true only when Avalonia is using its native Wayland backend (platform handle = "WAYLAND").
+    /// Returns false when Avalonia is using the X11 backend, including when running via XWayland on a
+    /// Wayland compositor (where XDG_SESSION_TYPE=wayland but platform handles are XIDs).
+    /// Falls back to <see cref="IsWaylandSession"/> if the main window handle is unavailable.
+    /// </summary>
+    internal static bool IsAvaloniaWaylandBackend()
+    {
+        if (!OperatingSystem.IsLinux())
+            return false;
+
+        var mainWindow = (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow;
+        if (mainWindow == null)
+            return IsWaylandSession(); // best-effort fallback during startup
+
+        return mainWindow.TryGetPlatformHandle()?.HandleDescriptor == "WAYLAND";
     }
 
 #if WINDOWS

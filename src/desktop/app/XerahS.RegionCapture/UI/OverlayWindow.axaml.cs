@@ -38,6 +38,7 @@ using XerahS.RegionCapture.UI.Controls;
 using SkiaSharp;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using XerahS.Common;
 using XerahS.RegionCapture.Models;
 using XerahS.RegionCapture.Services;
 using XerahS.RegionCapture.ViewModels;
@@ -134,15 +135,17 @@ public partial class OverlayWindow : Window
         DataContext = _viewModel;
 
         // Position window to cover the entire monitor.
-        // On X11, Window.Position is in physical pixels; use PhysicalBounds to avoid placing the
-        // overlay on the wrong screen when monitors have different DPI (logical ≠ physical origin).
-        // On Wayland and other platforms, Window.Position uses compositor logical coordinates; use
-        // OverlayBounds (logical) so it matches what the compositor reports for Screen.Bounds.
+        // Use PhysicalBounds for Window.Position on X11 (physical pixel coordinates).
+        // Use OverlayBounds for Window.Position on Wayland native (compositor logical coordinates).
+        // The distinction is made via IsAvaloniaWaylandBackend(), NOT IsWaylandSession(), because
+        // the app may be running via XWayland (XDG_SESSION_TYPE=wayland but Avalonia X11 backend).
 #if !WINDOWS
-        bool usePhysicalPosition = OperatingSystem.IsLinux() && !MonitorEnumerationService.IsWaylandSession();
+        bool isAvaloniaWayland = MonitorEnumerationService.IsAvaloniaWaylandBackend();
+        bool usePhysicalPosition = OperatingSystem.IsLinux() && !isAvaloniaWayland;
         var posX = usePhysicalPosition ? monitor.PhysicalBounds.X : monitor.OverlayBounds.X;
         var posY = usePhysicalPosition ? monitor.PhysicalBounds.Y : monitor.OverlayBounds.Y;
         Position = new AvPixelPoint((int)posX, (int)posY);
+        DebugHelper.WriteLine($"[OverlayWindow] {monitor.DeviceName}: isAvaloniaWayland={isAvaloniaWayland} usePhysicalPos={usePhysicalPosition} Position=({(int)posX},{(int)posY}) Width={monitor.OverlayBounds.Width:F1} Height={monitor.OverlayBounds.Height:F1} PhysicalBounds=({monitor.PhysicalBounds.X:F1},{monitor.PhysicalBounds.Y:F1},{monitor.PhysicalBounds.Width:F1},{monitor.PhysicalBounds.Height:F1})");
 #else
         Position = new AvPixelPoint((int)monitor.OverlayBounds.X, (int)monitor.OverlayBounds.Y);
 #endif
