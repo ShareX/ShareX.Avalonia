@@ -1,0 +1,16 @@
+VERIFICATION
+Verification is intended for Chocolatey moderators and reviewers.
+
+Release:
+  https://github.com/ShareX/XerahS/releases/tag/v0.19.9
+
+Installers:
+  x64
+    URL: https://github.com/ShareX/XerahS/releases/download/v0.19.9/XerahS-0.19.9-win-x64.exe
+    SHA256: 684b4f812b9198bbd79af66a5ccccfb6e5e553d62fdf6a0e2a76e04c08ef33b1
+
+  arm64
+    URL: https://github.com/ShareX/XerahS/releases/download/v0.19.9/XerahS-0.19.9-win-arm64.exe
+    SHA256: fdd6c1f7f857776cbc22bc21826b85a6181cd372e4f3965d2cd5bf26c8b5bf75
+
+The installer binaries are downloaded from the official XerahS GitHub release and are not redistributed inside this package.

@@ -2,13 +2,18 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2015/06/nuspec.xsd">
   <metadata>
     <id>xerahs</id>
-    <version>1.0.0</version>
+    <version>0.19.9</version>
     <title>XerahS</title>
     <authors>ShareX Team</authors>
     <projectUrl>https://github.com/ShareX/XerahS</projectUrl>
-    <tags>xerahs sharex screenshot screen-capture</tags>
-    <summary>ShareX mod with extra features.</summary>
-    <description>XerahS is a ShareX mod with extra features.</description>
+    <packageSourceUrl>https://github.com/ShareX/XerahS/tree/develop/build/windows/chocolatey</packageSourceUrl>
+    <licenseUrl>https://www.gnu.org/licenses/gpl-3.0-standalone.html</licenseUrl>
+    <iconUrl>https://xerahs.com/assets/Logo.png</iconUrl>
+    <releaseNotes>https://github.com/ShareX/XerahS/releases/tag/v0.19.9</releaseNotes>
+    <copyright>Copyright (c) 2007-2026 ShareX Team</copyright>
+    <tags>xerahs sharex screenshot capture file-sharing avalonia</tags>
+    <summary>Cross-platform screen capture and sharing tool built with Avalonia UI.</summary>
+    <description>XerahS is a cross-platform ShareX-compatible screen capture and file sharing tool built with Avalonia UI and .NET 10.</description>
   </metadata>
   <files>
     <file src="tools\**" target="tools" />

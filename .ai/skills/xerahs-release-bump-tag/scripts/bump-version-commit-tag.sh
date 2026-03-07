@@ -5,8 +5,8 @@ usage() {
   cat <<'USAGE'
 Usage: bump-version-commit-tag.sh [options]
 
-Bump Directory.Build.props version, commit all current changes, push branch,
-and create/push matching tag (vX.Y.Z).
+Bump tracked version metadata, commit all current changes, push branch, and
+create/push matching tag (vX.Y.Z).
 
 Options:
   --bump <x|y|z|major|minor|patch>  Bump type (interactive if omitted)
@@ -71,24 +71,74 @@ next_version() {
   echo "${major}.${minor}.${patch}"
 }
 
-update_version_file() {
+resolve_version_tag_value() {
   local file="$1"
-  local new_version="$2"
+  local tag_name="$2"
+
+  awk -v tag_name="$tag_name" '
+    {
+      pattern = "<" tag_name ">[[:space:]]*[0-9]+\\.[0-9]+\\.[0-9]+[[:space:]]*</" tag_name ">"
+      if ($0 ~ pattern) {
+        value = $0
+        sub(".*<" tag_name ">[[:space:]]*", "", value)
+        sub("[[:space:]]*</" tag_name ">.*", "", value)
+        print value
+        exit
+      }
+    }
+  ' "$file"
+}
+
+collect_version_sync_targets() {
+  VERSION_SYNC_TARGETS=()
+  local file
+  local chocolatey_nuspec="build/windows/chocolatey/xerahs.nuspec"
+
+  while IFS= read -r file; do
+    if [[ -n "$file" ]] && grep -q '<Version>[0-9]\+\.[0-9]\+\.[0-9]\+</Version>' "$file"; then
+      VERSION_SYNC_TARGETS+=("$file|Version")
+    fi
+  done < <(git ls-files | grep -E '(^|/)Directory.Build.props$' | sort)
+
+  if [[ -f "$chocolatey_nuspec" ]] && grep -q '<version>[0-9]\+\.[0-9]\+\.[0-9]\+</version>' "$chocolatey_nuspec"; then
+    VERSION_SYNC_TARGETS+=("$chocolatey_nuspec|version")
+  fi
+
+  if [[ ${#VERSION_SYNC_TARGETS[@]} -eq 0 ]]; then
+    echo "Error: no version sync targets were found." >&2
+    exit 1
+  fi
+}
+
+print_version_sync_targets() {
+  local entry file tag_name
+  for entry in "${VERSION_SYNC_TARGETS[@]}"; do
+    IFS='|' read -r file tag_name <<< "$entry"
+    echo "  - $file (<$tag_name>)"
+  done
+}
+
+update_version_tag_in_file() {
+  local file="$1"
+  local tag_name="$2"
+  local new_version="$3"
   local tmp
   tmp="$(mktemp)"
 
-  awk -v new_version="$new_version" '
+  awk -v new_version="$new_version" -v tag_name="$tag_name" '
     BEGIN { replaced = 0 }
     {
-      if (replaced == 0 && $0 ~ /<Version>[0-9]+\.[0-9]+\.[0-9]+<\/Version>/) {
-        sub(/<Version>[0-9]+\.[0-9]+\.[0-9]+<\/Version>/, "<Version>" new_version "</Version>")
+      pattern = "<" tag_name ">[0-9]+\\.[0-9]+\\.[0-9]+</" tag_name ">"
+      replacement = "<" tag_name ">" new_version "</" tag_name ">"
+      if (replaced == 0 && $0 ~ pattern) {
+        sub(pattern, replacement)
         replaced = 1
       }
       print
     }
     END {
       if (replaced == 0) {
-        print "Error: <Version>X.Y.Z</Version> not found in file" > "/dev/stderr"
+        print "Error: <" tag_name ">X.Y.Z</" tag_name "> not found in file" > "/dev/stderr"
         exit 2
       }
     }
@@ -113,6 +163,7 @@ prompt_if_empty() {
 require_cmd git
 require_cmd grep
 require_cmd awk
+require_cmd sort
 
 BUMP=""
 NO_BUMP=0
@@ -180,6 +231,7 @@ if [[ -z "$repo_root" ]]; then
   exit 1
 fi
 cd "$repo_root"
+repo_root="$(pwd -P)"
 
 current_branch="$(git rev-parse --abbrev-ref HEAD)"
 if [[ "$current_branch" == "HEAD" ]]; then
@@ -198,17 +250,23 @@ if [[ ! -f "$version_file" ]]; then
   exit 1
 fi
 
-current_version="$(grep -oPm1 '(?<=<Version>)[^<]+' "$version_file" | tr -d '[:space:]' || true)"
+current_version="$(resolve_version_tag_value "$version_file" "Version" | tr -d '[:space:]' || true)"
 if [[ -z "$current_version" ]]; then
   echo "Error: could not resolve <Version> from $version_file." >&2
   exit 1
 fi
 
+collect_version_sync_targets
+
 if [[ $NO_BUMP -eq 1 ]]; then
   new_version="$current_version"
 else
   if [[ -z "$BUMP" ]]; then
-    prompt_if_empty BUMP "Select bump type [x=major, y=minor, z=patch] (default z): " "z"
+    if [[ -t 0 ]]; then
+      prompt_if_empty BUMP "Select bump type [x=major, y=minor, z=patch] (default z): " "z"
+    else
+      BUMP="z"
+    fi
   fi
   BUMP="$(normalize_bump "$BUMP")"
   new_version="$(next_version "$current_version" "$BUMP")"
@@ -242,6 +300,8 @@ if [[ $ASSUME_YES -eq 0 ]]; then
   echo "Commit msg : [v${new_version}] [${TYPE_TOKEN}] ${SUMMARY}"
   echo "Push       : $([[ $NO_PUSH -eq 0 ]] && echo yes || echo no)"
   echo "Create tag : $([[ $NO_TAG -eq 0 ]] && echo yes || echo no)"
+  echo "Sync files :"
+  print_version_sync_targets
   echo ""
   read -r -p "Proceed? [y/N]: " confirm
   if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
@@ -252,7 +312,8 @@ fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   if [[ $NO_BUMP -eq 0 ]]; then
-    echo "[DRY RUN] Would update $version_file to $new_version"
+    echo "[DRY RUN] Would sync version metadata to $new_version in:"
+    print_version_sync_targets
   else
     echo "[DRY RUN] Would keep version $new_version (no bump)"
   fi
@@ -271,7 +332,10 @@ if [[ $DRY_RUN -eq 1 ]]; then
 fi
 
 if [[ $NO_BUMP -eq 0 ]]; then
-  update_version_file "$version_file" "$new_version"
+  for entry in "${VERSION_SYNC_TARGETS[@]}"; do
+    IFS='|' read -r file tag_name <<< "$entry"
+    update_version_tag_in_file "$file" "$tag_name" "$new_version"
+  done
 fi
 
 git add -A
@@ -294,4 +358,4 @@ if [[ $NO_TAG -eq 0 ]]; then
   fi
 fi
 
-echo "Done: version bumped to $new_version"
+echo "Done: version bumped to $new_version and synced ${#VERSION_SYNC_TARGETS[@]} version file(s)"

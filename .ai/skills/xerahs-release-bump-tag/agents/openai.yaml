@@ -1,3 +1,3 @@
 interface:
   display_name: "XerahS Release Bump Tag"
-  short_description: "Run maintenance first, then bump version, commit/push/tag, monitor release every 2 minutes, and ensure standard release notes with retry guidance"
+  short_description: "Run maintenance first, then bump version, sync Chocolatey nuspec metadata, commit/push/tag, monitor release every 2 minutes, and ensure standard release notes with retry guidance"

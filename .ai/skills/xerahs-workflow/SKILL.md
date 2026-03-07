@@ -15,10 +15,11 @@ This supersedes the retired `docs/development/RELEASE_PROCESS.md`.
 
 ## Version Source Of Truth
 
-1. Treat `Directory.Build.props` files as the only app version source.
+1. Treat the root `Directory.Build.props` file as the app version source of truth.
 2. Never set version numbers in individual `.csproj` files.
-3. When bumping version, update every `Directory.Build.props` in the repository so values match.
-4. Read current version from the root `Directory.Build.props` first.
+3. When bumping version, update every tracked `Directory.Build.props` in the repository so values match.
+4. Derived release metadata files, such as `build/windows/chocolatey/xerahs.nuspec`, must be synchronized from the root version during release automation.
+5. Read current version from the root `Directory.Build.props` first.
 
 ## Version Bump Policy
 

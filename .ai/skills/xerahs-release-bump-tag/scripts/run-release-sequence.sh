@@ -43,7 +43,19 @@ run_maintenance_chores() {
 resolve_version_from_props() {
   local version_file="$1"
   local version
-  version="$(grep -oPm1 '(?<=<Version>)[^<]+' "$version_file" | tr -d '[:space:]' || true)"
+  version="$(
+    awk '
+      {
+        if ($0 ~ /<Version>[[:space:]]*[0-9]+\.[0-9]+\.[0-9]+[[:space:]]*<\/Version>/) {
+          value = $0
+          sub(/^.*<Version>[[:space:]]*/, "", value)
+          sub(/[[:space:]]*<\/Version>.*$/, "", value)
+          print value
+          exit
+        }
+      }
+    ' "$version_file" | tr -d '[:space:]' || true
+  )"
   if [[ -z "$version" ]]; then
     echo "Error: failed to resolve <Version> from $version_file" >&2
     exit 1
@@ -284,10 +296,11 @@ if [[ -z "$repo_root" ]]; then
   exit 1
 fi
 cd "$repo_root"
+repo_root="$(pwd -P)"
 
-maintenance_skill=".ai/skills/maintenance-chores/SKILL.md"
-changelog_skill=".ai/skills/update-changelog/SKILL.md"
-bump_script=".ai/skills/xerahs-release-bump-tag/scripts/bump-version-commit-tag.sh"
+maintenance_skill="$repo_root/.ai/skills/maintenance-chores/SKILL.md"
+changelog_skill="$repo_root/.ai/skills/update-changelog/SKILL.md"
+bump_script="$repo_root/.ai/skills/xerahs-release-bump-tag/scripts/bump-version-commit-tag.sh"
 
 if [[ ! -f "$maintenance_skill" ]]; then
   echo "Error: required skill file not found: $maintenance_skill" >&2
@@ -297,8 +310,8 @@ if [[ ! -f "$changelog_skill" ]]; then
   echo "Error: required skill file not found: $changelog_skill" >&2
   exit 1
 fi
-if [[ ! -x "$bump_script" ]]; then
-  echo "Error: required script not executable: $bump_script" >&2
+if [[ ! -f "$bump_script" ]]; then
+  echo "Error: required script file not found: $bump_script" >&2
   exit 1
 fi
 
@@ -319,7 +332,7 @@ if [[ $ASSUME_CHANGELOG_DONE -eq 0 ]]; then
 fi
 
 echo "Step 3: running bump/tag automation..."
-"$bump_script" "${PASSTHROUGH_ARGS[@]}"
+bash "$bump_script" "${PASSTHROUGH_ARGS[@]}"
 
 if passthrough_has_flag "--dry-run"; then
   if [[ $MONITOR -eq 1 || $SET_PRERELEASE -eq 1 ]]; then

@@ -1,6 +1,6 @@
 ﻿---
 name: xerahs-release-bump-tag
-description: "Orchestrate XerahS release flow in strict order: maintenance-chores first, update-changelog second (optional if no CHANGELOG), verify build, bump/commit/push/tag, monitor GitHub Actions every 2 minutes, ensure standard release notes content, then optionally set pre-release. On failures, inspect logs, fix root cause, and retry with the next patch release."
+description: "Orchestrate XerahS release flow in strict order: maintenance-chores first, update-changelog second (optional if no CHANGELOG), verify build, bump/commit/push/tag while syncing Chocolatey version metadata, monitor GitHub Actions every 2 minutes, ensure standard release notes content, then optionally set pre-release. On failures, inspect logs, fix root cause, and retry with the next patch release."
 ---
 
 # XerahS Release Bump Tag
@@ -19,7 +19,8 @@ Use this skill to run release steps in strict order:
 Step 3 performs:
 - Pre-check: Run `dotnet build src/desktop/XerahS.sln`; do not proceed if build fails.
 - Prompts for `x/y/z` bump type (major/minor/patch) unless specified.
-- Updates every `Directory.Build.props` file that defines `<Version>`.
+- Updates every tracked `Directory.Build.props` file that defines `<Version>`.
+- Syncs `build/windows/chocolatey/xerahs.nuspec` `<version>` with the release version.
 - Stages all current repo changes.
 - Commits with version-prefixed message.
 - Pushes current branch and creates/pushes annotated tag `vX.Y.Z`.
@@ -38,6 +39,7 @@ Step 6 performs:
   - `Change log:`
   - `https://xerahs.com/changelog.html`
   - `### macOS Troubleshooting ("App is damaged")` section with Gatekeeper `xattr -cr` guidance.
+- After the release is published, Chocolatey checksums can be synchronized with `build/windows/chocolatey/Sync-ChocolateyPackage.ps1 -Version X.Y.Z`.
 
 ## Primary Command
 
@@ -104,7 +106,8 @@ On environments where `bash` is not in PATH, execute the sequence manually:
    - Read current version from root `Directory.Build.props`.
    - Compute next version: patch `Z+1`, minor `Y+1.0`, major `X+1.0.0`.
    - Ensure tag `v<new-version>` does not exist locally or on `origin`.
-   - Update all `Directory.Build.props` files containing `<Version>`.
+   - Update all tracked `Directory.Build.props` files containing `<Version>`.
+   - Update `build/windows/chocolatey/xerahs.nuspec` `<version>` to match.
    - `git add -A` -> `git commit -m "[v<new-version>] [CI] Release v<new-version>"` -> `git push origin <current-branch>` -> `git tag -a v<new-version> -m "v<new-version>"` -> `git push origin v<new-version>`.
 
 4. Step 4 - Monitor every 2 minutes
@@ -125,6 +128,10 @@ On environments where `bash` is not in PATH, execute the sequence manually:
 7. Step 7 - Set pre-release (when requested)
    - `gh release edit v<new-version> --prerelease`
    - Verify: `gh release view v<new-version> --json isPrerelease,url,assets`
+
+8. Optional post-release Chocolatey sync
+   - `powershell -File build/windows/chocolatey/Sync-ChocolateyPackage.ps1 -Version <new-version> -Pack`
+   - Optionally push after review: `powershell -File build/windows/chocolatey/Sync-ChocolateyPackage.ps1 -Version <new-version> -Pack -Push -ApiKey <key>`
 
 Default bump when unspecified: patch (`z`). Default commit type token: `CI`.
 
@@ -173,5 +180,7 @@ When executing this skill:
 - Windows/PowerShell: bash may be unavailable; manual fallback must be first-class.
 - Build before bump: avoid tagging broken trees.
 - Changelog optional: do not block if `CHANGELOG.md` does not exist unless user requires it.
-- Version sync: update every `Directory.Build.props` with `<Version>`.
+- Version sync: update every tracked `Directory.Build.props` with `<Version>` and sync `build/windows/chocolatey/xerahs.nuspec`.
+- Chocolatey asset naming: `build/windows/chocolatey/tools/chocolateyInstall.ps1` resolves `XerahS-<version>-win-x64.exe` or `XerahS-<version>-win-arm64.exe` from `ChocolateyPackageVersion`, so release bumps should not hardcode installer filenames there.
+- Chocolatey checksums for community publication are post-release data because GitHub release assets do not exist until after the tag workflow completes. Use `build/windows/chocolatey/Sync-ChocolateyPackage.ps1` after the release is live.
 - Release reliability loop: tag push is not the end; monitor, fix, and retry until green.

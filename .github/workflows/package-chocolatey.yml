@@ -1,0 +1,88 @@
+name: Package Chocolatey
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version without the leading v. Defaults to Directory.Build.props."
+        required: false
+        type: string
+      push_package:
+        description: "Push the generated package to Chocolatey Community Repository"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - id: version
+        name: Resolve version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "release") {
+            $version = "${{ github.event.release.tag_name }}".TrimStart('v')
+          } elseif (![string]::IsNullOrWhiteSpace("${{ inputs.version }}")) {
+            $version = "${{ inputs.version }}"
+          } else {
+            [xml]$props = Get-Content Directory.Build.props
+            $version = $props.Project.PropertyGroup.Version.Trim()
+          }
+
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Version '$version' must follow X.Y.Z format."
+          }
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Ensure Chocolatey CLI
+        shell: pwsh
+        run: |
+          if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
+            throw "Chocolatey CLI (choco) is required on the runner."
+          }
+
+          choco --version
+
+      - name: Sync and pack Chocolatey package
+        shell: pwsh
+        run: |
+          .\build\windows\chocolatey\Sync-ChocolateyPackage.ps1 `
+            -Version "${{ steps.version.outputs.version }}" `
+            -Pack `
+            -OutputDirectory "dist\chocolatey"
+
+      - name: Upload Chocolatey artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chocolatey-package-${{ steps.version.outputs.version }}
+          if-no-files-found: error
+          path: dist/chocolatey/xerahs.${{ steps.version.outputs.version }}.nupkg
+
+      - name: Push Chocolatey package
+        if: github.event_name == 'workflow_dispatch' && inputs.push_package == true
+        shell: pwsh
+        env:
+          CHOCO_API_KEY: ${{ secrets.CHOCO_API_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CHOCO_API_KEY)) {
+            throw "CHOCO_API_KEY secret is required when push_package is true."
+          }
+
+          $packagePath = "dist\chocolatey\xerahs.${{ steps.version.outputs.version }}.nupkg"
+          & choco push $packagePath --source "https://push.chocolatey.org/" --api-key $env:CHOCO_API_KEY
+          if ($LASTEXITCODE -ne 0) {
+            throw "choco push failed with exit code $LASTEXITCODE."
+          }

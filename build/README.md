@@ -17,6 +17,7 @@ build/
 │   ├── winget/                       # WinGet manifests
 │   │   └── generate-winget.ps1       # Script to generate WinGet manifests
 │   └── chocolatey/                   # Chocolatey packages
+│       ├── Sync-ChocolateyPackage.ps1# Sync + pack Chocolatey package metadata
 │       ├── xerahs.nuspec             # Chocolatey package definition
 │       └── tools/                    # Chocolatey install/uninstall scripts
 ├── linux/                             # Linux build scripts
@@ -88,6 +89,8 @@ The `build/windows` directory also contains resources for submitting XerahS to p
 - **Scoop**: `build/windows/scoop/scoop.json`
 - **WinGet**: `build/windows/winget/generate-winget.ps1` (Generates manifests to `manifests/` subdir)
 - **Chocolatey**: `build/windows/chocolatey/`
+  - `Sync-ChocolateyPackage.ps1` updates nuspec metadata, installer checksums, and `VERIFICATION.txt` from an existing GitHub release.
+  - Add `-Pack` to generate `xerahs.<version>.nupkg`.
 
 ---
 

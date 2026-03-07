@@ -74,6 +74,12 @@ src/XerahS.Mobile.iOS.ShareExtension/ShareExtension.BundleId.plist
 *.class
 .gradle/
 **/build/
+!build/
+!build/windows/
+!build/windows/chocolatey/
+!build/windows/chocolatey/Sync-ChocolateyPackage.ps1
+!build/windows/chocolatey/tools/
+!build/windows/chocolatey/tools/VERIFICATION.txt
 local.properties
 .idea/
 *.iml
@@ -117,3 +123,12 @@ SwiftPackageManager.build/
 *.swp
 *~
 .openapi-generator/
+/build/publish-aot-win-arm64
+/build/publish-aot-win-x64
+/build/publish-temp-win-arm64-manual
+/build/release-inspect
+/build/sizeprobe
+/build/tmp-daemon-test
+/build/xip0043-publish
+/build/tmp-deb-check
+/build/logs
