@@ -87,6 +87,30 @@ namespace XerahS.Indexer
                                 continue;
                             }
 
+                            // Apply include filter: only include specified extensions
+                            if (settings.IncludedFileExtensions != null && settings.IncludedFileExtensions.Count > 0)
+                            {
+                                string ext = fileInfo.Extension.TrimStart('.').ToLowerInvariant();
+                                bool isIncluded = settings.IncludedFileExtensions.Any(inc =>
+                                    inc.TrimStart('.').Equals(ext, StringComparison.OrdinalIgnoreCase));
+                                if (!isIncluded)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            // Apply exclude filter: skip specified extensions
+                            if (settings.ExcludedFileExtensions != null && settings.ExcludedFileExtensions.Count > 0)
+                            {
+                                string ext = fileInfo.Extension.TrimStart('.').ToLowerInvariant();
+                                bool isExcluded = settings.ExcludedFileExtensions.Any(exc =>
+                                    exc.TrimStart('.').Equals(ext, StringComparison.OrdinalIgnoreCase));
+                                if (isExcluded)
+                                {
+                                    continue;
+                                }
+                            }
+
                             folderInfo.Files.Add(fileInfo);
                         }
 
