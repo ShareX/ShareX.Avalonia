@@ -120,6 +120,8 @@ public enum ToastClickAction
 {
     CloseNotification,
     AnnotateMedia,
+    [Obsolete("Renamed to AnnotateMedia. Kept for JSON backwards-compatibility.")]
+    AnnotateImage = AnnotateMedia,
     CopyImageToClipboard,
     CopyFile,
     CopyFilePath,

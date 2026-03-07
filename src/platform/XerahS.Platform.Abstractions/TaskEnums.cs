@@ -34,6 +34,8 @@ public enum AfterCaptureTasks // Localized
     BeautifyImage = 1 << 2,
     AddImageEffects = 1 << 3,
     AnnotateMedia = 1 << 4,
+    [Obsolete("Renamed to AnnotateMedia. Kept for JSON backwards-compatibility.")]
+    AnnotateImage = AnnotateMedia,
     CopyImageToClipboard = 1 << 5,
     PinToScreen = 1 << 6,
     SendImageToPrinter = 1 << 7,
