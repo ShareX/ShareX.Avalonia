@@ -2,7 +2,7 @@
   "pluginId": "pixelfox",
   "name": "Pixelfox",
   "version": "1.0.0",
-  "author": "ShareX Team",
+  "author": "Manuel Reschke",
   "description": "Upload images to Pixelfox via API key and direct upload sessions",
   "apiVersion": "1.0",
   "entryPoint": "ShareX.Pixelfox.Plugin.PixelfoxProvider",
