@@ -146,7 +146,11 @@ namespace XerahS.UI.Services
                 editorViewModel.ApplicationName = AppResources.AppName;
 
                 // Wire up UploadRequested to trigger host app upload workflow
-                MainViewModelHelper.WireUploadRequested(editorViewModel, _taskManager);
+                MainViewModelHelper.WireUploadRequested(editorViewModel, _taskManager, () =>
+                {
+                    var editorView = editorWindow.FindControl<EditorView>("EditorViewControl");
+                    return editorView?.GetSnapshot();
+                });
 
                 // Wire up CopyRequested to copy edited image (with annotations) to clipboard
                 MainViewModelHelper.WireCopyRequested(editorViewModel, () =>

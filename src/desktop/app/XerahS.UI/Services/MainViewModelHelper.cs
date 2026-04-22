@@ -43,11 +43,11 @@ public static class MainViewModelHelper
     /// <summary>
     /// Wires up the UploadRequested event to the XerahS upload pipeline.
     /// </summary>
-    public static void WireUploadRequested(MainViewModel viewModel, IDesktopTaskManager taskManager)
+    public static void WireUploadRequested(MainViewModel viewModel, IDesktopTaskManager taskManager, Func<SKBitmap?>? getEditedSnapshot = null)
     {
         viewModel.UploadRequested += () =>
         {
-            _ = HandleUploadRequestedAsync(viewModel, taskManager);
+            _ = HandleUploadRequestedAsync(viewModel, taskManager, getEditedSnapshot);
         };
     }
 
@@ -208,21 +208,36 @@ public static class MainViewModelHelper
         DebugHelper.WriteLine($"MainViewModelHelper: Image saved to '{path}'");
     }
 
-    private static async Task HandleUploadRequestedAsync(MainViewModel viewModel, IDesktopTaskManager taskManager)
+    private static async Task HandleUploadRequestedAsync(MainViewModel viewModel, IDesktopTaskManager taskManager, Func<SKBitmap?>? getEditedSnapshot)
     {
         DebugHelper.WriteLine("MainViewModelHelper: UploadRequested received");
 
         try
         {
-            if (viewModel.PreviewImage == null)
+            using var editedSnapshot = getEditedSnapshot?.Invoke();
+            SKBitmap? imageToUpload = editedSnapshot;
+
+            if (imageToUpload != null)
             {
-                DebugHelper.WriteLine("MainViewModelHelper: UploadRequested ignored because PreviewImage is null.");
-                return;
+                DebugHelper.WriteLine($"MainViewModelHelper: Using edited snapshot {imageToUpload.Width}x{imageToUpload.Height} for upload");
             }
 
-            // Convert Avalonia Bitmap to SKBitmap for upload pipeline.
-            using var skBitmap = BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
-            DebugHelper.WriteLine($"MainViewModelHelper: Converted bitmap {skBitmap.Width}x{skBitmap.Height}");
+            if (imageToUpload == null && viewModel.PreviewImage != null)
+            {
+                imageToUpload = BitmapConversionHelpers.ToSKBitmap(viewModel.PreviewImage);
+                if (imageToUpload != null)
+                {
+                    DebugHelper.WriteLine($"MainViewModelHelper: Using preview image {imageToUpload.Width}x{imageToUpload.Height} for upload");
+                }
+            }
+
+            using var previewBitmap = ReferenceEquals(imageToUpload, editedSnapshot) ? null : imageToUpload;
+
+            if (imageToUpload == null)
+            {
+                DebugHelper.WriteLine("MainViewModelHelper: UploadRequested ignored because no upload image is available.");
+                return;
+            }
 
             var taskSettings = new TaskSettings
             {
@@ -234,7 +249,7 @@ public static class MainViewModelHelper
             DebugHelper.WriteLine($"MainViewModelHelper: TaskSettings created - Job={taskSettings.Job}, AfterCapture={taskSettings.AfterCaptureJob}, AfterUpload={taskSettings.AfterUploadJob}, DestId={taskSettings.DestinationInstanceId}");
 
             DebugHelper.WriteLine("MainViewModelHelper: Calling TaskManager.StartImageUploadTask...");
-            await taskManager.StartImageUploadTask(taskSettings, skBitmap.Copy());
+            await taskManager.StartImageUploadTask(taskSettings, imageToUpload.Copy());
             DebugHelper.WriteLine("MainViewModelHelper: TaskManager.StartImageUploadTask completed");
         }
         catch (Exception ex)
