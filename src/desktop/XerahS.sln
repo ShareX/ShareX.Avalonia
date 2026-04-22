@@ -93,6 +93,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{07D5
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.Immich.Plugin", "plugins\Immich.Plugin\XerahS.Immich.Plugin.csproj", "{460B7DBB-04D9-4146-A5EB-93B6D942D50A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerahS.Pixelfox.Plugin", "plugins\Pixelfox.Plugin\XerahS.Pixelfox.Plugin.csproj", "{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -535,6 +537,18 @@ Global
 		{460B7DBB-04D9-4146-A5EB-93B6D942D50A}.Release|x64.Build.0 = Release|Any CPU
 		{460B7DBB-04D9-4146-A5EB-93B6D942D50A}.Release|x86.ActiveCfg = Release|Any CPU
 		{460B7DBB-04D9-4146-A5EB-93B6D942D50A}.Release|x86.Build.0 = Release|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Debug|x64.Build.0 = Debug|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Debug|x86.Build.0 = Debug|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Release|x64.ActiveCfg = Release|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Release|x64.Build.0 = Release|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Release|x86.ActiveCfg = Release|Any CPU
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -580,6 +594,7 @@ Global
 		{26E776B0-562A-4ECD-93B3-4AAE901086C2} = {D11D01EB-7B8F-3246-317D-EC0310EB12D2}
 		{7F88CB6E-D800-4165-BF4B-94787DC22253} = {58D3A2C3-F96F-5E57-2C6B-ECE59D6A18FC}
 		{460B7DBB-04D9-4146-A5EB-93B6D942D50A} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
+		{CF33B030-34D6-4EF6-B9B4-7119D9AEBC1D} = {07D57EEB-2F50-60C4-C011-FE4FA775C9A8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F0A091F-7E5D-481D-8E95-59D51B437C9B}

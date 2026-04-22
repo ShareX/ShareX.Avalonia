@@ -1,0 +1,15 @@
+{
+  "pluginId": "pixelfox",
+  "name": "Pixelfox",
+  "version": "1.0.0",
+  "author": "ShareX Team",
+  "description": "Upload images to Pixelfox via API key and direct upload sessions",
+  "apiVersion": "1.0",
+  "entryPoint": "ShareX.Pixelfox.Plugin.PixelfoxProvider",
+  "assemblyFileName": "XerahS.Pixelfox.Plugin.dll",
+  "supportedCategories": ["Image"],
+  "supportsExplorer": false,
+  "configViewId": "pixelfox",
+  "dependencies": [],
+  "homepageUrl": "https://pixelfox.cc"
+}

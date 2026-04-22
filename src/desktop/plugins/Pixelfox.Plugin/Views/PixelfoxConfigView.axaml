@@ -1,0 +1,69 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:ShareX.Pixelfox.Plugin.ViewModels"
+             x:Class="ShareX.Pixelfox.Plugin.Views.PixelfoxConfigView"
+             x:DataType="vm:PixelfoxConfigViewModel">
+
+    <StackPanel Spacing="15">
+        <TextBlock Text="Pixelfox Configuration"
+                   FontSize="18"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,10"/>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Server URL *" FontWeight="Medium"/>
+            <TextBox Text="{Binding ServerUrl, UpdateSourceTrigger=PropertyChanged}"
+                     PlaceholderText="https://pixelfox.cc"
+                     Width="360"
+                     HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="API Key *" FontWeight="Medium"/>
+            <TextBox Text="{Binding ApiKey, UpdateSourceTrigger=PropertyChanged}"
+                     PasswordChar="*"
+                     Width="360"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Der API-Key wird im Secret Store abgelegt, nicht im Plugin-JSON."
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       TextWrapping="Wrap"
+                       MaxWidth="460"
+                       HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Album ID (Optional)" FontWeight="Medium"/>
+            <TextBox Text="{Binding AlbumId, UpdateSourceTrigger=PropertyChanged}"
+                     PlaceholderText="42"
+                     Width="160"
+                     HorizontalAlignment="Left"/>
+            <TextBlock Text="Wenn gesetzt, ordnet Pixelfox neue Uploads direkt diesem bestehenden Album zu."
+                       FontSize="11"
+                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
+                       TextWrapping="Wrap"
+                       MaxWidth="460"
+                       HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <StackPanel Spacing="5">
+            <TextBlock Text="Processing" FontWeight="Medium"/>
+            <ComboBox SelectedIndex="{Binding ProcessingProfileIndex}"
+                      ItemsSource="{Binding ProcessingProfiles}"
+                      Width="180"
+                      HorizontalAlignment="Left"/>
+        </StackPanel>
+
+        <CheckBox Content="Uploads als NSFW markieren"
+                  IsChecked="{Binding IsNsfw}"/>
+
+        <Border Background="{DynamicResource SystemFillColorAttentionBackground}"
+                Padding="10"
+                CornerRadius="4"
+                IsVisible="{Binding !!StatusMessage}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       Foreground="{DynamicResource SystemFillColorAttention}"/>
+        </Border>
+    </StackPanel>
+</UserControl>
