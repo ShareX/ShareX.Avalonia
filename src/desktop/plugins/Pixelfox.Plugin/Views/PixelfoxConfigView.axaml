@@ -24,7 +24,7 @@
                      PasswordChar="*"
                      Width="360"
                      HorizontalAlignment="Left"/>
-            <TextBlock Text="Der API-Key wird im Secret Store abgelegt, nicht im Plugin-JSON."
+            <TextBlock Text="The API key is stored in the secret store, not in the plugin JSON."
                        FontSize="11"
                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                        TextWrapping="Wrap"
@@ -38,7 +38,7 @@
                      PlaceholderText="42"
                      Width="160"
                      HorizontalAlignment="Left"/>
-            <TextBlock Text="Wenn gesetzt, ordnet Pixelfox neue Uploads direkt diesem bestehenden Album zu."
+            <TextBlock Text="When set, Pixelfox assigns new uploads directly to this existing album."
                        FontSize="11"
                        Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"
                        TextWrapping="Wrap"
@@ -54,7 +54,7 @@
                       HorizontalAlignment="Left"/>
         </StackPanel>
 
-        <CheckBox Content="Uploads als NSFW markieren"
+        <CheckBox Content="Flag uploaded images as NSFW"
                   IsChecked="{Binding IsNsfw}"/>
 
         <Border Background="{DynamicResource SystemFillColorAttentionBackground}"
