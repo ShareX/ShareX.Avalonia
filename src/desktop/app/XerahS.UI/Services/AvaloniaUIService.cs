@@ -752,9 +752,18 @@ namespace XerahS.UI.Services
 
         public async Task ShowOcrWindowAsync(SKBitmap image)
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            SKBitmap? ocrImage = image.Copy();
+            if (ocrImage == null)
             {
-                var viewModel = new OcrViewModel(image);
+                DebugHelper.WriteLine("OCR window skipped: failed to clone image.");
+                return;
+            }
+
+            try
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    var viewModel = new OcrViewModel(ocrImage);
 
                 // Wire the SelectRegion callback so users can re-capture inside the OCR window
                 viewModel.SelectRegionRequested = async () =>
@@ -799,15 +808,21 @@ namespace XerahS.UI.Services
                                    owner.WindowState != Avalonia.Controls.WindowState.Minimized &&
                                    owner.ShowInTaskbar;
 
-                if (canUseOwner)
-                {
-                    window.Show(owner!);
-                }
-                else
-                {
-                    window.Show();
-                }
-            });
+                    if (canUseOwner)
+                    {
+                        window.Show(owner!);
+                    }
+                    else
+                    {
+                        window.Show();
+                    }
+                });
+            }
+            catch
+            {
+                ocrImage.Dispose();
+                throw;
+            }
         }
 
         public async Task ShowAnalyzerWindowAsync(SKBitmap image)

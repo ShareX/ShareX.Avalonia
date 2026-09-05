@@ -87,10 +87,25 @@ public sealed class WorkflowOrchestrator : IWorkflowOrchestrator
         Core.Tasks.WorkerTask.HandleToolWorkflowCallback = HandleToolWorkflowAsync;
         Core.Tasks.Processors.CaptureJobProcessor.PinToScreenCallback = async (bitmap, location, options) =>
         {
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            // Pin windows outlive the worker completion callback; give them their own native pixels.
+            var pinnedImage = bitmap.Copy();
+            if (pinnedImage == null)
             {
-                PinToScreenManager.PinImage(bitmap, location == null ? null : (Avalonia.PixelPoint?)location, options);
-            });
+                DebugHelper.WriteLine("PinToScreen skipped: failed to clone image for pinned window.");
+                return;
+            }
+            try
+            {
+                await Dispatcher.UIThread.InvokeAsync(() =>
+                {
+                    PinToScreenManager.PinImage(pinnedImage, location == null ? null : (Avalonia.PixelPoint?)location, options);
+                });
+            }
+            catch
+            {
+                pinnedImage.Dispose();
+                throw;
+            }
         };
         Core.Tasks.Processors.CaptureJobProcessor.ShowAnalyzerCallback = async bitmap =>
         {
