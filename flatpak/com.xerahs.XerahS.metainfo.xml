@@ -42,6 +42,11 @@
     </screenshot>
   </screenshots>
   <releases>
+    <release version="0.28.4" date="2026-09-05">
+      <description>
+        <p>See CHANGELOG.md for details.</p>
+      </description>
+    </release>
     <release version="0.25.6" date="2026-08-22">
       <description>
         <p>Add self-contained AppImage packages for linux-x64 and linux-arm64 alongside tar.gz, deb, rpm, and Flatpak.</p>
