@@ -5,7 +5,7 @@ description: Commit, push, or version XerahS changes. Use only when the task inc
 
 # Git and versioning
 
-Use the operator's wrapper and identity checks from [AGENTS.md](../../../AGENTS.md) for every Git operation, including status, tags, staging, and push. Plain Git is only the documented wrapper-unavailable fallback.
+Follow the wrapper and fallback guidance in [AGENTS.md](../../../AGENTS.md).
 
 ## Version and commit format
 
@@ -30,4 +30,4 @@ Exceptions:
 
 For authorized commit/push work, stage the task's explicit paths, inspect the staged diff, commit, then push to the verified remote and branch. Do not stage unrelated work with `add .`. Include related documentation in the same logical change.
 
-Run the wrapper's `whoami` before pushing. Preserve configured hooks; fix hook failures and retry. Do not bypass hooks unless explicitly requested. Never create a branch or tag implicitly.
+Preserve configured hooks; fix hook failures and retry. Do not bypass hooks unless explicitly requested. Never create a branch or tag implicitly.

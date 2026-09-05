@@ -11,7 +11,7 @@ XerahS is the Avalonia implementation of ShareX.
 
 ## Git identity
 
-All Git activity must use the operator's own wrapper when available. Never choose another person's identity.
+Use your matching Git wrapper when available:
 
 | Agent | Wrapper |
 |---|---|
@@ -20,7 +20,7 @@ All Git activity must use the operator's own wrapper when available. Never choos
 | Declan | `git-declan` |
 | Vladislava | `git-vladislava` |
 
-Run `git-<person> whoami` before pushing. Only when the matching wrapper is unavailable, verify `git config --get user.name`, `git config --get user.email`, and `git remote -v`, then use configured Git authentication for ShareX/XerahS or the intended fork. Do not edit identity or remotes unless asked.
+Before pushing, confirm identity and remote with `git-<person> whoami`. If your wrapper is unavailable, use configured Git after checking `user.name`, `user.email`, and `git remote -v`. Keep the configured identity and remotes unless asked to change them.
 
 For commits, pushes, and version changes, use [.ai/skills/git-workflow/SKILL.md](.ai/skills/git-workflow/SKILL.md). XerahS commit prefixes must use the next unreleased app version; shared-library commits omit the app version.
 
