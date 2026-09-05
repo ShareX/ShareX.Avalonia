@@ -1,6 +1,6 @@
 ---
 name: ShareX Core Standards
-description: License headers, build configuration rules, dependency version guidance, and general coding standards for XerahS
+description: Apply XerahS C# license headers and project configuration conventions. Use for code or project-file changes, not release workflow.
 ---
 
 ## License Header Requirement
@@ -47,7 +47,7 @@ This is required to avoid "Windows Metadata not provided" errors during full sol
 
 ### SkiaSharp Version Guidance
 
-**IMPORTANT:** SkiaSharp is centrally managed in the root `Directory.Packages.props` and is currently on **3.119.3-preview.1.1** for the Avalonia 12 upgrade line.
+**IMPORTANT:** SkiaSharp is centrally managed in the root `Directory.Packages.props`; keep managed and native packages on the same current version.
 
 - When adding SkiaSharp to a new project, prefer the shared central package version instead of introducing an inline project-local version.
 - If you encounter version conflicts, align with the root central package management entry rather than reintroducing the legacy `2.88.9` pin.

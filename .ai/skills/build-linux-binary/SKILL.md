@@ -1,6 +1,6 @@
 ---
 name: build-linux-binary
-description: Builds Linux binaries (x64 and ARM64) for XerahS using the packaging script. Handles Linux packaging, log monitoring, and Avalonia XAML precompilation issues. Use build-common for shared build timeout, lock, and dependency guardrails.
+description: Build XerahS Linux binaries (x64 or ARM64) with the packaging script. Use only for Linux packaging, artifact checks, or packaging-specific Avalonia diagnostics.
 metadata:
   keywords:
     - build
@@ -47,56 +47,19 @@ Before Linux packaging work, follow [build-common](../build-common/SKILL.md) for
 
 ## Build Process
 
-### Phase 0: Update ShareX.ImageEditor Submodule
+### Preparation
 
-**Always pull the latest `ShareX.ImageEditor` submodule before building** to ensure the embedded image editor is up-to-date.
-
-```bash
-git submodule update --remote --merge ShareX.ImageEditor
-```
-
-### Phase 1: Pre-Build Cleanup
-
-**CRITICAL**: Stale `dotnet` and `package-linux.sh` processes are the #1 cause of file lock failures on Linux. **Always kill them before starting.**
-
-1. **Kill all stale build processes**:
-   ```bash
-   pkill -f "package-linux.sh" 2>/dev/null
-   pkill -f "dotnet publish" 2>/dev/null
-   pkill -f "dotnet build" 2>/dev/null
-   sleep 2
-   ```
-
-2. **Optional — clean obj folders if locks persist**:
-   ```bash
-   rm -rf /path/to/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/obj/Release
-   ```
-   This is most useful if you see `The process cannot access the file '...ShareX.ImageEditor.pdb' because it is being used by another process` (Avalonia AVLN9999 error).
-
----
+Build the pinned submodule revision. Update ImageEditor only when requested, using the operator's Git wrapper. For confirmed stalls or output locks, use [build-common](../build-common/SKILL.md); do not terminate unrelated builds.
 
 ### Phase 2: Run the Build Script
 
-**IMPORTANT: Always redirect output to a log file.** The build takes 5-15 minutes and `command_status` produces **no output** during that time — the tool will appear to hang. Do NOT use `WaitDurationSeconds > 30` with this command.
+Use the packaging script below. If the host buffers output, capture a log and inspect it while the build runs. Redirection alone does not background a shell command.
 
-**Start the build with log redirection:**
 ```bash
 bash build/linux/package-linux.sh > build_output.log 2>&1
 ```
 
-This runs in the background. Monitor progress by periodically reading the log with `view_file`:
-
-```
-view_file: /path/to/XerahS/build_output.log  (last 50 lines)
-```
-
-**Repeat every ~30 seconds** until you see one of:
-- `Done! All packages in dist/` → ✅ Build succeeded
-- `Error:` or `FAILED` lines → ❌ See Phase 3 for fixes
-
-**Do NOT** use `WaitDurationSeconds=120` in `command_status` — the command produces buffered output only after completion, so polling the log file is the only reliable way to track progress.
-
----
+Verify the exit code and resulting artifacts. Judge stalls from output and process activity, not a fixed timeout.
 
 ### Phase 3: Handle Common Failures
 
@@ -140,13 +103,7 @@ After fixing, rebuild from scratch.
 
 **Root Cause**: A previous `dotnet publish` is still running in the background (e.g. from a backgrounded `&` command).
 
-**Fix**:
-```bash
-pkill -f "dotnet publish"
-pkill -f "package-linux.sh"
-sleep 3
-bash build/linux/package-linux.sh
-```
+**Fix**: identify the lock holder and use [build-common](../build-common/SKILL.md) to cancel only the affected task-owned build, then rerun the packaging script.
 
 ---
 
@@ -219,16 +176,15 @@ Timestamps should match the current build session.
   dotnet build ShareX.ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj \
     -c Release -p:UseSharedCompilation=false /m:1
   ```
-- **Between builds**: Always kill all `dotnet` and `package-linux.sh` processes and wait for them to exit before starting a new build session.
+- **Between builds**: Ensure this checkout's previous build has exited before starting another build sharing its outputs.
 
 ### Background Build Caution
 - **Do not background the build script with `&`** unless you redirect output to a log file
 - Multiple concurrent builds share `obj/` folders and will conflict
-- Always kill previous builds before starting a new one
+- Cancel a confirmed stalled task-owned build before retrying; leave other checkouts' processes alone.
 
 ### stdout Buffering Issue
-- `dotnet publish` progress may not appear in `command_status` tool output until the command finishes
-- Redirect to a `.log` file and use `view_file` to check progress instead of waiting for command output
+- If the host buffers output, redirect to a log and inspect progress through the host's file or terminal tools.
 
 ---
 
@@ -246,7 +202,7 @@ Timestamps should match the current build session.
 | Symptom | Solution |
 |---------|----------|
 | `XamlLoadException: No precompiled XAML found` at startup | Check namespaces of all new converter classes — must match `xmlns:converters` in `.axaml` |
-| `AVLN9999: file used by another process` | Kill all `dotnet publish` and `package-linux.sh` processes, retry |
+| `AVLN9999: file used by another process` | Identify the task-owned lock holder; recover through build-common and retry |
 | `MSB3026: Could not copy XerahS.Uploaders.dll` | Usually transient; if fatal, delete `src/desktop/core/XerahS.Uploaders/obj/Release` and retry |
 | `Error: No plugins were published` | Check `src/desktop/plugins/` structure and `plugin.json` presence in each plugin directory |
 | ARM64 cross-compile fails | Ensure `linux-arm64` .NET SDK cross-compile support is installed; Fedora needs `dotnet-sdk-10.0` |

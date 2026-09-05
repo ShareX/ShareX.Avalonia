@@ -10,6 +10,8 @@ When a task produces a durable correction or preventive rule, capture it here or
 
 Promote only repository-wide policy changes to `AGENTS.md`.
 
+- When slimming agent instructions, preserve explicit identity mappings and operational requirements; verify that moved rules exist at their destination because shorter wording can silently weaken mandatory Git wrappers or lose verification exceptions.
+
 ## table of Contents
 
 1.  [UI & Theming](#ui--theming)

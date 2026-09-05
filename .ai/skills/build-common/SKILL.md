@@ -1,84 +1,24 @@
 ---
 name: build-common
-description: Shared XerahS build guardrails for all platforms. Use with platform build skills when handling timeouts, stale dotnet processes, file locks, single-node MSBuild, build-server shutdown, and centrally managed dependency versions.
-metadata:
-  keywords:
-    - build
-    - guardrails
-    - timeout
-    - file-lock
-    - dotnet
-    - msbuild
-    - m:1
-    - skia
+description: Recover XerahS build stalls, file locks, or shared-output races. Use with platform build workflows when needed.
 ---
 
-# Build Common Guardrails
+# Build recovery
 
-Use this skill as the shared preface for platform-specific build skills:
-- [build-android](../build-android/SKILL.md)
-- [build-windows-exe](../build-windows-exe/SKILL.md)
-- [build-linux-binary](../build-linux-binary/SKILL.md)
+Keep the build and dependency invariants in [AGENTS.md](../../../AGENTS.md). Platform skills own packaging commands and artifact validation.
 
-The platform skills own their command details and artifact checks. This file owns shared failure-handling rules.
+Do not run concurrent builds that share this checkout's outputs. Prefer single-node MSBuild (`-m:1`) when locks or output races occur. Elapsed time alone is not a reason to terminate a build.
 
-## Non-Negotiable Rules
+## Diagnose and recover
 
-1. Do not wait more than 5 minutes for a single build step without progress unless the platform skill explicitly documents a longer packaging step and a log-monitoring method.
-2. Never run two XerahS solution, packaging, publish, or Android builds at the same time.
-3. Prefer single-node MSBuild (`-m:1` or `/m:1`) when file locks or shared output races appear.
-4. Do not disable `<TreatWarningsAsErrors>`.
-5. Keep `net10.0-windows10.0.26100.0` as the Windows target framework moniker; do not downgrade it to `net10.0-windows`.
-6. Keep SkiaSharp aligned with the centrally managed root `Directory.Packages.props` version. Do not reintroduce a project-local legacy pin.
+1. Inspect the build output and process activity. Lock errors commonly name a DLL, APK, compiler, or lock-holder PID.
+2. Confirm that the lock holder belongs to this task and checkout. Cancel the affected build first; stop a remaining task-owned process by its verified PID only if necessary. Avoid blanket `dotnet`, compiler, or packaging-process termination across the machine.
+3. Clean the affected project if needed. Remove only verified task output directories when ordinary clean fails; preserve source and other sessions' outputs.
+4. Retry with single-node MSBuild and monitor progress. For shared ImageEditor/plugin output races, build the affected dependency first, then retry the platform build.
 
-## Lock Recovery
+For normal code/config verification, use the desktop solution build from `AGENTS.md`. For packaging, also inspect the expected platform artifacts.
 
-Common symptoms:
-- `CS2012: Cannot open ... for writing`
-- `The process cannot access the file ... because it is being used by another process`
-- `CompileAvaloniaXamlTask` copy failures
-- `.NET Host`, `dotnet`, `MSBuild`, `VBCSCompiler`, or `csc` named as the lock holder
-
-Windows cleanup:
-
-```powershell
-dotnet build-server shutdown
-Get-Process | Where-Object {
-    $_.Name -like '*dotnet*' -or
-    $_.Name -like '*MSBuild*' -or
-    $_.Name -like '*VBCSCompiler*' -or
-    $_.Name -like '*csc*'
-} | Stop-Process -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 2
-```
-
-Linux cleanup:
-
-```bash
-pkill -f "package-linux.sh" 2>/dev/null || true
-pkill -f "dotnet publish" 2>/dev/null || true
-pkill -f "dotnet build" 2>/dev/null || true
-sleep 2
-```
-
-After stopping lock holders, clean only the affected project or output folders first. Remove `obj` folders only when normal clean still fails.
-
-## Shared Output Race
-
-`ShareX.ImageEditor` and some plugins can race on shared build outputs during parallel builds. If lock errors mention `ShareX.ImageEditor.dll`, plugin DLLs, or Android wrapped `.so` files:
-
-```powershell
-dotnet build "ShareX.ImageEditor\src\ShareX.ImageEditor\ShareX.ImageEditor.csproj" -c Release -p:UseSharedCompilation=false -m:1
-```
-
-Then rerun the platform-specific script from the relevant build skill.
-
-## Build Verification
-
-For normal code/config changes before push:
-
-```powershell
-dotnet build src/desktop/XerahS.sln
-```
-
-For packaging tasks, also verify the expected artifacts in `dist/` or the platform-specific output path documented by the relevant build skill.
+Platform workflows:
+- [Android build and deployment](../build-android/SKILL.md)
+- [Windows packaging](../build-windows-exe/SKILL.md)
+- [Linux packaging](../build-linux-binary/SKILL.md)

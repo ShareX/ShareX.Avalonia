@@ -1,6 +1,6 @@
 ---
 name: avalonia-api
-description: Comprehensive reference for Avalonia UI framework including XAML syntax, controls, data binding, MVVM patterns, styling, custom controls, layout system, responsive layout, navigation, and best practices. Covers CommunityToolkit.Mvvm integration, compiled bindings, dependency properties, attached properties, control templates, container queries, and cross-platform development patterns.
+description: Look up Avalonia binding, control, or template patterns when a XerahS UI task needs API guidance.
 metadata:
   keywords:
     - avalonia

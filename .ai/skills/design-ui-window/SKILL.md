@@ -1,6 +1,6 @@
 ---
 name: design-ui-window
-description: Redesigns or normalises any XerahS Avalonia .axaml page, dialog, or tool window to consistent app quality. Enforces layout, spacing, theming, surfaces, buttons, scrollbars, accessibility, and visual hierarchy. Only changes visuals, layout, and styles; never business logic, bindings, or public view-model API. Reusable by updating target_view_path.
+description: Redesign a XerahS Avalonia page, dialog, or tool window when visual changes are requested.
 metadata:
   keywords:
     - redesign

@@ -1,6 +1,6 @@
 ---
 name: draft-blog-post
-description: Maintain XerahS daily development blog drafts under docs/blog using the YYYY/YYYY-MM/blog-YYYYMMDD.md layout. Use when asked to create, update, or consolidate the current UTC+8 blog post from new feature work, bug fixes, build/tooling changes, or recent git history.
+description: Create or consolidate a requested XerahS daily development blog draft in docs/blog.
 ---
 
 ## Scope

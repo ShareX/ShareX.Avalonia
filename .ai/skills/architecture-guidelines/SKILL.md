@@ -1,6 +1,6 @@
 ---
 name: ShareX Architecture and Porting
-description: Platform abstraction rules, porting guidelines, and architecture standards for XerahS
+description: Apply XerahS platform abstractions when adding native integrations or porting ShareX code.
 ---
 
 ## Platform Abstractions and Native Code Rules

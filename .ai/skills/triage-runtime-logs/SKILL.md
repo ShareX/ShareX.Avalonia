@@ -1,6 +1,6 @@
 ---
 name: triage-runtime-logs
-description: Triage pasted or file-backed XerahS startup, runtime, capture, history, or debug logs. Use when a user asks whether logged errors are still valid, wants fixes from a log excerpt, or needs repeated log noise reduced to a small verified bug list with code-level follow-through.
+description: Investigate supplied XerahS logs against current code. Implement fixes only when requested.
 ---
 
 # Triage Runtime Logs
@@ -49,7 +49,7 @@ If the user only pastes a partial log, work from that first. Read more log conte
    - Prefer a targeted repro or focused build/test path over assumptions.
    - If the log looks stale, verify against current code before spending time on a fix.
 
-6. Fix the smallest robust set.
+6. When fixes are requested, implement the smallest robust set. For diagnosis-only requests, report verified causes and proposed fixes without editing code.
    - Prefer root-cause fixes over suppressing downstream logs.
    - Add guards, snapshots, validation, or parsing compatibility only where needed.
    - If the issue is only misleading logging, tighten the log so future triage is clearer.

@@ -35,6 +35,7 @@ using XerahS.Core;
 using XerahS.Core.Managers;
 using XerahS.Core.Tasks;
 using XerahS.Platform.Abstractions;
+using XerahS.Uploaders;
 using BitmapConversionHelpers = ShareX.ImageEditor.Presentation.Rendering.BitmapConversionHelpers;
 
 namespace XerahS.UI.ViewModels;
@@ -412,18 +413,20 @@ public partial class UploadContentViewModel : ViewModelBase, IDisposable
 
         WorkerTask? capturedTask = null;
 
+        void OnUploadProgressChanged(ProgressManager progress)
+        {
+            if (!double.IsNaN(progress.Percentage) && !double.IsInfinity(progress.Percentage))
+            {
+                item.ProgressPercent = (int)Math.Clamp(progress.Percentage, 0, 99);
+            }
+        }
+
         void OnTaskStarted(object? sender, WorkerTask task)
         {
             capturedTask = task;
             _taskManager.TaskStarted -= OnTaskStarted;
 
-            task.Info.UploadProgressChanged += progress =>
-            {
-                if (!double.IsNaN(progress.Percentage) && !double.IsInfinity(progress.Percentage))
-                {
-                    item.ProgressPercent = (int)Math.Clamp(progress.Percentage, 0, 99);
-                }
-            };
+            task.Info.UploadProgressChanged += OnUploadProgressChanged;
         }
 
         _taskManager.TaskStarted += OnTaskStarted;
@@ -441,7 +444,11 @@ public partial class UploadContentViewModel : ViewModelBase, IDisposable
             {
                 case EDataType.Image when item.Image != null:
                     settings.Job = WorkflowType.PrintScreen;
-                    await _taskManager.StartTask(settings, item.Image);
+                    // The queue keeps its image for preview/retry; the worker owns its own copy.
+                    using (var uploadImage = item.Image.Copy())
+                    {
+                        await _taskManager.StartTask(settings, uploadImage);
+                    }
                     break;
 
                 case EDataType.File when !string.IsNullOrEmpty(item.FilePath):
@@ -496,6 +503,10 @@ public partial class UploadContentViewModel : ViewModelBase, IDisposable
         finally
         {
             _taskManager.TaskStarted -= OnTaskStarted;
+            if (capturedTask != null)
+            {
+                capturedTask.Info.UploadProgressChanged -= OnUploadProgressChanged;
+            }
         }
     }
 

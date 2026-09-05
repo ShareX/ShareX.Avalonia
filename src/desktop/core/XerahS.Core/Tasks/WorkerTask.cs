@@ -84,7 +84,7 @@ namespace XerahS.Core.Tasks
                     return false;
 
                 // Check if we have any valid output
-                bool hasImage = Info.Metadata?.Image != null;
+                bool hasImage = _hasImageOutput || Info.Metadata?.Image != null;
                 bool hasFile = !string.IsNullOrEmpty(Info.FilePath);
                 bool hasUrl = !string.IsNullOrEmpty(Info.Metadata?.UploadURL);
 
@@ -93,6 +93,12 @@ namespace XerahS.Core.Tasks
         }
 
         private CancellationTokenSource _cancellationTokenSource;
+        private bool _hasImageOutput;
+        private bool _disposeRequested;
+        private bool _disposed;
+        private readonly object _lifetimeLock = new();
+        private volatile bool _hasFinished;
+        internal bool HasFinished => _hasFinished;
 
         public event EventHandler? StatusChanged;
         public event EventHandler? TaskCompleted;
@@ -139,6 +145,10 @@ namespace XerahS.Core.Tasks
             _cancellationTokenSource = new CancellationTokenSource();
         }
 
+        /// <summary>
+        /// Creates a task that takes ownership of <paramref name="inputImage"/>.
+        /// Completion handlers must copy the image if they need it after the handler returns.
+        /// </summary>
         public static WorkerTask Create(TaskSettings taskSettings, SKBitmap? inputImage = null)
         {
             return new WorkerTask(taskSettings, inputImage);
@@ -146,15 +156,18 @@ namespace XerahS.Core.Tasks
 
         public async Task StartAsync()
         {
-            if (Status != TaskStatus.InQueue) return;
-
-            Info.TaskStartTime = DateTime.Now;
+            lock (_lifetimeLock)
+            {
+                ObjectDisposedException.ThrowIf(_disposed, this);
+                if (Status != TaskStatus.InQueue) return;
+                Info.TaskStartTime = DateTime.Now;
+                Status = TaskStatus.Preparing;
+            }
             DebugHelper.WriteLine($"Task started: Job={Info.TaskSettings.Job}");
-            Status = TaskStatus.Preparing;
-            OnStatusChanged();
 
             try
             {
+                OnStatusChanged();
                 await Task.Run(() => DoWorkAsync(_cancellationTokenSource.Token));
             }
             catch (OperationCanceledException)
@@ -202,8 +215,26 @@ namespace XerahS.Core.Tasks
                     Status = TaskStatus.Completed;
                 }
 
-                OnTaskCompleted();
-                OnStatusChanged();
+                _hasImageOutput = Info.Metadata?.Image != null;
+                try
+                {
+                    OnTaskCompleted();
+                    OnStatusChanged();
+                }
+                finally
+                {
+                    // History retains task metadata, not full-resolution native pixel buffers.
+                    // Synchronous completion handlers can copy the image before it is released.
+                    ReleaseImage();
+                    lock (_lifetimeLock)
+                    {
+                        _hasFinished = true;
+                        if (_disposeRequested)
+                        {
+                            Dispose();
+                        }
+                    }
+                }
             }
         }
 
@@ -377,8 +408,29 @@ namespace XerahS.Core.Tasks
         {
             if (disposing)
             {
-                _cancellationTokenSource?.Dispose();
+                lock (_lifetimeLock)
+                {
+                    _disposeRequested = true;
+                    if (Status != TaskStatus.InQueue && !HasFinished)
+                    {
+                        // In-flight pipeline stages and completion callbacks still borrow the image.
+                        return;
+                    }
+                    _disposed = true;
+                    ReleaseImage();
+                    _cancellationTokenSource?.Dispose();
+                }
             }
+        }
+
+        private void ReleaseImage()
+        {
+            var image = Info.Metadata?.Image;
+            if (Info.Metadata != null)
+            {
+                Info.Metadata.Image = null;
+            }
+            image?.Dispose();
         }
     }
 }

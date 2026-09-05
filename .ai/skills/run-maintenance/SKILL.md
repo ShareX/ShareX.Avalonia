@@ -1,6 +1,6 @@
 ---
 name: run-maintenance
-description: Repository maintenance preparation for XerahS. Use before release or changelog work to sync repositories, inspect submodule state, identify version/changelog needs, and hand off commit/push/version rules to git-workflow.
+description: Prepare repository and submodule state for requested maintenance or release work. Do not trigger for routine edits.
 ---
 
 # Maintenance Prep Skill
@@ -107,7 +107,7 @@ For code/config changes, run the required build before pushing:
 dotnet build src/desktop/XerahS.sln
 ```
 
-Do not wait more than 5 minutes for a single build. If it stalls, stop it, clear stale build processes/locks, prefer `-m:1`, then retry.
+Do not stop a build solely because a fixed amount of time elapsed. If it genuinely stalls, clear stale build processes/locks, prefer `-m:1`, then retry.
 
 Documentation-only skill edits do not require a full solution build unless they affect build or release scripts that need local execution.
 

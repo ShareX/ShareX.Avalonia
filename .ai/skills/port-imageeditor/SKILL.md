@@ -1,6 +1,6 @@
 ---
 name: port-imageeditor
-description: Use the local ShareX checkout as the source of truth for ShareX.ImageEditor, find the latest upstream commit that touches it, and port or sync the matching changes into the XerahS ShareX.ImageEditor submodule with path-aware diffing and build gates.
+description: Port ShareX.ImageEditor changes from a local ShareX checkout into the XerahS submodule when requested.
 metadata:
   keywords:
     - imageeditor
@@ -572,7 +572,7 @@ cd "$XerahSRoot"
 dotnet build "ShareX.ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj" -m:1
 ```
 
-If it stalls, stop it before 5 minutes and clear the lock before retrying.
+If it genuinely stalls, stop it, clear the lock, and retry with single-node compilation when appropriate.
 
 ### 4b - Full solution build
 

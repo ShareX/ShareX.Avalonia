@@ -1,6 +1,6 @@
 ---
 name: update-changelog
-description: Rules and workflows for updating docs/CHANGELOG.md with user-facing, consolidated release notes (not commit logs). Includes version grouping, noise filtering, platform/XIP-aware bullets, and GitHub tag-linked headings.
+description: Write or consolidate requested release notes in docs/CHANGELOG.md.
 ---
 
 ## Goal

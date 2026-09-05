@@ -1,6 +1,6 @@
 ---
 name: graphify
-description: Query the XerahS src knowledge graph for architecture, dependencies, and symbol relationships. Use when exploring how modules connect, finding paths between types, or orienting on unfamiliar areas of src/.
+description: Query src symbol relationships or cross-project dependency paths when graph navigation helps.
 ---
 
 # graphify (XerahS)
@@ -17,13 +17,13 @@ Full cross-agent kickoff prompt (copy-paste + skill/tool path index):
 
 ## When to use
 
-Use graphify **first** for:
+Use graphify when relationship queries help answer:
 
 - Architecture / "how does X connect to Y" questions
 - Finding callers, dependents, or cross-project paths
 - Orienting in an unfamiliar area of `src/`
 
-Do **not** block ordinary file edits or line-level debugging on graphify. After orientation, use Read/Grep as usual.
+Use source inspection when the graph or tool is unavailable or stale. A graph pass is optional; check important graph findings against current source.
 
 ## CLI
 

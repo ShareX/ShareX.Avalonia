@@ -1,6 +1,6 @@
 ---
 name: build-android
-description: Build and deploy XerahS Android apps (Kotlin/Mobile.Kt, Avalonia, MAUI) to emulator/device via adb. Covers JAVA_HOME for Gradle, Compose KeyboardOptions/foundation, file locks, EmbedAssembliesIntoApk, init white-screen, single-node builds (-m:1), and cold-boot emulator. Never wait more than 5 minutes for a build—if it exceeds that, treat as failure and fix locks or parallelism.
+description: Build and deploy XerahS Android apps (Kotlin/Mobile.Kt, Avalonia, or MAUI) through Gradle, dotnet, and adb. Use only for Android build or deployment work.
 metadata:
   keywords:
     - build
@@ -29,12 +29,12 @@ metadata:
 
 You are an expert Android build and deploy specialist for XerahS mobile (Kotlin/Mobile.Kt, Avalonia, and MAUI).
 
-Follow these instructions when building or deploying Android apps. **Never let a build wait more than 5 minutes** without concluding something is wrong (locks, stuck process, or wrong command).
+Follow these instructions when building or deploying Android apps. Treat elapsed time as a diagnostic signal, not a fixed failure threshold; stop only when progress is genuinely stalled.
 
 <task>
   <goal>Build XerahS.Mobile.Ava or XerahS.Mobile.Maui for Android and deploy via adb.</goal>
   <goal>Avoid file locks by using single-node builds and killing lingering dotnet processes.</goal>
-  <goal>If a build runs longer than 5 minutes, stop and fix the cause (locks, parallelism, or stale processes).</goal>
+  <goal>If a build is genuinely stalled, stop and fix locks, parallelism, or stale processes before retrying.</goal>
   <goal>Ensure MAUI APK works when installed via adb (EmbedAssembliesIntoApk).</goal>
 </task>
 
@@ -54,20 +54,20 @@ Follow these instructions when building or deploying Android apps. **Never let a
 
 ## Shared Build Guardrails
 
-Before Android-specific work, follow [build-common](../build-common/SKILL.md) for shared timeout, lock recovery, no-concurrent-build, `-m:1`, TFM, and SkiaSharp rules. This Android skill owns Android-specific prerequisites, emulator/device handling, APK output paths, and deploy commands.
+Before Android-specific work, follow [build-common](../build-common/SKILL.md) for shared stalled-build recovery, no-concurrent-build, `-m:1`, TFM, and SkiaSharp rules. This Android skill owns Android-specific prerequisites, emulator/device handling, APK output paths, and deploy commands.
 
-## 5-minute build rule (critical)
+## Stalled-build recovery
 
-**Do not wait more than 5 minutes for an Android build to complete.** A normal single-node Android build finishes in about 2–5 minutes. If the build has not completed within 5 minutes:
+If an Android build stops making progress:
 
-1. **Treat it as a failure** — something else is wrong.
+1. **Treat it as stalled** — inspect output and process state.
 2. **Stop the build** (cancel or let the command timeout).
 3. **Fix the cause** before retrying:
    - **Lingering processes**: A previous `dotnet` build may be holding the APK or DLLs. Find and stop the process (see "Pre-build: release locks" below).
    - **Clean failing**: If `dotnet clean` fails with "file in use", the lock is often the APK or a DLL; the error message names the process (e.g. ".NET Host (PID)").
    - **Parallelism**: Use `-m:1` so only one project builds at a time and `ShareX.ImageEditor`/plugin DLLs are not raced.
 
-Do **not** increase the timeout to 10+ minutes. Fix locks and parallelism instead.
+Do not impose an arbitrary timeout. Fix locks and parallelism when the evidence indicates they are the cause.
 
 ---
 
@@ -134,14 +134,7 @@ File locks are the main cause of Android build failures. **Before building**, en
 
 ### 2. Stop the process holding the lock
 
-If the error names a PID (e.g. 27788):
-
-```powershell
-Stop-Process -Id 27788 -Force -ErrorAction SilentlyContinue
-Start-Sleep -Seconds 2
-```
-
-If you see many `dotnet` processes and a recent build was run, consider stopping **only** the ones that are build workers (e.g. those that have been running for a long time). Avoid killing the IDE’s dotnet (e.g. OmniSharp) if possible; closing other terminals/builds first is safer.
+Verify that the PID in the error belongs to this task's build and checkout. Cancel that build first; stop only the verified lock holder if cancellation leaves it running. Do not copy a PID from an example or kill processes merely because they are old. See [build-common](../build-common/SKILL.md).
 
 ### 3. Use single-node build to avoid races (required)
 
@@ -236,7 +229,7 @@ If the first build fails with JAVA_HOME or KeyboardOptions, apply the fixes in t
 ```
 
 - Script uses **`-m:1`** and runs clean (if `-Clean`), build, then adb install and launch.
-- **Timeout**: Run with a **5-minute** cap. If the build does not finish in 5 minutes, stop and fix locks/processes.
+- **Timeout**: Do not use a fixed cap; stop only when output or process state shows the build is stalled.
 
 ### Avalonia
 
@@ -269,7 +262,7 @@ $apk = (Get-ChildItem "src\mobile-experimental\XerahS.Mobile.Ava\bin\Debug\net10
 
 ## Success criteria
 
-- Build completes in **under 5 minutes** (typically 2–3 min with `-m:1` and no locks for .NET; Kotlin Gradle builds often 1–2 min once JAVA_HOME is set).
+- Build completes successfully with the expected APK and deployment result.
 - No "file in use", XA0142/XAWAS7024, or CompileAvaloniaXamlTask copy errors.
 - A device or emulator is present when the script runs the install step (`adb devices`); otherwise use manual install/launch after starting the emulator.
 - **Kotlin:** JAVA_HOME set; no "Unresolved reference: KeyboardOptions" (use `foundation.text.KeyboardOptions` and add `compose.foundation` to the module); APK installs via `adb install -r` and app runs.

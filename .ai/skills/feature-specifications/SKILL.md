@@ -1,6 +1,6 @@
 ---
 name: ShareX Feature Specifications
-description: Detailed specifications for Uploader Plugin System and Annotation Subsystem features
+description: Consult uploader or annotation design specifications when explicitly reviewing those subsystem contracts.
 ---
 
 ## Uploader Plugin System Specification

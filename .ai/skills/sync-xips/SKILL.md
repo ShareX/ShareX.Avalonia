@@ -1,6 +1,6 @@
 ---
 name: sync-xips
-description: Create and maintain XerahS Improvement Proposals (XIPs) with GitHub as source of truth and docs/proposals/xip folder as backup. Use when creating or editing XIPs, syncing XIPs between GitHub issues and the docs/proposals/xip folder, or when the user mentions XIP, GitHub issues for XIP, or local XIP files.
+description: Synchronize XIP GitHub issues and local backups when requested. Do not trigger for reading or implementing an XIP.
 ---
 
 # XIP Sync Skill
@@ -8,7 +8,7 @@ description: Create and maintain XerahS Improvement Proposals (XIPs) with GitHub
 **Source of truth**: GitHub issues (label `xip`).  
 **Backup**: `docs/proposals/xip/` folder (generated from GitHub via sync).
 
-Create and edit XIPs in GitHub; keep a local backup in `docs/proposals/xip/` by running sync. Do not treat the local folder as the primary place to write XIPs.
+For requested issue creation or updates, edit XIPs in GitHub and sync the local backup. Reading, auditing, or implementing an XIP does not authorize issue edits, label repairs, or recovery uploads. Apply the mutation steps below only when requested; otherwise report differences.
 
 For XIP structure, templates, and writing patterns, use [XIP writing reference](../write-xip/SKILL.md). This skill is the operational workflow for issue creation, issue editing, sync, and recovery.
 

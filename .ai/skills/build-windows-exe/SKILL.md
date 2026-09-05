@@ -1,6 +1,6 @@
 ---
 name: build-windows-exe
-description: Builds Windows executables (x64 and ARM64) for XerahS using the packaging script. Handles Windows packaging, Inno Setup, artifact validation, and Windows-specific file lock recovery. Use build-common for shared build timeout, lock, and dependency guardrails.
+description: Build XerahS Windows executables (x64 or ARM64) with the packaging script. Use only for Windows packaging, Inno Setup, artifact checks, or packaging-specific lock recovery.
 metadata:
   keywords:
     - build
@@ -44,39 +44,11 @@ Before Windows packaging work, follow [build-common](../build-common/SKILL.md) f
 
 ## Build Process
 
-### Phase 0: Update ShareX.ImageEditor Submodule
+### Preparation
 
-**Always pull the latest `ShareX.ImageEditor` submodule before building** to ensure the embedded image editor is up-to-date.
+Build the pinned submodule revision. Update ImageEditor only when the task requests it, using the operator's Git wrapper.
 
-```powershell
-# Run from the repository root.
-git submodule update --remote --merge ShareX.ImageEditor
-```
-
-### Phase 1: Pre-Build Cleanup
-
-**CRITICAL**: File locking is the #1 cause of Windows build failures. Always clean before building.
-
-1. **Kill all potential file-locking processes**:
-   ```powershell
-   Get-Process | Where-Object { 
-     $_.Name -like '*XerahS*' -or 
-     $_.Name -like '*dotnet*' -or 
-     $_.Name -like '*MSBuild*' -or 
-     $_.Name -like '*VBCSCompiler*' 
-   } | Stop-Process -Force -ErrorAction SilentlyContinue
-   ```
-
-2. **Clean the solution**:
-   ```powershell
-   # Run from the repository root.
-   dotnet clean src/desktop/XerahS.sln --nologo -c Release
-   ```
-
-3. **If file locks persist, delete the problematic obj folder**:
-   ```powershell
-   Remove-Item 'ShareX.ImageEditor\src\ShareX.ImageEditor\obj' -Recurse -Force -ErrorAction SilentlyContinue
-   ```
+Check for another build sharing these outputs. If locks occur, follow [build-common](../build-common/SKILL.md) to identify task-owned lock holders and clean only the affected outputs. Routine packaging does not require blanket process termination or cleanup.
 
 ### Phase 2: Initial Build Attempt
 
@@ -98,20 +70,8 @@ git submodule update --remote --merge ShareX.ImageEditor
 
 **Then apply these fixes**:
 
-1. **Kill compiler processes again**:
-   ```powershell
-   Get-Process | Where-Object { 
-     $_.Name -like '*VBCSCompiler*' -or 
-     $_.Name -like '*dotnet*' -or 
-     $_.Name -like '*csc*' 
-   } | Stop-Process -Force -ErrorAction SilentlyContinue
-   Start-Sleep -Seconds 2
-   ```
-
-2. **Remove the locked obj folder**:
-   ```powershell
-   Remove-Item 'ShareX.ImageEditor\src\ShareX.ImageEditor\obj\Release' -Recurse -Force -ErrorAction SilentlyContinue
-   ```
+1. Follow [build-common](../build-common/SKILL.md) to stop only verified task-owned lock holders.
+2. Clean the affected project/output directory if the lock persists.
 
 3. **Pre-build the `ShareX.ImageEditor` project separately with single-threaded compilation**:
    ```powershell
@@ -129,11 +89,7 @@ git submodule update --remote --merge ShareX.ImageEditor
 
 **If ARM64 continues to fail but x64 succeeds**, build ARM64 manually:
 
-1. **Clean and kill processes**:
-   ```powershell
-   Get-Process | Where-Object { $_.Name -like '*VBCSCompiler*' -or $_.Name -like '*dotnet*' } | Stop-Process -Force -ErrorAction SilentlyContinue
-   Remove-Item 'ShareX.ImageEditor\src\ShareX.ImageEditor\obj\Release' -Recurse -Force -ErrorAction SilentlyContinue
-   ```
+1. Recover confirmed locks using [build-common](../build-common/SKILL.md).
 
 2. **Pre-build `ShareX.ImageEditor`**:
    ```powershell

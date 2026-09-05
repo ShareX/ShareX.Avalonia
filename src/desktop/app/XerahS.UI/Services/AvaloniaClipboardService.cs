@@ -64,7 +64,8 @@ public sealed partial class AvaloniaClipboardService : IClipboardService
 
     public bool ContainsImage()
     {
-        return GetImage() != null;
+        return RunOnUIThread(() =>
+            _clipboard.GetDataFormatsAsync().GetAwaiter().GetResult().Contains(DataFormat.Bitmap));
     }
 
     public bool ContainsFileDropList()
@@ -94,7 +95,7 @@ public sealed partial class AvaloniaClipboardService : IClipboardService
     {
         return RunOnUIThread(() =>
         {
-            var bitmap = _clipboard.TryGetBitmapAsync().GetAwaiter().GetResult();
+            using var bitmap = _clipboard.TryGetBitmapAsync().GetAwaiter().GetResult();
             if (bitmap == null)
                 return null;
 
@@ -157,7 +158,7 @@ public sealed partial class AvaloniaClipboardService : IClipboardService
     {
         return await RunOnUIThreadAsync(async () =>
         {
-            var bitmap = await _clipboard.TryGetBitmapAsync();
+            using var bitmap = await _clipboard.TryGetBitmapAsync();
             if (bitmap == null)
                 return null;
 

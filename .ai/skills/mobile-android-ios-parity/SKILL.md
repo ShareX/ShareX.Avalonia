@@ -1,6 +1,6 @@
 ---
 name: mobile-android-ios-parity
-description: Bring src/mobile/android to feature and behavior parity with src/mobile/ios while keeping each app native. Use when comparing iOS Swift/SwiftUI/UIKit mobile behavior against Android Kotlin/Jetpack Compose behavior, implementing missing Android features, or validating parity with the Test Android Apps emulator QA workflow.
+description: Compare or implement native Android parity with src/mobile/ios. Excludes experimental MAUI/Avalonia apps.
 metadata:
   keywords:
     - mobile

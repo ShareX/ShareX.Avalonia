@@ -360,10 +360,12 @@ public static class MainViewModelHelper
                 return;
             }
 
+            using var ownedImage = imageToCopy;
+
             // Use the platform clipboard service (set up via EditorClipboardAdapter).
             if (Platform.Abstractions.PlatformServices.IsInitialized)
             {
-                Platform.Abstractions.PlatformServices.Clipboard.SetImage(imageToCopy.Copy());
+                Platform.Abstractions.PlatformServices.Clipboard.SetImage(ownedImage);
                 DebugHelper.WriteLine("MainViewModelHelper: Image copied to clipboard");
             }
             else
@@ -371,7 +373,6 @@ public static class MainViewModelHelper
                 DebugHelper.WriteLine("MainViewModelHelper: Platform clipboard not initialized");
             }
 
-            imageToCopy.Dispose();
         }
         catch (Exception ex)
         {

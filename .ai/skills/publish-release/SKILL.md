@@ -1,6 +1,6 @@
 ---
 name: publish-release
-description: "Publish XerahS releases with Windows installers and portable ZIPs, macOS/Linux packages, and Chocolatey metadata. Run maintenance, changelog, build verification, version/tag automation, workflow monitoring, and asset checks with repository-specific release channels. Also supports building Windows portable packages locally without publishing."
+description: Publish a requested XerahS release or prepare a Windows portable package. Local packaging does not authorize publishing.
 ---
 
 # XerahS Release Bump Tag

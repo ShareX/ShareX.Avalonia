@@ -1,6 +1,6 @@
 ---
 name: XIP Writing Reference
-description: Reference for writing effective XerahS Improvement Proposals (XIPs), including structure, templates, review checks, and implementation patterns. Use sync-xips for creating, editing, and syncing XIP GitHub issues and local backups.
+description: Draft XIP structure and implementation criteria when proposal writing is requested. Use sync-xips for publishing.
 ---
 
 # XIP Writing Skill

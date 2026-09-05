@@ -72,7 +72,7 @@ This document tracks the current implementation status, backend porting checklis
 
 ### 🔄 Next: File-Type Routing (Planned)
 
-**Specification:** See `.github/skills/feature-specifications/SKILL.md`
+**Specification:** See [.ai/skills/feature-specifications/SKILL.md](../.ai/skills/feature-specifications/SKILL.md); confirm planned behavior against current implementation.
 
 **Goals:**
 - Deterministic routing based on file extension

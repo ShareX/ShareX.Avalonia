@@ -1,28 +1,6 @@
 ---
-description: XerahS graphify knowledge graph (src/)
-alwaysApply: true
+description: Query XerahS src symbol relationships, callers, or cross-project dependency paths.
+alwaysApply: false
 ---
 
-This repo has a graphify knowledge graph of `src/` at `docs/architecture/graphify-out/` (symlink: `graphify-out/`).
-
-For architecture, dependency, or "how does X connect to Y" questions, prefer graphify before broad Grep sweeps:
-
-```bash
-G=.tools/graphify-venv/bin/graphify
-GRAPH=docs/architecture/graphify-out/graph.json
-$G query "<question>" --graph "$GRAPH"
-$G path "<A>" "<B>" --graph "$GRAPH"
-$G explain "<concept>" --graph "$GRAPH"
-$G affected "<symbol>" --graph "$GRAPH"   # name must uniquely match a node
-```
-
-If the venv is missing: `python3 -m venv .tools/graphify-venv && .tools/graphify-venv/bin/pip install -U pip graphifyy`
-
-- Start with `docs/architecture/graphify-out/GRAPH_REPORT.md` for broad orientation
-- Prefer `GRAPH_TREE.html` over `graph.html` when opening in a browser (lighter)
-- After large structural edits, rebuild with `scripts/update-graphify.sh`
-- For incremental updates: `$G update src` — do NOT pass `--graph` (not a valid option), and do NOT pass `.` (scans the whole repo root)
-- `graphify <subcommand> --help` is unreliable; use `$G --help`
-- Skill details: `.ai/skills/graphify/SKILL.md`
-
-Ordinary line-level edits and targeted Read/Grep do not need a graphify pass first.
+Use [.ai/skills/graphify/SKILL.md](../../.ai/skills/graphify/SKILL.md) when graph queries help answer the task. Targeted source inspection needs no graph pass. If the graph or tool is unavailable or stale, inspect source directly; rebuild only when the task needs an updated graph.

@@ -1,6 +1,6 @@
 ---
 name: mobile-experimental-ios-parity
-description: Bring src/mobile-experimental Avalonia/MAUI mobile apps to feature and behavior parity with src/mobile/ios while preserving native platform feel. Use when comparing the Swift iOS app against XerahS.Mobile.Ava, XerahS.Mobile.Maui, or the experimental iOS share extension, implementing parity gaps, or validating Android/iOS experimental mobile flows.
+description: Compare or implement experimental MAUI/Avalonia mobile parity with src/mobile/ios. Excludes native Android.
 metadata:
   keywords:
     - mobile-experimental

@@ -1,76 +1,33 @@
 ---
-name: ShareX Workflow and Versioning
-description: Canonical Git, commit/push, and Directory.Build.props versioning workflow for XerahS. Use for any task that changes version numbers or requires commit/push.
+name: git-workflow
+description: Commit, push, or version XerahS changes. Use only when the task includes these operations.
 ---
 
-## Scope
+# Git and versioning
 
-This file is the single source of truth for Git and versioning rules that involve:
-- Commit and push workflow
-- Commit message format
-- Version bump behavior
-- `Directory.Build.props` updates
+Use the operator's wrapper and identity checks from [AGENTS.md](../../../AGENTS.md) for every Git operation, including status, tags, staging, and push. Plain Git is only the documented wrapper-unavailable fallback.
 
-This supersedes the retired `docs/development/RELEASE_PROCESS.md`.
+## Version and commit format
 
-## Version Source Of Truth
+- Root `Directory.Build.props` supplies the app version. Before an app commit, compare it with the highest existing XerahS release tag; the version must be strictly greater. If needed, bump it to the next unreleased version.
+- App commits use `[vX.Y.Z] [Type] Concise description`, with types such as `Fix`, `Feature`, `Build`, `Docs`, or `Refactor`.
+- Shared-library/submodule commits, including `ShareX.ImageEditor`, use `[Type] Concise description` without the app version.
+- For requested version increments: fixes increment patch; features increment minor and reset patch; breaking changes increment major and reset minor/patch.
+- Do not put app versions in individual project files. Synchronize other tracked props only if they intentionally carry the XerahS app version; do not overwrite independent library versions.
+- Release automation synchronizes derived Chocolatey metadata and validates the generated package.
 
-1. Treat the root `Directory.Build.props` file as the working XerahS app version source of truth.
-2. Before any versioned XerahS commit, compare the root version with the highest existing XerahS git tag.
-3. If the root version is not strictly greater than the latest tag, bump the root version first so the branch carries the next unreleased version.
-4. Never set version numbers in individual `.csproj` files.
-5. When bumping version, update every tracked `Directory.Build.props` in the repository that intentionally carries the XerahS app version so values match.
-6. Derived release metadata files, such as `build/windows/chocolatey/xerahs.nuspec`, must be synchronized from the root version during release automation.
-7. Tagged releases also generate and smoke-test the Chocolatey `.nupkg`, so release metadata under `build/windows/chocolatey/` must stay automation-friendly.
+## Verification and integration
 
-## Version Bump Policy
+Inspect status, the task diff, tracking branch, and submodule state before staging. Preserve unrelated edits. Pull/rebase or update submodules when integration requires it, after checking that local work will be preserved; do not unconditionally pull into a dirty checkout.
 
-1. Bug fix: increment patch only (`0.0.z` rule: keep major/minor, increase `z`).
-2. New feature: increment minor and reset patch.
-3. Breaking change: increment major and reset minor/patch.
+Before pushing code or build configuration, run the desktop solution build required by `AGENTS.md` and relevant tests. Do not disable warnings-as-errors.
 
-## Required Pre-Commit Checks
+Exceptions:
+- Documentation-only changes: check the diff, links, and consistency. Run relevant script checks if executable instructions or scripts changed.
+- Version-only root `Directory.Build.props` bump: verify that the task diff contains only the intended version change and that the commit prefix matches.
 
-Before committing and pushing:
+## Finish
 
-```bash
-git pull --recurse-submodules
-git submodule update --init --recursive
-dotnet build src/desktop/XerahS.sln
-```
+For authorized commit/push work, stage the task's explicit paths, inspect the staged diff, commit, then push to the verified remote and branch. Do not stage unrelated work with `add .`. Include related documentation in the same logical change.
 
-Only continue when build succeeds with 0 errors.
-
-## Commit And Push Procedure
-
-1. Stage changes:
-```bash
-git add .
-```
-2. Commit using:
-```bash
-git commit -m "[vX.Y.Z] [Type] concise description"
-```
-3. Push:
-```bash
-git push
-```
-
-## Commit Message Rules
-
-1. Prefix XerahS app commits with the root `Directory.Build.props` `<Version>` as `[vX.Y.Z]`, but only after verifying that version is strictly greater than the highest existing XerahS git tag.
-2. Never use a version prefix that is lower than or equal to the latest tag. If the latest tag is already at or above the root version, bump `Directory.Build.props` first and then commit with that bumped version.
-3. Include a type token such as `[Fix]`, `[Feature]`, `[Build]`, `[Docs]`, `[Refactor]`.
-4. Keep the description concise and specific.
-5. Submodule-only commits in shared libraries (e.g. `ShareX.ImageEditor`): omit `[vX.Y.Z]`; use `[Type] description` per `AGENTS.md`.
-
-## Git Hook Expectations
-
-1. Keep `.githooks` active (`git config core.hooksPath .githooks`).
-2. Do not bypass hooks with `--no-verify` unless explicitly requested for emergency use.
-3. If hooks fail, fix issues and recommit.
-
-## Documentation And Git
-
-1. Commit Markdown documentation changes with related code/config changes.
-2. Do not leave generated instruction docs uncommitted when they are part of the requested work.
+Run the wrapper's `whoami` before pushing. Preserve configured hooks; fix hook failures and retry. Do not bypass hooks unless explicitly requested. Never create a branch or tag implicitly.

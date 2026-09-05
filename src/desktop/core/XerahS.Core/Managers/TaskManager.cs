@@ -71,27 +71,7 @@ namespace XerahS.Core.Managers
 
             var task = WorkerTask.Create(taskSettings, inputImage);
 
-            // Add task and cleanup old tasks to prevent unbounded growth
-            lock (_tasksLock)
-            {
-                _tasks.Enqueue(task);
-
-                // Remove and dispose old tasks when limit exceeded
-                while (_tasks.Count > _maxHistoricalTasks)
-                {
-                    if (_tasks.TryDequeue(out var oldTask))
-                    {
-                        try
-                        {
-                            oldTask.Dispose();
-                        }
-                        catch (Exception ex)
-                        {
-                            DebugHelper.WriteLine($"Error disposing old task: {ex.Message}");
-                        }
-                    }
-                }
-            }
+            AddTask(task);
 
             XerahS.Common.TroubleshootingHelper.Log(task.Info?.TaskSettings?.Job.ToString() ?? "Unknown", "TASK_MANAGER", "Task created");
 
@@ -134,27 +114,7 @@ namespace XerahS.Core.Managers
             string extension = Path.GetExtension(filePath);
             task.Info.SetFileName(TaskHelpers.GetFileName(safeTaskSettings, extension, task.Info.Metadata));
 
-            // Add task and cleanup old tasks to prevent unbounded growth
-            lock (_tasksLock)
-            {
-                _tasks.Enqueue(task);
-
-                // Remove and dispose old tasks when limit exceeded
-                while (_tasks.Count > _maxHistoricalTasks)
-                {
-                    if (_tasks.TryDequeue(out var oldTask))
-                    {
-                        try
-                        {
-                            oldTask.Dispose();
-                        }
-                        catch (Exception ex)
-                        {
-                            DebugHelper.WriteLine($"Error disposing old task: {ex.Message}");
-                        }
-                    }
-                }
-            }
+            AddTask(task);
 
             task.StatusChanged += (s, e) => DebugHelper.WriteLine($"Task Status: {task.Status}");
             task.TaskCompleted += (s, e) =>
@@ -191,25 +151,7 @@ namespace XerahS.Core.Managers
             string imageExtension = EnumExtensions.GetDescription(safeTaskSettings.ImageSettings.ImageFormat);
             task.Info.SetFileName(TaskHelpers.GetFileName(safeTaskSettings, imageExtension, task.Info.Metadata));
 
-            lock (_tasksLock)
-            {
-                _tasks.Enqueue(task);
-
-                while (_tasks.Count > _maxHistoricalTasks)
-                {
-                    if (_tasks.TryDequeue(out var oldTask))
-                    {
-                        try
-                        {
-                            oldTask.Dispose();
-                        }
-                        catch (Exception ex)
-                        {
-                            DebugHelper.WriteLine($"Error disposing old task: {ex.Message}");
-                        }
-                    }
-                }
-            }
+            AddTask(task);
 
             task.StatusChanged += (s, e) => DebugHelper.WriteLine($"Task Status: {task.Status}");
             task.TaskCompleted += (s, e) =>
@@ -255,25 +197,7 @@ namespace XerahS.Core.Managers
                 $"[UploadContentDebug] StartTextTask created WorkerTask: fileName=\"{task.Info.FileName}\", " +
                 $"dataType={task.Info.DataType}, taskJob={task.Info.Job}, textLength={(task.Info.TextContent?.Length ?? 0)}");
 
-            lock (_tasksLock)
-            {
-                _tasks.Enqueue(task);
-
-                while (_tasks.Count > _maxHistoricalTasks)
-                {
-                    if (_tasks.TryDequeue(out var oldTask))
-                    {
-                        try
-                        {
-                            oldTask.Dispose();
-                        }
-                        catch (Exception ex)
-                        {
-                            DebugHelper.WriteLine($"Error disposing old task: {ex.Message}");
-                        }
-                    }
-                }
-            }
+            AddTask(task);
 
             task.StatusChanged += (s, e) => DebugHelper.WriteLine($"Task Status: {task.Status}");
             task.TaskCompleted += (s, e) =>
@@ -284,6 +208,34 @@ namespace XerahS.Core.Managers
             TaskStarted?.Invoke(this, task);
 
             await task.StartAsync();
+        }
+
+        private void AddTask(WorkerTask task)
+        {
+            lock (_tasksLock)
+            {
+                _tasks.Enqueue(task);
+                int candidates = _tasks.Count;
+                while (_tasks.Count > _maxHistoricalTasks && candidates-- > 0 &&
+                       _tasks.TryDequeue(out var oldTask))
+                {
+                    // A long-running upload or recording still owns its buffers and cancellation source.
+                    if (!oldTask.HasFinished)
+                    {
+                        _tasks.Enqueue(oldTask);
+                        continue;
+                    }
+
+                    try
+                    {
+                        oldTask.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugHelper.WriteLine($"Error disposing old task: {ex.Message}");
+                    }
+                }
+            }
         }
 
         public void StopAllTasks()

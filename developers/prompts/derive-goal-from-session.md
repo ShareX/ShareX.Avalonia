@@ -7,9 +7,9 @@ Use this when an assistant session already contains the discussion, constraints,
 ## Copy-paste prompt
 
 ```text
-Read this repo, analyze deeply the exact intent and goals we are looking to achieve here, then write me the /goal prompt for one of the goals that you believe we must focus on.
+Use the session's stated intent and relevant repository evidence to write a /goal prompt for the most useful next goal.
 
-Make sure to dig into history and docs we have to be 100% clear.
+Inspect history and documentation only where needed to resolve a material uncertainty.
 
 If you are not sure about certain parts, or want to ask me a few questions to clarify certain goals further, don't hesitate.
 
@@ -18,7 +18,7 @@ Output requirements:
 - Start the final prompt with `/goal`.
 - Make the prompt self-contained enough that Codex can continue in this session and repo nonstop until completion.
 - Include concrete goals, constraints, relevant history/docs to inspect, implementation expectations, verification expectations, and completion criteria.
-- Preserve XerahS repository rules: stay on `main` unless explicitly told otherwise, follow root `AGENTS.md`, do not create branches or GitHub issues unless asked, and verify with the narrowest relevant tests plus `dotnet build` when required.
+- Preserve XerahS repository rules: stay on the current branch, follow root `AGENTS.md` and its Git wrappers, do not create branches or GitHub issues unless asked, and include verification appropriate to the goal.
 ```
 
 Paste this into Codex from the session you want to convert. If Codex returns a prompt that does not already start with `/goal`, change the initial part to `/goal` before running it.

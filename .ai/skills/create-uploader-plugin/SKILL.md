@@ -1,6 +1,6 @@
 ---
 name: create-uploader-plugin
-description: Scaffold and implement a new XerahS uploader plugin under `src/desktop/plugins` with the correct project layout, provider/uploader classes, `plugin.json`, Avalonia config UI, solution registration, and build verification. Use when adding a new upload destination, storage backend, text uploader, or URL-sharing plugin to XerahS.
+description: Add a desktop upload destination under src/desktop/plugins. Do not use for configuring an existing plugin.
 ---
 
 # Create Uploader Plugin
