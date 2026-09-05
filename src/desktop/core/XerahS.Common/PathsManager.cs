@@ -58,7 +58,7 @@ namespace XerahS.Common
 
                 if (string.IsNullOrEmpty(_personalFolder))
                 {
-                    _personalFolder = Path.Combine(GetDocumentsFolder(), AppResources.AppName);
+                    _personalFolder = Path.Combine(IsPortable ? AppContext.BaseDirectory : GetDocumentsFolder(), AppResources.AppName);
                 }
                 return _personalFolder;
             }
@@ -72,7 +72,9 @@ namespace XerahS.Common
             }
         }
 
-        private static bool UseLinuxXdgLayout => OperatingSystem.IsLinux() && !_personalFolderOverrideSet;
+        public static bool IsPortable => File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.txt"));
+
+        private static bool UseLinuxXdgLayout => OperatingSystem.IsLinux() && !_personalFolderOverrideSet && !IsPortable;
 
         private static string GetDocumentsFolder()
         {

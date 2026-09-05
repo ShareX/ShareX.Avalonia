@@ -321,7 +321,7 @@ namespace XerahS.Common
             return runtimePlatform switch
             {
                 RuntimePlatform.Windows => isPortable
-                    ? [ $"-win-{archToken}.zip" ]
+                    ? [ $"-win-{archToken}-portable.zip", $"-win-{archToken}.zip" ]
                     : [ $"-win-{archToken}.exe" ],
                 RuntimePlatform.MacOS =>
                 [
@@ -365,7 +365,15 @@ namespace XerahS.Common
                 ? [ "portable.zip" ]
                 : [ "-setup.exe", "setup.exe", ".exe" ];
 
-            return FindAssetBySuffixes(assets, legacySuffixes);
+            // Architecture-qualified portable archives must never be treated as generic legacy assets.
+            GitHubAsset[] legacyAssets = isPortable
+                ? assets.Where(asset => asset?.name != null &&
+                    !asset.name.Contains("-win-", StringComparison.OrdinalIgnoreCase) &&
+                    !asset.name.Contains("-linux-", StringComparison.OrdinalIgnoreCase) &&
+                    !asset.name.Contains("-mac-", StringComparison.OrdinalIgnoreCase) &&
+                    !asset.name.Contains("-osx-", StringComparison.OrdinalIgnoreCase)).ToArray()
+                : assets;
+            return FindAssetBySuffixes(legacyAssets, legacySuffixes);
         }
 
         protected class GitHubRelease

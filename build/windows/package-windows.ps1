@@ -1,6 +1,12 @@
+[CmdletBinding()]
+param(
+    # Publish and package ZIPs without requiring Inno Setup or WiX.
+    [switch]$PortableOnly
+)
+
 $ErrorActionPreference = "Stop"
 
-# This script builds Windows installers and requires Windows plus Inno Setup.
+# This script builds Windows portable ZIPs and installers (Inno Setup required unless -PortableOnly).
 # It also builds MSI packages using WiX Toolset v4+ when `wix` is available in PATH.
 # Install WiX: dotnet tool install --global wix --version 6.0.2 ; wix extension add --global WixToolset.UI.wixext/6.0.2
 
@@ -70,19 +76,19 @@ if (!(Test-Path $outputDir)) { New-Item -ItemType Directory -Force -Path $output
 # Find ISCC (Inno Setup Compiler) - Windows only
 $programFilesX86 = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ProgramFilesX86)
 $isccPath = Join-Path (Join-Path $programFilesX86 "Inno Setup 6") "ISCC.exe"
-if (!(Test-Path $isccPath)) {
+if (!$PortableOnly -and !(Test-Path $isccPath)) {
     Write-Error "Inno Setup Compiler (ISCC.exe) not found at: $isccPath"
 }
 
 # WiX Toolset v4 — optional; MSI build is skipped with a warning if not found.
 # WiX Toolset v4 - optional; MSI build is skipped with a warning if not found.
 $wixCmd  = Get-Command wix -ErrorAction SilentlyContinue
-$skipMsi = $null -eq $wixCmd
-if ($skipMsi) {
+$skipMsi = $PortableOnly -or $null -eq $wixCmd
+if ($skipMsi -and !$PortableOnly) {
     Write-Warning "WiX CLI (wix.exe) not found in PATH - MSI packages will not be built."
     Write-Warning "Install: dotnet tool install --global wix --version 6.0.2"
     Write-Warning "Then add extension: wix extension add --global WixToolset.UI.wixext/6.0.2"
-} else {
+} elseif (!$skipMsi) {
     Write-Host "WiX CLI: $($wixCmd.Source)"
 }
 $wixScript = Join-Path (Join-Path (Join-Path $root "build") "windows") "XerahS-setup.wxs"
@@ -195,6 +201,9 @@ foreach ($arch in $archs) {
     # Disable nodeReuse and UseSharedCompilation to avoid VBCSCompiler file locking on multi-TFM builds
     # /m:1 forces single-threaded build to prevent parallel TFM race conditions on ImageEditor.dll
     dotnet publish $project -c Release -p:OS=Windows_NT -r $arch -p:PublishSingleFile=false -p:SkipBundlePlugins=true -p:nodeReuse=false -p:UseSharedCompilation=false -p:BuildInParallel=false --disable-build-servers --self-contained true -o $publishOutput /m:1
+    if ($LASTEXITCODE -ne 0) {
+        throw "App publish failed for $arch with exit code $LASTEXITCODE."
+    }
 
     $daemonExecutable = Join-Path $publishOutput "xerahs-watchfolder-daemon.exe"
     $daemonRuntimeConfig = Join-Path $publishOutput "xerahs-watchfolder-daemon.runtimeconfig.json"
@@ -232,6 +241,9 @@ foreach ($arch in $archs) {
 
         $pluginOutput = Join-Path $pluginsDir $pluginId
         dotnet publish $plugin.FullName -c Release -p:OS=Windows_NT -r $arch -p:nodeReuse=false -p:UseSharedCompilation=false -p:BuildInParallel=false --disable-build-servers --self-contained false -o $pluginOutput /m:1
+        if ($LASTEXITCODE -ne 0) {
+            throw "Plugin publish failed for $($plugin.Name) ($arch) with exit code $LASTEXITCODE."
+        }
 
 
     }
@@ -277,6 +289,11 @@ foreach ($arch in $archs) {
     $savedMB = [math]::Round($dedupStats.BytesSaved / 1MB, 2)
     Write-Host "Deduplication complete: Removed $($dedupStats.Removed) files, saved ${savedMB} MB, $($dedupStats.Errors) errors"
 
+    # Package the same complete payload without adding portable.txt to the installer source.
+    & (Join-Path $PSScriptRoot 'package-portable.ps1') -PublishDirectory $publishOutput `
+        -Version $version -Runtime $arch -OutputDirectory $outputDir
+
+    if (!$PortableOnly) {
     # 2. Compile Installer
     Write-Host "Compiling Installer with Inno Setup..."
     $setupBaseName = "XerahS-$version-$arch"
@@ -382,9 +399,11 @@ foreach ($arch in $archs) {
         }
     }
 
+    }
+
     # Cleanup temp publish folder
     Remove-Item -Recurse -Force $publishOutput
 }
 
-Write-Host "`nAll builds complete! Installers in $outputDir"
+Write-Host "`nAll builds complete! Windows release packages in $outputDir"
 

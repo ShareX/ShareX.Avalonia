@@ -97,6 +97,10 @@ jobs:
             wix extension add --global "WixToolset.UI.wixext/$wixVersion"
           }
 
+      - name: Test portable archive packaging
+        shell: pwsh
+        run: .\build\windows\test-package-portable.ps1
+
       - name: Build Windows packages
         shell: pwsh
         run: |
@@ -120,6 +124,8 @@ jobs:
             dist/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64.exe
             dist/XerahS-${{ needs.validate-version.outputs.version }}-win-x64.msi
             dist/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64.msi
+            dist/XerahS-${{ needs.validate-version.outputs.version }}-win-x64-portable.zip
+            dist/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64-portable.zip
 
       - name: Upload Windows build log
         if: always()
@@ -429,6 +435,7 @@ jobs:
         run: |
           set -euo pipefail
           VERSION="${{ needs.validate-version.outputs.version }}"
+          python3 -B -m unittest discover -s build/ci -p 'test_validate_release_assets.py'
           python3 build/ci/validate_release_assets.py \
             --assets-dir release-assets \
             --version "$VERSION" \
@@ -446,6 +453,8 @@ jobs:
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-x64.msi
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64.exe
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64.msi
+            release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-x64-portable.zip
+            release-assets/XerahS-${{ needs.validate-version.outputs.version }}-win-arm64-portable.zip
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-mac-arm64.tar.gz
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-mac-x64.tar.gz
             release-assets/XerahS-${{ needs.validate-version.outputs.version }}-linux-x64.tar.gz

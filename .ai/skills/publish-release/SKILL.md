@@ -1,9 +1,13 @@
 ---
 name: publish-release
-description: "Orchestrate XerahS release flow in strict order: run maintenance prep first, update-changelog second (optional only if docs/CHANGELOG.md is intentionally absent), verify build, bump/commit/push/tag while syncing Chocolatey version metadata, monitor GitHub Actions every 2 minutes, ensure standard release notes content, then apply repo release-channel policy (ShareX/XerahS = pre-release; KovaForge/XerahS = full latest release). On failures, inspect logs, fix root cause, and retry with the next patch release."
+description: "Publish XerahS releases with Windows installers and portable ZIPs, macOS/Linux packages, and Chocolatey metadata. Run maintenance, changelog, build verification, version/tag automation, workflow monitoring, and asset checks with repository-specific release channels. Also supports building Windows portable packages locally without publishing."
 ---
 
 # XerahS Release Bump Tag
+
+## Windows Portable Releases
+
+Windows portable ZIPs are part of every normal tagged release alongside the EXE/MSI installers. For portable-only local packaging, artifact verification, and upgrade guidance, read [references/windows-portable.md](references/windows-portable.md). A request to build a portable ZIP locally does not require a version bump, tag, or GitHub release; use that reference instead of the publishing sequence below.
 
 ## Overview
 
@@ -26,7 +30,7 @@ Repository target behavior (dual-repo):
 - Origin may be a standard `github.com` URL or a KovaForge per-person SSH alias such as `git@github-vladislava:KovaForge/XerahS.git`.
 - Do **not** rely on bare `gh repo view` for target inference on fork checkouts: it often resolves the upstream parent (`ShareX/XerahS`) instead of origin (`KovaForge/XerahS`).
 - Use `--repo owner/name` to override the inferred target when needed.
-- After a successful workflow, the skill verifies the required asset set on the chosen repo (Windows/macOS/Linux/Flatpak + Chocolatey nupkg).
+- After a successful workflow, the skill verifies the required asset set on the chosen repo (Windows installers and portable ZIPs/macOS/Linux/Flatpak + Chocolatey nupkg).
 
 Release channel policy (default):
 - `ShareX/XerahS` -> always **Pre-release** (`prerelease: true`, not latest)
@@ -58,7 +62,7 @@ Step 6 performs:
   - `### macOS Troubleshooting ("App is damaged")` section with Gatekeeper `xattr -cr` guidance.
 - After the release is published, the tag workflow also builds, smoke-tests, and attaches `xerahs.X.Y.Z.nupkg` to the GitHub release.
 - `build/windows/chocolatey/Sync-ChocolateyPackage.ps1 -Version X.Y.Z` remains the manual recovery path for re-syncing checksums or repacking.
-- Expected Windows release assets per architecture: `XerahS-X.Y.Z-win-x64.exe`, `XerahS-X.Y.Z-win-x64.msi`, `XerahS-X.Y.Z-win-arm64.exe`, `XerahS-X.Y.Z-win-arm64.msi`.
+- Expected Windows release assets: six files across x64 and ARM64, with `XerahS-X.Y.Z-win-<arch>.exe`, `XerahS-X.Y.Z-win-<arch>.msi`, and `XerahS-X.Y.Z-win-<arch>-portable.zip` for each architecture. The ZIP must contain `portable.txt` next to `XerahS.exe`; see the portable reference for validation.
 - Expected Linux AppImage assets: `XerahS-X.Y.Z-linux-x64.AppImage`, `XerahS-X.Y.Z-linux-arm64.AppImage` (in addition to tar.gz/deb/rpm and the existing Flatpak bundle).
 
 Optional Step 8 performs:
@@ -220,7 +224,7 @@ On environments where `bash` is not in PATH, execute the sequence manually:
    - Read current body: `gh release view v<new-version> --json body`
    - Append the standard changelog + macOS troubleshooting block if missing.
    - Write body: `gh release edit v<new-version> --notes-file <file>`
-   - Verify all **8 Windows assets** are attached (`-win-x64.exe`, `-win-x64.msi`, `-win-arm64.exe`, `-win-arm64.msi`) plus macOS and Linux assets.
+   - Verify all **6 Windows assets** are attached (EXE, MSI, and `-portable.zip` for both `win-x64` and `win-arm64`) plus macOS and Linux assets. Validate portable ZIP contents as described in [references/windows-portable.md](references/windows-portable.md), not just filenames.
 
 7. Step 7 - Apply release channel policy
    - `ShareX/XerahS`: `gh release edit v<new-version> --prerelease --latest=false`
@@ -307,7 +311,7 @@ Default release-channel policy: `ShareX/XerahS` = pre-release; `KovaForge/XerahS
 - Build before bump: avoid tagging broken trees.
 - Changelog optional: do not block if `docs/CHANGELOG.md` is intentionally absent unless user requires it.
 - Version sync: update every tracked `Directory.Build.props` with `<Version>`, sync `build/windows/chocolatey/xerahs.nuspec`, and prepend a new `<release version="X.Y.Z" date="YYYY-MM-DD">` entry to the `<releases>` block in `flatpak/com.xerahs.XerahS.metainfo.xml`. The metainfo insertion uses a generic "See CHANGELOG.md for details." placeholder description; edit it in the resulting commit before pushing if a hand-written note is preferred.
-- **Windows packaging produces 4 assets per release**: `XerahS-X.Y.Z-win-x64.exe`, `XerahS-X.Y.Z-win-x64.msi`, `XerahS-X.Y.Z-win-arm64.exe`, `XerahS-X.Y.Z-win-arm64.msi`. The EXE is built by Inno Setup; the MSI is built by WiX Toolset v4 (`build/windows/XerahS-setup.wxs`). Both are produced by `build/windows/package-windows.ps1` in the same loop iteration.
+- **Windows packaging produces 6 assets per release**: EXE, MSI, and portable ZIP for each of x64 and ARM64. `build/windows/package-windows.ps1` uses the same self-contained publish payload for all three formats. Portable mode is enabled only in the ZIP; installer payloads must remain free of `portable.txt`.
 - **ShareX.ImageEditor submodule must stay on `develop`**: after `git submodule update --init --recursive`, immediately run `git -C ShareX.ImageEditor fetch origin --prune`, `git -C ShareX.ImageEditor checkout develop`, and `git -C ShareX.ImageEditor pull --ff-only origin develop`. `git submodule update` checks out the parent-recorded commit and can leave a detached HEAD; do not proceed with release work until `git -C ShareX.ImageEditor status --short --branch` confirms `develop...origin/develop`.
 - **WiX prerequisite (CI & local)**: use a pinned pre-v7 WiX CLI, currently `dotnet tool install --global wix --version 6.0.2` + `wix extension add --global WixToolset.UI.wixext/6.0.2`. The `release-build-all-platforms.yml` workflow installs WiX automatically in the `build-windows` job. For local MSI builds: install WiX first; if not present the script emits a warning and skips MSI.
 - **MSI install layout**: per-user, no UAC elevation required. Binaries → `%LocalAppData%\Programs\XerahS\`; Plugins → `%USERPROFILE%\Documents\XerahS\Plugins\`; Start Menu shortcut created automatically.

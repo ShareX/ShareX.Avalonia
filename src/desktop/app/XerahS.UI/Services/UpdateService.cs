@@ -120,7 +120,7 @@ public class UpdateService : IDisposable
         _updateManager = new GitHubUpdateManager(updateRepository.Owner, updateRepository.Repo)
         {
             GitHubRepositories = updateRepositories,
-            IsPortable = IsPortableBuild(),
+            IsPortable = PathsManager.IsPortable,
             IncludePreRelease = includePreRelease,
             AllowAutoUpdate = settings.AutoCheckUpdate
         };
@@ -383,13 +383,6 @@ public class UpdateService : IDisposable
         }
 
         return await dialog.ShowDetachedAsync();
-    }
-
-    private static bool IsPortableBuild()
-    {
-        // Check for portable marker file
-        var portableMarker = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "portable.txt");
-        return File.Exists(portableMarker);
     }
 
     /// <summary>

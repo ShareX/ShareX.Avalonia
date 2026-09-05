@@ -325,3 +325,9 @@ This forces the build system to include the correct Windows SDK reference assemb
 - Never run a `--no-restore` solution build after pulling central package-version changes; always restore the solution first because stale project assets can mix incompatible managed assembly versions and produce misleading compiler failures.
 - Never remove a project reference based only on `using`-directive searches; search fully qualified namespace expressions and build the affected project directly because expression-qualified calls can hide a real dependency without importing its namespace.
 - Never use a product executable project as a bounded compile check unless recursive staging is explicitly disabled; route agent checks through `build/verify.ps1` so plugin builds, daemon staging, and VideoEditor frontend work happen only in product-assembly lanes.
+
+### Portable Release Contracts
+
+- Never assume a ZIP makes XerahS portable; include `portable.txt` beside `XerahS.exe` and verify that the marker routes default settings to the adjacent `XerahS` folder, because classic ShareX's extensionless `Portable` marker is a different contract.
+- Never add the portable marker to the shared installer publish directory; add it only while writing the ZIP, because EXE/MSI packaging consumes the same payload.
+- Never let the updater's generic `portable.zip` fallback select a different architecture's archive; prefer the exact `-win-<arch>-portable.zip` suffix and keep CI upload lists, archive validation, and post-release asset checks synchronized.

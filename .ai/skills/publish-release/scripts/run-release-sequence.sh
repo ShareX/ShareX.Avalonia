@@ -373,8 +373,10 @@ expected_release_asset_names() {
   cat <<EOF
 XerahS-${version}-win-x64.exe
 XerahS-${version}-win-x64.msi
+XerahS-${version}-win-x64-portable.zip
 XerahS-${version}-win-arm64.exe
 XerahS-${version}-win-arm64.msi
+XerahS-${version}-win-arm64-portable.zip
 XerahS-${version}-mac-arm64.tar.gz
 XerahS-${version}-mac-x64.tar.gz
 XerahS-${version}-linux-x64.tar.gz

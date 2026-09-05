@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import tarfile
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -13,8 +14,10 @@ from pathlib import Path
 EXPECTED_ASSETS = [
     ("win", "x64", "exe"),
     ("win", "x64", "msi"),
+    ("win", "x64", "portable.zip"),
     ("win", "arm64", "exe"),
     ("win", "arm64", "msi"),
+    ("win", "arm64", "portable.zip"),
     ("mac", "arm64", "tar.gz"),
     ("mac", "x64", "tar.gz"),
     ("linux", "x64", "tar.gz"),
@@ -120,7 +123,51 @@ def ensure_tar_has_daemon(path: Path, os_name: str) -> None:
 
 
 def build_file_name(version: str, os_name: str, arch: str, extension: str) -> str:
+    if extension == "portable.zip":
+        return f"XerahS-{version}-{os_name}-{arch}-portable.zip"
     return f"XerahS-{version}-{os_name}-{arch}.{extension}"
+
+
+def ensure_portable_zip_payload(path: Path) -> None:
+    """Check the shipped archive, including each plugin's declared assembly."""
+    required_files = {
+        "XerahS.exe",
+        "xerahs-watchfolder-daemon.exe",
+        "portable.txt",
+        "coreclr.dll",
+        "LICENSE.txt",
+        "frontend/dist/index.html",
+    }
+    with zipfile.ZipFile(path) as archive:
+        files = {item.filename: item for item in archive.infolist() if not item.is_dir()}
+        missing = required_files - files.keys()
+        if missing:
+            raise RuntimeError(f"Missing portable payload files in {path}: {', '.join(sorted(missing))}")
+
+        for name, item in files.items():
+            parts = name.replace("\\", "/").split("/")
+            if name.startswith("/") or ".." in parts or ":" in name or "\\" in name:
+                raise RuntimeError(f"Unsafe portable archive path in {path}: {name}")
+            if name.lower().endswith(".pdb"):
+                raise RuntimeError(f"Debug symbols in portable archive {path}: {name}")
+            if name != "portable.txt" and name in required_files and item.file_size == 0:
+                raise RuntimeError(f"Empty portable payload file in {path}: {name}")
+
+        manifests = [name for name in files if name.startswith("Plugins/") and name.endswith("/plugin.json")]
+        if not manifests:
+            raise RuntimeError(f"No plugin manifests in portable archive: {path}")
+        for manifest_name in manifests:
+            manifest = json.loads(archive.read(manifest_name))
+            assembly = manifest.get("assemblyFileName")
+            if not isinstance(assembly, str) or not assembly or "/" in assembly or "\\" in assembly:
+                raise RuntimeError(f"Invalid plugin assembly in {path}: {manifest_name}")
+            assembly_name = manifest_name.rsplit("/", 1)[0] + "/" + assembly
+            if assembly_name not in files or files[assembly_name].file_size == 0:
+                raise RuntimeError(f"Missing or empty plugin assembly in {path}: {assembly_name}")
+
+        corrupt_member = archive.testzip()
+        if corrupt_member:
+            raise RuntimeError(f"Corrupt portable archive member in {path}: {corrupt_member}")
 
 
 def main() -> int:
@@ -147,6 +194,8 @@ def main() -> int:
 
         if extension == "tar.gz":
             ensure_tar_has_daemon(file_path, os_name)
+        elif extension == "portable.zip":
+            ensure_portable_zip_payload(file_path)
 
         asset_metadata = {
             "file_name": file_name,
