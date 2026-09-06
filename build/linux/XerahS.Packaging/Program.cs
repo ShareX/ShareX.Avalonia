@@ -623,7 +623,7 @@ File.CreateSymbolicLink(symlinkPath, "../lib/xerahs/XerahS");
         sb.AppendLine("rm -rf %{buildroot}");
         sb.AppendLine("mkdir -p %{buildroot}/usr/lib/xerahs");
         sb.AppendLine("mkdir -p %{buildroot}/usr/bin");
-        sb.AppendLine("cp -a * %{buildroot}/usr/lib/xerahs/");
+        sb.AppendLine("cp -a usr/* %{buildroot}/usr/lib/xerahs/");
         sb.AppendLine("rm -f %{buildroot}/usr/bin/xerahs");
         sb.AppendLine("rm -f %{buildroot}/usr/bin/omaxerahs");
         sb.AppendLine("ln -s /usr/lib/xerahs/XerahS %{buildroot}/usr/bin/xerahs");
