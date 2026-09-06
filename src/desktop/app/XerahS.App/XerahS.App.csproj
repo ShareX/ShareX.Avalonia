@@ -112,7 +112,7 @@
     flattens them to $(PublishDir) using %(Filename)%(Extension) to preserve
     the actual output extension (e.g. .dll on some RIDs, no extension on native).
   -->
-  <Target Name="PublishWatchFolderDaemon" AfterTargets="Publish">
+  <Target Name="PublishWatchFolderDaemon" AfterTargets="CreateMacOSAppBundle">
     <Message Text="Publishing watch folder daemon..." Importance="High" />
     <PropertyGroup>
       <_WatchFolderDaemonPublishDir>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)watchfolder-daemon-publish/</_WatchFolderDaemonPublishDir>
@@ -190,7 +190,7 @@
     PublishDir. Same approach as PublishWatchFolderDaemon: uses a recursive glob
     to handle whatever RID subdirectory structure dotnet publish creates.
   -->
-  <Target Name="PublishOmaXerahs" AfterTargets="Publish">
+  <Target Name="PublishOmaXerahs" AfterTargets="CreateMacOSAppBundle">
     <Message Text="Publishing omaxerahs..." Importance="High" />
     <PropertyGroup>
       <_OmaXerahsPublishDir>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)omaxerahs-publish/</_OmaXerahsPublishDir>
