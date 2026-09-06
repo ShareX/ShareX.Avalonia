@@ -181,13 +181,13 @@
       uses $(PublishDir)$(AssemblyName).app/Contents/MacOS/ explicitly. On other
       platforms the daemon goes to $(PublishDir) root.
     -->
-    <Error Condition="'$(RuntimeIdentifier.StartsWith('osx'))' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)')"
+    <Error Condition="$([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)')"
            Text="Missing watch folder daemon executable at final destination: $(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)" />
-    <Error Condition="'$(RuntimeIdentifier.StartsWith('osx'))' != 'true' and !Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
+    <Error Condition="!$([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
            Text="Missing watch folder daemon executable at final destination: $(PublishDir)$(_WatchFolderDaemonExecutableName)" />
-    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and '$(RuntimeIdentifier.StartsWith('osx'))' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json')"
+    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and $([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json')"
            Text="Missing watch folder daemon runtimeconfig at final destination" />
-    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and '$(RuntimeIdentifier.StartsWith('osx'))' != 'true' and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
+    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and !$([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
            Text="Missing watch folder daemon runtimeconfig at final destination" />
   </Target>
 
@@ -248,13 +248,13 @@
     </PropertyGroup>
 
     <!-- Validate at the final destination. On macOS: app bundle Contents/MacOS/. Otherwise: PublishDir root. -->
-    <Error Condition="'$(RuntimeIdentifier.StartsWith('osx'))' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)')"
+    <Error Condition="$([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)')"
            Text="Missing omaxerahs executable at final destination: $(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)" />
-    <Error Condition="'$(RuntimeIdentifier.StartsWith('osx'))' != 'true' and !Exists('$(PublishDir)$(_OmaXerahsExecutableName)')"
+    <Error Condition="!$([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)$(_OmaXerahsExecutableName)')"
            Text="Missing omaxerahs executable at final destination: $(PublishDir)$(_OmaXerahsExecutableName)" />
-    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and '$(RuntimeIdentifier.StartsWith('osx'))' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/omaxerahs.runtimeconfig.json')"
+    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and $([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/omaxerahs.runtimeconfig.json')"
            Text="Missing omaxerahs runtimeconfig at final destination" />
-    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and '$(RuntimeIdentifier.StartsWith('osx'))' != 'true' and !Exists('$(PublishDir)omaxerahs.runtimeconfig.json')"
+    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and !$([System.String]::new('$(RuntimeIdentifier)').StartsWith('osx')) and !Exists('$(PublishDir)omaxerahs.runtimeconfig.json')"
            Text="Missing omaxerahs runtimeconfig at final destination" />
   </Target>
 
