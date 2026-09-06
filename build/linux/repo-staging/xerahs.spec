@@ -46,7 +46,7 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/lib/xerahs
 cp -a * %{buildroot}/usr/lib/xerahs/
 mkdir -p %{buildroot}%{_bindir}
-rm -f %{buildroot}%{_bindir}/xerahs
+rm -f %{buildroot}%{_bindir}/xerahs %{buildroot}%{_bindir}/omaxerahs
 ln -s ../lib/xerahs/XerahS %{buildroot}%{_bindir}/xerahs
 ln -s ../lib/xerahs/omaxerahs %{buildroot}%{_bindir}/omaxerahs
 chmod 755 %{buildroot}/usr/lib/xerahs/XerahS

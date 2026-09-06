@@ -10,6 +10,17 @@ The format follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html):
 
 ---
 
+## v0.28.32
+
+### Features
+- **Windows — Portable**: Ship `XerahS-{version}-win-x64-portable.zip` and `XerahS-{version}-win-arm64-portable.zip` on tagged releases, with `portable.txt` beside `XerahS.exe` so settings stay next to the extract folder.
+
+### Fixes
+- **Linux — RPM**: Recreate the `omaxerahs` `/usr/bin` symlink after copying the payload so rpmbuild no longer fails with "File exists" on Ubuntu hosts.
+- **Linux — Image Editor**: Embed English `Strings.resx` under `ShareX.ImageEditor.Localization.Strings` so startup no longer throws `MissingManifestResourceException` (#283).
+
+---
+
 ## v0.28.0
 
 ### Features
