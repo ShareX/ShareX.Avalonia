@@ -44,11 +44,14 @@ XerahS-%{version}-linux-*.rpm asset already attached to each release.
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}/usr/lib/xerahs
-cp -a * %{buildroot}/usr/lib/xerahs/
 mkdir -p %{buildroot}%{_bindir}
-rm -f %{buildroot}%{_bindir}/xerahs %{buildroot}%{_bindir}/omaxerahs
-ln -s ../lib/xerahs/XerahS %{buildroot}%{_bindir}/xerahs
-ln -s ../lib/xerahs/omaxerahs %{buildroot}%{_bindir}/omaxerahs
+cp -a * %{buildroot}/usr/lib/xerahs/
+# Remove any pre-existing symlinks or regular files before creating new symlinks.
+rm -f %{buildroot}%{_bindir}/xerahs
+rm -f %{buildroot}%{_bindir}/omaxerahs
+# Use absolute paths to avoid cp -a symlink-copied artifacts in the staging dir.
+ln -s /usr/lib/xerahs/XerahS %{buildroot}%{_bindir}/xerahs
+ln -s /usr/lib/xerahs/omaxerahs %{buildroot}%{_bindir}/omaxerahs
 chmod 755 %{buildroot}/usr/lib/xerahs/XerahS
 if [ -f %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon ]; then
   chmod 755 %{buildroot}/usr/lib/xerahs/xerahs-watchfolder-daemon
