@@ -14,6 +14,9 @@
     <AssemblyName>omaxerahs</AssemblyName>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <SelfContained Condition="'$(Configuration)' == 'Release' And '$(RuntimeIdentifier)' != ''">true</SelfContained>
+    <PublishSingleFile Condition="'$(RuntimeIdentifier)' != ''">true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract Condition="'$(RuntimeIdentifier)' != ''">true</IncludeNativeLibrariesForSelfExtract>
     <DefineConstants Condition="'$(IsWindowsCliBuild)' == 'true'">$(DefineConstants);WINDOWS</DefineConstants>
     <DefineConstants Condition="'$(IsMacOSCliBuild)' == 'true'">$(DefineConstants);MACOS</DefineConstants>
     <DefineConstants Condition="'$(IsLinuxCliBuild)' == 'true'">$(DefineConstants);LINUX</DefineConstants>

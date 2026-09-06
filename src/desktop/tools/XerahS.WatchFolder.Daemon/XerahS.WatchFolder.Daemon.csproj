@@ -10,6 +10,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <SelfContained Condition="'$(Configuration)' == 'Release' And '$(RuntimeIdentifier)' != ''">true</SelfContained>
+    <PublishSingleFile Condition="'$(RuntimeIdentifier)' != ''">true</PublishSingleFile>
+    <IncludeNativeLibrariesForSelfExtract Condition="'$(RuntimeIdentifier)' != ''">true</IncludeNativeLibrariesForSelfExtract>
     <DefineConstants Condition="$(RuntimeIdentifier.StartsWith('win')) Or ('$(OS)' == 'Windows_NT' And '$(RuntimeIdentifier)' == '')">$(DefineConstants);WINDOWS</DefineConstants>
     <DefineConstants Condition="$(RuntimeIdentifier.StartsWith('osx')) Or ('$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('OSX')))">$(DefineConstants);MACOS</DefineConstants>
     <DefineConstants Condition="$(RuntimeIdentifier.StartsWith('linux')) Or ('$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Linux')))">$(DefineConstants);LINUX</DefineConstants>
