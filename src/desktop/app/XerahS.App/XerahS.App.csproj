@@ -136,11 +136,17 @@
     </ItemGroup>
 
     <Error Condition="'@(_WatchFolderDaemonPublishedFiles)' == ''"
-           Text="Watch folder daemon publish output is empty: $(_WatchFolderDaemonPublishDir). Globbed: $(_WatchFolderDaemonPublishedFiles)" />
+           Text="Watch folder daemon publish output is empty: $(_WatchFolderDaemonPublishDir)" />
 
+    <!--
+      On macOS, the daemon must end up inside the .app bundle's Contents/MacOS/
+      subdirectory. Use _MacMacOS when available; fall back to PublishDir root
+      for other platforms. This ensures the daemon is co-located with the
+      main XerahS executable inside the bundle.
+    -->
     <Copy SourceFiles="@(_WatchFolderDaemonPublishedFiles)"
-          DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+          DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')"
+          Overwrite="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
@@ -196,8 +202,8 @@
            Text="omaxerahs publish output is empty: $(_OmaXerahsPublishDir)" />
 
     <Copy SourceFiles="@(_OmaXerahsPublishedFiles)"
-          DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+          DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')"
+          Overwrite="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
