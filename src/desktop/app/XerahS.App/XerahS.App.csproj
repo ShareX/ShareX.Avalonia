@@ -121,10 +121,14 @@
     <RemoveDir Directories="$(_WatchFolderDaemonPublishDir)" />
     <MakeDir Directories="$(_WatchFolderDaemonPublishDir)" />
 
-    <MSBuild Projects="..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj"
-             Targets="Restore;Publish"
-             BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(_WatchFolderDaemonPublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+    <!-- Use Exec so we control the exact dotnet publish invocation without outer properties leaking in. -->
+    <PropertyGroup>
+      <_WatchFolderDaemonArgs>publish "$(MSBuildThisFileDirectory)..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:CopyOutputSymbolsToPublishDirectory=false -o "$(_WatchFolderDaemonPublishDir)"</_WatchFolderDaemonArgs>
+    </PropertyGroup>
+    <Message Text="Publishing watch folder daemon: dotnet $(_WatchFolderDaemonArgs)" Importance="High" />
+    <Exec Command="dotnet $(_WatchFolderDaemonArgs)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="DOTNET_CLI_FORCE_UTF8_ENCODING=1" />
 
     <!--
       Glob recursively to handle any RID subdirectory structure dotnet publish
@@ -188,10 +192,14 @@
     <RemoveDir Directories="$(_OmaXerahsPublishDir)" />
     <MakeDir Directories="$(_OmaXerahsPublishDir)" />
 
-    <MSBuild Projects="..\..\cli\XerahS.OmaXerahs\XerahS.OmaXerahs.csproj"
-             Targets="Restore;Publish"
-             BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(_OmaXerahsPublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+    <!-- Use Exec so we control the exact dotnet publish invocation without outer properties leaking in. -->
+    <PropertyGroup>
+      <_OmaXerahsArgs>publish "$(MSBuildThisFileDirectory)..\..\cli\XerahS.OmaXerahs\XerahS.OmaXerahs.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:CopyOutputSymbolsToPublishDirectory=false -o "$(_OmaXerahsPublishDir)"</_OmaXerahsArgs>
+    </PropertyGroup>
+    <Message Text="Publishing omaxerahs: dotnet $(_OmaXerahsArgs)" Importance="High" />
+    <Exec Command="dotnet $(_OmaXerahsArgs)"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          EnvironmentVariables="DOTNET_CLI_FORCE_UTF8_ENCODING=1" />
 
     <ItemGroup>
       <_OmaXerahsPublishedFiles Include="$(_OmaXerahsPublishDir)**/omaxerahs*"
