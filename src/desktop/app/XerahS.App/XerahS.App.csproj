@@ -105,9 +105,16 @@
 
   <Target Name="PublishWatchFolderDaemon" AfterTargets="Publish">
     <Message Text="Publishing watch folder daemon..." Importance="High" />
+    <!--
+      NOTE: Do NOT append $(RuntimeIdentifier) to this path. dotnet publish already
+      creates an RID-specific subdirectory (osx-arm64/, win-x64/, etc.) inside
+      PublishDir. Adding it here caused a double-nested output path
+      (e.g. watchfolder-daemon-publish/osx-arm64/osx-arm64/) which broke the
+      Copy task's glob and silenced the copy, leaving the daemon absent from the
+      macOS app bundle.
+    -->
     <PropertyGroup>
       <_WatchFolderDaemonPublishDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(IntermediateOutputPath)watchfolder-daemon-publish/'))</_WatchFolderDaemonPublishDir>
-      <_WatchFolderDaemonPublishDir Condition="'$(RuntimeIdentifier)' != ''">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(IntermediateOutputPath)watchfolder-daemon-publish/$(RuntimeIdentifier)/'))</_WatchFolderDaemonPublishDir>
     </PropertyGroup>
 
     <RemoveDir Directories="$(_WatchFolderDaemonPublishDir)" />
