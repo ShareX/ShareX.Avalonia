@@ -1,0 +1,202 @@
+Building XerahS version 0.28.6 for macOS...
+Building ShareX.VideoEditor frontend...
+
+added 49 packages, and audited 50 packages in 3s
+
+10 packages are looking for funding
+  run `npm fund` for details
+
+4 high severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+> sharex-video-editor-ui@0.1.0 build
+> tsc -b && vite build
+
+[36mvite v8.0.0 [32mbuilding client environment for production...[36m[39m
+[2Ktransforming...✓ 1749 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.66 kB │ gzip:  0.38 kB
+dist/assets/index-Cp1jR4Lu.css   37.35 kB │ gzip:  6.97 kB
+dist/assets/index-n7Ez9Yss.js   231.38 kB │ gzip: 70.93 kB
+
+[32m✓ built in 260ms[39m
+Restoring scoped intermediate assets for macOS packaging...
+
+  Determining projects to restore...
+  Restored /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj (in 10.05 sec).
+
+  Determining projects to restore...
+  Restored /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/XerahS.Platform.Abstractions.csproj (in 5.43 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/XerahS.Uploaders.csproj (in 5.43 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/XerahS.Platform.MacOS.csproj (in 5.43 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/XerahS.UploaderPluginSdk.csproj (in 1 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/XerahS.Services.Abstractions.csproj (in 1 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/XerahS.Media.csproj (in 4 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/XerahS.Indexer.csproj (in 5 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/XerahS.Common.csproj (in 4 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/XerahS.History.csproj (in 2.1 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/XerahS.Core.csproj (in 2.1 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.UI/XerahS.UI.csproj (in 2.09 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/XerahS.RegionCapture.csproj (in 4 ms).
+  Restored /Users/runner/work/XerahS/XerahS/ShareX.VideoEditor/backend/ShareX.VideoEditor.csproj (in 0.7 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/XerahS.Bootstrap.csproj (in 6 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Assistant/XerahS.Assistant.csproj (in 6 ms).
+  1 of 16 projects are up-to-date for restore.
+Building native ScreenCaptureKit library...
+rm -f libscreencapturekit_bridge.dylib
+clang -fobjc-arc -O2 -arch x86_64 -arch arm64 -framework ScreenCaptureKit -framework Foundation -framework CoreGraphics -framework AppKit -framework AVFoundation -framework CoreMedia -framework CoreVideo -dynamiclib -o libscreencapturekit_bridge.dylib screencapturekit_bridge.m
+Built libscreencapturekit_bridge.dylib
+Copy to output directory: cp libscreencapturekit_bridge.dylib <your-app-output-dir>/
+Native library built successfully
+------------------------------------------------
+Building for osx-arm64...
+
+  Determining projects to restore...
+  Restored /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/XerahS.Platform.MacOS.csproj (in 2.75 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Assistant/XerahS.Assistant.csproj (in 2.75 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/XerahS.Bootstrap.csproj (in 2.75 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/XerahS.UploaderPluginSdk.csproj (in 6 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/XerahS.Services.Abstractions.csproj (in 11 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/XerahS.Platform.Abstractions.csproj (in 25 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/XerahS.Uploaders.csproj (in 27 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/XerahS.Media.csproj (in 18 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/XerahS.Indexer.csproj (in 17 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/XerahS.History.csproj (in 22 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/XerahS.Common.csproj (in 19 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/XerahS.Core.csproj (in 35 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/XerahS.RegionCapture.csproj (in 20 ms).
+  Restored /Users/runner/work/XerahS/XerahS/ShareX.VideoEditor/backend/ShareX.VideoEditor.csproj (in 4 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.UI/XerahS.UI.csproj (in 69 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.App/XerahS.App.csproj (in 32 ms).
+  Restored /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj (in 33 ms).
+  ShareX.ImageEditor -> /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/bin/Release/net10.0/ShareX.ImageEditor.dll
+  XerahS.Services.Abstractions -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/bin/Release/net10.0/XerahS.Services.Abstractions.dll
+  XerahS.Platform.Abstractions -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/bin/Release/net10.0/XerahS.Platform.Abstractions.dll
+  XerahS.Common -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/bin/Release/net10.0/XerahS.Common.dll
+  XerahS.History -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/bin/Release/net10.0/XerahS.History.dll
+  XerahS.Indexer -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/bin/Release/net10.0/XerahS.Indexer.dll
+  XerahS.Media -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/bin/Release/net10.0/XerahS.Media.dll
+  XerahS.RegionCapture -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/bin/Release/net10.0/XerahS.RegionCapture.dll
+  XerahS.Platform.MacOS -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/bin/Release/net10.0/XerahS.Platform.MacOS.dll
+  XerahS.UploaderPluginSdk -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/bin/Release/net10.0/XerahS.UploaderPluginSdk.dll
+  XerahS.Uploaders -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/bin/Release/net10.0/XerahS.Uploaders.dll
+  XerahS.Core -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/bin/Release/net10.0/XerahS.Core.dll
+  XerahS.Bootstrap -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/bin/Release/net10.0/XerahS.Bootstrap.dll
+  XerahS.Assistant -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Assistant/bin/Release/net10.0/XerahS.Assistant.dll
+  ShareX.VideoEditor -> /Users/runner/work/XerahS/XerahS/ShareX.VideoEditor/backend/bin/Release/net10.0/ShareX.VideoEditor.dll
+  XerahS.UI -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.UI/bin/Release/net10.0/XerahS.UI.dll
+  ShareX.ImageEditor -> /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/bin/Release/net10.0/ShareX.ImageEditor.dll
+  XerahS.Services.Abstractions -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/bin/Release/net10.0/XerahS.Services.Abstractions.dll
+  XerahS.Platform.Abstractions -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/bin/Release/net10.0/XerahS.Platform.Abstractions.dll
+  XerahS.Common -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/bin/Release/net10.0/XerahS.Common.dll
+  XerahS.Media -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/bin/Release/net10.0/XerahS.Media.dll
+  XerahS.RegionCapture -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/bin/Release/net10.0/XerahS.RegionCapture.dll
+  XerahS.Platform.MacOS -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/bin/Release/net10.0/XerahS.Platform.MacOS.dll
+  XerahS.History -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/bin/Release/net10.0/XerahS.History.dll
+  XerahS.Indexer -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/bin/Release/net10.0/XerahS.Indexer.dll
+  XerahS.UploaderPluginSdk -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/bin/Release/net10.0/XerahS.UploaderPluginSdk.dll
+  XerahS.Uploaders -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/bin/Release/net10.0/XerahS.Uploaders.dll
+  XerahS.Core -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/bin/Release/net10.0/XerahS.Core.dll
+  XerahS.Bootstrap -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/bin/Release/net10.0/XerahS.Bootstrap.dll
+  XerahS.Assistant -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Assistant/bin/Release/net10.0/XerahS.Assistant.dll
+  ShareX.VideoEditor -> /Users/runner/work/XerahS/XerahS/ShareX.VideoEditor/backend/bin/Release/net10.0/ShareX.VideoEditor.dll
+  [VideoEditor] Validating Node.js version for Vite 8...
+  [VideoEditor] Adopting existing WebUI node_modules dependency state.
+  [VideoEditor] WebUI dependencies are current; skipping npm ci.
+  [VideoEditor] Building WebUI with "npm"...
+  
+  > sharex-video-editor-ui@0.1.0 build
+  > tsc -b && vite build
+  
+  [36mvite v8.0.0 [32mbuilding client environment for production...[36m[39m
+  [2K
+  transforming...✓ 1749 modules transformed.
+  rendering chunks...
+  computing gzip size...
+  dist/index.html                   0.66 kB │ gzip:  0.38 kB
+  dist/assets/index-Cp1jR4Lu.css   37.35 kB │ gzip:  6.97 kB
+  dist/assets/index-n7Ez9Yss.js   231.38 kB │ gzip: 70.93 kB
+  
+  [32m✓ built in 333ms[39m
+  XerahS.App -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.App/bin/Release/net10.0/osx-arm64/XerahS.dll
+  XerahS.App -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.App/bin/Release/net10.0/osx-arm64/publish/
+  Publishing watch folder daemon...
+  Determining projects to restore...
+  Restored /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/XerahS.Platform.Abstractions.csproj (in 1.09 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/XerahS.Platform.MacOS.csproj (in 1.09 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/XerahS.Core.csproj (in 1.1 sec).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/XerahS.UploaderPluginSdk.csproj (in 3 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/XerahS.Services.Abstractions.csproj (in 7 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/XerahS.Uploaders.csproj (in 27 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/XerahS.Media.csproj (in 17 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/XerahS.Indexer.csproj (in 17 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/XerahS.History.csproj (in 18 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/XerahS.Common.csproj (in 12 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/tools/XerahS.WatchFolder.Daemon/XerahS.WatchFolder.Daemon.csproj (in 96 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/XerahS.RegionCapture.csproj (in 17 ms).
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/XerahS.Bootstrap.csproj (in 25 ms).
+  Restored /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/ShareX.ImageEditor.csproj (in 27 ms).
+  ShareX.ImageEditor -> /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/bin/Release/net10.0/osx-arm64/ShareX.ImageEditor.dll
+  XerahS.Services.Abstractions -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Services.Abstractions.dll
+  XerahS.Platform.Abstractions -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Platform.Abstractions.dll
+  XerahS.Common -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/bin/Release/net10.0/osx-arm64/XerahS.Common.dll
+  XerahS.Media -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/bin/Release/net10.0/osx-arm64/XerahS.Media.dll
+  XerahS.RegionCapture -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/bin/Release/net10.0/osx-arm64/XerahS.RegionCapture.dll
+  XerahS.Platform.MacOS -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/bin/Release/net10.0/osx-arm64/XerahS.Platform.MacOS.dll
+  XerahS.History -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/bin/Release/net10.0/osx-arm64/XerahS.History.dll
+  XerahS.Indexer -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/bin/Release/net10.0/osx-arm64/XerahS.Indexer.dll
+  XerahS.UploaderPluginSdk -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/bin/Release/net10.0/osx-arm64/XerahS.UploaderPluginSdk.dll
+  XerahS.Uploaders -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/bin/Release/net10.0/osx-arm64/XerahS.Uploaders.dll
+  XerahS.Core -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/bin/Release/net10.0/osx-arm64/XerahS.Core.dll
+  XerahS.Bootstrap -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/bin/Release/net10.0/osx-arm64/XerahS.Bootstrap.dll
+  XerahS.Services.Abstractions -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Services.Abstractions.dll
+  XerahS.Platform.Abstractions -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Platform.Abstractions.dll
+  ShareX.ImageEditor -> /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/bin/Release/net10.0/osx-arm64/ShareX.ImageEditor.dll
+  XerahS.Common -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/bin/Release/net10.0/osx-arm64/XerahS.Common.dll
+  XerahS.History -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/bin/Release/net10.0/osx-arm64/XerahS.History.dll
+  XerahS.UploaderPluginSdk -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/bin/Release/net10.0/osx-arm64/XerahS.UploaderPluginSdk.dll
+  XerahS.Uploaders -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/bin/Release/net10.0/osx-arm64/XerahS.Uploaders.dll
+  XerahS.Indexer -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/bin/Release/net10.0/osx-arm64/XerahS.Indexer.dll
+  XerahS.Media -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/bin/Release/net10.0/osx-arm64/XerahS.Media.dll
+  XerahS.RegionCapture -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/bin/Release/net10.0/osx-arm64/XerahS.RegionCapture.dll
+  XerahS.Core -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/bin/Release/net10.0/osx-arm64/XerahS.Core.dll
+  XerahS.Platform.MacOS -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/bin/Release/net10.0/osx-arm64/XerahS.Platform.MacOS.dll
+  XerahS.WatchFolder.Daemon -> /Users/runner/work/XerahS/XerahS/src/desktop/tools/XerahS.WatchFolder.Daemon/bin/Release/net10.0/osx-arm64/xerahs-watchfolder-daemon.dll
+  XerahS.WatchFolder.Daemon -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.App/obj/Release/net10.0/osx-arm64/watchfolder-daemon-publish/
+  Publishing omaxerahs...
+  Determining projects to restore...
+  Restored /Users/runner/work/XerahS/XerahS/src/desktop/cli/XerahS.OmaXerahs/XerahS.OmaXerahs.csproj (in 773 ms).
+  13 of 14 projects are up-to-date for restore.
+  ShareX.ImageEditor -> /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/bin/Release/net10.0/osx-arm64/ShareX.ImageEditor.dll
+  XerahS.Services.Abstractions -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Services.Abstractions.dll
+  XerahS.Platform.Abstractions -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Platform.Abstractions.dll
+  XerahS.Common -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/bin/Release/net10.0/osx-arm64/XerahS.Common.dll
+  XerahS.Media -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/bin/Release/net10.0/osx-arm64/XerahS.Media.dll
+  XerahS.RegionCapture -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/bin/Release/net10.0/osx-arm64/XerahS.RegionCapture.dll
+  XerahS.Platform.MacOS -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/bin/Release/net10.0/osx-arm64/XerahS.Platform.MacOS.dll
+  XerahS.History -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/bin/Release/net10.0/osx-arm64/XerahS.History.dll
+  XerahS.Indexer -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/bin/Release/net10.0/osx-arm64/XerahS.Indexer.dll
+  XerahS.UploaderPluginSdk -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/bin/Release/net10.0/osx-arm64/XerahS.UploaderPluginSdk.dll
+  XerahS.Uploaders -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/bin/Release/net10.0/osx-arm64/XerahS.Uploaders.dll
+  XerahS.Core -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/bin/Release/net10.0/osx-arm64/XerahS.Core.dll
+  XerahS.Bootstrap -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.Bootstrap/bin/Release/net10.0/osx-arm64/XerahS.Bootstrap.dll
+  XerahS.Services.Abstractions -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Services.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Services.Abstractions.dll
+  XerahS.Platform.Abstractions -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.Abstractions/bin/Release/net10.0/osx-arm64/XerahS.Platform.Abstractions.dll
+  ShareX.ImageEditor -> /Users/runner/work/XerahS/XerahS/ShareX.ImageEditor/src/ShareX.ImageEditor/bin/Release/net10.0/osx-arm64/ShareX.ImageEditor.dll
+  XerahS.Common -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Common/bin/Release/net10.0/osx-arm64/XerahS.Common.dll
+  XerahS.History -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.History/bin/Release/net10.0/osx-arm64/XerahS.History.dll
+  XerahS.UploaderPluginSdk -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.UploaderPluginSdk/bin/Release/net10.0/osx-arm64/XerahS.UploaderPluginSdk.dll
+  XerahS.Uploaders -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Uploaders/bin/Release/net10.0/osx-arm64/XerahS.Uploaders.dll
+  XerahS.Indexer -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Indexer/bin/Release/net10.0/osx-arm64/XerahS.Indexer.dll
+  XerahS.Media -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Media/bin/Release/net10.0/osx-arm64/XerahS.Media.dll
+  XerahS.RegionCapture -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.RegionCapture/bin/Release/net10.0/osx-arm64/XerahS.RegionCapture.dll
+  XerahS.Core -> /Users/runner/work/XerahS/XerahS/src/desktop/core/XerahS.Core/bin/Release/net10.0/osx-arm64/XerahS.Core.dll
+  XerahS.Platform.MacOS -> /Users/runner/work/XerahS/XerahS/src/platform/XerahS.Platform.MacOS/bin/Release/net10.0/osx-arm64/XerahS.Platform.MacOS.dll
+  XerahS.OmaXerahs -> /Users/runner/work/XerahS/XerahS/src/desktop/cli/XerahS.OmaXerahs/bin/Release/net10.0/osx-arm64/omaxerahs.dll
+  XerahS.OmaXerahs -> /Users/runner/work/XerahS/XerahS/src/desktop/app/XerahS.App/obj/Release/net10.0/osx-arm64/omaxerahs-publish/osx-arm64/
+Error: Missing daemon executable in app bundle: /Users/runner/work/XerahS/XerahS/build/macos/../../src/desktop/app/XerahS.App/bin/Release/net10.0/osx-arm64/publish/XerahS.app/Contents/MacOS/xerahs-watchfolder-daemon
