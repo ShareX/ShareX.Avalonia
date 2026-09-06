@@ -104,19 +104,43 @@
   </Target>
 
   <!--
-    Publish the watch-folder daemon directly into the app's PublishDir.
-    No intermediate directory, no glob, no Copy task — dotnet publish writes
-    the daemon files directly beside XerahS.exe in the app bundle/publish output.
-    This avoids the glob/Copy fragility that silently failed on macOS when
-    dotnet publish created an unexpected RID subdirectory structure.
+    Publish the watch-folder daemon to an intermediate directory, then copy
+    into the app's PublishDir. Uses a recursive glob to handle whatever
+    RID subdirectory structure dotnet publish creates (dotnet may or may not
+    create an RID subdirectory inside PublishDir depending on SDK behavior).
+    The glob captures all files matching the daemon basename, then the Copy
+    flattens them to $(PublishDir) using %(Filename)%(Extension) to preserve
+    the actual output extension (e.g. .dll on some RIDs, no extension on native).
   -->
   <Target Name="PublishWatchFolderDaemon" AfterTargets="Publish">
-    <Message Text="Publishing watch folder daemon to $(PublishDir)..." Importance="High" />
+    <Message Text="Publishing watch folder daemon..." Importance="High" />
+    <PropertyGroup>
+      <_WatchFolderDaemonPublishDir>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)watchfolder-daemon-publish/</_WatchFolderDaemonPublishDir>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(_WatchFolderDaemonPublishDir)" />
+    <MakeDir Directories="$(_WatchFolderDaemonPublishDir)" />
 
     <MSBuild Projects="..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj"
              Targets="Restore;Publish"
              BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(PublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(_WatchFolderDaemonPublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+
+    <!--
+      Glob recursively to handle any RID subdirectory structure dotnet publish
+      creates. %(Filename)%(Extension) preserves the actual extension (.dll or no-ext).
+    -->
+    <ItemGroup>
+      <_WatchFolderDaemonPublishedFiles Include="$(_WatchFolderDaemonPublishDir)**/xerahs-watchfolder-daemon*"
+                                        Exclude="$(_WatchFolderDaemonPublishDir)**/*.pdb;$(_WatchFolderDaemonPublishDir)**/*.xml" />
+    </ItemGroup>
+
+    <Error Condition="'@(_WatchFolderDaemonPublishedFiles)' == ''"
+           Text="Watch folder daemon publish output is empty: $(_WatchFolderDaemonPublishDir). Globbed: $(_WatchFolderDaemonPublishedFiles)" />
+
+    <Copy SourceFiles="@(_WatchFolderDaemonPublishedFiles)"
+          DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
@@ -145,16 +169,35 @@
   </Target>
 
   <!--
-    Publish omaxerahs directly into the app's PublishDir. Same fix as
-    PublishWatchFolderDaemon: no intermediate directory, no glob, no Copy task.
+    Publish omaxerahs to an intermediate directory, then copy into the app's
+    PublishDir. Same approach as PublishWatchFolderDaemon: uses a recursive glob
+    to handle whatever RID subdirectory structure dotnet publish creates.
   -->
   <Target Name="PublishOmaXerahs" AfterTargets="Publish">
-    <Message Text="Publishing omaxerahs to $(PublishDir)..." Importance="High" />
+    <Message Text="Publishing omaxerahs..." Importance="High" />
+    <PropertyGroup>
+      <_OmaXerahsPublishDir>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)omaxerahs-publish/</_OmaXerahsPublishDir>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(_OmaXerahsPublishDir)" />
+    <MakeDir Directories="$(_OmaXerahsPublishDir)" />
 
     <MSBuild Projects="..\..\cli\XerahS.OmaXerahs\XerahS.OmaXerahs.csproj"
              Targets="Restore;Publish"
              BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(PublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(_OmaXerahsPublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
+
+    <ItemGroup>
+      <_OmaXerahsPublishedFiles Include="$(_OmaXerahsPublishDir)**/omaxerahs*"
+                                Exclude="$(_OmaXerahsPublishDir)**/*.pdb;$(_OmaXerahsPublishDir)**/*.xml" />
+    </ItemGroup>
+
+    <Error Condition="'@(_OmaXerahsPublishedFiles)' == ''"
+           Text="omaxerahs publish output is empty: $(_OmaXerahsPublishDir)" />
+
+    <Copy SourceFiles="@(_OmaXerahsPublishedFiles)"
+          DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
