@@ -177,12 +177,16 @@
     </PropertyGroup>
 
     <!--
-      Validate the daemon ended up at the FINAL destination (app bundle Contents/MacOS/ on macOS,
-      or PublishDir root on other platforms).
+      Validate the daemon ended up at the FINAL destination. On macOS it must be
+      inside the .app bundle. On other platforms it goes to PublishDir root.
+      The daemon is always copied to $(PublishDir)$(_MacMacOS) which resolves to
+      the bundle path on macOS and a Contents/MacOS/ subdirectory on other
+      platforms. The fallback to PublishDir root catches cases where the
+      $(_MacMacOS) sub-path doesn't exist.
     -->
-    <Error Condition="!Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)') and !Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
-           Text="Missing watch folder daemon executable at final destination: $(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)" />
-    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json') and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
+    <Error Condition="!Exists('$(PublishDir)$(_MacMacOS)/$(_WatchFolderDaemonExecutableName)') and !Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
+           Text="Missing watch folder daemon executable at final destination: $(PublishDir)$(_MacMacOS)/$(_WatchFolderDaemonExecutableName)" />
+    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(_MacMacOS)/xerahs-watchfolder-daemon.runtimeconfig.json') and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
            Text="Missing watch folder daemon runtimeconfig at final destination" />
   </Target>
 
@@ -243,9 +247,9 @@
     </PropertyGroup>
 
     <!-- Validate at the final destination (app bundle Contents/MacOS/ on macOS, or PublishDir root on other platforms). -->
-    <Error Condition="!Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)') and !Exists('$(PublishDir)$(_OmaXerahsExecutableName)')"
-           Text="Missing omaxerahs executable at final destination: $(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)" />
-    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/omaxerahs.runtimeconfig.json') and !Exists('$(PublishDir)omaxerahs.runtimeconfig.json')"
+    <Error Condition="!Exists('$(PublishDir)$(_MacMacOS)/$(_OmaXerahsExecutableName)') and !Exists('$(PublishDir)$(_OmaXerahsExecutableName)')"
+           Text="Missing omaxerahs executable at final destination: $(PublishDir)$(_MacMacOS)/$(_OmaXerahsExecutableName)" />
+    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(_MacMacOS)/omaxerahs.runtimeconfig.json') and !Exists('$(PublishDir)omaxerahs.runtimeconfig.json')"
            Text="Missing omaxerahs runtimeconfig at final destination" />
   </Target>
 
