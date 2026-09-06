@@ -123,7 +123,7 @@
 
     <!-- Use Exec so we control the exact dotnet publish invocation without outer properties leaking in. -->
     <PropertyGroup>
-      <_WatchFolderDaemonArgs>publish "$(MSBuildThisFileDirectory)..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:CopyOutputSymbolsToPublishDirectory=false -o "$(_WatchFolderDaemonPublishDir)"</_WatchFolderDaemonArgs>
+      <_WatchFolderDaemonArgs>publish "$(MSBuildThisFileDirectory)..\..\tools\XerahS.WatchFolder.Daemon\XerahS.WatchFolder.Daemon.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" -o "$(_WatchFolderDaemonPublishDir)"</_WatchFolderDaemonArgs>
     </PropertyGroup>
     <Message Text="Publishing watch folder daemon: dotnet $(_WatchFolderDaemonArgs)" Importance="High" />
     <Exec Command="dotnet $(_WatchFolderDaemonArgs)"
@@ -194,7 +194,7 @@
 
     <!-- Use Exec so we control the exact dotnet publish invocation without outer properties leaking in. -->
     <PropertyGroup>
-      <_OmaXerahsArgs>publish "$(MSBuildThisFileDirectory)..\..\cli\XerahS.OmaXerahs\XerahS.OmaXerahs.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:CopyOutputSymbolsToPublishDirectory=false -o "$(_OmaXerahsPublishDir)"</_OmaXerahsArgs>
+      <_OmaXerahsArgs>publish "$(MSBuildThisFileDirectory)..\..\cli\XerahS.OmaXerahs\XerahS.OmaXerahs.csproj" -c "$(Configuration)" -r "$(RuntimeIdentifier)" -o "$(_OmaXerahsPublishDir)"</_OmaXerahsArgs>
     </PropertyGroup>
     <Message Text="Publishing omaxerahs: dotnet $(_OmaXerahsArgs)" Importance="High" />
     <Exec Command="dotnet $(_OmaXerahsArgs)"
