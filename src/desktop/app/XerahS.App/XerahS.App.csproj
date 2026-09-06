@@ -144,9 +144,14 @@
       for other platforms. This ensures the daemon is co-located with the
       main XerahS executable inside the bundle.
     -->
+    <!-- Remove any existing files at the destination so Copy always succeeds cross-MSBuild-versions. -->
+    <PropertyGroup>
+      <_WatchFolderDaemonDestFiles>@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')</_WatchFolderDaemonDestFiles>
+    </PropertyGroup>
+    <RemoveFile Files="$(_WatchFolderDaemonDestFiles)" />
     <Copy SourceFiles="@(_WatchFolderDaemonPublishedFiles)"
           DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')"
-          Overwrite="true" />
+          SkipUnchangedFiles="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
@@ -201,9 +206,14 @@
     <Error Condition="'@(_OmaXerahsPublishedFiles)' == ''"
            Text="omaxerahs publish output is empty: $(_OmaXerahsPublishDir)" />
 
+    <!-- Remove any existing files at the destination so Copy always succeeds cross-MSBuild-versions. -->
+    <PropertyGroup>
+      <_OmaXerahsDestFiles>@(_OmaXerahsPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')</_OmaXerahsDestFiles>
+    </PropertyGroup>
+    <RemoveFile Files="$(_OmaXerahsDestFiles)" />
     <Copy SourceFiles="@(_OmaXerahsPublishedFiles)"
           DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')"
-          Overwrite="true" />
+          SkipUnchangedFiles="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
