@@ -144,39 +144,21 @@
            Text="Missing watch folder daemon runtimeconfig in publish output: $(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json" />
   </Target>
 
+  <!--
+    Publish omaxerahs directly into the app's PublishDir. Same fix as
+    PublishWatchFolderDaemon: no intermediate directory, no glob, no Copy task.
+  -->
   <Target Name="PublishOmaXerahs" AfterTargets="Publish">
-    <Message Text="Publishing omaxerahs..." Importance="High" />
-    <PropertyGroup>
-      <_OmaXerahsPublishDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(IntermediateOutputPath)omaxerahs-publish/'))</_OmaXerahsPublishDir>
-      <_OmaXerahsPublishDir Condition="'$(RuntimeIdentifier)' != ''">$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/$(IntermediateOutputPath)omaxerahs-publish/$(RuntimeIdentifier)/'))</_OmaXerahsPublishDir>
-    </PropertyGroup>
-
-    <RemoveDir Directories="$(_OmaXerahsPublishDir)" />
-    <MakeDir Directories="$(_OmaXerahsPublishDir)" />
+    <Message Text="Publishing omaxerahs to $(PublishDir)..." Importance="High" />
 
     <MSBuild Projects="..\..\cli\XerahS.OmaXerahs\XerahS.OmaXerahs.csproj"
              Targets="Restore;Publish"
              BuildInParallel="false"
-             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(_OmaXerahsPublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
-
-    <ItemGroup>
-      <_OmaXerahsPublishedFiles Include="$(_OmaXerahsPublishDir)**/omaxerahs*"
-                                Exclude="$(_OmaXerahsPublishDir)**/*.pdb;$(_OmaXerahsPublishDir)**/*.xml" />
-    </ItemGroup>
-
-    <Error Condition="'@(_OmaXerahsPublishedFiles)' == ''"
-           Text="omaxerahs publish output is empty: $(_OmaXerahsPublishDir)" />
-
-    <Copy SourceFiles="@(_OmaXerahsPublishedFiles)"
-          DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true" />
+             Properties="Configuration=$(Configuration);Platform=$(Platform);RuntimeIdentifier=$(RuntimeIdentifier);RuntimeIdentifiers=$(RuntimeIdentifier);OS=$(OS);CrossCompile=$(CrossCompile);SelfContained=$(SelfContained);PublishSingleFile=true;IncludeNativeLibrariesForSelfExtract=true;CopyOutputSymbolsToPublishDirectory=false;PublishDir=$(PublishDir);EnableWindowsTargeting=$(EnableWindowsTargeting);UseSharedCompilation=false;BuildInParallel=false;nodeReuse=false" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
     <PropertyGroup>
-      <_OmaXerahsRuntimeConfig>$(_OmaXerahsPublishDir)omaxerahs.runtimeconfig.json</_OmaXerahsRuntimeConfig>
-      <_OmaXerahsRuntimeConfig Condition="!Exists('$(_OmaXerahsRuntimeConfig)')">$(_OmaXerahsPublishDir)$(RuntimeIdentifier)\omaxerahs.runtimeconfig.json</_OmaXerahsRuntimeConfig>
-      <_OmaXerahsRuntimeConfig Condition="!Exists('$(_OmaXerahsRuntimeConfig)')">$(MSBuildThisFileDirectory)..\..\cli\XerahS.OmaXerahs\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\omaxerahs.runtimeconfig.json</_OmaXerahsRuntimeConfig>
-      <_OmaXerahsRuntimeConfig Condition="!Exists('$(_OmaXerahsRuntimeConfig)')">$(MSBuildThisFileDirectory)..\..\cli\XerahS.OmaXerahs\bin\$(Configuration)\net10.0\$(RuntimeIdentifier)\omaxerahs.runtimeconfig.json</_OmaXerahsRuntimeConfig>
+      <_OmaXerahsRuntimeConfig>$(MSBuildThisFileDirectory)..\..\cli\XerahS.OmaXerahs\bin\$(Configuration)\$(TargetFramework)\$(RuntimeIdentifier)\omaxerahs.runtimeconfig.json</_OmaXerahsRuntimeConfig>
     </PropertyGroup>
     <Copy SourceFiles="$(_OmaXerahsRuntimeConfig)"
           DestinationFolder="$(PublishDir)"
