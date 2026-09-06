@@ -146,12 +146,14 @@
 
     <!--
       On macOS, the daemon must end up inside the .app bundle's Contents/MacOS/
-      subdirectory. Use _MacMacOS when available; fall back to PublishDir root
-      for other platforms. This ensures the daemon is co-located with the
-      main XerahS executable inside the bundle.
+      subdirectory. _MacMacOS is set by CreateMacOSAppBundle, but that target
+      calls RemoveDir on PublishDir before CreateMacOSAppBundle's own MakeDir,
+      so the bundle must be re-created here. Use the full explicit path to avoid
+      any _MacMacOS scoping issues across target boundaries.
     -->
+    <MakeDir Directories="$(PublishDir)$(AssemblyName).app/Contents/MacOS;$(PublishDir)$(AssemblyName).app/Contents/Resources" />
     <Copy SourceFiles="@(_WatchFolderDaemonPublishedFiles)"
-          DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')"
+          DestinationFiles="@(_WatchFolderDaemonPublishedFiles->'$(PublishDir)$(AssemblyName).app/Contents/MacOS/%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
@@ -176,12 +178,11 @@
 
     <!--
       Validate the daemon ended up at the FINAL destination (app bundle Contents/MacOS/ on macOS,
-      or PublishDir root on other platforms). The intermediate PublishDir is the daemon's own
-      publish folder, not the app's publish folder.
+      or PublishDir root on other platforms).
     -->
-    <Error Condition="!Exists('$(PublishDir)$(_MacMacOS)/$(_WatchFolderDaemonExecutableName)') and !Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
-           Text="Missing watch folder daemon executable at final destination: $(PublishDir)$(_MacMacOS)/$(_WatchFolderDaemonExecutableName)" />
-    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(_MacMacOS)/xerahs-watchfolder-daemon.runtimeconfig.json') and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
+    <Error Condition="!Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)') and !Exists('$(PublishDir)$(_WatchFolderDaemonExecutableName)')"
+           Text="Missing watch folder daemon executable at final destination: $(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_WatchFolderDaemonExecutableName)" />
+    <Error Condition="'$(_WatchFolderDaemonRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/xerahs-watchfolder-daemon.runtimeconfig.json') and !Exists('$(PublishDir)xerahs-watchfolder-daemon.runtimeconfig.json')"
            Text="Missing watch folder daemon runtimeconfig at final destination" />
   </Target>
 
@@ -216,8 +217,9 @@
     <Error Condition="'@(_OmaXerahsPublishedFiles)' == ''"
            Text="omaxerahs publish output is empty: $(_OmaXerahsPublishDir)" />
 
+    <MakeDir Directories="$(PublishDir)$(AssemblyName).app/Contents/MacOS;$(PublishDir)$(AssemblyName).app/Contents/Resources" />
     <Copy SourceFiles="@(_OmaXerahsPublishedFiles)"
-          DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)$(_MacMacOS)/%(Filename)%(Extension)')"
+          DestinationFiles="@(_OmaXerahsPublishedFiles->'$(PublishDir)$(AssemblyName).app/Contents/MacOS/%(Filename)%(Extension)')"
           SkipUnchangedFiles="true" />
 
     <!-- .NET 10+ single-file publish embeds runtimeconfig and no longer writes the sidecar. -->
@@ -241,9 +243,9 @@
     </PropertyGroup>
 
     <!-- Validate at the final destination (app bundle Contents/MacOS/ on macOS, or PublishDir root on other platforms). -->
-    <Error Condition="!Exists('$(PublishDir)$(_MacMacOS)/$(_OmaXerahsExecutableName)') and !Exists('$(PublishDir)$(_OmaXerahsExecutableName)')"
-           Text="Missing omaxerahs executable at final destination: $(PublishDir)$(_MacMacOS)/$(_OmaXerahsExecutableName)" />
-    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(_MacMacOS)/omaxerahs.runtimeconfig.json') and !Exists('$(PublishDir)omaxerahs.runtimeconfig.json')"
+    <Error Condition="!Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)') and !Exists('$(PublishDir)$(_OmaXerahsExecutableName)')"
+           Text="Missing omaxerahs executable at final destination: $(PublishDir)$(AssemblyName).app/Contents/MacOS/$(_OmaXerahsExecutableName)" />
+    <Error Condition="'$(_OmaXerahsRequireRuntimeConfig)' == 'true' and !Exists('$(PublishDir)$(AssemblyName).app/Contents/MacOS/omaxerahs.runtimeconfig.json') and !Exists('$(PublishDir)omaxerahs.runtimeconfig.json')"
            Text="Missing omaxerahs runtimeconfig at final destination" />
   </Target>
 
