@@ -141,9 +141,6 @@
 
     <Message Text="DAEMON PUBLISH DIR: $(_WatchFolderDaemonPublishDir)" Importance="High" />
     <Message Text="DAEMON FILES FOUND: @(_WatchFolderDaemonPublishedFiles)" Importance="High" />
-    <Message Text="ALL FILES IN PUBLISH DIR:" Importance="High" />
-    <Exec Command="ls -laR &quot;$(_WatchFolderDaemonPublishDir)&quot; 2>&1 || echo &quot;Directory not found or empty&quot;"
-          WorkingDirectory="$(MSBuildProjectDirectory)" />
     <Error Condition="'@(_WatchFolderDaemonPublishedFiles)' == ''"
            Text="Watch folder daemon publish output is empty: $(_WatchFolderDaemonPublishDir)" />
 
